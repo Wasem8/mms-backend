@@ -15,65 +15,88 @@ class AuthorizationSeeder extends Seeder
     {
         DB::transaction(function () {
 
-            // 1. Seed Permissions
+            // --- 1. إنشاء الصلاحيات (Permissions) ---
             $permissions = [
-                ['name' => 'manage_users', 'description' => 'Create, edit and delete users'],
-                ['name' => 'manage_hlaqat', 'description' => 'Manage Quran circles'],
-                ['name' => 'record_attendance', 'description' => 'Mark daily attendance'],
-                ['name' => 'view_reports', 'description' => 'View educational reports'],
-                ['name' => 'approve_registration', 'description' => 'Approve new student accounts'],
+                'manage_users'    => 'إدارة المستخدمين والدعوات',
+                'manage_mosques'  => 'إدارة المساجد والمناطق',
+                'manage_hlaqat'   => 'إدارة الحلقات والطلاب',
+                'record_marks'    => 'تسجيل درجات الطلاب',
+                'view_reports'    => 'عرض التقارير والإحصائيات',
+                'send_notif'      => 'إرسال الإشعارات والتعميمات',
             ];
 
-            foreach ($permissions as $perm) {
-                Permission::firstOrCreate(['name' => $perm['name']], $perm);
+            foreach ($permissions as $slug => $desc) {
+                Permission::firstOrCreate(
+                    ['name' => $slug],
+                    ['description' => $desc]
+                );
             }
 
-            // 2. Seed Roles and Link to Permissions
-            $roles = [
-                'area_manager'   => ['manage_users', 'view_reports', 'approve_registration'],
-                'mosque_manager' => ['manage_hlaqat', 'view_reports', 'approve_registration'],
-                'hlaqat_supervisor'  => ['manage_hlaqat', 'record_attendance', 'view_reports'],
-                'teacher'        => ['record_attendance', 'view_reports'],
-                'student'        => [], // Students usually have no special permissions
+            // --- 2. إنشاء الأدوار وربطها بالصلاحيات (Roles) ---
+            $rolesConfig = [
+                'region_manager' => [
+                    'manage_users', 'manage_mosques', 'view_reports', 'send_notif'
+                ],
+                'mosque_manager' => [
+                    'manage_hlaqat', 'view_reports', 'manage_users'
+                ],
+                'supervisor' => [
+                    'manage_hlaqat', 'record_marks', 'view_reports'
+                ],
+                'teacher' => [
+                    'record_marks', 'view_reports'
+                ],
+                'parent' => [
+                    'view_reports'
+                ],
             ];
 
-            foreach ($roles as $roleName => $perms) {
+            foreach ($rolesConfig as $roleSlug => $rolePerms) {
                 $role = Role::firstOrCreate(
-                    ['name' => $roleName],
-                    ['description' => ucfirst(str_replace('_', ' ', $roleName)) . ' account']
+                    ['name' => $roleSlug],
+                    ['description' => ucwords(str_replace('_', ' ', $roleSlug))]
                 );
 
-                // Attach permissions using the custom 'role_permissions' table
-                $permissionIds = Permission::whereIn('name', $perms)->pluck('id');
-                $role->permissions()->sync($permissionIds);
+                // جلب IDs الصلاحيات وربطها بالدور
+                $permIds = Permission::whereIn('name', $rolePerms)->pluck('id');
+                $role->permissions()->sync($permIds);
             }
 
-            // 3. Create Demo Users
-            $this->createDemoUser('Admin User', 'wasem8115@gmail.com', 'area_manager');
-            $this->createDemoUser('Teacher User', 'teacher@tahabeer.com', 'teacher');
-            $this->createDemoUser('Halaqat Supervisor', 'supervisor@tahabeer.com', 'hlaqat_supervisor');
-            $this->createDemoUser('Student User', 'student@tahabeer.com', 'student');
+            // --- 3. إنشاء مستخدمين تجريبيين (Demo Users) ---
+
+            // مدير المنطقة (Active)
+            $this->createAdminUser('وسيم البقاعي', 'wasem8115@gmail.com', 'region_manager');
+
+            // مدير مسجد (Active)
+            $this->createAdminUser('مدير المسجد', 'mosque_admin@wasl.com', 'mosque_manager');
+
+            // معلم (Inactive - كمثال لحساب ينتظر التفعيل حسب الـ SRS)
+            $this->createAdminUser('الأستاذ أحمد', 'teacher@wasl.com', 'teacher', false);
 
         });
     }
 
-    // Inside AuthorizationSeeder.php
-
-    private function createDemoUser($name, $email, $roleName)
+    /**
+     * دالة مساعدة لإنشاء المستخدم وربط دوره وتحديد حالته
+     */
+    private function createAdminUser($name, $email, $roleSlug, $isActive = true)
     {
-        $user = User::firstOrCreate(
+        $user = User::updateOrCreate(
             ['email' => $email],
             [
-                'name' => $name,
-                'password' => Hash::make('password123'),
+                'name'      => $name,
+                'password'  => Hash::make('password123'), // كلمة مرور افتراضية
+                'is_active' => $isActive,
                 'email_verified_at' => now(),
             ]
         );
 
-        $role = Role::where('name', $roleName)->first();
+        // ربط العلاقة في جدول user_role
+        $role = Role::where('name', $roleSlug)->first();
         if ($role) {
-            // This will now insert into 'user_roles' table
             $user->roles()->sync([$role->id]);
         }
+
+        return $user;
     }
 }
