@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\User\Providers;
+namespace Modules\User\App\Providers;
 
 use Nwidart\Modules\Support\ModuleServiceProvider;
 

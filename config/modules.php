@@ -171,7 +171,7 @@ return [
             'scopes' => ['path' => 'Models/Scopes', 'generate' => false],
             'traits' => ['path' => 'Traits', 'generate' => false],
 
-            // app/Http/
+            // Http/
             'controller' => ['path' => 'Http/Controllers', 'generate' => true],
             'filter' => ['path' => 'Http/Middleware', 'generate' => false],
             'request' => ['path' => 'Http/Requests', 'generate' => false],
