@@ -1,9 +1,8 @@
 <?php
 
-namespace Modules\User\App\Providers;
+namespace Modules\User\Providers;
 
 use Nwidart\Modules\Support\ModuleServiceProvider;
-use Illuminate\Console\Scheduling\Schedule;
 
 class UserServiceProvider extends ModuleServiceProvider
 {
