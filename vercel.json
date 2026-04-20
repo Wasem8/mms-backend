@@ -1,6 +1,5 @@
 {
     "version": 2,
-    "buildCommand": "php artisan migrate:fresh --seed && php artisan config:cache && php artisan route:cache && php artisan view:cache",
     "functions": {
         "api/index.php": {
             "runtime": "vercel-php@0.9.0"
