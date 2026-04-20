@@ -1,7 +1,7 @@
 <?php
 
 
-use Illuminate\Routing\Route;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 
 foreach (glob(__DIR__ . '/mms/*.php') as $routeFile) {
