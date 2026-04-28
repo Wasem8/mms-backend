@@ -13,4 +13,5 @@ if (isset($_GET['debug_server'])) {
     exit;
 }
 
+// توجيه الطلبات إلى ملف الاندكس الأصلي في لارفيل
 require __DIR__ . '/../public/index.php';
