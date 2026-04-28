@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Middleware\Authenticate;
+use App\Http\Middleware\RoleMiddleware;
 use App\Support\ApiResponse;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -22,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'auth' => Authenticate::class, // 🔥 override
+            'role' => RoleMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -40,6 +43,28 @@ return Application::configure(basePath: dirname(__DIR__))
             return ApiResponse::error('Too many attempts. Please try again later.', 429);
         });
 
+        $exceptions->render(function (ModelNotFoundException $e, $request) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Resource not found.',
+                'data' => null,
+                'pagination' => null
+            ], 404);
+        });
+
+        // 2. معالجة NotFoundHttpException (الناتج عن Route Model Binding أو رابط خطأ)
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e, $request) {
+            // نتحقق إذا كان الطلب API لضمان عدم تخريب صفحات الـ Web
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Resource not found.',
+                    'data' => null,
+                    'pagination' => null
+                ], 404);
+            }
+        });
+
         // ⚠️ Validation
         $exceptions->render(function (ValidationException $e, $request) {
             return ApiResponse::error(
@@ -48,5 +73,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 $e->errors()
             );
         });
+
+
 
     })->create();

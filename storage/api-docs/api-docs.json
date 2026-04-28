@@ -3,12 +3,24 @@
     "info": {
         "title": "MMS API Documentation",
         "description": "API documentation for Mosque Management System (MMS)",
+        "contact": {
+            "name": "API Support",
+            "url": "https://mms-support.example.com",
+            "email": "support@example.com"
+        },
+        "license": {
+            "name": "MIT"
+        },
         "version": "1.0.0"
     },
     "servers": [
         {
-            "url": "/api",
-            "description": "Main API Server"
+            "url": "http://localhost:8000/api",
+            "description": "Local Development Server"
+        },
+        {
+            "url": "https://api.mms-system.com",
+            "description": "Production API Server"
         }
     ],
     "paths": {
@@ -18,7 +30,7 @@
                     "Auth"
                 ],
                 "summary": "Register a new parent account",
-                "description": "Parent Registration",
+                "description": "Create a new parent account. An OTP verification email will be sent.",
                 "operationId": "registerParent",
                 "requestBody": {
                     "required": true,
@@ -34,15 +46,19 @@
                                 "properties": {
                                     "name": {
                                         "type": "string",
-                                        "example": "Ahmed Ali"
+                                        "example": "Ahmed Ali",
+                                        "maxLength": 255,
+                                        "minLength": 2
                                     },
                                     "email": {
                                         "type": "string",
+                                        "format": "email",
                                         "example": "parent@test.com"
                                     },
                                     "password": {
                                         "type": "string",
-                                        "example": "password123"
+                                        "example": "password123",
+                                        "minLength": 8
                                     },
                                     "password_confirmation": {
                                         "type": "string",
@@ -56,7 +72,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Account created. An OTP has been sent to your email for verification.",
+                        "description": "Account created successfully. OTP sent to email.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -67,7 +83,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Account created. An OTP has been sent to your email for verification."
+                                            "example": "Account created. OTP sent to your email."
                                         },
                                         "data": {
                                             "properties": {
@@ -85,22 +101,13 @@
                                                 },
                                                 "status": {
                                                     "type": "string",
-                                                    "example": "active"
-                                                },
-                                                "created_at": {
-                                                    "type": "string",
-                                                    "example": "2026-04-16T18:22:02.000000Z"
-                                                },
-                                                "updated_at": {
-                                                    "type": "string",
-                                                    "example": "2026-04-16T18:22:02.000000Z"
+                                                    "example": "pending"
                                                 }
                                             },
                                             "type": "object"
                                         },
                                         "pagination": {
                                             "type": "object",
-                                            "example": null,
                                             "nullable": true
                                         }
                                     },
@@ -110,7 +117,7 @@
                         }
                     },
                     "422": {
-                        "description": "Validation error",
+                        "description": "Validation error - Request validation failed",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -126,8 +133,8 @@
                                         "data": {
                                             "type": "object",
                                             "example": {
-                                                "email": [
-                                                    "The email has already been taken."
+                                                "field_name": [
+                                                    "Error message"
                                                 ]
                                             }
                                         },
@@ -151,7 +158,7 @@
                     "Auth"
                 ],
                 "summary": "Verify OTP and activate account",
-                "description": "Verify OTP (Activate Parent Account)",
+                "description": "Verify the OTP code sent to the registered email address",
                 "operationId": "verifyOtp",
                 "requestBody": {
                     "required": true,
@@ -165,11 +172,13 @@
                                 "properties": {
                                     "email": {
                                         "type": "string",
+                                        "format": "email",
                                         "example": "parent@test.com"
                                     },
                                     "otp": {
                                         "type": "string",
-                                        "example": "123456"
+                                        "example": "123456",
+                                        "maxLength": 6
                                     }
                                 },
                                 "type": "object"
@@ -196,7 +205,7 @@
                                             "properties": {
                                                 "id": {
                                                     "type": "integer",
-                                                    "example": 7
+                                                    "example": 1
                                                 },
                                                 "name": {
                                                     "type": "string",
@@ -204,18 +213,39 @@
                                                 },
                                                 "email": {
                                                     "type": "string",
-                                                    "example": "parent@test.com"
+                                                    "example": "user@example.com"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "active",
+                                                    "enum": [
+                                                        "active",
+                                                        "inactive",
+                                                        "blocked"
+                                                    ]
+                                                },
+                                                "roles": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "example": [
+                                                        "teacher"
+                                                    ]
                                                 },
                                                 "created_at": {
                                                     "type": "string",
-                                                    "example": "2026-04-16T18:22:02.000000Z"
+                                                    "format": "date-time"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
                                                 }
                                             },
                                             "type": "object"
                                         },
                                         "pagination": {
                                             "type": "object",
-                                            "example": null,
                                             "nullable": true
                                         }
                                     },
@@ -225,7 +255,7 @@
                         }
                     },
                     "422": {
-                        "description": "Invalid OTP",
+                        "description": "Validation error - Request validation failed",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -241,8 +271,8 @@
                                         "data": {
                                             "type": "object",
                                             "example": {
-                                                "otp": [
-                                                    "Invalid or expired OTP."
+                                                "field_name": [
+                                                    "Error message"
                                                 ]
                                             }
                                         },
@@ -265,8 +295,8 @@
                 "tags": [
                     "Auth"
                 ],
-                "summary": "Login using email and password",
-                "description": "Login (Email & Password)",
+                "summary": "Login with email and password",
+                "description": "Authenticate and receive an access token",
                 "operationId": "login",
                 "requestBody": {
                     "required": true,
@@ -280,6 +310,7 @@
                                 "properties": {
                                     "email": {
                                         "type": "string",
+                                        "format": "email",
                                         "example": "admin@test.com"
                                     },
                                     "password": {
@@ -311,7 +342,7 @@
                                             "properties": {
                                                 "access_token": {
                                                     "type": "string",
-                                                    "example": "13|xxxx"
+                                                    "example": "13|xxxxxxxxxxxx"
                                                 },
                                                 "token_type": {
                                                     "type": "string",
@@ -325,21 +356,21 @@
                                                         },
                                                         "name": {
                                                             "type": "string",
-                                                            "example": "Super Admin"
+                                                            "example": "Ahmed Ali"
                                                         },
                                                         "email": {
                                                             "type": "string",
-                                                            "example": "admin@test.com"
+                                                            "example": "user@example.com"
                                                         },
                                                         "created_at": {
                                                             "type": "string",
-                                                            "example": "2026-04-13 11:28:02"
+                                                            "example": "2026-04-13T11:28:02.000000Z"
                                                         },
                                                         "roles": {
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
-                                                                "example": "super_admin"
+                                                                "example": "teacher"
                                                             }
                                                         }
                                                     },
@@ -350,7 +381,6 @@
                                         },
                                         "pagination": {
                                             "type": "object",
-                                            "example": null,
                                             "nullable": true
                                         }
                                     },
@@ -371,7 +401,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Authorization error."
+                                            "example": "EMAIL_NOT_VERIFIED"
                                         },
                                         "data": {
                                             "type": "object",
@@ -379,37 +409,16 @@
                                         },
                                         "pagination": {
                                             "type": "object",
-                                            "example": null,
                                             "nullable": true
                                         }
                                     },
                                     "type": "object"
-                                },
-                                "examples": {
-                                    "email_not_verified": {
-                                        "summary": "Email not verified",
-                                        "value": {
-                                            "status": false,
-                                            "message": "EMAIL_NOT_VERIFIED",
-                                            "data": null,
-                                            "pagination": null
-                                        }
-                                    },
-                                    "account_inactive": {
-                                        "summary": "Account inactive",
-                                        "value": {
-                                            "status": false,
-                                            "message": "ACCOUNT_INACTIVE",
-                                            "data": null,
-                                            "pagination": null
-                                        }
-                                    }
                                 }
                             }
                         }
                     },
                     "422": {
-                        "description": "Invalid credentials",
+                        "description": "Validation error - Request validation failed",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -420,12 +429,15 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Invalid credentials."
+                                            "example": "Validation error."
                                         },
                                         "data": {
                                             "type": "object",
-                                            "example": null,
-                                            "nullable": true
+                                            "example": {
+                                                "field_name": [
+                                                    "Error message"
+                                                ]
+                                            }
                                         },
                                         "pagination": {
                                             "type": "object",
@@ -450,7 +462,6 @@
                     "Auth"
                 ],
                 "summary": "Logout current user",
-                "description": "Logout (Authenticated)",
                 "operationId": "logout",
                 "responses": {
                     "200": {
@@ -473,7 +484,6 @@
                                         },
                                         "pagination": {
                                             "type": "object",
-                                            "example": null,
                                             "nullable": true
                                         }
                                     },
@@ -483,7 +493,7 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthenticated",
+                        "description": "Unauthenticated - Missing or invalid token",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -525,8 +535,8 @@
                 "tags": [
                     "Auth"
                 ],
-                "summary": "Send OTP to email for password reset",
-                "description": "Forgot Password (Send OTP)",
+                "summary": "Send OTP for password reset",
+                "description": "Request password reset. If email exists, an OTP will be sent (for security, always returns success).",
                 "operationId": "forgotPassword",
                 "requestBody": {
                     "required": true,
@@ -539,6 +549,7 @@
                                 "properties": {
                                     "email": {
                                         "type": "string",
+                                        "format": "email",
                                         "example": "admin@test.com"
                                     }
                                 },
@@ -549,7 +560,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Request processed (OTP sent if email exists)",
+                        "description": "Request processed successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -560,7 +571,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "If the email exists, an OTP has been sent."
+                                            "example": "If email exists, OTP has been sent."
                                         },
                                         "data": {
                                             "type": "object",
@@ -568,7 +579,6 @@
                                         },
                                         "pagination": {
                                             "type": "object",
-                                            "example": null,
                                             "nullable": true
                                         }
                                     },
@@ -585,8 +595,7 @@
                 "tags": [
                     "Auth"
                 ],
-                "summary": "Reset password using OTP",
-                "description": "Reset Password using OTP",
+                "summary": "Reset password with OTP",
                 "operationId": "resetPassword",
                 "requestBody": {
                     "required": true,
@@ -602,6 +611,7 @@
                                 "properties": {
                                     "email": {
                                         "type": "string",
+                                        "format": "email",
                                         "example": "admin@test.com"
                                     },
                                     "otp": {
@@ -610,7 +620,8 @@
                                     },
                                     "password": {
                                         "type": "string",
-                                        "example": "newpassword"
+                                        "example": "newpassword",
+                                        "minLength": 8
                                     },
                                     "password_confirmation": {
                                         "type": "string",
@@ -643,7 +654,6 @@
                                         },
                                         "pagination": {
                                             "type": "object",
-                                            "example": null,
                                             "nullable": true
                                         }
                                     },
@@ -653,7 +663,7 @@
                         }
                     },
                     "422": {
-                        "description": "Invalid or expired OTP",
+                        "description": "Validation error - Request validation failed",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -669,8 +679,8 @@
                                         "data": {
                                             "type": "object",
                                             "example": {
-                                                "otp": [
-                                                    "Invalid or expired OTP."
+                                                "field_name": [
+                                                    "Error message"
                                                 ]
                                             }
                                         },
@@ -688,13 +698,522 @@
                 }
             }
         },
+        "/education/halaqat": {
+            "get": {
+                "tags": [
+                    "Education"
+                ],
+                "summary": "List all halaqat: Required Role: **halaqa_supervisor**",
+                "description": "Get paginated list of halaqat. ",
+                "operationId": "getHalaqat",
+                "responses": {
+                    "200": {
+                        "description": "Halaqat retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم جلب الحلقات بنجاح"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/HalaqaResource"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "$ref": "#/components/schemas/Pagination"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Education"
+                ],
+                "summary": "Create new halaqa: Required Role: **halaqa_supervisor**",
+                "operationId": "storeHalaqa",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "capacity"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "حلقة التجويد"
+                                    },
+                                    "teacher_id": {
+                                        "type": "integer",
+                                        "example": 5,
+                                        "nullable": true
+                                    },
+                                    "capacity": {
+                                        "type": "integer",
+                                        "example": 20
+                                    },
+                                    "schedule_days": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "example": [
+                                            "Sunday",
+                                            "Tuesday"
+                                        ]
+                                    },
+                                    "start_time": {
+                                        "type": "string",
+                                        "example": "16:00"
+                                    },
+                                    "end_time": {
+                                        "type": "string",
+                                        "example": "18:00"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "active",
+                                        "enum": [
+                                            "active",
+                                            "inactive"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Halaqa created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم إنشاء الحلقة بنجاح"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/HalaqaResource"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/education/halaqat/{id}": {
+            "get": {
+                "tags": [
+                    "Education"
+                ],
+                "summary": "Get halaqa detailsRequired Role: **halaqa_supervisor**",
+                "operationId": "showHalaqa",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Halaqa details retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم جلب تفاصيل الحلقة"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/HalaqaResource"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Education"
+                ],
+                "summary": "Update halaqa: Required Role: **halaqa_supervisor**",
+                "operationId": "updateHalaqa",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the halaqa to update",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "حلقة التجويد المحدثة"
+                                    },
+                                    "teacher_id": {
+                                        "type": "integer",
+                                        "example": 5,
+                                        "nullable": true
+                                    },
+                                    "capacity": {
+                                        "type": "integer",
+                                        "example": 25
+                                    },
+                                    "schedule_days": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "example": [
+                                            "Monday",
+                                            "Wednesday"
+                                        ]
+                                    },
+                                    "start_time": {
+                                        "type": "string",
+                                        "example": "15:30"
+                                    },
+                                    "end_time": {
+                                        "type": "string",
+                                        "example": "17:30"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "active",
+                                        "enum": [
+                                            "active",
+                                            "inactive"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Halaqa updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم تحديث بيانات الحلقة بنجاح"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/HalaqaResource"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Education"
+                ],
+                "summary": "Delete halaqa: Required Role: **halaqa_supervisor**",
+                "operationId": "deleteHalaqa",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Halaqa deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم حذف الحلقة بنجاح"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {},
+                                            "example": []
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/education/halaqat/{id}/students": {
+            "post": {
+                "tags": [
+                    "Education"
+                ],
+                "summary": "Add students to halaqa: Required Role: **halaqa_supervisor**",
+                "operationId": "attachStudents",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "students": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "example": [
+                                            1,
+                                            2,
+                                            3
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Students added successfully"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/education/halaqat/{id}/students/{studentId}": {
+            "delete": {
+                "tags": [
+                    "Education"
+                ],
+                "summary": "Remove student from halaqa: Required Role: **halaqa_supervisor**",
+                "operationId": "detachStudent",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "studentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Student removed successfully"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/invitations/send": {
             "post": {
                 "tags": [
-                    "Auth"
+                    "Invitations"
                 ],
-                "summary": "Send invitation (only for new emails, no duplicate active invitations)",
-                "description": "Send Invitation",
+                "summary": "Send invitation to user",
+                "description": "Send invitation email. Prevents duplicate active invitations for same email.",
                 "operationId": "sendInvitation",
                 "requestBody": {
                     "required": true,
@@ -708,10 +1227,11 @@
                                 "properties": {
                                     "email": {
                                         "type": "string",
+                                        "format": "email",
                                         "example": "user@test.com"
                                     },
                                     "role": {
-                                        "description": "Available roles: super_admin, mosque_manager, halaqa_supervisor, teacher, parent",
+                                        "description": "User role to assign",
                                         "type": "string",
                                         "example": "teacher",
                                         "enum": [
@@ -744,17 +1264,40 @@
                                             "example": "Invitation sent successfully."
                                         },
                                         "data": {
-                                            "type": "object",
-                                            "example": {
-                                                "id": 1,
-                                                "email": "user@test.com",
-                                                "role": "teacher",
-                                                "token": "abc123"
-                                            }
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "user@example.com"
+                                                },
+                                                "role": {
+                                                    "type": "string",
+                                                    "example": "teacher"
+                                                },
+                                                "token": {
+                                                    "type": "string",
+                                                    "example": "abc123token"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "pending",
+                                                        "accepted",
+                                                        "rejected"
+                                                    ]
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                }
+                                            },
+                                            "type": "object"
                                         },
                                         "pagination": {
                                             "type": "object",
-                                            "example": null,
                                             "nullable": true
                                         }
                                     },
@@ -764,7 +1307,7 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthenticated",
+                        "description": "Unauthenticated - Missing or invalid token",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -794,7 +1337,7 @@
                         }
                     },
                     "422": {
-                        "description": "Validation error",
+                        "description": "Validation error - Request validation failed",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -808,7 +1351,12 @@
                                             "example": "Validation error."
                                         },
                                         "data": {
-                                            "type": "object"
+                                            "type": "object",
+                                            "example": {
+                                                "field_name": [
+                                                    "Error message"
+                                                ]
+                                            }
                                         },
                                         "pagination": {
                                             "type": "object",
@@ -817,47 +1365,6 @@
                                         }
                                     },
                                     "type": "object"
-                                },
-                                "examples": {
-                                    "email_exists": {
-                                        "summary": "User already exists",
-                                        "value": {
-                                            "status": false,
-                                            "message": "Validation error.",
-                                            "data": {
-                                                "email": [
-                                                    "User already exists and has a role."
-                                                ]
-                                            },
-                                            "pagination": null
-                                        }
-                                    },
-                                    "invitation_exists": {
-                                        "summary": "Invitation already exists",
-                                        "value": {
-                                            "status": false,
-                                            "message": "Validation error.",
-                                            "data": {
-                                                "email": [
-                                                    "An active invitation already exists for this email."
-                                                ]
-                                            },
-                                            "pagination": null
-                                        }
-                                    },
-                                    "role_not_allowed": {
-                                        "summary": "Role not allowed",
-                                        "value": {
-                                            "status": false,
-                                            "message": "Validation error.",
-                                            "data": {
-                                                "role": [
-                                                    "You are not allowed to invite this role."
-                                                ]
-                                            },
-                                            "pagination": null
-                                        }
-                                    }
                                 }
                             }
                         }
@@ -873,10 +1380,10 @@
         "/invitations/accept": {
             "post": {
                 "tags": [
-                    "Auth"
+                    "Invitations"
                 ],
-                "summary": "Accept invitation and create account or attach role",
-                "description": "Accept Invitation",
+                "summary": "Accept invitation",
+                "description": "Accept invitation using token. Creates new account or attaches role to existing user.",
                 "operationId": "acceptInvitation",
                 "requestBody": {
                     "required": true,
@@ -892,17 +1399,17 @@
                                         "example": "abc123token"
                                     },
                                     "name": {
-                                        "description": "Required only if user does not exist",
+                                        "description": "Required only if creating new account",
                                         "type": "string",
                                         "example": "Waseem"
                                     },
                                     "password": {
-                                        "description": "Required only if user does not exist",
+                                        "description": "Required only if creating new account",
                                         "type": "string",
                                         "example": "password123"
                                     },
                                     "password_confirmation": {
-                                        "description": "Required only if user does not exist",
+                                        "description": "Required only if creating new account",
                                         "type": "string",
                                         "example": "password123"
                                     }
@@ -937,23 +1444,48 @@
                                                         },
                                                         "name": {
                                                             "type": "string",
-                                                            "example": "Waseem"
+                                                            "example": "Ahmed Ali"
                                                         },
                                                         "email": {
                                                             "type": "string",
-                                                            "example": "user@test.com"
+                                                            "example": "user@example.com"
                                                         },
                                                         "status": {
                                                             "type": "string",
-                                                            "example": "active"
+                                                            "example": "active",
+                                                            "enum": [
+                                                                "active",
+                                                                "inactive",
+                                                                "blocked"
+                                                            ]
+                                                        },
+                                                        "roles": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            },
+                                                            "example": [
+                                                                "teacher"
+                                                            ]
+                                                        },
+                                                        "created_at": {
+                                                            "type": "string",
+                                                            "format": "date-time"
+                                                        },
+                                                        "updated_at": {
+                                                            "type": "string",
+                                                            "format": "date-time"
                                                         }
                                                     },
                                                     "type": "object"
                                                 },
                                                 "user_status": {
-                                                    "description": "new or existing",
                                                     "type": "string",
-                                                    "example": "new"
+                                                    "example": "new",
+                                                    "enum": [
+                                                        "new",
+                                                        "existing"
+                                                    ]
                                                 },
                                                 "roles_added": {
                                                     "type": "array",
@@ -969,7 +1501,6 @@
                                         },
                                         "pagination": {
                                             "type": "object",
-                                            "example": null,
                                             "nullable": true
                                         }
                                     },
@@ -979,7 +1510,7 @@
                         }
                     },
                     "422": {
-                        "description": "Invalid or expired invitation",
+                        "description": "Validation error - Request validation failed",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -995,8 +1526,8 @@
                                         "data": {
                                             "type": "object",
                                             "example": {
-                                                "token": [
-                                                    "Invalid or expired invitation"
+                                                "field_name": [
+                                                    "Error message"
                                                 ]
                                             }
                                         },
@@ -1016,19 +1547,265 @@
         }
     },
     "components": {
+        "schemas": {
+            "Pagination": {
+                "properties": {
+                    "current_page": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "last_page": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "per_page": {
+                        "type": "integer",
+                        "example": 10
+                    },
+                    "total": {
+                        "type": "integer",
+                        "example": 50
+                    },
+                    "has_more_pages": {
+                        "type": "boolean",
+                        "example": true
+                    }
+                },
+                "type": "object"
+            },
+            "HalaqaResource": {
+                "properties": {
+                    "id": {
+                        "description": "Reusable API Schema Definitions",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "حلقة التحفيظ - المستوى الأول"
+                    },
+                    "schedule_days": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "sunday",
+                            "tuesday",
+                            "thursday"
+                        ]
+                    },
+                    "start_time": {
+                        "type": "string",
+                        "example": "16:00:00"
+                    },
+                    "end_time": {
+                        "type": "string",
+                        "example": "18:00:00"
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "active"
+                    },
+                    "capacity": {
+                        "type": "integer",
+                        "example": 10
+                    },
+                    "teacher": {
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 4
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "Teacher"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "students_count": {
+                        "type": "integer",
+                        "example": 5
+                    }
+                },
+                "type": "object"
+            },
+            "ErrorResponse": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Error message here"
+                    },
+                    "data": {
+                        "type": "object",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "pagination": {
+                        "type": "object",
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "responses": {
+            "Unauthenticated": {
+                "description": "Unauthenticated - Missing or invalid token",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "properties": {
+                                "status": {
+                                    "description": "MMS API Documentation - OpenAPI/Swagger Configuration",
+                                    "type": "boolean",
+                                    "example": false
+                                },
+                                "message": {
+                                    "type": "string",
+                                    "example": "Unauthenticated."
+                                },
+                                "data": {
+                                    "type": "object",
+                                    "example": null,
+                                    "nullable": true
+                                },
+                                "pagination": {
+                                    "type": "object",
+                                    "example": null,
+                                    "nullable": true
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "Forbidden": {
+                "description": "Forbidden - Insufficient permissions",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "properties": {
+                                "status": {
+                                    "type": "boolean",
+                                    "example": false
+                                },
+                                "message": {
+                                    "type": "string",
+                                    "example": "Access denied. Your role does not allow this action."
+                                },
+                                "data": {
+                                    "type": "object",
+                                    "example": null,
+                                    "nullable": true
+                                },
+                                "pagination": {
+                                    "type": "object",
+                                    "example": null,
+                                    "nullable": true
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "NotFound": {
+                "description": "Resource not found",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "properties": {
+                                "status": {
+                                    "type": "boolean",
+                                    "example": false
+                                },
+                                "message": {
+                                    "type": "string",
+                                    "example": "Resource not found."
+                                },
+                                "data": {
+                                    "type": "object",
+                                    "example": null,
+                                    "nullable": true
+                                },
+                                "pagination": {
+                                    "type": "object",
+                                    "example": null,
+                                    "nullable": true
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "ValidationError": {
+                "description": "Validation failed",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "properties": {
+                                "status": {
+                                    "type": "boolean",
+                                    "example": false
+                                },
+                                "message": {
+                                    "type": "string",
+                                    "example": "Validation error."
+                                },
+                                "data": {
+                                    "type": "object",
+                                    "example": {
+                                        "field": [
+                                            "Error details"
+                                        ]
+                                    }
+                                },
+                                "pagination": {
+                                    "type": "object",
+                                    "example": null,
+                                    "nullable": true
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
         "securitySchemes": {
             "bearerAuth": {
                 "type": "http",
-                "description": "Enter your Bearer token",
-                "bearerFormat": "Token",
-                "scheme": "bearer"
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
             }
         }
     },
     "tags": [
         {
             "name": "Auth",
-            "description": "Authentication endpoints."
+            "description": "Auth"
+        },
+        {
+            "name": "Education",
+            "description": "Education"
+        },
+        {
+            "name": "Invitations",
+            "description": "Invitations"
+        }
+    ],
+    "security": [
+        {
+            "bearerAuth": []
         }
     ]
 }
