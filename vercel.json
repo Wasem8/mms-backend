@@ -1,5 +1,7 @@
 {
     "version": 2,
+
+    "framework": null,
     "functions": {
         "api/index.php": {
             "runtime": "vercel-php@0.9.0"
@@ -14,9 +16,19 @@
     "env": {
         "APP_ENV": "production",
         "APP_DEBUG": "true",
+    "routes": [
+        {
+            "src": "/(.*)",
+            "dest": "/api/index.php"
+        }
+    ],
+    "env": {
+        "APP_ENV": "production",
+        "APP_DEBUG": "false",
         "LOG_CHANNEL": "stderr",
         "CACHE_DRIVER": "array",
         "SESSION_DRIVER": "cookie",
         "QUEUE_CONNECTION": "sync"
     }
+}
 }
