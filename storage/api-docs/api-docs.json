@@ -1013,22 +1013,4 @@
                     }
                 }
             }
-        }
-    },
-    "components": {
-        "securitySchemes": {
-            "bearerAuth": {
-                "type": "http",
-                "description": "Enter your Bearer token",
-                "bearerFormat": "Token",
-                "scheme": "bearer"
-            }
-        }
-    },
-    "tags": [
-        {
-            "name": "Auth",
-            "description": "Authentication endpoints."
-        }
-    ]
-}
+        },
