@@ -4,6 +4,10 @@ namespace Modules\Mosque\Providers;
 
 use Nwidart\Modules\Support\ModuleServiceProvider;
 use Illuminate\Console\Scheduling\Schedule;
+use Modules\Mosque\Repositories\FacilityRepository;
+use Modules\Mosque\Repositories\FacilityRepositoryInterface;
+use Modules\Mosque\Repositories\MosqueRepository;
+use Modules\Mosque\Repositories\MosqueRepositoryInterface;
 
 class MosqueServiceProvider extends ModuleServiceProvider
 {
@@ -34,9 +38,20 @@ class MosqueServiceProvider extends ModuleServiceProvider
         RouteServiceProvider::class,
     ];
 
+    public function register(): void
+    {
+        $this->app->bind(
+            MosqueRepositoryInterface::class,
+            MosqueRepository::class,
+        );
+        $this->app->bind(
+            FacilityRepositoryInterface::class,
+            FacilityRepository::class
+        );
+    }
     /**
      * Define module schedules.
-     * 
+     *
      * @param $schedule
      */
     // protected function configureSchedules(Schedule $schedule): void

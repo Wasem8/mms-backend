@@ -1,14 +1,29 @@
 <?php
 
-namespace Modules\Facility\Repositories\Facilites;
+namespace Modules\Mosque\Repositories;
 
 use Illuminate\Support\Collection;
-use Modules\Facility\Models\Facility;
 use Modules\Mosque\Models\Facility as ModelsFacility;
 use Modules\Mosque\Models\Mosque;
 
 class FacilityRepository implements FacilityRepositoryInterface
 {
+
+    public function create(array $data): ModelsFacility
+    {
+        return ModelsFacility::create($data);
+    }
+
+    public function update(ModelsFacility $facility, array $data): ModelsFacility
+    {
+        $facility->update($data);
+        return $facility->fresh();
+    }
+
+    public function delete(ModelsFacility $facility): void
+    {
+        $facility->delete();
+    }
     public function getAll(): Collection
     {
         return ModelsFacility::all();

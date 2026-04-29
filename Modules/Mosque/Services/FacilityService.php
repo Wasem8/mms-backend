@@ -1,19 +1,36 @@
 <?php
 
-namespace Modules\Facility\Services;
+namespace Modules\Mosque\Services;
 
-use Modules\Facility\Repositories\Facilites\FacilityRepositoryInterface;
+use Illuminate\Support\Facades\DB;
+use Modules\Mosque\Models\Facility;
 use Modules\Mosque\Models\Mosque;
+use Modules\Mosque\Repositories\FacilityRepositoryInterface as FacilitesFacilityRepositoryInterface;
 
 class FacilityService
 {
     public function __construct(
-        private readonly FacilityRepositoryInterface $facilityRepository
+        private readonly FacilitesFacilityRepositoryInterface $facilityRepository
     ) {}
+
+    public function createFacility(array $data): Facility
+    {
+            return  $this->facilityRepository->create($data);
+    }
+
+    public function updateFacility(Facility $facility, array $data): Facility
+    {
+        return $this->facilityRepository->update($facility, $data);
+    }
+
+    public function deleteFacility(Facility $facility): void
+    {
+        $this->facilityRepository->delete($facility);
+    }
 
     public function getAllFacilities()
     {
-        return $this->facilityRepository->getAll();
+        return $this->facilityRepository->getAll('id', 'name');
     }
 
     public function getFacilitiesByMosque(int $mosqueId)
@@ -25,14 +42,13 @@ class FacilityService
     {
         $this->facilityRepository->syncToMosque($mosque, $facilityIds);
     }
-
-    public function addFacilitiesToMosque(Mosque $mosque, array $facilityIds): void
+    public function attachFacilitiesToMosque(Mosque $mosque, array $facilityIds): void
     {
         $this->facilityRepository->attachToMosque($mosque, $facilityIds);
     }
-
-    public function removeFacilitiesFromMosque(Mosque $mosque, ?array $facilityIds = null): void
+    public function detachFacilitiesFromMosque(Mosque $mosque, array $facilityIds): void
     {
-        $this->facilityRepository->detachFromMosque($mosque, $facilityIds);
+        $mosque->facilities()->detach($facilityIds);
     }
+
 }

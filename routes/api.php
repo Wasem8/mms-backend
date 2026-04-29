@@ -4,7 +4,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 
-foreach (glob(__DIR__ . '/mms/*.php') as $routeFile) {
+foreach (glob(base_path('Modules/*/routes/api.php')) as $routeFile) {
     require $routeFile;
 }
 

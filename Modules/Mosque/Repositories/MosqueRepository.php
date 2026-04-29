@@ -41,6 +41,14 @@ class MosqueRepository implements MosqueRepositoryInterface
     }
 
 
+    public function searchMosques(string $query, array $filters = [], int $perPage = 15): LengthAwarePaginator
+    {
+        $searchFilters = array_merge($filters, ['search' => $query]);
+
+        return $this->getAllPaginated($searchFilters, $perPage);
+    }
+
+
     public function findById(int $id, array $relations = []): ?Mosque
     {
         $query = $this->model->newQuery();
