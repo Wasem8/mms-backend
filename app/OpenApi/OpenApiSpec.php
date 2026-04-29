@@ -707,7 +707,7 @@ class OpenApiSpec
     )]
     public function acceptInvitation() {}
 }
-
+/*
 class MosqueSpec
 {
     // ==========================================
@@ -773,9 +773,7 @@ class MosqueSpec
     // PROTECTED MOSQUE ENDPOINTS (Auth Required)
     // ==========================================
 
-    /**
-     * إنشاء مسجد جديد
-     */
+
     #[OA\Post(
         path: '/mosques',
         operationId: 'storeMosque',
@@ -812,9 +810,7 @@ class MosqueSpec
     )]
     public function store() {}
 
-    /**
-     * تحديث بيانات المسجد
-     */
+
     #[OA\Put(
         path: '/mosques/{mosque}',
         operationId: 'updateMosque',
@@ -1030,4 +1026,6 @@ class MosqueSpec
         ]
     )]
     public function detachFacility() {}
+
 }
+*/
