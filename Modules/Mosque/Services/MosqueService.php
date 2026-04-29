@@ -4,7 +4,7 @@ namespace Modules\Mosque\Services;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
-use Modules\Facility\Services\FacilityService;
+use Modules\Mosque\Services\FacilityService;
 use Modules\Mosque\Models\Mosque;
 use Modules\Mosque\Repositories\MosqueRepositoryInterface;
 
@@ -20,11 +20,16 @@ class MosqueService
         return $this->mosqueRepository->getAllPaginated($filters, $perPage);
     }
 
+    public function searchMosques(string $query, array $filters = [], int $perPage = 15): LengthAwarePaginator
+    {
+        return $this->mosqueRepository->searchMosques($query, $filters, $perPage);
+    }
+
     public function getMosqueById(int $id): ?Mosque
     {
         return $this->mosqueRepository->findById($id, [
             'facilities',
-            'manager:id,name,email,phone',
+            'manager:id,name,email',
         ]);
     }
 
@@ -40,7 +45,6 @@ class MosqueService
 
             $mosque = $this->mosqueRepository->create($data);
 
-            // 🔥 Delegation to FacilityService (important separation)
             if (!empty($facilityIds)) {
                 $this->facilityService->syncMosqueFacilities($mosque, $facilityIds);
             }
@@ -58,7 +62,6 @@ class MosqueService
 
             $this->mosqueRepository->update($mosque, $data);
 
-            // 🔥 Only delegate, no DB logic here
             if ($facilityIds !== null) {
                 $this->facilityService->syncMosqueFacilities($mosque, $facilityIds);
             }
@@ -67,14 +70,12 @@ class MosqueService
         });
     }
 
-    public function deleteMosque(Mosque $mosque): bool
+    public function deleteMosque(Mosque $mosque): void
     {
-        return DB::transaction(function () use ($mosque) {
+        DB::transaction(function () use ($mosque) {
+            $mosque->facilities()->detach();
 
-            // 🔥 delete relationship handled in FacilityService
-            $this->facilityService->removeFacilitiesFromMosque($mosque);
-
-            return $this->mosqueRepository->delete($mosque);
+            $this->mosqueRepository->delete($mosque);
         });
     }
 

@@ -3,6 +3,7 @@
 namespace Modules\Mosque\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class StoreMosqueRequest extends FormRequest
@@ -22,9 +23,21 @@ class StoreMosqueRequest extends FormRequest
             'district' => ['required', 'string', 'max:100'],
             'latitude' => ['required', 'numeric', 'decimal:0,8', 'between:-90,90'],
             'longitude' => ['required', 'numeric', 'decimal:0,8', 'between:-180,180'],
+            'manager_id' => [
+                'required',
+                'integer',
+                Rule::exists('users', 'id')->where(function ($query) {
+                    $query->whereExists(function ($subquery) {
+                        $subquery->select(DB::raw('1'))
+                            ->from('role_user')
+                            ->join('roles', 'roles.id', '=', 'role_user.role_id')
+                            ->whereColumn('role_user.user_id', 'users.id')
+                            ->where('roles.name', 'mosque_manager');
+                    });
+                }),
+            ],
             'imam' => ['nullable', 'string'],
             'khatib' => ['nullable', 'string'],
-            'manager_id' => ['nullable', 'integer', 'exists:users,id'],
             'facility_ids' => ['nullable', 'array'],
             'facility_ids.*' => ['required', 'integer', 'exists:facilities,id'],
         ];

@@ -46,9 +46,10 @@ class MosqueController extends Controller
 
     public function store(StoreMosqueRequest $request)
     {
-        $mosque = $this->mosqueService->createMosque(
-            $request->validated()
-        );
+        $data = $request->validated();
+
+
+        $mosque = $this->mosqueService->createMosque($data);
 
         return ApiResponse::success(
             $mosque,
@@ -100,6 +101,26 @@ class MosqueController extends Controller
         );
     }
 
+    public function search(Request $request)
+    {
+        $validated = $request->validate([
+            'q' => ['required', 'string', 'min:1'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $data = $this->mosqueService->searchMosques(
+            $validated['q'],
+            $request->except(['q', 'per_page']),
+            (int) $request->get('per_page', 15)
+        );
+
+        return ApiResponse::success(
+            $data->items(),
+            'Search results retrieved successfully',
+            ApiResponse::pagination($data)
+        );
+    }
+
     // -------------------------
     // TOGGLE FEATURED
     // -------------------------
@@ -111,7 +132,7 @@ class MosqueController extends Controller
         );
     }
 
-   
+
     public function updateStatus(Request $request, Mosque $mosque)
     {
         $validated = $request->validate([
