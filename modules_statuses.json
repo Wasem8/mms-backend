@@ -1,0 +1,6 @@
+{
+    "Auth": true,
+    "User": true,
+    "Invitation": true,
+    "Mosque": true
+}

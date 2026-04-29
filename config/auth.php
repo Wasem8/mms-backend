@@ -1,6 +1,7 @@
 <?php
 
-use App\Models\User;
+
+use Modules\User\Models\User;
 
 return [
 
@@ -42,8 +43,12 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
-    ],
 
+        'api' => [
+            'driver' => 'sanctum',
+            'provider' => 'users',
+        ],
+    ],
     /*
     |--------------------------------------------------------------------------
     | User Providers
