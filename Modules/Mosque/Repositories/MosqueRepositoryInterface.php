@@ -17,6 +17,9 @@ interface MosqueRepositoryInterface
     public function getAll(array $filters = []): Collection;
 
 
+    public function searchMosques(string $query, array $filters = [], int $perPage = 15): LengthAwarePaginator;
+
+
     public function findById(int $id, array $relations = []): ?Mosque;
 
 

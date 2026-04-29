@@ -19,7 +19,7 @@ class Mosque extends Model
 
     protected $fillable = [
         'name',
-        'cover_image',
+        'image',
         'working_hours',
         'status',
         'is_featured',
