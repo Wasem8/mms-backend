@@ -4,120 +4,116 @@ namespace App\OpenApi;
 
 use OpenApi\Attributes as OA;
 
+/**
+ * MMS API Documentation - OpenAPI/Swagger Configuration
+ */
 #[OA\Info(
     title: 'MMS API Documentation',
     version: "1.0.0",
-    description: 'API documentation for Mosque Management System (MMS)'
+    description: 'API documentation for Mosque Management System (MMS)',
+    contact: new OA\Contact(
+        name: 'API Support',
+        email: 'support@example.com',
+        url: 'https://mms-support.example.com'
+    ),
+    license: new OA\License(
+        name: 'MIT',
+        identifier: 'MIT'
+    )
 )]
 #[OA\Server(
-    url: '/api',
-    description: 'Main API Server'
+    url: 'http://localhost:8000/api',
+    description: 'Local Development Server'
 )]
-#[OA\Tag(name: 'Auth', description: 'Authentication endpoints including OTP login and Join Requests')]
+#[OA\Server(
+    url: 'https://mms-backend-rose.vercel.app/api',
+    description: 'Production API Server'
+)]
 
+// ========== SECURITY SCHEMES ==========
 #[OA\SecurityScheme(
     securityScheme: 'bearerAuth',
     type: 'http',
     scheme: 'bearer',
-    bearerFormat: 'JWT',
-    description: 'Enter your Bearer token to access protected endpoints'
+    bearerFormat: 'Token',
+    description: 'Enter your Bearer token'
 )]
+
+// ========== GLOBAL COMPONENTS (Responses & Schemas) ==========
+#[OA\Components(
+    responses: [
+        // استجابة 401: غير مسجل دخول
+        'Unauthenticated' => new OA\Response(
+            response: 'Unauthenticated',
+            description: 'Unauthenticated - Missing or invalid token',
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'status', type: 'boolean', example: false),
+                    new OA\Property(property: 'message', type: 'string', example: 'Unauthenticated.'),
+                    new OA\Property(property: 'data', type: 'object', nullable: true, example: null),
+                    new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
+                ]
+            )
+        ),
+
+        // استجابة 403: صلاحيات غير كافية (التي طلبتها)
+        'Forbidden' => new OA\Response(
+            response: 'Forbidden',
+            description: 'Forbidden - Insufficient permissions',
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'status', type: 'boolean', example: false),
+                    new OA\Property(property: 'message', type: 'string', example: 'Access denied. Your role does not allow this action.'),
+                    new OA\Property(property: 'data', type: 'object', nullable: true, example: null),
+                    new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
+                ]
+            )
+        ),
+
+        // استجابة 404: مورد غير موجود
+        'NotFound' => new OA\Response(
+            response: 'NotFound',
+            description: 'Resource not found',
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'status', type: 'boolean', example: false),
+                    new OA\Property(property: 'message', type: 'string', example: 'Resource not found.'),
+                    new OA\Property(property: 'data', type: 'object', nullable: true, example: null),
+                    new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
+                ]
+            )
+        ),
+
+        // استجابة 422: خطأ في التحقق من البيانات
+        'ValidationError' => new OA\Response(
+            response: 'ValidationError',
+            description: 'Validation failed',
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'status', type: 'boolean', example: false),
+                    new OA\Property(property: 'message', type: 'string', example: 'Validation error.'),
+                    new OA\Property(property: 'data', type: 'object', example: ["field" => ["Error details"]]),
+                    new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
+                ]
+            )
+        )
+    ],
+    schemas: [
+        // تعريف الـ Pagination لكي يعمل ref: '#/components/schemas/Pagination'
+        'Pagination' => new OA\Schema(
+            schema: 'Pagination',
+            properties: [
+                new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                new OA\Property(property: 'last_page', type: 'integer', example: 5),
+                new OA\Property(property: 'per_page', type: 'integer', example: 10),
+                new OA\Property(property: 'total', type: 'integer', example: 50),
+                new OA\Property(property: 'has_more_pages', type: 'boolean', example: true),
+            ]
+        )
+    ]
+)]
+
 class OpenApiSpec
 {
-    /**
-     * Join Request (Public)
-     */
-    #[OA\Post(
-        path: '/auth/join-request',
-        operationId: 'submitJoinRequest',
-        tags: ['Auth'],
-        summary: 'Submit a new student registration request',
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(
-                required: ['name', 'email', 'password', 'password_confirmation', 'age', 'grade', 'parent_phone'],
-                properties: [
-                    new OA\Property(property: 'name', type: 'string', example: 'Ahmed Mohamed'),
-                    new OA\Property(property: 'email', type: 'string', example: 'ahmed@example.com'),
-                    new OA\Property(property: 'password', type: 'string', example: 'password123'),
-                    new OA\Property(property: 'password_confirmation', type: 'string', example: 'password123'),
-                    new OA\Property(property: 'age', type: 'integer', example: 12),
-                    new OA\Property(property: 'grade', type: 'string', example: '6th Grade'),
-                    new OA\Property(property: 'parent_phone', type: 'string', example: '0501234567'),
-                ]
-            )
-        ),
-        responses: [
-            new OA\Response(response: 200, description: 'Request submitted successfully'),
-            new OA\Response(response: 422, description: 'Validation Error')
-        ]
-    )]
-    public function submitJoinRequest() {}
-
-
-    /**
-     * Login (Request OTP)
-     */
-    #[OA\Post(
-        path: '/auth/login',
-        operationId: 'login',
-        tags: ['Auth'],
-        summary: 'Login and send OTP to email',
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(
-                required: ['email', 'password'],
-                properties: [
-                    new OA\Property(property: 'email', type: 'string', example: 'wasem8115@gmail.com'),
-                    new OA\Property(property: 'password', type: 'string', example: 'password123'),
-                ]
-            )
-        ),
-        responses: [
-            new OA\Response(response: 200, description: 'OTP sent to email'),
-            new OA\Response(response: 422, description: 'Validation Error (Returns JSON because of Accept header)')
-        ]
-    )]
-    public function login() {}
-
-    /**
-     * Verify OTP
-     */
-    #[OA\Post(
-        path: '/auth/verify-otp',
-        operationId: 'verifyOtp',
-        tags: ['Auth'],
-        summary: 'Verify OTP and get Access Token',
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(
-                required: ['email', 'otp'],
-                properties: [
-                    new OA\Property(property: 'email', type: 'string', example: 'wasem8115@gmail.com'),
-                    new OA\Property(property: 'otp', type: 'string', example: '726437'),
-                ]
-            )
-        ),
-        responses: [
-            new OA\Response(response: 200, description: 'Login successful'),
-            new OA\Response(response: 422, description: 'Invalid or expired OTP')
-        ]
-    )]
-    public function verifyOtp() {}
-
-    /**
-     * Logout (Authenticated)
-     */
-    #[OA\Post(
-        path: '/auth/logout',
-        operationId: 'logout',
-        tags: ['Auth'],
-        summary: 'Logout current user',
-        security: [['bearerAuth' => []]], // ربط تلقائي بالتوكن المحفوظ
-        responses: [
-            new OA\Response(response: 200, description: 'Success'),
-            new OA\Response(response: 401, description: 'Unauthenticated')
-        ]
-    )]
-    public function logout() {}
 }
+
