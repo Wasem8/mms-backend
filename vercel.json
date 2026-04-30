@@ -2,13 +2,20 @@
     "version": 2,
     "functions": { "api/index.php": { "runtime": "vercel-php@0.9.0" } },
     "routes": [
-        { "src": "/api/(.*)", "dest": "/api/index.php" },
-        { "src": "/build/(.*)", "dest": "/public/build/$1" },
+        {
+            "src": "/api/(.*)",
+            "headers": {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+                "Access-Control-Allow-Headers": "Authorization, Content-Type, Accept"
+            },
+            "dest": "/api/index.php"
+        },
         { "src": "/(.*)", "dest": "/api/index.php" }
     ],
     "env": {
         "APP_ENV": "production",
-        "APP_DEBUG": "true",
+        "APP_DEBUG": "false",
         "LOG_CHANNEL": "stderr",
         "CACHE_DRIVER": "array"
     }
