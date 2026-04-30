@@ -19,7 +19,7 @@
             "description": "Local Development Server"
         },
         {
-            "url": "https://api.mms-system.com",
+            "url": "https://mms-backend-rose.vercel.app/api",
             "description": "Production API Server"
         }
     ],
@@ -771,7 +771,7 @@
                                     },
                                     "teacher_id": {
                                         "type": "integer",
-                                        "example": 5,
+                                        "example": 4,
                                         "nullable": true
                                     },
                                     "capacity": {
@@ -890,7 +890,54 @@
                                             "example": "تم جلب تفاصيل الحلقة"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/HalaqaResource"
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/HalaqaResource"
+                                                },
+                                                {
+                                                    "properties": {
+                                                        "students": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": 1
+                                                                    },
+                                                                    "first_name": {
+                                                                        "type": "string",
+                                                                        "example": "Student"
+                                                                    },
+                                                                    "last_name": {
+                                                                        "type": "string",
+                                                                        "example": "1"
+                                                                    },
+                                                                    "parent_name": {
+                                                                        "type": "string",
+                                                                        "example": null,
+                                                                        "nullable": true
+                                                                    },
+                                                                    "email": {
+                                                                        "type": "string",
+                                                                        "example": "student1@test.com"
+                                                                    },
+                                                                    "phone": {
+                                                                        "type": "string",
+                                                                        "example": null,
+                                                                        "nullable": true
+                                                                    },
+                                                                    "status": {
+                                                                        "type": "string",
+                                                                        "example": "active"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            ]
                                         },
                                         "pagination": {
                                             "type": "object",
@@ -1544,6 +1591,347 @@
                     }
                 }
             }
+        },
+        "/education/students": {
+            "get": {
+                "tags": [
+                    "Students"
+                ],
+                "summary": "عرض قائمة الطلاب",
+                "description": "يعيد قائمة الطلاب المفلترة: المشرف يرى طلاب مسجده، وولي الأمر يرى أبناءه.",
+                "operationId": "listStudents",
+                "responses": {
+                    "200": {
+                        "description": "تم جلب القائمة بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم استعادة قائمة الطلاب بنجاح."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/StudentResource"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "$ref": "#/components/schemas/Pagination"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Students"
+                ],
+                "summary": "تسجيل طالب جديد (من قبل ولي الأمر)",
+                "description": "يسمح لولي الأمر بتسجيل ابنه في النظام مع تحديد المسجد المراد الالتحاق به. يتم إنشاء الحساب بحالة (غير نشط) حتى موافقة المشرف.",
+                "operationId": "storeStudent",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "first_name",
+                                    "gender",
+                                    "mosque_id"
+                                ],
+                                "properties": {
+                                    "first_name": {
+                                        "description": "الاسم الأول للطالب",
+                                        "type": "string",
+                                        "example": "أحمد"
+                                    },
+                                    "last_name": {
+                                        "description": "اسم العائلة",
+                                        "type": "string",
+                                        "example": "محمد"
+                                    },
+                                    "mosque_id": {
+                                        "description": "معرف المسجد المراد التسجيل فيه",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "date_of_birth": {
+                                        "description": "تاريخ الميلاد",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2015-05-15"
+                                    },
+                                    "gender": {
+                                        "description": "الجنس",
+                                        "type": "string",
+                                        "example": "male",
+                                        "enum": [
+                                            "male",
+                                            "female"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "تم تسجيل الطلب بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم تسجيل بيانات الطالب بنجاح، يرجى انتظار موافقة مشرف الحلقات لتفعيل الحساب."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/StudentResource"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/education/students/{id}": {
+            "get": {
+                "tags": [
+                    "Education"
+                ],
+                "summary": "تفاصيل الطالب",
+                "operationId": "showStudent",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "بيانات الطالب",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم جلب بيانات الطالب بنجاح."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/StudentResource"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Education",
+                    "Role: halaqa_supervisor"
+                ],
+                "summary": "[Supervisor] تحديث بيانات الطالب",
+                "operationId": "updateStudent",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "first_name": {
+                                        "type": "string",
+                                        "example": "أحمد المعدل"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "inactive",
+                                        "enum": [
+                                            "active",
+                                            "inactive"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "تم التحديث",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم تحديث بيانات الطالب بنجاح."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/StudentResource"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Education",
+                    "Role: halaqa_supervisor"
+                ],
+                "summary": "[Supervisor] حذف طالب",
+                "operationId": "deleteStudent",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم الحذف",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم حذف سجل الطالب بنجاح."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {},
+                                            "example": []
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -1624,9 +2012,78 @@
                         },
                         "type": "object"
                     },
+                    "mosque": {
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 2
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "جامع الراجحي الكبير"
+                            }
+                        },
+                        "type": "object"
+                    },
                     "students_count": {
                         "type": "integer",
                         "example": 5
+                    }
+                },
+                "type": "object"
+            },
+            "StudentResource": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 20
+                    },
+                    "first_name": {
+                        "type": "string",
+                        "example": "أحمد"
+                    },
+                    "last_name": {
+                        "type": "string",
+                        "example": "محمد"
+                    },
+                    "parent": {
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 5
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "Parent"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "mosque": {
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 1
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "جامع الراجحي الكبير"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "date_of_birth": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2015-05-15"
+                    },
+                    "gender": {
+                        "type": "string",
+                        "example": "male"
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "inactive"
                     }
                 },
                 "type": "object"
@@ -1801,6 +2258,14 @@
         {
             "name": "Invitations",
             "description": "Invitations"
+        },
+        {
+            "name": "Students",
+            "description": "Students"
+        },
+        {
+            "name": "Role: halaqa_supervisor",
+            "description": "Role: halaqa_supervisor"
         }
     ],
     "security": [

@@ -22,7 +22,13 @@ class HalaqaResource extends JsonResource
                 'name' => $this->teacher?->name,
             ],
 
+            'mosque' => [
+                'id' => $this->mosque?->id,
+                'name' => $this->mosque?->name,
+            ],
+
             'students_count' => $this->students()->count(),
+            'students' => StudentResource::collection($this->whenLoaded('students')),
         ];
     }
 }

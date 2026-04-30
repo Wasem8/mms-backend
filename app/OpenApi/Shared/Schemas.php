@@ -30,10 +30,45 @@ use OpenApi\Attributes as OA;
                 new OA\Property(property: 'name', type: 'string', example: 'Teacher')
             ]
         ),
+        new OA\Property(
+            property: 'mosque',
+            type: 'object',
+            properties: [
+                new OA\Property(property: 'id', type: 'integer', example: 2),
+                new OA\Property(property: 'name', type: 'string', example: 'جامع الراجحي الكبير')
+            ]
+        ),
         new OA\Property(property: 'students_count', type: 'integer', example: 5),
     ]
 )]
 
+#[OA\Schema(
+    schema: 'StudentResource',
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 20),
+        new OA\Property(property: 'first_name', type: 'string', example: 'أحمد'),
+        new OA\Property(property: 'last_name', type: 'string', example: 'محمد'),
+        new OA\Property(
+            property: 'parent',
+            type: 'object',
+            properties: [
+                new OA\Property(property: 'id', type: 'integer', example: 5),
+                new OA\Property(property: 'name', type: 'string', example: 'Parent')
+            ]
+        ),
+        new OA\Property(
+            property: 'mosque',
+            type: 'object',
+            properties: [
+                new OA\Property(property: 'id', type: 'integer', example: 1),
+                new OA\Property(property: 'name', type: 'string', example: 'جامع الراجحي الكبير')
+            ]
+        ),
+        new OA\Property(property: 'date_of_birth', type: 'string', format: 'date', example: '2015-05-15'),
+        new OA\Property(property: 'gender', type: 'string', example: 'male'),
+        new OA\Property(property: 'status', type: 'string', example: 'inactive'),
+    ]
+)]
 
 // هيكل رد الخطأ الموحد الذي طلبته
 #[OA\Schema(

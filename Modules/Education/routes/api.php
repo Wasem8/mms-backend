@@ -14,10 +14,15 @@ Route::prefix('education')->group(function () {
     });
 
 
+    Route::middleware(['auth:sanctum', 'role:parent'])->group(function () {
+        Route::apiResource('students', StudentController::class);
+
+    });
+
     Route::post('halaqat/{id}/students', [HalaqaController::class, 'attachStudents']);
     Route::delete('halaqat/{id}/students/{studentId}', [HalaqaController::class, 'detachStudent']);
 
-    Route::apiResource('students', StudentController::class);
+
 
     Route::post('attendance', [AttendanceController::class, 'store']);
     Route::get('attendance', [AttendanceController::class, 'index']);

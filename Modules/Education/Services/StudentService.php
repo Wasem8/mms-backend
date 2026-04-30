@@ -8,17 +8,43 @@ class StudentService
 {
     public function list()
     {
-        return Student::latest()->get();
+        $user = auth()->user();
+        $query = Student::query()->with(['mosque', 'parent']);
+
+        if ($user->isSupervisor()) {
+            $query->where('mosque_id', $user->mosque_id);
+        } elseif ($user->isParent()) {
+            $query->where('parent_id', $user->id);
+        }
+
+
+        return $query->latest()->paginate(10);
     }
 
     public function create(array $data)
     {
-        return Student::create($data);
+        $data['parent_id'] = auth()->id();
+        $data['status'] = 'inactive';
+
+        $student = Student::create($data);
+
+        // تحميل علاقة المسجد ليتعرف عليها الـ Resource
+        return $student->load(['mosque', 'parent']);
     }
 
     public function find($id)
     {
-        return Student::with('halaqat')->findOrFail($id);
+        $user = auth()->user();
+
+        $query = Student::with(['mosque', 'parent', 'halaqat']);
+
+        if ($user->isSupervisor()) {
+            $query->where('mosque_id', $user->mosque_id);
+        } elseif ($user->isParent()) {
+            $query->where('parent_id', $user->id);
+        }
+
+        return $query->findOrFail($id);
     }
 
     public function update($id, array $data)

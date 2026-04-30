@@ -26,7 +26,7 @@ use OpenApi\Attributes as OA;
     description: 'Local Development Server'
 )]
 #[OA\Server(
-    url: 'https://api.mms-system.com',
+    url: 'https://mms-backend-rose.vercel.app/api',
     description: 'Production API Server'
 )]
 
