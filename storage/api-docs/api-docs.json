@@ -1592,6 +1592,2370 @@
                 }
             }
         },
+        "/mosques": {
+            "get": {
+                "tags": [
+                    "Mosques"
+                ],
+                "summary": "List all mosques",
+                "description": "Returns a paginated list of all mosques.",
+                "operationId": "getMosques",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mosques retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Mosques retrieved successfully."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Al-Rahma Mosque"
+                                                    },
+                                                    "image": {
+                                                        "type": "string",
+                                                        "example": "mosque.jpg",
+                                                        "nullable": true
+                                                    },
+                                                    "working_hours": {
+                                                        "type": "string",
+                                                        "example": "5:00 AM - 10:00 PM",
+                                                        "nullable": true
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "active",
+                                                        "enum": [
+                                                            "active",
+                                                            "maintenance",
+                                                            "closed"
+                                                        ]
+                                                    },
+                                                    "is_featured": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    },
+                                                    "city": {
+                                                        "type": "string",
+                                                        "example": "Cairo",
+                                                        "nullable": true
+                                                    },
+                                                    "district": {
+                                                        "type": "string",
+                                                        "example": "Downtown",
+                                                        "nullable": true
+                                                    },
+                                                    "latitude": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 30.0444,
+                                                        "nullable": true
+                                                    },
+                                                    "longitude": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 31.2357,
+                                                        "nullable": true
+                                                    },
+                                                    "average_rating": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 4.5
+                                                    },
+                                                    "reviews_count": {
+                                                        "type": "integer",
+                                                        "example": 10
+                                                    },
+                                                    "imam": {
+                                                        "type": "string",
+                                                        "example": "Sheikh Ahmed",
+                                                        "nullable": true
+                                                    },
+                                                    "khatib": {
+                                                        "type": "string",
+                                                        "example": "Sheikh Mohamed",
+                                                        "nullable": true
+                                                    },
+                                                    "manager_id": {
+                                                        "type": "integer",
+                                                        "example": 2,
+                                                        "nullable": true
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "properties": {
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 50
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 4
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Mosques"
+                ],
+                "summary": "Create a new mosque",
+                "description": "Creates a new mosque record. Requires authentication.",
+                "operationId": "createMosque",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Al-Rahma Mosque",
+                                        "maxLength": 255,
+                                        "minLength": 2
+                                    },
+                                    "image": {
+                                        "type": "string",
+                                        "example": "mosque.jpg",
+                                        "nullable": true
+                                    },
+                                    "working_hours": {
+                                        "type": "string",
+                                        "example": "5:00 AM - 10:00 PM",
+                                        "nullable": true
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "active",
+                                        "enum": [
+                                            "active",
+                                            "maintenance",
+                                            "closed"
+                                        ]
+                                    },
+                                    "is_featured": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "city": {
+                                        "type": "string",
+                                        "example": "Cairo",
+                                        "nullable": true
+                                    },
+                                    "district": {
+                                        "type": "string",
+                                        "example": "Downtown",
+                                        "nullable": true
+                                    },
+                                    "latitude": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 30.0444,
+                                        "nullable": true
+                                    },
+                                    "longitude": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 31.2357,
+                                        "nullable": true
+                                    },
+                                    "imam": {
+                                        "type": "string",
+                                        "example": "Sheikh Ahmed",
+                                        "nullable": true
+                                    },
+                                    "khatib": {
+                                        "type": "string",
+                                        "example": "Sheikh Mohamed",
+                                        "nullable": true
+                                    },
+                                    "manager_id": {
+                                        "description": "User ID of a mosque_manager role user.",
+                                        "type": "integer",
+                                        "example": 2,
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Mosque created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Mosque created successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Al-Rahma Mosque"
+                                                },
+                                                "image": {
+                                                    "type": "string",
+                                                    "example": "mosque.jpg",
+                                                    "nullable": true
+                                                },
+                                                "working_hours": {
+                                                    "type": "string",
+                                                    "example": "5:00 AM - 10:00 PM",
+                                                    "nullable": true
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "active",
+                                                    "enum": [
+                                                        "active",
+                                                        "maintenance",
+                                                        "closed"
+                                                    ]
+                                                },
+                                                "is_featured": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                },
+                                                "city": {
+                                                    "type": "string",
+                                                    "example": "Cairo",
+                                                    "nullable": true
+                                                },
+                                                "district": {
+                                                    "type": "string",
+                                                    "example": "Downtown",
+                                                    "nullable": true
+                                                },
+                                                "latitude": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 30.0444,
+                                                    "nullable": true
+                                                },
+                                                "longitude": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 31.2357,
+                                                    "nullable": true
+                                                },
+                                                "average_rating": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 0
+                                                },
+                                                "reviews_count": {
+                                                    "type": "integer",
+                                                    "example": 0
+                                                },
+                                                "imam": {
+                                                    "type": "string",
+                                                    "example": "Sheikh Ahmed",
+                                                    "nullable": true
+                                                },
+                                                "khatib": {
+                                                    "type": "string",
+                                                    "example": "Sheikh Mohamed",
+                                                    "nullable": true
+                                                },
+                                                "manager_id": {
+                                                    "type": "integer",
+                                                    "example": 2,
+                                                    "nullable": true
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation error."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": {
+                                                "field_name": [
+                                                    "Error message"
+                                                ]
+                                            }
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/mosques/search": {
+            "get": {
+                "tags": [
+                    "Mosques"
+                ],
+                "summary": "Search mosques by  name, city, or district",
+                "description": "Search mosques by name, city, or district.",
+                "operationId": "searchMosques",
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "Al-Rahma"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Search results retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Search results retrieved successfully."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Al-Rahma Mosque"
+                                                    },
+                                                    "image": {
+                                                        "type": "string",
+                                                        "example": "mosque.jpg",
+                                                        "nullable": true
+                                                    },
+                                                    "working_hours": {
+                                                        "type": "string",
+                                                        "example": "5:00 AM - 10:00 PM",
+                                                        "nullable": true
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "active",
+                                                        "enum": [
+                                                            "active",
+                                                            "maintenance",
+                                                            "closed"
+                                                        ]
+                                                    },
+                                                    "is_featured": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    },
+                                                    "city": {
+                                                        "type": "string",
+                                                        "example": "Cairo",
+                                                        "nullable": true
+                                                    },
+                                                    "district": {
+                                                        "type": "string",
+                                                        "example": "Downtown",
+                                                        "nullable": true
+                                                    },
+                                                    "latitude": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 30.0444,
+                                                        "nullable": true
+                                                    },
+                                                    "longitude": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 31.2357,
+                                                        "nullable": true
+                                                    },
+                                                    "average_rating": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 4.5
+                                                    },
+                                                    "reviews_count": {
+                                                        "type": "integer",
+                                                        "example": 10
+                                                    },
+                                                    "imam": {
+                                                        "type": "string",
+                                                        "example": "Sheikh Ahmed",
+                                                        "nullable": true
+                                                    },
+                                                    "khatib": {
+                                                        "type": "string",
+                                                        "example": "Sheikh Mohamed",
+                                                        "nullable": true
+                                                    },
+                                                    "manager_id": {
+                                                        "type": "integer",
+                                                        "example": 2,
+                                                        "nullable": true
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "properties": {
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation error."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": {
+                                                "q": [
+                                                    "The q field is required."
+                                                ]
+                                            }
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/mosques/featured": {
+            "get": {
+                "tags": [
+                    "Mosques"
+                ],
+                "summary": "List featured mosques",
+                "description": "Returns a list of mosques marked as featured.",
+                "operationId": "getFeaturedMosques",
+                "responses": {
+                    "200": {
+                        "description": "Featured mosques retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Featured mosques retrieved successfully."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Al-Nour Mosque"
+                                                    },
+                                                    "image": {
+                                                        "type": "string",
+                                                        "example": "nour.jpg",
+                                                        "nullable": true
+                                                    },
+                                                    "working_hours": {
+                                                        "type": "string",
+                                                        "example": "5:00 AM - 10:00 PM",
+                                                        "nullable": true
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "active",
+                                                        "enum": [
+                                                            "active",
+                                                            "maintenance",
+                                                            "closed"
+                                                        ]
+                                                    },
+                                                    "is_featured": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "city": {
+                                                        "type": "string",
+                                                        "example": "Alexandria",
+                                                        "nullable": true
+                                                    },
+                                                    "district": {
+                                                        "type": "string",
+                                                        "example": "Corniche",
+                                                        "nullable": true
+                                                    },
+                                                    "latitude": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 31.2001,
+                                                        "nullable": true
+                                                    },
+                                                    "longitude": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 29.9187,
+                                                        "nullable": true
+                                                    },
+                                                    "average_rating": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 4.8
+                                                    },
+                                                    "reviews_count": {
+                                                        "type": "integer",
+                                                        "example": 15
+                                                    },
+                                                    "imam": {
+                                                        "type": "string",
+                                                        "example": "Sheikh Hassan",
+                                                        "nullable": true
+                                                    },
+                                                    "khatib": {
+                                                        "type": "string",
+                                                        "example": "Sheikh Ali",
+                                                        "nullable": true
+                                                    },
+                                                    "manager_id": {
+                                                        "type": "integer",
+                                                        "example": 3,
+                                                        "nullable": true
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/mosques/city/{city}": {
+            "get": {
+                "tags": [
+                    "Mosques"
+                ],
+                "summary": "List mosques by city",
+                "description": "Returns all mosques located in the specified city.",
+                "operationId": "getMosquesByCity",
+                "parameters": [
+                    {
+                        "name": "city",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "Cairo"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mosques retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Mosques retrieved successfully."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Al-Rahma Mosque"
+                                                    },
+                                                    "image": {
+                                                        "type": "string",
+                                                        "example": "rahma.jpg",
+                                                        "nullable": true
+                                                    },
+                                                    "working_hours": {
+                                                        "type": "string",
+                                                        "example": "5:00 AM - 10:00 PM",
+                                                        "nullable": true
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "active",
+                                                        "enum": [
+                                                            "active",
+                                                            "maintenance",
+                                                            "closed"
+                                                        ]
+                                                    },
+                                                    "is_featured": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    },
+                                                    "city": {
+                                                        "type": "string",
+                                                        "example": "Cairo",
+                                                        "nullable": true
+                                                    },
+                                                    "district": {
+                                                        "type": "string",
+                                                        "example": "Downtown",
+                                                        "nullable": true
+                                                    },
+                                                    "latitude": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 30.0444,
+                                                        "nullable": true
+                                                    },
+                                                    "longitude": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 31.2357,
+                                                        "nullable": true
+                                                    },
+                                                    "average_rating": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 4.2
+                                                    },
+                                                    "reviews_count": {
+                                                        "type": "integer",
+                                                        "example": 8
+                                                    },
+                                                    "imam": {
+                                                        "type": "string",
+                                                        "example": "Sheikh Ahmed",
+                                                        "nullable": true
+                                                    },
+                                                    "khatib": {
+                                                        "type": "string",
+                                                        "example": "Sheikh Mohamed",
+                                                        "nullable": true
+                                                    },
+                                                    "manager_id": {
+                                                        "type": "integer",
+                                                        "example": 2,
+                                                        "nullable": true
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No mosques found for this city",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "No mosques found."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/mosques/{id}": {
+            "get": {
+                "tags": [
+                    "Mosques"
+                ],
+                "summary": "Get a single mosque",
+                "description": "Returns the details of a specific mosque by its ID.",
+                "operationId": "getMosque",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mosque retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Mosque retrieved successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Al-Rahma Mosque"
+                                                },
+                                                "image": {
+                                                    "type": "string",
+                                                    "example": "rahma.jpg",
+                                                    "nullable": true
+                                                },
+                                                "working_hours": {
+                                                    "type": "string",
+                                                    "example": "5:00 AM - 10:00 PM",
+                                                    "nullable": true
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "active",
+                                                    "enum": [
+                                                        "active",
+                                                        "maintenance",
+                                                        "closed"
+                                                    ]
+                                                },
+                                                "is_featured": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                },
+                                                "city": {
+                                                    "type": "string",
+                                                    "example": "Cairo",
+                                                    "nullable": true
+                                                },
+                                                "district": {
+                                                    "type": "string",
+                                                    "example": "Downtown",
+                                                    "nullable": true
+                                                },
+                                                "latitude": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 30.0444,
+                                                    "nullable": true
+                                                },
+                                                "longitude": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 31.2357,
+                                                    "nullable": true
+                                                },
+                                                "average_rating": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 4.5
+                                                },
+                                                "reviews_count": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "imam": {
+                                                    "type": "string",
+                                                    "example": "Sheikh Ahmed",
+                                                    "nullable": true
+                                                },
+                                                "khatib": {
+                                                    "type": "string",
+                                                    "example": "Sheikh Mohamed",
+                                                    "nullable": true
+                                                },
+                                                "manager_id": {
+                                                    "type": "integer",
+                                                    "example": 2,
+                                                    "nullable": true
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Mosque not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Mosque not found."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/mosques/{mosque}": {
+            "put": {
+                "tags": [
+                    "Mosques"
+                ],
+                "summary": "Update a mosque",
+                "description": "Updates an existing mosque record. Requires authentication.",
+                "operationId": "updateMosque",
+                "parameters": [
+                    {
+                        "name": "mosque",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Al-Rahma Mosque Updated",
+                                        "maxLength": 255,
+                                        "minLength": 2
+                                    },
+                                    "image": {
+                                        "type": "string",
+                                        "example": "updated.jpg",
+                                        "nullable": true
+                                    },
+                                    "working_hours": {
+                                        "type": "string",
+                                        "example": "6:00 AM - 11:00 PM",
+                                        "nullable": true
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "active",
+                                        "enum": [
+                                            "active",
+                                            "maintenance",
+                                            "closed"
+                                        ]
+                                    },
+                                    "is_featured": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "city": {
+                                        "type": "string",
+                                        "example": "Cairo",
+                                        "nullable": true
+                                    },
+                                    "district": {
+                                        "type": "string",
+                                        "example": "New District",
+                                        "nullable": true
+                                    },
+                                    "latitude": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 30.0444,
+                                        "nullable": true
+                                    },
+                                    "longitude": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 31.2357,
+                                        "nullable": true
+                                    },
+                                    "imam": {
+                                        "type": "string",
+                                        "example": "Sheikh Ahmed Updated",
+                                        "nullable": true
+                                    },
+                                    "khatib": {
+                                        "type": "string",
+                                        "example": "Sheikh Mohamed Updated",
+                                        "nullable": true
+                                    },
+                                    "manager_id": {
+                                        "description": "User ID of a mosque_manager role user.",
+                                        "type": "integer",
+                                        "example": 3,
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Mosque updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Mosque updated successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Al-Rahma Mosque Updated"
+                                                },
+                                                "image": {
+                                                    "type": "string",
+                                                    "example": "updated.jpg",
+                                                    "nullable": true
+                                                },
+                                                "working_hours": {
+                                                    "type": "string",
+                                                    "example": "6:00 AM - 11:00 PM",
+                                                    "nullable": true
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "active",
+                                                    "enum": [
+                                                        "active",
+                                                        "maintenance",
+                                                        "closed"
+                                                    ]
+                                                },
+                                                "is_featured": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "city": {
+                                                    "type": "string",
+                                                    "example": "Cairo",
+                                                    "nullable": true
+                                                },
+                                                "district": {
+                                                    "type": "string",
+                                                    "example": "New District",
+                                                    "nullable": true
+                                                },
+                                                "latitude": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 30.0444,
+                                                    "nullable": true
+                                                },
+                                                "longitude": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 31.2357,
+                                                    "nullable": true
+                                                },
+                                                "average_rating": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 4.5
+                                                },
+                                                "reviews_count": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "imam": {
+                                                    "type": "string",
+                                                    "example": "Sheikh Ahmed Updated",
+                                                    "nullable": true
+                                                },
+                                                "khatib": {
+                                                    "type": "string",
+                                                    "example": "Sheikh Mohamed Updated",
+                                                    "nullable": true
+                                                },
+                                                "manager_id": {
+                                                    "type": "integer",
+                                                    "example": 3,
+                                                    "nullable": true
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Mosque not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Mosques"
+                ],
+                "summary": "Delete a mosque",
+                "description": "Permanently deletes a mosque record. Requires authentication.",
+                "operationId": "deleteMosque",
+                "parameters": [
+                    {
+                        "name": "mosque",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mosque deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Mosque deleted successfully."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": []
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Mosque not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/mosques/{mosque}/status": {
+            "patch": {
+                "tags": [
+                    "Mosques"
+                ],
+                "summary": "Update mosque status",
+                "description": "Updates only the status of a mosque (active/inactive). Requires authentication.",
+                "operationId": "updateMosqueStatus",
+                "parameters": [
+                    {
+                        "name": "mosque",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "example": "maintenance",
+                                        "enum": [
+                                            "active",
+                                            "maintenance",
+                                            "closed"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Status updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Mosque status updated successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "maintenance"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Mosque not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/mosques/{mosque}/featured": {
+            "patch": {
+                "tags": [
+                    "Mosques"
+                ],
+                "summary": "Toggle mosque featured flag",
+                "description": "Toggles the featured state of a mosque. Requires authentication.",
+                "operationId": "toggleMosqueFeatured",
+                "parameters": [
+                    {
+                        "name": "mosque",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Featured status toggled successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Mosque featured status updated."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "is_featured": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Mosque not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/mosques/{mosque}/rating": {
+            "patch": {
+                "tags": [
+                    "Mosques"
+                ],
+                "summary": "Update mosque rating",
+                "description": "Updates the rating of a mosque. Requires authentication.",
+                "operationId": "updateMosqueRating",
+                "parameters": [
+                    {
+                        "name": "mosque",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "average_rating"
+                                ],
+                                "properties": {
+                                    "average_rating": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 4.5,
+                                        "maximum": 5,
+                                        "minimum": 0
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rating updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Mosque rating updated successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "average_rating": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 4.5
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Mosque not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/facilities": {
+            "get": {
+                "tags": [
+                    "Facilities"
+                ],
+                "summary": "List all facilities /{public endpoint}",
+                "description": "Returns a list of all available facilities. Public endpoint.",
+                "operationId": "getFacilities",
+                "responses": {
+                    "200": {
+                        "description": "Facilities retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Facilities retrieved successfully."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Parking"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Facilities"
+                ],
+                "summary": "Create a new facility / {Region Manager Only}",
+                "description": "Creates a new standalone facility. Requires authentication.",
+                "operationId": "createFacility",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Parking",
+                                        "maxLength": 255,
+                                        "minLength": 2
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Facility created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Facility created successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Parking"
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation error."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": {
+                                                "field_name": [
+                                                    "Error message"
+                                                ]
+                                            }
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/facilities/{facility}": {
+            "put": {
+                "tags": [
+                    "Facilities"
+                ],
+                "summary": "Update a facility / {Region Manager Only}",
+                "description": "Updates an existing facility. Requires authentication.",
+                "operationId": "updateFacility",
+                "parameters": [
+                    {
+                        "name": "facility",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 5
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Parking Updated",
+                                        "maxLength": 255,
+                                        "minLength": 2
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Facility updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Facility updated successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Parking Updated"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Facility not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Facilities"
+                ],
+                "summary": "Delete a facility /{Region manager Only}",
+                "description": "Permanently deletes a facility. Requires authentication.",
+                "operationId": "deleteFacility",
+                "parameters": [
+                    {
+                        "name": "facility",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 5
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Facility deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Facility deleted successfully."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": []
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Facility not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/mosques/{mosque}/facilities": {
+            "get": {
+                "tags": [
+                    "Facilities"
+                ],
+                "summary": "List facilities for a mosque /{public endpoint}",
+                "description": "Returns all facilities associated with a specific mosque. Public endpoint.",
+                "operationId": "getMosqueFacilities",
+                "parameters": [
+                    {
+                        "name": "mosque",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Facilities retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Facilities retrieved successfully."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Parking"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Mosque not found"
+                    }
+                }
+            }
+        },
+        "/mosques/{mosque}/facilities/attach": {
+            "post": {
+                "tags": [
+                    "Facilities"
+                ],
+                "summary": "Attach facilities to a mosque (add facilities to exists facilities) / {Mosque Manager Only}",
+                "description": "Adds one or more facilities to a mosque without removing existing ones. Requires authentication.",
+                "operationId": "attachMosqueFacilities",
+                "parameters": [
+                    {
+                        "name": "mosque",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "facility_ids"
+                                ],
+                                "properties": {
+                                    "facility_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "example": [
+                                            4,
+                                            5
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Facilities attached successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Facilities attached successfully."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 4
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Prayer Mats"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Mosque not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/mosques/{mosque}/facilities/detach": {
+            "post": {
+                "tags": [
+                    "Facilities"
+                ],
+                "summary": "Detach facilities from a mosque (delete this facilities from mosque) / {Mosque Manager Only}",
+                "description": "Removes one or more facilities from a mosque. Requires authentication.",
+                "operationId": "detachMosqueFacilities",
+                "parameters": [
+                    {
+                        "name": "mosque",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "facility_ids"
+                                ],
+                                "properties": {
+                                    "facility_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "example": [
+                                            2,
+                                            3
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Facilities detached successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Facilities detached successfully."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": []
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Mosque not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/mosques/{mosque}/facilities/sync": {
+            "post": {
+                "tags": [
+                    "Facilities"
+                ],
+                "summary": "Sync facilities for a mosque (delete exists facilities and add array of facilities )/ {Mosque Manager Only}",
+                "description": "Replaces all existing facility associations with the provided list. Requires authentication.",
+                "operationId": "syncMosqueFacilities",
+                "parameters": [
+                    {
+                        "name": "mosque",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "facility_ids"
+                                ],
+                                "properties": {
+                                    "facility_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "example": [
+                                            1,
+                                            2,
+                                            3
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Facilities synced successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Facilities synced successfully."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Parking"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Mosque not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/education/students": {
             "get": {
                 "tags": [
@@ -2258,6 +4622,14 @@
         {
             "name": "Invitations",
             "description": "Invitations"
+        },
+        {
+            "name": "Mosques",
+            "description": "Mosques"
+        },
+        {
+            "name": "Facilities",
+            "description": "Facilities"
         },
         {
             "name": "Students",
