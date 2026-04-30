@@ -82,91 +82,49 @@ class StudentEndpoints
     #[OA\Get(
         path: '/education/students/{id}',
         operationId: 'showStudent',
-        tags: ['Education'],
-        summary: 'تفاصيل الطالب',
+        tags: ['Students'],
+        summary: 'عرض بيانات طالب محدد',
+        description: 'يعيد تفاصيل طالب معين حسب الصلاحيات (مشرف المسجد أو ولي الأمر).',
         security: [['bearerAuth' => []]],
         parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1))
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'معرف الطالب',
+                schema: new OA\Schema(type: 'integer', example: 1)
+            )
         ],
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'بيانات الطالب',
+                description: 'تم جلب بيانات الطالب بنجاح',
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'status', type: 'boolean', example: true),
                         new OA\Property(property: 'message', type: 'string', example: 'تم جلب بيانات الطالب بنجاح.'),
-                        new OA\Property(property: 'data', ref: '#/components/schemas/StudentResource'),
-                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
+                        new OA\Property(
+                            property: 'data',
+                            ref: '#/components/schemas/StudentResource'
+                        ),
+                        new OA\Property(
+                            property: 'pagination',
+                            type: 'object',
+                            nullable: true,
+                            example: null
+                        )
                     ]
                 )
             ),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+            new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
             new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
         ]
     )]
-    public function show() {}
+    public function show()
+    {
+    }
 
-    #[OA\Put(
-        path: '/education/students/{id}',
-        operationId: 'updateStudent',
-        tags: ['Education', 'Role: halaqa_supervisor'],
-        summary: '[Supervisor] تحديث بيانات الطالب',
-        security: [['bearerAuth' => []]],
-        parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
-        ],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(
-                properties: [
-                    new OA\Property(property: 'first_name', type: 'string', example: 'أحمد المعدل'),
-                    new OA\Property(property: 'status', type: 'string', enum: ['active', 'inactive'], example: 'inactive'),
-                ]
-            )
-        ),
-        responses: [
-            new OA\Response(
-                response: 200,
-                description: 'تم التحديث',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'status', type: 'boolean', example: true),
-                        new OA\Property(property: 'message', type: 'string', example: 'تم تحديث بيانات الطالب بنجاح.'),
-                        new OA\Property(property: 'data', ref: '#/components/schemas/StudentResource'),
-                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
-                    ]
-                )
-            ),
-            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
-            new OA\Response(response: 422, ref: '#/components/responses/ValidationError'),
-        ]
-    )]
-    public function update() {}
-
-    #[OA\Delete(
-        path: '/education/students/{id}',
-        operationId: 'deleteStudent',
-        tags: ['Education', 'Role: halaqa_supervisor'],
-        summary: '[Supervisor] حذف طالب',
-        security: [['bearerAuth' => []]],
-        parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
-        ],
-        responses: [
-            new OA\Response(
-                response: 200,
-                description: 'تم الحذف',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'status', type: 'boolean', example: true),
-                        new OA\Property(property: 'message', type: 'string', example: 'تم حذف سجل الطالب بنجاح.'),
-                        new OA\Property(property: 'data', type: 'array', items: new OA\Items(), example: []),
-                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
-                    ]
-                )
-            ),
-            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
-        ]
-    )]
-    public function destroy() {}
 }
+
+

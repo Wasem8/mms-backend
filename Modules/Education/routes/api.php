@@ -14,7 +14,7 @@ Route::prefix('education')->group(function () {
     });
 
 
-    Route::middleware(['auth:api', 'role:parent'])->group(function () {
+    Route::middleware(['auth:api', 'role:parent,halaqa_supervisor'])->group(function () {
         Route::apiResource('students', StudentController::class);
 
     });

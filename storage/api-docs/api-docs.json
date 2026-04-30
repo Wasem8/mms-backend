@@ -15,7 +15,7 @@
     },
     "servers": [
         {
-            "url": "http://localhost:8000/api",
+            "url": "http://localhost:8000",
             "description": "Local Development Server"
         },
         {
@@ -1152,12 +1152,13 @@
                 "tags": [
                     "Education"
                 ],
-                "summary": "Add students to halaqa: Required Role: **halaqa_supervisor**",
+                "summary": "إضافة طلاب إلى الحلقة: Required Role: **halaqa_supervisor**",
                 "operationId": "attachStudents",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
+                        "description": "معرف الحلقة",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -1169,6 +1170,9 @@
                     "content": {
                         "application/json": {
                             "schema": {
+                                "required": [
+                                    "students"
+                                ],
                                 "properties": {
                                     "students": {
                                         "type": "array",
@@ -1177,8 +1181,8 @@
                                         },
                                         "example": [
                                             1,
-                                            2,
-                                            3
+                                            5,
+                                            12
                                         ]
                                     }
                                 },
@@ -1189,16 +1193,92 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Students added successfully"
+                        "description": "تمت العملية بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم إضافة الطلاب إلى الحلقة بنجاح"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {},
+                                            "example": []
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "فشل التحقق (طلاب مفقودين، تبعية مسجد مختلف، أو تجاوز سعة)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation error."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "students": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "example": [
+                                                        "الطالب (أحمد) يتبع لمسجد آخر.",
+                                                        "المعرفات التالية غير موجودة في النظام: 12"
+                                                    ]
+                                                },
+                                                "capacity": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "example": [
+                                                        "عذراً، الحلقة لا تستوعب هذا العدد. المقاعد المتبقية: 3"
+                                                    ]
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
                     },
                     "403": {
                         "$ref": "#/components/responses/Forbidden"
                     },
                     "404": {
                         "$ref": "#/components/responses/NotFound"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/Unauthenticated"
                     }
                 },
                 "security": [
@@ -1213,12 +1293,13 @@
                 "tags": [
                     "Education"
                 ],
-                "summary": "Remove student from halaqa: Required Role: **halaqa_supervisor**",
+                "summary": "إزالة طالب من الحلقة: Required Role: **halaqa_supervisor**",
                 "operationId": "detachStudent",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
+                        "description": "معرف الحلقة",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -1227,6 +1308,7 @@
                     {
                         "name": "studentId",
                         "in": "path",
+                        "description": "معرف الطالب",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -1235,16 +1317,67 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Student removed successfully"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/Forbidden"
+                        "description": "تمت الإزالة بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم إزالة الطالب من الحلقة"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {},
+                                            "example": []
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "404": {
                         "$ref": "#/components/responses/NotFound"
                     },
-                    "401": {
-                        "$ref": "#/components/responses/Unauthenticated"
+                    "422": {
+                        "description": "الطالب غير موجود في هذه الحلقة",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "هذا الطالب غير مسجل في هذه الحلقة."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -4101,14 +4234,16 @@
         "/education/students/{id}": {
             "get": {
                 "tags": [
-                    "Education"
+                    "Students"
                 ],
-                "summary": "تفاصيل الطالب",
+                "summary": "عرض بيانات طالب محدد",
+                "description": "يعيد تفاصيل طالب معين حسب الصلاحيات (مشرف المسجد أو ولي الأمر).",
                 "operationId": "showStudent",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
+                        "description": "معرف الطالب",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -4118,7 +4253,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "بيانات الطالب",
+                        "description": "تم جلب بيانات الطالب بنجاح",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4145,146 +4280,11 @@
                             }
                         }
                     },
-                    "404": {
-                        "$ref": "#/components/responses/NotFound"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            },
-            "put": {
-                "tags": [
-                    "Education",
-                    "Role: halaqa_supervisor"
-                ],
-                "summary": "[Supervisor] تحديث بيانات الطالب",
-                "operationId": "updateStudent",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "properties": {
-                                    "first_name": {
-                                        "type": "string",
-                                        "example": "أحمد المعدل"
-                                    },
-                                    "status": {
-                                        "type": "string",
-                                        "example": "inactive",
-                                        "enum": [
-                                            "active",
-                                            "inactive"
-                                        ]
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "تم التحديث",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "تم تحديث بيانات الطالب بنجاح."
-                                        },
-                                        "data": {
-                                            "$ref": "#/components/schemas/StudentResource"
-                                        },
-                                        "pagination": {
-                                            "type": "object",
-                                            "example": null,
-                                            "nullable": true
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
                     },
-                    "404": {
-                        "$ref": "#/components/responses/NotFound"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationError"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            },
-            "delete": {
-                "tags": [
-                    "Education",
-                    "Role: halaqa_supervisor"
-                ],
-                "summary": "[Supervisor] حذف طالب",
-                "operationId": "deleteStudent",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "تم الحذف",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "تم حذف سجل الطالب بنجاح."
-                                        },
-                                        "data": {
-                                            "type": "array",
-                                            "items": {},
-                                            "example": []
-                                        },
-                                        "pagination": {
-                                            "type": "object",
-                                            "example": null,
-                                            "nullable": true
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
                     },
                     "404": {
                         "$ref": "#/components/responses/NotFound"
@@ -4634,10 +4634,6 @@
         {
             "name": "Students",
             "description": "Students"
-        },
-        {
-            "name": "Role: halaqa_supervisor",
-            "description": "Role: halaqa_supervisor"
         }
     ],
     "security": [
