@@ -7,14 +7,14 @@ use Modules\Education\Http\Controllers\AttendanceController;
 
 Route::prefix('education')->group(function () {
 
-    Route::middleware(['auth:sanctum', 'role:halaqa_supervisor'])->group(function () {
+    Route::middleware(['auth:api', 'role:halaqa_supervisor'])->group(function () {
         Route::apiResource('halaqat', HalaqaController::class);
         Route::get('halaqat/{id}', [HalaqaController::class, 'show']);
 
     });
 
 
-    Route::middleware(['auth:sanctum', 'role:parent'])->group(function () {
+    Route::middleware(['auth:api', 'role:parent'])->group(function () {
         Route::apiResource('students', StudentController::class);
 
     });

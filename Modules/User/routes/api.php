@@ -11,7 +11,7 @@ Route::prefix('auth')->group(function () {
     Route::post('/register-parent', [AuthController::class, 'registerParent']);
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
 
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware('auth:api')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
     });
 });

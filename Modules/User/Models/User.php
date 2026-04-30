@@ -9,9 +9,10 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Modules\Education\Models\Student;
 use Modules\Mosque\Models\Mosque;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
 
-class User extends Authentication
+class User extends Authentication implements JWTSubject
 {
     use HasApiTokens, Notifiable,HasFactory;
 
@@ -98,6 +99,16 @@ class User extends Authentication
             'otp' => null,
             'otp_expires_at' => null
         ]);
+    }
+
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims()
+    {
+        return [];
     }
 
 

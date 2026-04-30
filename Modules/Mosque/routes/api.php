@@ -24,7 +24,7 @@ Route::prefix('mosques')->group(function () {
 
     Route::get('/{mosque}/facilities', [FacilitiesController::class, 'byMosque']);
 
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware('auth:api')->group(function () {
         // ── Mosque Management ──
         Route::middleware('role:super_admin')->group(function () {
             Route::post('/',                       [MosqueController::class, 'store']);
@@ -36,7 +36,7 @@ Route::prefix('mosques')->group(function () {
         });
 
 
-        Route::middleware('role:mosque_manager')->group(function () {
+        Route::middleware('role:api')->group(function () {
             Route::post('/{mosque}/facilities/attach', [FacilitiesController::class, 'attach']);
             Route::post('/{mosque}/facilities/detach', [FacilitiesController::class, 'detach']);
             Route::post('/{mosque}/facilities/sync',   [FacilitiesController::class, 'sync']);
