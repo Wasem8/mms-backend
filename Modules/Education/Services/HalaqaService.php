@@ -9,22 +9,50 @@ class HalaqaService
 {
     public function list()
     {
-        return Halaqa::with('teacher')->latest()->paginate(10);
+        $user = auth()->user();
+        $query = Halaqa::with('teacher');
+
+
+        if ($user->isSupervisor()) {
+            $query->where('mosque_id', $user->mosque_id);
+        }
+
+        return $query->latest()->paginate(10);
     }
 
     public function create(array $data)
     {
+        $user = auth()->user();
+
+        if ($user->isSupervisor() && !$user->mosque_id) {
+            throw new \Exception('هذا المشرف غير مرتبط بمسجد، لا يمكنه إنشاء حلقات.');
+        }
+
+        $data['mosque_id'] = $user->mosque_id;
         return Halaqa::create($data);
     }
 
-    public function find($id)
+    public function find($id, array $relations = [])
     {
-        return Halaqa::with('students', 'teacher')->findOrFail($id);
+        $user = auth()->user();
+
+        $query = Halaqa::query();
+
+        if (!empty($relations)) {
+            $query->with($relations);
+        }
+
+        if ($user->isSupervisor()) {
+            $query->where('mosque_id', $user->mosque_id);
+        }
+
+        return $query->findOrFail($id);
     }
 
     public function update($id, array $data)
     {
-        $halaqa = Halaqa::findOrFail($id);
+
+        $halaqa = $this->find($id);
         $halaqa->update($data);
 
         return $halaqa;

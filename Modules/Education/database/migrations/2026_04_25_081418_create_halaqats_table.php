@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->foreignId('teacher_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->string('level')->nullable();
+            $table->foreignId('mosque_id')->constrained()->onDelete('cascade');
             $table->unsignedInteger('capacity')->default(0);
             $table->json('schedule_days')->nullable();
             $table->time('start_time')->nullable();

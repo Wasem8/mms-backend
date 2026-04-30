@@ -52,7 +52,31 @@ class EducationEndpoints
                     properties: [
                         new OA\Property(property: 'status', type: 'boolean', example: true),
                         new OA\Property(property: 'message', type: 'string', example: 'تم جلب تفاصيل الحلقة'),
-                        new OA\Property(property: 'data', ref: '#/components/schemas/HalaqaResource'),
+                        new OA\Property(
+                            property: 'data',
+                            allOf: [
+                                new OA\Schema(ref: '#/components/schemas/HalaqaResource'), // جلب الخصائص الأساسية
+                                new OA\Schema(
+                                    properties: [
+                                        new OA\Property(
+                                            property: 'students',
+                                            type: 'array',
+                                            items: new OA\Items(
+                                                properties: [
+                                                    new OA\Property(property: 'id', type: 'integer', example: 1),
+                                                    new OA\Property(property: 'first_name', type: 'string', example: 'Student'),
+                                                    new OA\Property(property: 'last_name', type: 'string', example: '1'),
+                                                    new OA\Property(property: 'parent_name', type: 'string', nullable: true, example: null),
+                                                    new OA\Property(property: 'email', type: 'string', example: 'student1@test.com'),
+                                                    new OA\Property(property: 'phone', type: 'string', nullable: true, example: null),
+                                                    new OA\Property(property: 'status', type: 'string', example: 'active'),
+                                                ]
+                                            )
+                                        )
+                                    ]
+                                )
+                            ]
+                        ),
                         new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
                     ]
                 )
@@ -76,7 +100,7 @@ class EducationEndpoints
                 required: ['name', 'capacity'],
                 properties: [
                     new OA\Property(property: 'name', type: 'string', example: 'حلقة التجويد'),
-                    new OA\Property(property: 'teacher_id', type: 'integer', nullable: true, example: 5),
+                    new OA\Property(property: 'teacher_id', type: 'integer', nullable: true, example: 4),
                     new OA\Property(property: 'capacity', type: 'integer', example: 20),
                     new OA\Property(property: 'schedule_days', type: 'array', items: new OA\Items(type: 'string'), example: ['Sunday', 'Tuesday']),
                     new OA\Property(property: 'start_time', type: 'string', example: '16:00'),

@@ -6,6 +6,7 @@ namespace Modules\User\Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Modules\Mosque\Models\Mosque;
 use Modules\User\Models\Permission;
 use Modules\User\Models\Role;
 use Modules\User\Models\User;
@@ -14,12 +15,6 @@ class RolesAndPermissionsSeeder extends Seeder
 {
     public function run(): void
     {
-        // 🔥 Reset tables (order important)
-        DB::table('permission_role')->truncate();
-        DB::table('role_user')->truncate();
-        DB::table('permissions')->truncate();
-        DB::table('roles')->truncate();
-        DB::table('users')->truncate();
 
         /*
         |--------------------------------------------------
@@ -138,6 +133,7 @@ class RolesAndPermissionsSeeder extends Seeder
         | USERS SEED
         |--------------------------------------------------
         */
+        $mosque = Mosque::first();
 
         $users = [
             [
@@ -145,30 +141,35 @@ class RolesAndPermissionsSeeder extends Seeder
                 'email' => 'admin@test.com',
                 'password' => 'password',
                 'role' => 'super_admin',
+                'mosque_id' => null,
             ],
             [
                 'name' => 'Mosque Manager',
                 'email' => 'manager@test.com',
                 'password' => 'password',
                 'role' => 'mosque_manager',
+                'mosque_id' => $mosque?->id,
             ],
             [
                 'name' => 'Supervisor',
                 'email' => 'supervisor@test.com',
                 'password' => 'password',
                 'role' => 'halaqa_supervisor',
+                'mosque_id' => $mosque?->id,
             ],
             [
                 'name' => 'Teacher',
                 'email' => 'teacher@test.com',
                 'password' => 'password',
                 'role' => 'teacher',
+                'mosque_id' => $mosque?->id,
             ],
             [
                 'name' => 'Parent',
                 'email' => 'parent@test.com',
                 'password' => 'password',
                 'role' => 'parent',
+                'mosque_id' => null,
             ],
         ];
 
@@ -180,6 +181,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'password' => Hash::make($data['password']),
                 'email_verified_at' => now(),
                 'status' => 'active',
+                'mosque_id' => $data['mosque_id'],
             ]);
 
             $role = Role::where('name', $data['role'])->first();

@@ -3,6 +3,7 @@
 namespace Modules\Education\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Modules\Mosque\Models\Mosque;
 
 class Halaqa extends Model
 {
@@ -11,6 +12,7 @@ class Halaqa extends Model
         'name',
         'teacher_id',
         'capacity',
+        'mosque_id',
         'level',
         'schedule_days',
         'start_time',
@@ -31,5 +33,10 @@ class Halaqa extends Model
     public function teacher()
     {
         return $this->belongsTo(\Modules\User\Models\User::class, 'teacher_id');
+    }
+
+    public function mosque()
+    {
+        return $this->belongsTo(Mosque::class);
     }
 }

@@ -4,7 +4,9 @@ namespace Modules\Education\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Support\ApiResponse;
+use Modules\Education\Http\Requests\StoreStudentRequest;
 use Modules\Education\Services\StudentService;
+use Modules\Education\Transformers\StudentResource;
 
 class StudentController
 {
@@ -12,24 +14,31 @@ class StudentController
 
     public function index()
     {
+        $students = $this->service->list();
         return ApiResponse::success(
-            $this->service->list(),
-            'Students retrieved.'
+            StudentResource::collection($students),
+            'تم استعادة قائمة الطلاب بنجاح.',
+            ApiResponse::pagination($students)
         );
     }
 
-    public function store(Request $request)
+    public function store(StoreStudentRequest $request)
     {
-        $student = $this->service->create($request->all());
+        $student = $this->service->create($request->validated());
 
-        return ApiResponse::success($student, 'Created.');
+        return ApiResponse::success(
+            new StudentResource($student),
+            'تم تسجيل بيانات الطالب بنجاح، يرجى انتظار موافقة مشرف الحلقات لتفعيل الحساب.'
+        );
     }
 
     public function show($id)
     {
+        $student = $this->service->find($id);
+
         return ApiResponse::success(
-            $this->service->find($id),
-            'Student details.'
+            new StudentResource($student), // هنا نستخدم الـ Resource
+            'تم جلب بيانات الطالب بنجاح.'
         );
     }
 
@@ -37,7 +46,7 @@ class StudentController
     {
         return ApiResponse::success(
             $this->service->update($id, $request->all()),
-            'Updated.'
+            'تم تحديث بيانات الطالب بنجاح.'
         );
     }
 
@@ -45,6 +54,6 @@ class StudentController
     {
         $this->service->delete($id);
 
-        return ApiResponse::success([], 'Deleted.');
+        return ApiResponse::success([], 'تم حذف سجل الطالب بنجاح.');
     }
 }
