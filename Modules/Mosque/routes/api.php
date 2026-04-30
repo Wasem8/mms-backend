@@ -7,7 +7,7 @@ use Modules\Mosque\Http\Controllers\FacilitiesController;
 Route::prefix('facilities')->group(function () {
     Route::get('/', [FacilitiesController::class, 'index']);
 
-    Route::middleware(['auth:sanctum', 'role:super_admin'])->group(function () {
+    Route::middleware(['auth:api', 'role:super_admin'])->group(function () {
         Route::post('/',             [FacilitiesController::class, 'store']);
         Route::put('/{facility}',    [FacilitiesController::class, 'update']);
         Route::delete('/{facility}', [FacilitiesController::class, 'destroy']);
@@ -36,7 +36,7 @@ Route::prefix('mosques')->group(function () {
         });
 
 
-        Route::middleware('role:api')->group(function () {
+        Route::middleware('role:mosque_manager')->group(function () {
             Route::post('/{mosque}/facilities/attach', [FacilitiesController::class, 'attach']);
             Route::post('/{mosque}/facilities/detach', [FacilitiesController::class, 'detach']);
             Route::post('/{mosque}/facilities/sync',   [FacilitiesController::class, 'sync']);
