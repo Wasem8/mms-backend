@@ -14,11 +14,11 @@ class Authenticate extends Middleware
 
     protected function unauthenticated($request, array $guards)
     {
-        abort(response()->json([
+        return response()->json([
             'status' => false,
             'message' => 'Unauthenticated.',
             'data' => null,
             'pagination' => null
-        ], 401));
+        ], 401);
     }
 }
