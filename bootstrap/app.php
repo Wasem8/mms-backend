@@ -53,17 +53,17 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         // 2. معالجة NotFoundHttpException (الناتج عن Route Model Binding أو رابط خطأ)
-        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e, $request) {
-            // نتحقق إذا كان الطلب API لضمان عدم تخريب صفحات الـ Web
-            if ($request->is('api/*')) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Resource not found.',
-                    'data' => null,
-                    'pagination' => null
-                ], 404);
-            }
-        });
+//        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e, $request) {
+//            // نتحقق إذا كان الطلب API لضمان عدم تخريب صفحات الـ Web
+//            if ($request->is('api/*')) {
+//                return response()->json([
+//                    'status' => false,
+//                    'message' => 'Resource not found.',
+//                    'data' => null,
+//                    'pagination' => null
+//                ], 404);
+//            }
+//        });
 
         // ⚠️ Validation
         $exceptions->render(function (ValidationException $e, $request) {
