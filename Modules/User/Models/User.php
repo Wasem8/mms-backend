@@ -6,7 +6,6 @@ namespace Modules\User\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authentication;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 use Modules\Education\Models\Student;
 use Modules\Mosque\Models\Mosque;
 use Tymon\JWTAuth\Contracts\JWTSubject;
@@ -14,7 +13,7 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 
 class User extends Authentication implements JWTSubject
 {
-    use HasApiTokens, Notifiable,HasFactory;
+    use  Notifiable,HasFactory;
 
     protected $fillable = [
         'name',
