@@ -10,6 +10,10 @@ Route::prefix('education')->group(function () {
     Route::middleware(['auth:api', 'role:halaqa_supervisor'])->group(function () {
         Route::apiResource('halaqat', HalaqaController::class);
         Route::get('halaqat/{id}', [HalaqaController::class, 'show']);
+        Route::patch('students/{id}/approve', [StudentController::class, 'approve']);
+        Route::patch('students/{id}/reject', [StudentController::class, 'reject']);
+        Route::post('halaqat/{id}/students', [HalaqaController::class, 'attachStudents']);
+        Route::delete('halaqat/{id}/students/{studentId}', [HalaqaController::class, 'detachStudent']);
 
     });
 
@@ -19,8 +23,7 @@ Route::prefix('education')->group(function () {
 
     });
 
-    Route::post('halaqat/{id}/students', [HalaqaController::class, 'attachStudents']);
-    Route::delete('halaqat/{id}/students/{studentId}', [HalaqaController::class, 'detachStudent']);
+
 
 
 

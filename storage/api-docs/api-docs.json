@@ -296,7 +296,7 @@
                     "Auth"
                 ],
                 "summary": "Login with email and password",
-                "description": "Authenticate and receive an access token",
+                "description": "\n### 🧪 Test Credentials:\n| Role | Email | Password |\n| :--- | :--- | :--- |\n| **Super Admin** | `admin@test.com` | `password` |\n| **Mosque Manager** | `manager@test.com` | `password` |\n| **Supervisor** | `supervisor@test.com` | `password` |\n| **Teacher** | `teacher@test.com` | `password` |\n| **Parent** | `parent@test.com` | `password` |\n    ",
                 "operationId": "login",
                 "requestBody": {
                     "required": true,
@@ -342,7 +342,7 @@
                                             "properties": {
                                                 "access_token": {
                                                     "type": "string",
-                                                    "example": "13|xxxxxxxxxxxx"
+                                                    "example": "eyJ0eXAiOiJKV1Qi..."
                                                 },
                                                 "token_type": {
                                                     "type": "string",
@@ -360,7 +360,7 @@
                                                         },
                                                         "email": {
                                                             "type": "string",
-                                                            "example": "user@example.com"
+                                                            "example": "admin@test.com"
                                                         },
                                                         "created_at": {
                                                             "type": "string",
@@ -370,7 +370,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
-                                                                "example": "teacher"
+                                                                "example": "super_admin"
                                                             }
                                                         }
                                                     },
@@ -4296,6 +4296,138 @@
                     }
                 ]
             }
+        },
+        "/education/students/{id}/approve": {
+            "patch": {
+                "tags": [
+                    "Students"
+                ],
+                "summary": "قبول طلب تسجيل طالب (للمشرف فقط)",
+                "description": "يسمح لمشرف المسجد بتغيير حالة الطالب من (غير نشط) إلى (نشط) ليتمكن من الانضمام للحلقات.",
+                "operationId": "approveStudent",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "معرف الطالب المراد قبوله",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم قبول الطالب بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم قبول الطالب بنجاح وتفعيل حسابه."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/StudentResource"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/education/students/{id}/reject": {
+            "patch": {
+                "tags": [
+                    "Students"
+                ],
+                "summary": "رفض طلب تسجيل طالب (للمشرف فقط)",
+                "description": "يسمح لمشرف المسجد برفض طلب انضمام طالب، مما يحول حالته إلى (مرفوض).",
+                "operationId": "rejectStudent",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "معرف الطالب المراد رفضه",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم رفض الطالب بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم رفض طلب تسجيل الطالب."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/StudentResource"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -4634,11 +4766,6 @@
         {
             "name": "Students",
             "description": "Students"
-        }
-    ],
-    "security": [
-        {
-            "bearerAuth": []
         }
     ]
 }

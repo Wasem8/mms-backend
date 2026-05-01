@@ -59,4 +59,30 @@ class StudentService
     {
         Student::findOrFail($id)->delete();
     }
+
+
+    public function approve($id)
+    {
+        $user = auth()->user();
+
+        $student = Student::where('mosque_id', $user->mosque_id)
+            ->findOrFail($id);
+
+        $student->update(['status' => 'active']);
+
+        return $student->load(['mosque', 'parent']);
+    }
+
+
+    public function reject($id)
+    {
+        $user = auth()->user();
+
+        $student = Student::where('mosque_id', $user->mosque_id)
+            ->findOrFail($id);
+
+        $student->update(['status' => 'rejected']);
+
+        return $student->load(['mosque', 'parent']);
+    }
 }

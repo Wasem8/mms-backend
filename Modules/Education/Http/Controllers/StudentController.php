@@ -56,4 +56,16 @@ class StudentController
 
         return ApiResponse::success([], 'تم حذف سجل الطالب بنجاح.');
     }
+
+    public function approve($id)
+    {
+        $student = $this->service->approve($id);
+        return ApiResponse::success(new StudentResource($student), 'تم قبول الطالب بنجاح');
+    }
+
+    public function reject($id)
+    {
+        $student = $this->service->reject($id);
+        return ApiResponse::success(new StudentResource($student), 'تم رفض طلب التسجيل');
+    }
 }

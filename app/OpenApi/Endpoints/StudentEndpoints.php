@@ -125,6 +125,81 @@ class StudentEndpoints
     {
     }
 
+    #[OA\Patch(
+        path: '/education/students/{id}/approve',
+        operationId: 'approveStudent',
+        tags: ['Students'],
+        summary: 'قبول طلب تسجيل طالب (للمشرف فقط)',
+        description: 'يسمح لمشرف المسجد بتغيير حالة الطالب من (غير نشط) إلى (نشط) ليتمكن من الانضمام للحلقات.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'معرف الطالب المراد قبوله',
+                schema: new OA\Schema(type: 'integer', example: 1)
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'تم قبول الطالب بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم قبول الطالب بنجاح وتفعيل حسابه.'),
+                        new OA\Property(property: 'data', ref: '#/components/schemas/StudentResource'),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+            new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
+            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+        ]
+    )]
+    public function approve($id)
+    {
+    }
+
+    #[OA\Patch(
+        path: '/education/students/{id}/reject',
+        operationId: 'rejectStudent',
+        tags: ['Students'],
+        summary: 'رفض طلب تسجيل طالب (للمشرف فقط)',
+        description: 'يسمح لمشرف المسجد برفض طلب انضمام طالب، مما يحول حالته إلى (مرفوض).',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'معرف الطالب المراد رفضه',
+                schema: new OA\Schema(type: 'integer', example: 1)
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'تم رفض الطالب بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم رفض طلب تسجيل الطالب.'),
+                        new OA\Property(property: 'data', ref: '#/components/schemas/StudentResource'),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+            new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
+            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+        ]
+    )]
+    public function reject($id)
+    {
+    }
 }
 
 

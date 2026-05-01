@@ -7,6 +7,9 @@ use OpenApi\Attributes as OA;
 /**
  * MMS API Documentation - OpenAPI/Swagger Configuration
  */
+#[OA\OpenAPI(
+    openapi: '3.0.0'
+)]
 #[OA\Info(
     title: 'MMS API Documentation',
     version: "1.0.0",
@@ -56,7 +59,7 @@ use OpenApi\Attributes as OA;
             )
         ),
 
-        // استجابة 403: صلاحيات غير كافية (التي طلبتها)
+        // استجابة 403: صلاحيات غير كافية
         'Forbidden' => new OA\Response(
             response: 'Forbidden',
             description: 'Forbidden - Insufficient permissions',
@@ -116,4 +119,3 @@ use OpenApi\Attributes as OA;
 class OpenApiSpec
 {
 }
-
