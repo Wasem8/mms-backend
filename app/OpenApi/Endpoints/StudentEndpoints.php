@@ -2,22 +2,37 @@
 
 namespace App\OpenApi\Endpoints;
 
+use App\Support\ApiResponse;
 use Modules\Education\Http\Requests\StoreStudentRequest;
+use Modules\Education\Transformers\StudentResource;
 use OpenApi\Attributes as OA;
 
 class StudentEndpoints
 {
     #[OA\Get(
         path: '/education/students',
-        operationId: 'listStudents',
+        operationId: 'getStudentsList',
         tags: ['Students'],
-        summary: 'عرض قائمة الطلاب',
-        description: 'يعيد قائمة الطلاب المفلترة: المشرف يرى طلاب مسجده، وولي الأمر يرى أبناءه.',
+        summary: 'عرض قائمة الطلاب مع الفلترة',
+        description: 'يمكن الفلترة حسب الحالة باستخدام query parameter: ?status=active أو pending أو rejected',
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'status',
+                in: 'query',
+                description: 'فلترة الطلاب حسب الحالة',
+                required: false,
+                schema: new OA\Schema(
+                    type: 'string',
+                    enum: ['active', 'pending', 'rejected'],
+                    example: 'active'
+                )
+            )
+        ],
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'تم جلب القائمة بنجاح',
+                description: 'قائمة الطلاب',
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'status', type: 'boolean', example: true),
@@ -27,15 +42,14 @@ class StudentEndpoints
                             type: 'array',
                             items: new OA\Items(ref: '#/components/schemas/StudentResource')
                         ),
-                        new OA\Property(property: 'pagination', type: 'object', ref: '#/components/schemas/Pagination')
+                        new OA\Property(property: 'pagination', ref: '#/components/schemas/Pagination')
                     ]
                 )
             )
         ]
     )]
-    public function index()
-    {
-
+    public function index() {
+        // الكود كما هو
     }
 
     #[OA\Post(
@@ -154,6 +168,25 @@ class StudentEndpoints
                     ]
                 )
             ),
+            new OA\Response(
+                response: 400,
+                description: 'خطأ في منطق الطلب (Bad Request)',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: false),
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            oneOf: [
+                                new OA\Schema(example: 'هذا الطالب مفعل مسبقاً.'),
+                                new OA\Schema(example: 'لا يمكن قبول طالب مرفوض بالفعل.'),
+                            ]
+                        ),
+                        new OA\Property(property: 'data', type: 'object', nullable: true, example: null),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                    ]
+                )
+            ),
             new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
             new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
             new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
@@ -161,6 +194,16 @@ class StudentEndpoints
     )]
     public function approve($id)
     {
+        $result = $this->service->approve($id);
+
+        if (isset($result['error']) && $result['error']) {
+            return ApiResponse::error($result['message'], 400);
+        }
+
+        return ApiResponse::success(
+            new StudentResource($result['data']),
+            'تم قبول الطالب بنجاح وتفعيل حسابه.'
+        );
     }
 
     #[OA\Patch(
@@ -192,6 +235,25 @@ class StudentEndpoints
                     ]
                 )
             ),
+            new OA\Response(
+                response: 400,
+                description: 'خطأ في منطق الطلب (Bad Request)',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: false),
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            oneOf: [
+                                new OA\Schema(example: 'لا يمكن رفض طالب مقبول بالفعل.'),
+                                new OA\Schema(example: 'هذا الطلب مرفوض مسبقاً.')
+                            ]
+                        ),
+                        new OA\Property(property: 'data', type: 'object', nullable: true, example: null),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                    ]
+                )
+            ),
             new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
             new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
             new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
@@ -199,6 +261,16 @@ class StudentEndpoints
     )]
     public function reject($id)
     {
+        $result = $this->service->reject($id);
+
+        if (isset($result['error']) && $result['error']) {
+            return ApiResponse::error($result['message'], 400);
+        }
+
+        return ApiResponse::success(
+            new StudentResource($result['data']),
+            'تم رفض طلب تسجيل الطالب.'
+        );
     }
 }
 

@@ -4094,12 +4094,29 @@
                 "tags": [
                     "Students"
                 ],
-                "summary": "عرض قائمة الطلاب",
-                "description": "يعيد قائمة الطلاب المفلترة: المشرف يرى طلاب مسجده، وولي الأمر يرى أبناءه.",
-                "operationId": "listStudents",
+                "summary": "عرض قائمة الطلاب مع الفلترة",
+                "description": "يمكن الفلترة حسب الحالة باستخدام query parameter: ?status=active أو inactive أو rejected",
+                "operationId": "getStudentsList",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "فلترة الطلاب حسب الحالة",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "active",
+                            "enum": [
+                                "active",
+                                "pending",
+                                "rejected"
+                            ]
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "تم جلب القائمة بنجاح",
+                        "description": "قائمة الطلاب",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4346,6 +4363,43 @@
                             }
                         }
                     },
+                    "400": {
+                        "description": "خطأ في منطق الطلب (Bad Request)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "oneOf": [
+                                                {
+                                                    "example": "هذا الطالب مفعل مسبقاً."
+                                                },
+                                                {
+                                                    "example": "لا يمكن قبول طالب مرفوض بالفعل."
+                                                }
+                                            ]
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
                     "401": {
                         "$ref": "#/components/responses/Unauthenticated"
                     },
@@ -4400,6 +4454,43 @@
                                         },
                                         "data": {
                                             "$ref": "#/components/schemas/StudentResource"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "خطأ في منطق الطلب (Bad Request)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "oneOf": [
+                                                {
+                                                    "example": "لا يمكن رفض طالب مقبول بالفعل."
+                                                },
+                                                {
+                                                    "example": "هذا الطلب مرفوض مسبقاً."
+                                                }
+                                            ]
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
                                         },
                                         "pagination": {
                                             "type": "object",

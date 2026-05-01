@@ -18,9 +18,12 @@ Route::prefix('education')->group(function () {
     });
 
 
-    Route::middleware(['auth:api', 'role:parent,halaqa_supervisor'])->group(function () {
-        Route::apiResource('students', StudentController::class);
+    Route::middleware(['auth:api', 'role:parent'])->group(function () {
+        Route::post('students', [StudentController::class, 'store']); // تقديم الطلب للأب فقط
+    });
 
+    Route::middleware(['auth:api', 'role:parent,halaqa_supervisor'])->group(function () {
+        Route::apiResource('students', StudentController::class)->except(['store']);
     });
 
 
