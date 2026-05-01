@@ -11,6 +11,5 @@ class MosqueDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // $this->call([]);
     }
 }
