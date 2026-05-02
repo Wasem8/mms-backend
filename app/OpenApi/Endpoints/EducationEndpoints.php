@@ -2,6 +2,8 @@
 
 namespace App\OpenApi\Endpoints;
 
+use App\Support\ApiResponse;
+use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
 
 class EducationEndpoints
@@ -52,7 +54,31 @@ class EducationEndpoints
                     properties: [
                         new OA\Property(property: 'status', type: 'boolean', example: true),
                         new OA\Property(property: 'message', type: 'string', example: 'تم جلب تفاصيل الحلقة'),
-                        new OA\Property(property: 'data', ref: '#/components/schemas/HalaqaResource'),
+                        new OA\Property(
+                            property: 'data',
+                            allOf: [
+                                new OA\Schema(ref: '#/components/schemas/HalaqaResource'), // جلب الخصائص الأساسية
+                                new OA\Schema(
+                                    properties: [
+                                        new OA\Property(
+                                            property: 'students',
+                                            type: 'array',
+                                            items: new OA\Items(
+                                                properties: [
+                                                    new OA\Property(property: 'id', type: 'integer', example: 1),
+                                                    new OA\Property(property: 'first_name', type: 'string', example: 'Student'),
+                                                    new OA\Property(property: 'last_name', type: 'string', example: '1'),
+                                                    new OA\Property(property: 'parent_name', type: 'string', nullable: true, example: null),
+                                                    new OA\Property(property: 'email', type: 'string', example: 'student1@test.com'),
+                                                    new OA\Property(property: 'phone', type: 'string', nullable: true, example: null),
+                                                    new OA\Property(property: 'status', type: 'string', example: 'active'),
+                                                ]
+                                            )
+                                        )
+                                    ]
+                                )
+                            ]
+                        ),
                         new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
                     ]
                 )
@@ -76,7 +102,7 @@ class EducationEndpoints
                 required: ['name', 'capacity'],
                 properties: [
                     new OA\Property(property: 'name', type: 'string', example: 'حلقة التجويد'),
-                    new OA\Property(property: 'teacher_id', type: 'integer', nullable: true, example: 5),
+                    new OA\Property(property: 'teacher_id', type: 'integer', nullable: true, example: 4),
                     new OA\Property(property: 'capacity', type: 'integer', example: 20),
                     new OA\Property(property: 'schedule_days', type: 'array', items: new OA\Items(type: 'string'), example: ['Sunday', 'Tuesday']),
                     new OA\Property(property: 'start_time', type: 'string', example: '16:00'),
@@ -204,41 +230,125 @@ class EducationEndpoints
         path: '/education/halaqat/{id}/students',
         operationId: 'attachStudents',
         tags: ['Education'],
-        summary: 'Add students to halaqa: ' . self::ROLE_REQUIRED,
+        summary: 'إضافة طلاب إلى الحلقة: ' . self::ROLE_REQUIRED,
         security: [['bearerAuth' => []]],
         parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                description: 'معرف الحلقة',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            )
         ],
         requestBody: new OA\RequestBody(
             required: true,
-            content: new OA\JsonContent(properties: [
-                new OA\Property(property: 'students', type: 'array', items: new OA\Items(type: 'integer'), example: [1, 2, 3])
-            ])
+            content: new OA\JsonContent(
+                required: ['students'],
+                properties: [
+                    new OA\Property(
+                        property: 'students',
+                        type: 'array',
+                        items: new OA\Items(type: 'integer'),
+                        example: [1, 5, 12]
+                    )
+                ]
+            )
         ),
         responses: [
-            new OA\Response(response: 200, description: 'Students added successfully'),
+            new OA\Response(
+                response: 200,
+                description: 'تمت العملية بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم إضافة الطلاب إلى الحلقة بنجاح'),
+                        new OA\Property(property: 'data', type: 'array', items: new OA\Items(), example: []),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'فشل التحقق (طلاب مفقودين، تبعية مسجد مختلف، أو تجاوز سعة)',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: false),
+                        new OA\Property(property: 'message', type: 'string', example: 'Validation error.'),
+                        new OA\Property(
+                            property: 'errors',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'students',
+                                    type: 'array',
+                                    items: new OA\Items(type: 'string'),
+                                    example: ["الطالب (أحمد) يتبع لمسجد آخر.", "المعرفات التالية غير موجودة في النظام: 12"]
+                                ),
+                                new OA\Property(
+                                    property: 'capacity',
+                                    type: 'array',
+                                    items: new OA\Items(type: 'string'),
+                                    example: ["عذراً، الحلقة لا تستوعب هذا العدد. المقاعد المتبقية: 3"]
+                                )
+                            ]
+                        ),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
             new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
             new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
-            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
         ]
     )]
-    public function attachStudents() {}
+    public function attachStudents(Request $request, $id)
+    {
+        // 1. التحقق الأولي من صحة المدخلات (مصفوفة وأرقام)
+        $validated = $request->validate([
+            'students' => 'required|array|min:1',
+            'students.*' => 'integer'
+        ]);
+
+        // 2. استدعاء الخدمة لتنفيذ المنطق المعقد
+        $this->service->attachStudents($id, $validated['students']);
+
+        return ApiResponse::success(null, 'تم إضافة الطلاب للحلقة بنجاح.');
+    }
 
     #[OA\Delete(
         path: '/education/halaqat/{id}/students/{studentId}',
         operationId: 'detachStudent',
         tags: ['Education'],
-        summary: 'Remove student from halaqa: ' . self::ROLE_REQUIRED,
+        summary: 'إزالة طالب من الحلقة: ' . self::ROLE_REQUIRED,
         security: [['bearerAuth' => []]],
         parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
-            new OA\Parameter(name: 'studentId', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+            new OA\Parameter(name: 'id', in: 'path', description: 'معرف الحلقة', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'studentId', in: 'path', description: 'معرف الطالب', required: true, schema: new OA\Schema(type: 'integer'))
         ],
         responses: [
-            new OA\Response(response: 200, description: 'Student removed successfully'),
-            new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
+            new OA\Response(
+                response: 200,
+                description: 'تمت الإزالة بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم إزالة الطالب من الحلقة'),
+                        new OA\Property(property: 'data', type: 'array', items: new OA\Items(), example: []),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                    ]
+                )
+            ),
             new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
-            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+            new OA\Response(response: 422, description: 'الطالب غير موجود في هذه الحلقة',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: false),
+                        new OA\Property(property: 'message', type: 'string', example: 'هذا الطالب غير مسجل في هذه الحلقة.'),
+                        new OA\Property(property: 'data', type: 'object', nullable: true, example: null),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                    ]
+                ))
         ]
     )]
     public function detachStudent() {}

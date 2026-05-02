@@ -139,7 +139,16 @@ class AuthEndpoints
         operationId: 'login',
         tags: ['Auth'],
         summary: 'Login with email and password',
-        description: 'Authenticate and receive an access token',
+        description: "
+### 🧪 Test Credentials:
+| Role | Email | Password |
+| :--- | :--- | :--- |
+| **Super Admin** | `admin@test.com` | `password` |
+| **Mosque Manager** | `manager@test.com` | `password` |
+| **Supervisor** | `supervisor@test.com` | `password` |
+| **Teacher** | `teacher@test.com` | `password` |
+| **Parent** | `parent@test.com` | `password` |
+    ",
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -162,7 +171,7 @@ class AuthEndpoints
                             property: 'data',
                             type: 'object',
                             properties: [
-                                new OA\Property(property: 'access_token', type: 'string', example: '13|xxxxxxxxxxxx'),
+                                new OA\Property(property: 'access_token', type: 'string', example: 'eyJ0eXAiOiJKV1Qi...'),
                                 new OA\Property(property: 'token_type', type: 'string', example: 'Bearer'),
                                 new OA\Property(
                                     property: 'user',
@@ -170,12 +179,12 @@ class AuthEndpoints
                                     properties: [
                                         new OA\Property(property: 'id', type: 'integer', example: 1),
                                         new OA\Property(property: 'name', type: 'string', example: 'Ahmed Ali'),
-                                        new OA\Property(property: 'email', type: 'string', example: 'user@example.com'),
+                                        new OA\Property(property: 'email', type: 'string', example: 'admin@test.com'),
                                         new OA\Property(property: 'created_at', type: 'string', example: '2026-04-13T11:28:02.000000Z'),
                                         new OA\Property(
                                             property: 'roles',
                                             type: 'array',
-                                            items: new OA\Items(type: 'string', example: 'teacher')
+                                            items: new OA\Items(type: 'string', example: 'super_admin')
                                         ),
                                     ]
                                 ),

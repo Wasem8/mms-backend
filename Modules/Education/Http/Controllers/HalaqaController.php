@@ -34,8 +34,9 @@ class HalaqaController
 
     public function show($id)
     {
+        $halaqa = $this->service->find($id, ['students', 'teacher', 'mosque']);
         return ApiResponse::success(
-            $this->service->find($id),
+            new HalaqaResource($halaqa),
             'تم جلب تفاصيل الحلقة'
         );
     }
@@ -44,7 +45,7 @@ class HalaqaController
     {
         $halaqa = $this->service->update($id, $request->validated());
 
-        return ApiResponse::success($halaqa, 'تم تحديث بيانات الحلقة بنجاح');
+        return ApiResponse::success(new HalaqaResource($halaqa), 'تم تحديث بيانات الحلقة بنجاح');
     }
 
     public function destroy($id)
@@ -70,4 +71,6 @@ class HalaqaController
 
         return ApiResponse::success([], 'تم إزالة الطالب من الحلقة');
     }
+
+
 }

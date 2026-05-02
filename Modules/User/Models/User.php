@@ -6,12 +6,14 @@ namespace Modules\User\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authentication;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
+use Modules\Education\Models\Student;
+use Modules\Mosque\Models\Mosque;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
 
-class User extends Authentication
+class User extends Authentication implements JWTSubject
 {
-    use HasApiTokens, Notifiable,HasFactory;
+    use  Notifiable,HasFactory;
 
     protected $fillable = [
         'name',
@@ -20,6 +22,7 @@ class User extends Authentication
         'otp',
         'otp_expires_at',
         'email_verified_at',
+        'mosque_id',
         'status'
     ];
 
@@ -95,5 +98,37 @@ class User extends Authentication
             'otp' => null,
             'otp_expires_at' => null
         ]);
+    }
+
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims()
+    {
+        return [];
+    }
+
+
+    public function mosque()
+    {
+        return $this->belongsTo(Mosque::class);
+    }
+
+    public function children()
+    {
+        return $this->hasMany(Student::class, 'parent_id');
+    }
+
+
+    public function isSupervisor(): bool
+    {
+        return $this->hasRole('halaqa_supervisor');
+    }
+
+    public function isParent(): bool
+    {
+        return $this->hasRole('parent');
     }
 }

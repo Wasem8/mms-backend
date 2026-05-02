@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use Modules\Education\Models\Halaqa;
 use Modules\Education\Models\Student;
 use Modules\Education\Models\Attendance;
+use Modules\Mosque\Models\Mosque;
 use Modules\User\Models\User;
 use Illuminate\Support\Facades\DB;
 
@@ -33,26 +34,31 @@ class EducationDatabaseSeeder extends Seeder
 
             // 📚 2. إنشاء حلقات
 
+            $mosques = Mosque::take(2)->get();
+
+            $mosque1 = $mosques[0] ?? null;
+            $mosque2 = $mosques[1] ?? null;
+
 
             $halaqa1 = Halaqa::create([
                 'name' => 'حلقة التحفيظ - المستوى الأول',
                 'teacher_id' => $teacher->id,
+                'mosque_id' => $mosque1->id,
                 'capacity' => 10,
                 'schedule_days' => ['sunday', 'tuesday', 'thursday'],
                 'start_time' => '16:00',
                 'end_time' => '18:00',
-                'level' => 'Beginner',
                 'status' => 'active',
             ]);
 
             $halaqa2 = Halaqa::create([
                 'name' => 'حلقة النور',
                 'schedule_days' => ['saturday', 'monday'],
+                'mosque_id' => $mosque2->id,
                 'start_time' => '15:00',
                 'end_time' => '17:00',
                 'teacher_id' => $teacher->id,
                 'capacity' => 15,
-                'level' => 'Intermediate',
                 'status' => 'active',
             ]);
 
@@ -64,7 +70,8 @@ class EducationDatabaseSeeder extends Seeder
                     Student::create([
                         'first_name' => "Student",
                         'last_name' => "$i",
-                        'email' => "student$i@test.com",
+                        'mosque_id' => $i <= 5 ? $mosque1->id : $mosque2->id,
+                        'date_of_birth' => now()->subYears(10 + $i)->toDateString(),
                         'status' => 'active',
                     ])
                 );

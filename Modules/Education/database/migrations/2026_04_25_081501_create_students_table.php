@@ -13,14 +13,13 @@ return new class extends Migration
     {
         Schema::create('students', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('parent_id')->nullable()->constrained('users')->nullOnDelete();
             $table->string('first_name');
             $table->string('last_name')->nullable();
-            $table->string('email')->nullable();
-            $table->string('phone')->nullable();
+            $table->foreignId('mosque_id')->constrained('mosques')->cascadeOnDelete();
             $table->date('date_of_birth')->nullable();
             $table->string('gender')->nullable();
-            $table->enum('status', ['active', 'inactive'])->default('inactive');
+            $table->enum('status', ['active', 'pending', 'rejected'])->default('pending');
             $table->timestamps();
         });
     }

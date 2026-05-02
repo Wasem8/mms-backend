@@ -3,15 +3,16 @@
 namespace Modules\Education\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Modules\Mosque\Models\Mosque;
+use Modules\User\Models\User;
 
 class Student extends Model
 {
     protected $fillable = [
-        'user_id',
+        'parent_id',
         'first_name',
         'last_name',
-        'email',
-        'phone',
+        'mosque_id',
         'date_of_birth',
         'gender',
         'status'
@@ -20,6 +21,16 @@ class Student extends Model
     public function halaqat()
     {
         return $this->belongsToMany(Halaqa::class);
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(User::class, 'parent_id');
+    }
+
+    public function mosque()
+    {
+        return $this->belongsTo(Mosque::class);
     }
 
     public function getFullNameAttribute()

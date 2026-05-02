@@ -17,6 +17,7 @@ use Modules\User\Http\Requests\RegisterParentRequest;
 use Modules\User\Http\Requests\ResetPasswordRequest;
 use Modules\User\Http\Requests\VerifyOtpRequest;
 use Modules\User\Transformers\UserResource;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller {
 
@@ -48,9 +49,7 @@ class AuthController extends Controller {
 
         $user = $result;
 
-        $user->tokens()->delete();
-
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = JWTAuth::fromUser($user);
 
         return ApiResponse::success([
             'access_token' => $token,
@@ -74,7 +73,7 @@ class AuthController extends Controller {
     }
 
     public function logout(Request $request) {
-        $request->user()->currentAccessToken()->delete();
+        auth('api')->logout();
         return ApiResponse::success([],'Logged out successfully.');
     }
 
