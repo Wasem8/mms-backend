@@ -11,10 +11,23 @@ class AttendanceResource extends JsonResource
     {
         return [
             'id' => $this->id,
+
+            'student' => [
+                'id' => $this->student->id,
+                'name' => $this->student->first_name . ' ' . $this->student->last_name,
+            ],
+
+            'halaqa' => [
+                'id' => $this->halaqa->id,
+                'name' => $this->halaqa->name,
+            ],
+
             'date' => $this->date,
             'status' => $this->status,
-            'student_id' => $this->student_id,
-            'halaqa_id' => $this->halaqa_id,
+
+            'notes' => $this->notes,
+
+            'created_at' => $this->created_at,
         ];
     }
 }

@@ -19,11 +19,24 @@ Route::prefix('education')->group(function () {
 
     });
 
+<<<<<<< Updated upstream
     Route::post('halaqat/{id}/students', [HalaqaController::class, 'attachStudents']);
     Route::delete('halaqat/{id}/students/{studentId}', [HalaqaController::class, 'detachStudent']);
+=======
+    Route::middleware(['auth:api', 'role:parent,halaqa_supervisor'])->group(function () {
+        Route::apiResource('students', StudentController::class)->except(['store']);
+    });
 
 
+    Route::middleware(['auth:api', 'role:teacher'])->group(function () {
+        Route::post('attendance', [AttendanceController::class, 'storeBulk']);
+    });
+>>>>>>> Stashed changes
 
-    Route::post('attendance', [AttendanceController::class, 'store']);
-    Route::get('attendance', [AttendanceController::class, 'index']);
+    Route::middleware(['auth:api', 'role:parent,halaqa_supervisor,teacher'])->group(function () {
+
+        Route::get('attendance', [AttendanceController::class, 'index']);
+
+    });
+
 });

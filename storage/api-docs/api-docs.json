@@ -213,33 +213,34 @@
                                                 },
                                                 "email": {
                                                     "type": "string",
-                                                    "example": "user@example.com"
+                                                    "example": "admin@test.com"
                                                 },
                                                 "status": {
                                                     "type": "string",
-                                                    "example": "active",
-                                                    "enum": [
-                                                        "active",
-                                                        "inactive",
-                                                        "blocked"
-                                                    ]
+                                                    "example": "active"
+                                                },
+                                                "email_verified_at": {
+                                                    "type": "string",
+                                                    "example": "2026-05-03 14:00:00",
+                                                    "nullable": true
                                                 },
                                                 "roles": {
                                                     "type": "array",
                                                     "items": {
-                                                        "type": "string"
-                                                    },
-                                                    "example": [
-                                                        "teacher"
-                                                    ]
+                                                        "type": "string",
+                                                        "example": "parent"
+                                                    }
+                                                },
+                                                "permissions": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "create_student"
+                                                    }
                                                 },
                                                 "created_at": {
                                                     "type": "string",
-                                                    "format": "date-time"
-                                                },
-                                                "updated_at": {
-                                                    "type": "string",
-                                                    "format": "date-time"
+                                                    "example": "2026-05-03 12:00:00"
                                                 }
                                             },
                                             "type": "object"
@@ -362,16 +363,36 @@
                                                             "type": "string",
                                                             "example": "user@example.com"
                                                         },
-                                                        "created_at": {
+                                                        "status": {
                                                             "type": "string",
-                                                            "example": "2026-04-13T11:28:02.000000Z"
+                                                            "example": "active"
+                                                        },
+                                                        "email_verified_at": {
+                                                            "type": "string",
+                                                            "example": "2026-05-03 14:00:00",
+                                                            "nullable": true
                                                         },
                                                         "roles": {
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+<<<<<<< Updated upstream
                                                                 "example": "teacher"
+=======
+                                                                "example": "parent"
+>>>>>>> Stashed changes
                                                             }
+                                                        },
+                                                        "permissions": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string",
+                                                                "example": "create_student"
+                                                            }
+                                                        },
+                                                        "created_at": {
+                                                            "type": "string",
+                                                            "example": "2026-05-03 12:00:00"
                                                         }
                                                     },
                                                     "type": "object"
@@ -696,6 +717,138 @@
                         }
                     }
                 }
+            }
+        },
+        "/auth/refresh": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Refresh JWT token",
+                "description": "Bumps the current token and returns a new one. The old token will be invalidated.",
+                "operationId": "refreshToken",
+                "responses": {
+                    "200": {
+                        "description": "New token generated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Token refreshed successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "access_token": {
+                                                    "type": "string"
+                                                },
+                                                "token_type": {
+                                                    "type": "string",
+                                                    "example": "Bearer"
+                                                },
+                                                "expires_in": {
+                                                    "type": "integer",
+                                                    "example": 3600
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/auth/me": {
+            "get": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Get current authenticated user profile",
+                "operationId": "me",
+                "responses": {
+                    "200": {
+                        "description": "Profile retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "User profile retrieved successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Ahmed Ali"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "admin@test.com"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "active"
+                                                },
+                                                "roles": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "permissions": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "example": "2026-05-03 12:00:00"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/education/halaqat": {
@@ -3961,9 +4114,32 @@
                 "tags": [
                     "Students"
                 ],
+<<<<<<< Updated upstream
                 "summary": "عرض قائمة الطلاب",
                 "description": "يعيد قائمة الطلاب المفلترة: المشرف يرى طلاب مسجده، وولي الأمر يرى أبناءه.",
                 "operationId": "listStudents",
+=======
+                "summary": "عرض قائمة الطلاب مع الفلترة",
+                "description": "يمكن الفلترة حسب الحالة باستخدام query parameter: ?status=active أو pending أو rejected",
+                "operationId": "getStudentsList",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "فلترة الطلاب حسب الحالة",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "active",
+                            "enum": [
+                                "active",
+                                "pending",
+                                "rejected"
+                            ]
+                        }
+                    }
+                ],
+>>>>>>> Stashed changes
                 "responses": {
                     "200": {
                         "description": "تم جلب القائمة بنجاح",

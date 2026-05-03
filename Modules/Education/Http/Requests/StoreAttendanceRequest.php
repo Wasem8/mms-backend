@@ -12,11 +12,12 @@ class StoreAttendanceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'halaqa_id' => 'required|exists:halaqat,id',
-            'student_id' => 'required|exists:students,id',
+            'halaqa_id' => 'required|exists:halaqats,id',
             'date' => 'required|date',
-            'status' => 'required|in:present,absent,late',
-            'notes' => 'nullable|string'
+            'attendances' => 'required|array',
+            'attendances.*.student_id' => 'required|exists:students,id',
+            'attendances.*.status' => 'required|in:present,absent,late',
+            'attendances.*.notes' => 'nullable|string',
         ];
     }
 

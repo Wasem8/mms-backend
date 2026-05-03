@@ -16,10 +16,15 @@ class UserResource extends BaseApiResource
             'id'         => $this->id,
             'name'       => $this->name,
             'email'      => $this->email,
-            'created_at' => $this->created_at?->format('Y-m-d H:i:s'),
+            'status'     => $this->status,
+            'email_verified_at' => $this->email_verified_at?->format('Y-m-d H:i:s'),
             'roles'      => $this->whenLoaded('roles', function () {
                 return $this->roles->pluck('name');
             }),
+            'permissions' => $this->whenLoaded('roles', function () {
+                return $this->roles->flatMap(fn($role) => $role->permissions)->pluck('name')->unique();
+            }),
+            'created_at' => $this->created_at?->format('Y-m-d H:i:s'),
         ];
     }
 }
