@@ -4,6 +4,7 @@ namespace Modules\Mosque\Services;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Modules\Mosque\Services\FacilityService;
 use Modules\Mosque\Models\Mosque;
 use Modules\Mosque\Repositories\MosqueRepositoryInterface;
@@ -43,6 +44,10 @@ class MosqueService
             $data['average_rating'] = 0;
             $data['reviews_count'] = 0;
 
+            if (isset($data['image']) && $data['image']) {
+                $data['image'] = $this->uploadImage($data['image']);
+            }
+
             $mosque = $this->mosqueRepository->create($data);
 
             if (!empty($facilityIds)) {
@@ -60,6 +65,15 @@ class MosqueService
             $facilityIds = $data['facility_ids'] ?? null;
             unset($data['facility_ids']);
 
+            if (isset($data['image']) && $data['image']) {
+
+                if ($mosque->image) {
+                    $this->deleteImage($mosque->image);
+                }
+
+                $data['image'] = $this->uploadImage($data['image']);
+            }
+
             $this->mosqueRepository->update($mosque, $data);
 
             if ($facilityIds !== null) {
@@ -69,7 +83,6 @@ class MosqueService
             return $this->getMosqueById($mosque->id);
         });
     }
-
     public function deleteMosque(Mosque $mosque): void
     {
         DB::transaction(function () use ($mosque) {
@@ -121,5 +134,15 @@ class MosqueService
             'average_rating' => $averageRating,
             'reviews_count' => $reviewsCount,
         ]);
+    }
+
+    private function uploadImage($image): string
+    {
+        return $image->store('mosques', 'public');
+    }
+
+    private function deleteImage(string $path): void
+    {
+        Storage::disk('public')->delete($path);
     }
 }

@@ -1782,7 +1782,7 @@
                                                     },
                                                     "image": {
                                                         "type": "string",
-                                                        "example": "mosque.jpg",
+                                                        "example": "/storage/mosques/mosque.jpg",
                                                         "nullable": true
                                                     },
                                                     "working_hours": {
@@ -1801,7 +1801,7 @@
                                                     },
                                                     "is_featured": {
                                                         "type": "boolean",
-                                                        "example": false
+                                                        "example": 0
                                                     },
                                                     "city": {
                                                         "type": "string",
@@ -1900,7 +1900,7 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "required": [
                                     "name"
@@ -1913,9 +1913,9 @@
                                         "minLength": 2
                                     },
                                     "image": {
+                                        "description": "Mosque image file to upload",
                                         "type": "string",
-                                        "example": "mosque.jpg",
-                                        "nullable": true
+                                        "format": "binary"
                                     },
                                     "working_hours": {
                                         "type": "string",
@@ -1933,7 +1933,7 @@
                                     },
                                     "is_featured": {
                                         "type": "boolean",
-                                        "example": false
+                                        "example": 0
                                     },
                                     "city": {
                                         "type": "string",
@@ -2006,7 +2006,7 @@
                                                 },
                                                 "image": {
                                                     "type": "string",
-                                                    "example": "mosque.jpg",
+                                                    "example": "/storage/mosques/mosque.jpg",
                                                     "nullable": true
                                                 },
                                                 "working_hours": {
@@ -2025,7 +2025,7 @@
                                                 },
                                                 "is_featured": {
                                                     "type": "boolean",
-                                                    "example": false
+                                                    "example": 0
                                                 },
                                                 "city": {
                                                     "type": "string",
@@ -2231,7 +2231,7 @@
                                                     },
                                                     "image": {
                                                         "type": "string",
-                                                        "example": "mosque.jpg",
+                                                        "example": "/storage/mosques/mosque.jpg",
                                                         "nullable": true
                                                     },
                                                     "working_hours": {
@@ -2250,7 +2250,7 @@
                                                     },
                                                     "is_featured": {
                                                         "type": "boolean",
-                                                        "example": false
+                                                        "example": 0
                                                     },
                                                     "city": {
                                                         "type": "string",
@@ -2410,7 +2410,7 @@
                                                     },
                                                     "image": {
                                                         "type": "string",
-                                                        "example": "nour.jpg",
+                                                        "example": "/storage/mosques/nour.jpg",
                                                         "nullable": true
                                                     },
                                                     "working_hours": {
@@ -2550,7 +2550,7 @@
                                                     },
                                                     "image": {
                                                         "type": "string",
-                                                        "example": "rahma.jpg",
+                                                        "example": "/storage/mosques/rahma.jpg",
                                                         "nullable": true
                                                     },
                                                     "working_hours": {
@@ -2569,7 +2569,7 @@
                                                     },
                                                     "is_featured": {
                                                         "type": "boolean",
-                                                        "example": false
+                                                        "example": 0
                                                     },
                                                     "city": {
                                                         "type": "string",
@@ -2718,7 +2718,7 @@
                                                 },
                                                 "image": {
                                                     "type": "string",
-                                                    "example": "rahma.jpg",
+                                                    "example": "/storage/mosques/rahma.jpg",
                                                     "nullable": true
                                                 },
                                                 "working_hours": {
@@ -2737,7 +2737,7 @@
                                                 },
                                                 "is_featured": {
                                                     "type": "boolean",
-                                                    "example": false
+                                                    "example": 0
                                                 },
                                                 "city": {
                                                     "type": "string",
@@ -2861,9 +2861,14 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "properties": {
+                                    "_method": {
+                                        "description": "Included if sending via POST to handle multipart data in some frameworks",
+                                        "type": "string",
+                                        "example": "PUT"
+                                    },
                                     "name": {
                                         "type": "string",
                                         "example": "Al-Rahma Mosque Updated",
@@ -2871,9 +2876,9 @@
                                         "minLength": 2
                                     },
                                     "image": {
+                                        "description": "New mosque image file to upload",
                                         "type": "string",
-                                        "example": "updated.jpg",
-                                        "nullable": true
+                                        "format": "binary"
                                     },
                                     "working_hours": {
                                         "type": "string",
@@ -2964,7 +2969,7 @@
                                                 },
                                                 "image": {
                                                     "type": "string",
-                                                    "example": "updated.jpg",
+                                                    "example": "/storage/mosques/updated.jpg",
                                                     "nullable": true
                                                 },
                                                 "working_hours": {

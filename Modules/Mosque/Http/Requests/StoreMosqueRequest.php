@@ -15,10 +15,10 @@ class StoreMosqueRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'cover_image' => ['nullable', 'string', 'max:500'],
+            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048'  ,
             'working_hours' => ['nullable', 'string', 'max:500'],
             'status' => ['required', Rule::in(['active', 'maintenance', 'closed'])],
-            'is_featured' => ['boolean'],
+            'is_featured' => 'nullable|in:true,false,1,0,true,false',  
             'city' => ['required', 'string', 'max:100'],
             'district' => ['required', 'string', 'max:100'],
             'latitude' => ['required', 'numeric', 'decimal:0,8', 'between:-90,90'],
