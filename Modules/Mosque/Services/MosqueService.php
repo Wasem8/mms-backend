@@ -4,6 +4,8 @@ namespace Modules\Mosque\Services;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Modules\Mosque\Services\FacilityService;
 use Modules\Mosque\Models\Mosque;
 use Modules\Mosque\Repositories\MosqueRepositoryInterface;
@@ -43,6 +45,10 @@ class MosqueService
             $data['average_rating'] = 0;
             $data['reviews_count'] = 0;
 
+            if (isset($data['image']) && $data['image']) {
+                $data['image'] = $this->uploadImage($data['image']);
+            }
+
             $mosque = $this->mosqueRepository->create($data);
 
             if (!empty($facilityIds)) {
@@ -60,6 +66,15 @@ class MosqueService
             $facilityIds = $data['facility_ids'] ?? null;
             unset($data['facility_ids']);
 
+            if (isset($data['image']) && $data['image']) {
+
+                if ($mosque->image) {
+                    $this->deleteImage($mosque->image);
+                }
+
+                $data['image'] = $this->uploadImage($data['image']);
+            }
+
             $this->mosqueRepository->update($mosque, $data);
 
             if ($facilityIds !== null) {
@@ -69,7 +84,6 @@ class MosqueService
             return $this->getMosqueById($mosque->id);
         });
     }
-
     public function deleteMosque(Mosque $mosque): void
     {
         DB::transaction(function () use ($mosque) {
@@ -121,5 +135,49 @@ class MosqueService
             'average_rating' => $averageRating,
             'reviews_count' => $reviewsCount,
         ]);
+    }
+
+
+    private function uploadImage($image): string
+    {
+        $fileName = uniqid() . '.' . $image->getClientOriginalExtension();
+
+        $baseUrl = config('services.supabase.url');
+        $bucket = config('services.supabase.bucket');
+        $key = config('services.supabase.key');
+
+        $path = $bucket . '/' . $fileName;
+
+        $uploadUrl = $baseUrl . '/storage/v1/object/' . $path;
+
+        $response = Http::withHeaders([
+            'apikey' => $key,
+            'Authorization' => 'Bearer ' . $key,
+        ])->attach(
+            'file',
+            file_get_contents($image),
+            $fileName
+        )->post($uploadUrl);
+
+        if (!$response->successful()) {
+            throw new \Exception('Upload failed: ' . $response->body());
+        }
+
+        return $baseUrl . '/storage/v1/object/public/' . $path;
+    }
+    private function deleteImage(string $url): void
+    {
+        $bucket = env('SUPABASE_BUCKET');
+
+        $fileName = basename($url);
+
+        $path = $bucket . '/' . $fileName;
+
+        $deleteUrl = env('SUPABASE_URL') . '/storage/v1/object/' . $path;
+
+        Http::withHeaders([
+            'apikey' => env('SUPABASE_KEY'),
+            'Authorization' => 'Bearer ' . env('SUPABASE_KEY'),
+        ])->delete($deleteUrl);
     }
 }

@@ -13,20 +13,31 @@ return new class extends Migration
     {
         Schema::create('maintenance_requests', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('mosque_id');
-            $table->unsignedBigInteger('manager_id')->nullable();
+             $table->foreignId('mosque_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
 
-
-            $table->string('type');
+            $table->string('type')->nullable();
+            
+            $table->string('title');
             $table->text('description');
 
             $table->enum('priority', ['low', 'medium', 'high', 'urgent'])->default('medium');
-            $table->enum('status', ['pending', 'approved', 'rejected', 'completed'])->default('pending');
+
+            $table->enum('status', [
+                'pending',
+                'approved',
+                'rejected',
+                'in_progress',
+                'completed'
+            ])->default('pending');
+
+            $table->foreignId('assigned_to')->nullable()->constrained('users')->nullOnDelete();
 
             $table->text('admin_notes')->nullable();
 
-            $table->foreign('mosque_id')->references('id')->on('mosques')->onDelete('cascade');
-            $table->foreign('manager_id')->references('id')->on('users')->onDelete('set null');
+            $table->timestamp('scheduled_at')->nullable();
+            $table->timestamp('completed_at')->nullable();
+
             $table->timestamps();
         });
     }

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 use Modules\User\Models\User;
 
 // use Modules\Mosque\Database\Factories\MosqueFactory;
@@ -27,6 +28,7 @@ class Mosque extends Model
         'district',
         'latitude',
         'longitude',
+        //'place_id',
         'average_rating',
         'reviews_count',
         'imam',
@@ -41,6 +43,14 @@ class Mosque extends Model
         'average_rating' => 'decimal:2',
     ];
 
+    protected $appends = ['image_url'];
+
+    public function getImageUrlAttribute(): ?string
+    {
+        return $this->image
+            ? Storage::url($this->image)
+            : null;
+    }
 
     public function manager(): BelongsTo
     {

@@ -56,4 +56,34 @@ class StudentController
 
         return ApiResponse::success([], 'تم حذف سجل الطالب بنجاح.');
     }
+
+    // Modules/Education/Http/Controllers/StudentController.php
+
+    public function approve($id)
+    {
+        $result = $this->service->approve($id);
+
+        if (isset($result['error']) && $result['error']) {
+            return ApiResponse::error($result['message'], 400);
+        }
+
+        return ApiResponse::success(
+            new StudentResource($result['data']),
+            'تم قبول الطالب بنجاح'
+        );
+    }
+
+    public function reject($id)
+    {
+        $result = $this->service->reject($id);
+
+        if (isset($result['error']) && $result['error']) {
+            return ApiResponse::error($result['message'], 400);
+        }
+
+        return ApiResponse::success(
+            new StudentResource($result['data']),
+            'تم رفض طلب التسجيل'
+        );
+    }
 }

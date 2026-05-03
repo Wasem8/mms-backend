@@ -146,7 +146,17 @@ class AuthEndpoints
         operationId: 'login',
         tags: ['Auth'],
         summary: 'Login with email and password',
-        description: 'Authenticate and receive an access token',
+        description: "
+### 🧪 Test Credentials:
+| Role | Email | Password |
+| :--- | :--- | :--- |
+| **Super Admin** | `admin@test.com` | `password` |
+| **Mosque Manager** | `manager@test.com` | `password` |
+| **Supervisor** | `supervisor@test.com` | `password` |
+| **Teacher** | `teacher@test.com` | `password` |
+| **Parent** | `parent@test.com` | `password` |
+    ",
+
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -179,14 +189,6 @@ class AuthEndpoints
 
                                         new OA\Property(property: 'id', type: 'integer', example: 1),
                                         new OA\Property(property: 'name', type: 'string', example: 'Ahmed Ali'),
-<<<<<<< Updated upstream
-                                        new OA\Property(property: 'email', type: 'string', example: 'user@example.com'),
-                                        new OA\Property(property: 'created_at', type: 'string', example: '2026-04-13T11:28:02.000000Z'),
-                                        new OA\Property(
-                                            property: 'roles',
-                                            type: 'array',
-                                            items: new OA\Items(type: 'string', example: 'teacher')
-=======
                                         new OA\Property(property: 'email', type: 'string', example: 'admin@test.com'),
                                         new OA\Property(property: 'status', type: 'string', example: 'active'),
                                         new OA\Property(property: 'email_verified_at', type: 'string', example: '2026-05-03 14:00:00', nullable: true),
@@ -194,7 +196,6 @@ class AuthEndpoints
                                             property: 'roles',
                                             type: 'array',
                                             items: new OA\Items(type: 'string', example: 'parent')
->>>>>>> Stashed changes
                                         ),
 // إضافة هذا الجزء الهام جداً:
                                         new OA\Property(

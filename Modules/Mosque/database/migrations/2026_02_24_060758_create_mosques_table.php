@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('district')->nullable();
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
+          // $table->string('place_id')->nullable();
             $table->decimal('average_rating', 3, 2)->default(0.00);
             $table->integer('reviews_count')->default(0);;
             $table->string('imam')->nullable();
@@ -29,6 +30,9 @@ return new class extends Migration
             $table->unsignedBigInteger('manager_id')->nullable();
 
             $table->foreign('manager_id')->references('id')->on('users')->onDelete('set null');
+
+
+            $table->index(['latitude', 'longitude']);
 
             $table->timestamps();
         });

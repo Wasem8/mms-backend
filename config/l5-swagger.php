@@ -224,9 +224,11 @@ return [
             ],
             'security' => [
 
-                [
-                    'bearerAuth' => [],
-                ],
+                /*
+          [
+              'bearerAuth' => [],
+          ],
+          */
                 /*
                  * Examples of Securities
                  */

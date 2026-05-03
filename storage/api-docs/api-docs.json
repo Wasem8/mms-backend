@@ -15,7 +15,7 @@
     },
     "servers": [
         {
-            "url": "http://localhost:8000/api",
+            "url": "http://localhost:8000",
             "description": "Local Development Server"
         },
         {
@@ -297,7 +297,7 @@
                     "Auth"
                 ],
                 "summary": "Login with email and password",
-                "description": "Authenticate and receive an access token",
+                "description": "\n### 🧪 Test Credentials:\n| Role | Email | Password |\n| :--- | :--- | :--- |\n| **Super Admin** | `admin@test.com` | `password` |\n| **Mosque Manager** | `manager@test.com` | `password` |\n| **Supervisor** | `supervisor@test.com` | `password` |\n| **Teacher** | `teacher@test.com` | `password` |\n| **Parent** | `parent@test.com` | `password` |\n    ",
                 "operationId": "login",
                 "requestBody": {
                     "required": true,
@@ -361,7 +361,7 @@
                                                         },
                                                         "email": {
                                                             "type": "string",
-                                                            "example": "user@example.com"
+                                                            "example": "admin@test.com"
                                                         },
                                                         "status": {
                                                             "type": "string",
@@ -376,11 +376,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
-<<<<<<< Updated upstream
-                                                                "example": "teacher"
-=======
                                                                 "example": "parent"
->>>>>>> Stashed changes
                                                             }
                                                         },
                                                         "permissions": {
@@ -1305,12 +1301,13 @@
                 "tags": [
                     "Education"
                 ],
-                "summary": "Add students to halaqa: Required Role: **halaqa_supervisor**",
+                "summary": "إضافة طلاب إلى الحلقة: Required Role: **halaqa_supervisor**",
                 "operationId": "attachStudents",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
+                        "description": "معرف الحلقة",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -1322,6 +1319,9 @@
                     "content": {
                         "application/json": {
                             "schema": {
+                                "required": [
+                                    "students"
+                                ],
                                 "properties": {
                                     "students": {
                                         "type": "array",
@@ -1330,8 +1330,8 @@
                                         },
                                         "example": [
                                             1,
-                                            2,
-                                            3
+                                            5,
+                                            12
                                         ]
                                     }
                                 },
@@ -1342,16 +1342,92 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Students added successfully"
+                        "description": "تمت العملية بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم إضافة الطلاب إلى الحلقة بنجاح"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {},
+                                            "example": []
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "فشل التحقق (طلاب مفقودين، تبعية مسجد مختلف، أو تجاوز سعة)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation error."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "students": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "example": [
+                                                        "الطالب (أحمد) يتبع لمسجد آخر.",
+                                                        "المعرفات التالية غير موجودة في النظام: 12"
+                                                    ]
+                                                },
+                                                "capacity": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "example": [
+                                                        "عذراً، الحلقة لا تستوعب هذا العدد. المقاعد المتبقية: 3"
+                                                    ]
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
                     },
                     "403": {
                         "$ref": "#/components/responses/Forbidden"
                     },
                     "404": {
                         "$ref": "#/components/responses/NotFound"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/Unauthenticated"
                     }
                 },
                 "security": [
@@ -1366,12 +1442,13 @@
                 "tags": [
                     "Education"
                 ],
-                "summary": "Remove student from halaqa: Required Role: **halaqa_supervisor**",
+                "summary": "إزالة طالب من الحلقة: Required Role: **halaqa_supervisor**",
                 "operationId": "detachStudent",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
+                        "description": "معرف الحلقة",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -1380,6 +1457,7 @@
                     {
                         "name": "studentId",
                         "in": "path",
+                        "description": "معرف الطالب",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -1388,16 +1466,67 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Student removed successfully"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/Forbidden"
+                        "description": "تمت الإزالة بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم إزالة الطالب من الحلقة"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {},
+                                            "example": []
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "404": {
                         "$ref": "#/components/responses/NotFound"
                     },
-                    "401": {
-                        "$ref": "#/components/responses/Unauthenticated"
+                    "422": {
+                        "description": "الطالب غير موجود في هذه الحلقة",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "هذا الطالب غير مسجل في هذه الحلقة."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -1801,8 +1930,9 @@
                                                         "example": "Al-Rahma Mosque"
                                                     },
                                                     "image": {
+                                                        "description": "Full public URL of the image stored in Supabase Storage",
                                                         "type": "string",
-                                                        "example": "mosque.jpg",
+                                                        "example": "https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/images/mosque.jpg",
                                                         "nullable": true
                                                     },
                                                     "working_hours": {
@@ -1821,7 +1951,7 @@
                                                     },
                                                     "is_featured": {
                                                         "type": "boolean",
-                                                        "example": false
+                                                        "example": 0
                                                     },
                                                     "city": {
                                                         "type": "string",
@@ -1920,7 +2050,7 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "required": [
                                     "name"
@@ -1933,9 +2063,9 @@
                                         "minLength": 2
                                     },
                                     "image": {
+                                        "description": "Mosque image file to upload",
                                         "type": "string",
-                                        "example": "mosque.jpg",
-                                        "nullable": true
+                                        "format": "binary"
                                     },
                                     "working_hours": {
                                         "type": "string",
@@ -1953,7 +2083,7 @@
                                     },
                                     "is_featured": {
                                         "type": "boolean",
-                                        "example": false
+                                        "example": 0
                                     },
                                     "city": {
                                         "type": "string",
@@ -2025,8 +2155,9 @@
                                                     "example": "Al-Rahma Mosque"
                                                 },
                                                 "image": {
+                                                    "description": "Full public URL of the image stored in Supabase Storage",
                                                     "type": "string",
-                                                    "example": "mosque.jpg",
+                                                    "example": "https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/images/mosque.jpg",
                                                     "nullable": true
                                                 },
                                                 "working_hours": {
@@ -2045,7 +2176,7 @@
                                                 },
                                                 "is_featured": {
                                                     "type": "boolean",
-                                                    "example": false
+                                                    "example": 0
                                                 },
                                                 "city": {
                                                     "type": "string",
@@ -2250,8 +2381,9 @@
                                                         "example": "Al-Rahma Mosque"
                                                     },
                                                     "image": {
+                                                        "description": "Full public URL of the image stored in Supabase Storage",
                                                         "type": "string",
-                                                        "example": "mosque.jpg",
+                                                        "example": "https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/images/mosque.jpg",
                                                         "nullable": true
                                                     },
                                                     "working_hours": {
@@ -2270,7 +2402,7 @@
                                                     },
                                                     "is_featured": {
                                                         "type": "boolean",
-                                                        "example": false
+                                                        "example": 0
                                                     },
                                                     "city": {
                                                         "type": "string",
@@ -2430,7 +2562,7 @@
                                                     },
                                                     "image": {
                                                         "type": "string",
-                                                        "example": "nour.jpg",
+                                                        "example": "/storage/mosques/nour.jpg",
                                                         "nullable": true
                                                     },
                                                     "working_hours": {
@@ -2569,8 +2701,9 @@
                                                         "example": "Al-Rahma Mosque"
                                                     },
                                                     "image": {
+                                                        "description": "Full public URL of the image stored in Supabase Storage",
                                                         "type": "string",
-                                                        "example": "rahma.jpg",
+                                                        "example": "https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/images/mosque.jpg",
                                                         "nullable": true
                                                     },
                                                     "working_hours": {
@@ -2589,7 +2722,7 @@
                                                     },
                                                     "is_featured": {
                                                         "type": "boolean",
-                                                        "example": false
+                                                        "example": 0
                                                     },
                                                     "city": {
                                                         "type": "string",
@@ -2737,8 +2870,9 @@
                                                     "example": "Al-Rahma Mosque"
                                                 },
                                                 "image": {
+                                                    "description": "Full public URL of the image stored in Supabase Storage",
                                                     "type": "string",
-                                                    "example": "rahma.jpg",
+                                                    "example": "https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/images/mosque.jpg",
                                                     "nullable": true
                                                 },
                                                 "working_hours": {
@@ -2757,7 +2891,7 @@
                                                 },
                                                 "is_featured": {
                                                     "type": "boolean",
-                                                    "example": false
+                                                    "example": 0
                                                 },
                                                 "city": {
                                                     "type": "string",
@@ -2881,9 +3015,14 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "properties": {
+                                    "_method": {
+                                        "description": "Included if sending via POST to handle multipart data in some frameworks",
+                                        "type": "string",
+                                        "example": "PUT"
+                                    },
                                     "name": {
                                         "type": "string",
                                         "example": "Al-Rahma Mosque Updated",
@@ -2891,9 +3030,9 @@
                                         "minLength": 2
                                     },
                                     "image": {
+                                        "description": "New mosque image file to upload",
                                         "type": "string",
-                                        "example": "updated.jpg",
-                                        "nullable": true
+                                        "format": "binary"
                                     },
                                     "working_hours": {
                                         "type": "string",
@@ -2983,8 +3122,9 @@
                                                     "example": "Al-Rahma Mosque Updated"
                                                 },
                                                 "image": {
+                                                    "description": "Full public URL of the image stored in Supabase Storage",
                                                     "type": "string",
-                                                    "example": "updated.jpg",
+                                                    "example": "https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/images/mosque.jpg",
                                                     "nullable": true
                                                 },
                                                 "working_hours": {
@@ -4114,11 +4254,6 @@
                 "tags": [
                     "Students"
                 ],
-<<<<<<< Updated upstream
-                "summary": "عرض قائمة الطلاب",
-                "description": "يعيد قائمة الطلاب المفلترة: المشرف يرى طلاب مسجده، وولي الأمر يرى أبناءه.",
-                "operationId": "listStudents",
-=======
                 "summary": "عرض قائمة الطلاب مع الفلترة",
                 "description": "يمكن الفلترة حسب الحالة باستخدام query parameter: ?status=active أو pending أو rejected",
                 "operationId": "getStudentsList",
@@ -4139,10 +4274,9 @@
                         }
                     }
                 ],
->>>>>>> Stashed changes
                 "responses": {
                     "200": {
-                        "description": "تم جلب القائمة بنجاح",
+                        "description": "قائمة الطلاب",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4277,14 +4411,16 @@
         "/education/students/{id}": {
             "get": {
                 "tags": [
-                    "Education"
+                    "Students"
                 ],
-                "summary": "تفاصيل الطالب",
+                "summary": "عرض بيانات طالب محدد",
+                "description": "يعيد تفاصيل طالب معين حسب الصلاحيات (مشرف المسجد أو ولي الأمر).",
                 "operationId": "showStudent",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
+                        "description": "معرف الطالب",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -4294,7 +4430,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "بيانات الطالب",
+                        "description": "تم جلب بيانات الطالب بنجاح",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4321,6 +4457,12 @@
                             }
                         }
                     },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
                     "404": {
                         "$ref": "#/components/responses/NotFound"
                     }
@@ -4330,51 +4472,31 @@
                         "bearerAuth": []
                     }
                 ]
-            },
-            "put": {
+            }
+        },
+        "/education/students/{id}/approve": {
+            "patch": {
                 "tags": [
-                    "Education",
-                    "Role: halaqa_supervisor"
+                    "Students"
                 ],
-                "summary": "[Supervisor] تحديث بيانات الطالب",
-                "operationId": "updateStudent",
+                "summary": "قبول طلب تسجيل طالب (للمشرف فقط)",
+                "description": "يسمح لمشرف المسجد بتغيير حالة الطالب من (غير نشط) إلى (نشط) ليتمكن من الانضمام للحلقات.",
+                "operationId": "approveStudent",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
+                        "description": "معرف الطالب المراد قبوله",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "integer",
+                            "example": 1
                         }
                     }
                 ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "properties": {
-                                    "first_name": {
-                                        "type": "string",
-                                        "example": "أحمد المعدل"
-                                    },
-                                    "status": {
-                                        "type": "string",
-                                        "example": "inactive",
-                                        "enum": [
-                                            "active",
-                                            "inactive"
-                                        ]
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
                 "responses": {
                     "200": {
-                        "description": "تم التحديث",
+                        "description": "تم قبول الطالب بنجاح",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4385,7 +4507,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "تم تحديث بيانات الطالب بنجاح."
+                                            "example": "تم قبول الطالب بنجاح وتفعيل حسابه."
                                         },
                                         "data": {
                                             "$ref": "#/components/schemas/StudentResource"
@@ -4401,55 +4523,31 @@
                             }
                         }
                     },
-                    "404": {
-                        "$ref": "#/components/responses/NotFound"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationError"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            },
-            "delete": {
-                "tags": [
-                    "Education",
-                    "Role: halaqa_supervisor"
-                ],
-                "summary": "[Supervisor] حذف طالب",
-                "operationId": "deleteStudent",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "تم الحذف",
+                    "400": {
+                        "description": "خطأ في منطق الطلب (Bad Request)",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "status": {
                                             "type": "boolean",
-                                            "example": true
+                                            "example": false
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "تم حذف سجل الطالب بنجاح."
+                                            "oneOf": [
+                                                {
+                                                    "example": "هذا الطالب مفعل مسبقاً."
+                                                },
+                                                {
+                                                    "example": "لا يمكن قبول طالب مرفوض بالفعل."
+                                                }
+                                            ]
                                         },
                                         "data": {
-                                            "type": "array",
-                                            "items": {},
-                                            "example": []
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
                                         },
                                         "pagination": {
                                             "type": "object",
@@ -4461,6 +4559,115 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/education/students/{id}/reject": {
+            "patch": {
+                "tags": [
+                    "Students"
+                ],
+                "summary": "رفض طلب تسجيل طالب (للمشرف فقط)",
+                "description": "يسمح لمشرف المسجد برفض طلب انضمام طالب، مما يحول حالته إلى (مرفوض).",
+                "operationId": "rejectStudent",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "معرف الطالب المراد رفضه",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم رفض الطالب بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم رفض طلب تسجيل الطالب."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/StudentResource"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "خطأ في منطق الطلب (Bad Request)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "oneOf": [
+                                                {
+                                                    "example": "لا يمكن رفض طالب مقبول بالفعل."
+                                                },
+                                                {
+                                                    "example": "هذا الطلب مرفوض مسبقاً."
+                                                }
+                                            ]
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
                     },
                     "404": {
                         "$ref": "#/components/responses/NotFound"
@@ -4810,15 +5017,6 @@
         {
             "name": "Students",
             "description": "Students"
-        },
-        {
-            "name": "Role: halaqa_supervisor",
-            "description": "Role: halaqa_supervisor"
-        }
-    ],
-    "security": [
-        {
-            "bearerAuth": []
         }
     ]
 }

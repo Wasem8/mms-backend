@@ -4,6 +4,7 @@ namespace Modules\Education\Services;
 
 use Illuminate\Validation\ValidationException;
 use Modules\Education\Models\Halaqa;
+use Modules\Education\Models\Student;
 
 class HalaqaService
 {
@@ -71,22 +72,64 @@ class HalaqaService
     {
         $halaqa = Halaqa::findOrFail($halaqaId);
 
-        if ($halaqa->students()->count() + count($studentIds) > $halaqa->capacity) {
+        $foundStudents = Student::whereIn('id', $studentIds)->get();
+        $foundIds = $foundStudents->pluck('id')->toArray();
+
+        $missingIds = array_diff($studentIds, $foundIds);
+        if (!empty($missingIds)) {
             throw ValidationException::withMessages([
-                'students' => ['لا يمكن إضافة الطلاب، تم تجاوز الطاقة الاستيعابية للحلقة.']
+                'students' => ['المعرفات التالية غير موجودة في النظام: ' . implode(', ', $missingIds)]
+            ]);
+        }
+
+        $errors = [];
+        foreach ($foundStudents as $student) {
+            if ($student->mosque_id !== $halaqa->mosque_id) {
+                $errors[] = "الطالب ({$student->first_name}) يتبع لمسجد آخر.";
+            }
+
+            if ($student->status !== 'active') {
+                $errors[] = "الطالب ({$student->first_name}) حالته حالياً ({$student->status}) ولا يمكن إضافته للحلقة.";
+            }
+
+            $isAlreadyInHalaqa = $halaqa->students()->where('student_id', $student->id)->exists();
+            if ($isAlreadyInHalaqa) {
+                $errors[] = "الطالب ({$student->first_name}) موجود بالفعل في هذه الحلقة.";
+            }
+        }
+
+        if (!empty($errors)) {
+            throw ValidationException::withMessages([
+                'students' => $errors
+            ]);
+        }
+
+        $currentCount = $halaqa->students()->count();
+        if ($currentCount + count($studentIds) > $halaqa->capacity) {
+            $remaining = $halaqa->capacity - $currentCount;
+            throw ValidationException::withMessages([
+                'capacity' => ["عذراً، الحلقة لا تستوعب هذا العدد. المقاعد المتبقية: {$remaining}"]
             ]);
         }
 
         $halaqa->students()->syncWithoutDetaching(
             collect($studentIds)->mapWithKeys(fn ($id) => [
                 $id => ['joined_at' => now(), 'status' => 'active']
-            ])
+            ])->toArray()
         );
     }
 
     public function detachStudent($halaqaId, $studentId)
     {
         $halaqa = Halaqa::findOrFail($halaqaId);
+
+        $exists = $halaqa->students()->where('student_id', $studentId)->exists();
+
+        if (!$exists) {
+            throw ValidationException::withMessages([
+                'student' => ['هذا الطالب غير مسجل في هذه الحلقة.']
+            ]);
+        }
 
         $halaqa->students()->detach($studentId);
     }

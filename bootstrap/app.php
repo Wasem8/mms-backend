@@ -10,6 +10,8 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -52,18 +54,14 @@ return Application::configure(basePath: dirname(__DIR__))
             ], 404);
         });
 
-        // 2. معالجة NotFoundHttpException (الناتج عن Route Model Binding أو رابط خطأ)
-//        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e, $request) {
-//            // نتحقق إذا كان الطلب API لضمان عدم تخريب صفحات الـ Web
-//            if ($request->is('api/*')) {
-//                return response()->json([
-//                    'status' => false,
-//                    'message' => 'Resource not found.',
-//                    'data' => null,
-//                    'pagination' => null
-//                ], 404);
-//            }
-//        });
+        $exceptions->render(function (NotFoundHttpException $e, $request) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Resource not found.',
+                'data' => null,
+                'pagination' => null
+            ], 404);
+        });
 
         // ⚠️ Validation
         $exceptions->render(function (ValidationException $e, $request) {
@@ -73,7 +71,5 @@ return Application::configure(basePath: dirname(__DIR__))
                 $e->errors()
             );
         });
-
-
 
     })->create();

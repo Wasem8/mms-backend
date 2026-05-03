@@ -15,10 +15,10 @@ class UpdateMosqueRequest extends FormRequest
     {
         return [
             'name' => ['sometimes', 'required', 'string', 'max:255'],
-            'cover_image' => ['nullable', 'string', 'max:500'],
+            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'working_hours' => ['nullable', 'string', 'max:500'],
             'status' => ['sometimes', 'required', Rule::in(['active', 'maintenance', 'closed'])],
-            'is_featured' => ['sometimes', 'boolean'],
+            'is_featured' => ['sometimes', 'nullable|in:true,false,1,0,true,false'],
             'city' => ['sometimes', 'required', 'string', 'max:100'],
             'district' => ['sometimes', 'required', 'string', 'max:100'],
             'latitude' => ['sometimes', 'required', 'numeric', 'decimal:0,8', 'between:-90,90'],

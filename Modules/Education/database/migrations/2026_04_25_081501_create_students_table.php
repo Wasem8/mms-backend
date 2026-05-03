@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreignId('mosque_id')->constrained('mosques')->cascadeOnDelete();
             $table->date('date_of_birth')->nullable();
             $table->string('gender')->nullable();
-            $table->enum('status', ['active', 'inactive'])->default('inactive');
+            $table->enum('status', ['active', 'pending', 'rejected'])->default('pending');
             $table->timestamps();
         });
     }

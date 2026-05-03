@@ -71,4 +71,6 @@ class HalaqaController
 
         return ApiResponse::success([], 'تم إزالة الطالب من الحلقة');
     }
+
+
 }

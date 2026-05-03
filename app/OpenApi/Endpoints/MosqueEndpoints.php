@@ -6,9 +6,7 @@ use OpenApi\Attributes as OA;
 
 class MosqueEndpoints
 {
-    // ─────────────────────────────────────────────
-    //  MOSQUE ENDPOINTS
-    // ─────────────────────────────────────────────
+
 
     #[OA\Get(
         path: '/mosques',
@@ -35,11 +33,16 @@ class MosqueEndpoints
                                 properties: [
                                     new OA\Property(property: 'id', type: 'integer', example: 1),
                                     new OA\Property(property: 'name', type: 'string', example: 'Al-Rahma Mosque'),
-                                    new OA\Property(property: 'image', type: 'string', nullable: true, example: 'mosque.jpg'),
+                                    new OA\Property(
+                                        property: 'image',
+                                        type: 'string',
+                                        nullable: true,
+                                        example: 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/images/mosque.jpg',
+                                        description: 'Full public URL of the image stored in Supabase Storage'
+                                    ),
                                     new OA\Property(property: 'working_hours', type: 'string', nullable: true, example: '5:00 AM - 10:00 PM'),
                                     new OA\Property(property: 'status', type: 'string', enum: ['active', 'maintenance', 'closed'], example: 'active'),
-                                    new OA\Property(property: 'is_featured', type: 'boolean', example: false),
-                                    new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Cairo'),
+                                    new OA\Property(property: 'is_featured', type: 'boolean', example: 0),                                    new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Cairo'),
                                     new OA\Property(property: 'district', type: 'string', nullable: true, example: 'Downtown'),
                                     new OA\Property(property: 'latitude', type: 'number', format: 'float', nullable: true, example: 30.0444),
                                     new OA\Property(property: 'longitude', type: 'number', format: 'float', nullable: true, example: 31.2357),
@@ -96,11 +99,16 @@ class MosqueEndpoints
                                 properties: [
                                     new OA\Property(property: 'id', type: 'integer', example: 1),
                                     new OA\Property(property: 'name', type: 'string', example: 'Al-Rahma Mosque'),
-                                    new OA\Property(property: 'image', type: 'string', nullable: true, example: 'mosque.jpg'),
+                                    new OA\Property(
+                                        property: 'image',
+                                        type: 'string',
+                                        nullable: true,
+                                        example: 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/images/mosque.jpg',
+                                        description: 'Full public URL of the image stored in Supabase Storage'
+                                    ),
                                     new OA\Property(property: 'working_hours', type: 'string', nullable: true, example: '5:00 AM - 10:00 PM'),
                                     new OA\Property(property: 'status', type: 'string', enum: ['active', 'maintenance', 'closed'], example: 'active'),
-                                    new OA\Property(property: 'is_featured', type: 'boolean', example: false),
-                                    new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Cairo'),
+                                    new OA\Property(property: 'is_featured', type: 'boolean', example: 0),                                    new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Cairo'),
                                     new OA\Property(property: 'district', type: 'string', nullable: true, example: 'Downtown'),
                                     new OA\Property(property: 'latitude', type: 'number', format: 'float', nullable: true, example: 30.0444),
                                     new OA\Property(property: 'longitude', type: 'number', format: 'float', nullable: true, example: 31.2357),
@@ -164,7 +172,7 @@ class MosqueEndpoints
                                 properties: [
                                     new OA\Property(property: 'id', type: 'integer', example: 2),
                                     new OA\Property(property: 'name', type: 'string', example: 'Al-Nour Mosque'),
-                                    new OA\Property(property: 'image', type: 'string', nullable: true, example: 'nour.jpg'),
+                                    new OA\Property(property: 'image', type: 'string', nullable: true, example: '/storage/mosques/nour.jpg'),
                                     new OA\Property(property: 'working_hours', type: 'string', nullable: true, example: '5:00 AM - 10:00 PM'),
                                     new OA\Property(property: 'status', type: 'string', enum: ['active', 'maintenance', 'closed'], example: 'active'),
                                     new OA\Property(property: 'is_featured', type: 'boolean', example: true),
@@ -214,11 +222,16 @@ class MosqueEndpoints
                                 properties: [
                                     new OA\Property(property: 'id', type: 'integer', example: 1),
                                     new OA\Property(property: 'name', type: 'string', example: 'Al-Rahma Mosque'),
-                                    new OA\Property(property: 'image', type: 'string', nullable: true, example: 'rahma.jpg'),
+                                    new OA\Property(
+                                        property: 'image',
+                                        type: 'string',
+                                        nullable: true,
+                                        example: 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/images/mosque.jpg',
+                                        description: 'Full public URL of the image stored in Supabase Storage'
+                                    ),
                                     new OA\Property(property: 'working_hours', type: 'string', nullable: true, example: '5:00 AM - 10:00 PM'),
                                     new OA\Property(property: 'status', type: 'string', enum: ['active', 'maintenance', 'closed'], example: 'active'),
-                                    new OA\Property(property: 'is_featured', type: 'boolean', example: false),
-                                    new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Cairo'),
+                                    new OA\Property(property: 'is_featured', type: 'boolean', example: 0),                                    new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Cairo'),
                                     new OA\Property(property: 'district', type: 'string', nullable: true, example: 'Downtown'),
                                     new OA\Property(property: 'latitude', type: 'number', format: 'float', nullable: true, example: 30.0444),
                                     new OA\Property(property: 'longitude', type: 'number', format: 'float', nullable: true, example: 31.2357),
@@ -275,11 +288,16 @@ class MosqueEndpoints
                             properties: [
                                 new OA\Property(property: 'id', type: 'integer', example: 1),
                                 new OA\Property(property: 'name', type: 'string', example: 'Al-Rahma Mosque'),
-                                new OA\Property(property: 'image', type: 'string', nullable: true, example: 'rahma.jpg'),
+                                new OA\Property(
+                                    property: 'image',
+                                    type: 'string',
+                                    nullable: true,
+                                    example: 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/images/mosque.jpg',
+                                    description: 'Full public URL of the image stored in Supabase Storage'
+                                ),
                                 new OA\Property(property: 'working_hours', type: 'string', nullable: true, example: '5:00 AM - 10:00 PM'),
                                 new OA\Property(property: 'status', type: 'string', enum: ['active', 'maintenance', 'closed'], example: 'active'),
-                                new OA\Property(property: 'is_featured', type: 'boolean', example: false),
-                                new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Cairo'),
+                                new OA\Property(property: 'is_featured', type: 'boolean', example: 0),                                new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Cairo'),
                                 new OA\Property(property: 'district', type: 'string', nullable: true, example: 'Downtown'),
                                 new OA\Property(property: 'latitude', type: 'number', format: 'float', nullable: true, example: 30.0444),
                                 new OA\Property(property: 'longitude', type: 'number', format: 'float', nullable: true, example: 31.2357),
@@ -321,22 +339,24 @@ class MosqueEndpoints
         security: [['bearerAuth' => []]],
         requestBody: new OA\RequestBody(
             required: true,
-            content: new OA\JsonContent(
-                required: ['name'],
-                properties: [
-                    new OA\Property(property: 'name', type: 'string', example: 'Al-Rahma Mosque', minLength: 2, maxLength: 255),
-                    new OA\Property(property: 'image', type: 'string', nullable: true, example: 'mosque.jpg'),
-                    new OA\Property(property: 'working_hours', type: 'string', nullable: true, example: '5:00 AM - 10:00 PM'),
-                    new OA\Property(property: 'status', type: 'string', enum: ['active', 'maintenance', 'closed'], example: 'active'),
-                    new OA\Property(property: 'is_featured', type: 'boolean', example: false),
-                    new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Cairo'),
-                    new OA\Property(property: 'district', type: 'string', nullable: true, example: 'Downtown'),
-                    new OA\Property(property: 'latitude', type: 'number', format: 'float', nullable: true, example: 30.0444),
-                    new OA\Property(property: 'longitude', type: 'number', format: 'float', nullable: true, example: 31.2357),
-                    new OA\Property(property: 'imam', type: 'string', nullable: true, example: 'Sheikh Ahmed'),
-                    new OA\Property(property: 'khatib', type: 'string', nullable: true, example: 'Sheikh Mohamed'),
-                    new OA\Property(property: 'manager_id', type: 'integer', nullable: true, example: 2, description: 'User ID of a mosque_manager role user.'),
-                ]
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    required: ['name'],
+                    properties: [
+                        new OA\Property(property: 'name', type: 'string', example: 'Al-Rahma Mosque', minLength: 2, maxLength: 255),
+                        new OA\Property(property: 'image', type: 'string', format: 'binary', description: 'Mosque image file to upload'),
+                        new OA\Property(property: 'working_hours', type: 'string', nullable: true, example: '5:00 AM - 10:00 PM'),
+                        new OA\Property(property: 'status', type: 'string', enum: ['active', 'maintenance', 'closed'], example: 'active'),
+                        new OA\Property(property: 'is_featured', type: 'boolean', example: 0),                        new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Cairo'),
+                        new OA\Property(property: 'district', type: 'string', nullable: true, example: 'Downtown'),
+                        new OA\Property(property: 'latitude', type: 'number', format: 'float', nullable: true, example: 30.0444),
+                        new OA\Property(property: 'longitude', type: 'number', format: 'float', nullable: true, example: 31.2357),
+                        new OA\Property(property: 'imam', type: 'string', nullable: true, example: 'Sheikh Ahmed'),
+                        new OA\Property(property: 'khatib', type: 'string', nullable: true, example: 'Sheikh Mohamed'),
+                        new OA\Property(property: 'manager_id', type: 'integer', nullable: true, example: 2, description: 'User ID of a mosque_manager role user.'),
+                    ]
+                )
             )
         ),
         responses: [
@@ -353,11 +373,16 @@ class MosqueEndpoints
                             properties: [
                                 new OA\Property(property: 'id', type: 'integer', example: 10),
                                 new OA\Property(property: 'name', type: 'string', example: 'Al-Rahma Mosque'),
-                                new OA\Property(property: 'image', type: 'string', nullable: true, example: 'mosque.jpg'),
+                                new OA\Property(
+                                    property: 'image',
+                                    type: 'string',
+                                    nullable: true,
+                                    example: 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/images/mosque.jpg',
+                                    description: 'Full public URL of the image stored in Supabase Storage'
+                                ),
                                 new OA\Property(property: 'working_hours', type: 'string', nullable: true, example: '5:00 AM - 10:00 PM'),
                                 new OA\Property(property: 'status', type: 'string', enum: ['active', 'maintenance', 'closed'], example: 'active'),
-                                new OA\Property(property: 'is_featured', type: 'boolean', example: false),
-                                new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Cairo'),
+                                new OA\Property(property: 'is_featured', type: 'boolean', example: 0),                                new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Cairo'),
                                 new OA\Property(property: 'district', type: 'string', nullable: true, example: 'Downtown'),
                                 new OA\Property(property: 'latitude', type: 'number', format: 'float', nullable: true, example: 30.0444),
                                 new OA\Property(property: 'longitude', type: 'number', format: 'float', nullable: true, example: 31.2357),
@@ -414,21 +439,25 @@ class MosqueEndpoints
         ],
         requestBody: new OA\RequestBody(
             required: true,
-            content: new OA\JsonContent(
-                properties: [
-                    new OA\Property(property: 'name', type: 'string', example: 'Al-Rahma Mosque Updated', minLength: 2, maxLength: 255),
-                    new OA\Property(property: 'image', type: 'string', nullable: true, example: 'updated.jpg'),
-                    new OA\Property(property: 'working_hours', type: 'string', nullable: true, example: '6:00 AM - 11:00 PM'),
-                    new OA\Property(property: 'status', type: 'string', enum: ['active', 'maintenance', 'closed'], example: 'active'),
-                    new OA\Property(property: 'is_featured', type: 'boolean', example: true),
-                    new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Cairo'),
-                    new OA\Property(property: 'district', type: 'string', nullable: true, example: 'New District'),
-                    new OA\Property(property: 'latitude', type: 'number', format: 'float', nullable: true, example: 30.0444),
-                    new OA\Property(property: 'longitude', type: 'number', format: 'float', nullable: true, example: 31.2357),
-                    new OA\Property(property: 'imam', type: 'string', nullable: true, example: 'Sheikh Ahmed Updated'),
-                    new OA\Property(property: 'khatib', type: 'string', nullable: true, example: 'Sheikh Mohamed Updated'),
-                    new OA\Property(property: 'manager_id', type: 'integer', nullable: true, example: 3, description: 'User ID of a mosque_manager role user.'),
-                ]
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    properties: [
+                        new OA\Property(property: '_method', type: 'string', example: 'PUT', description: 'Included if sending via POST to handle multipart data in some frameworks'),
+                        new OA\Property(property: 'name', type: 'string', example: 'Al-Rahma Mosque Updated', minLength: 2, maxLength: 255),
+                        new OA\Property(property: 'image', type: 'string', format: 'binary', description: 'New mosque image file to upload'),
+                        new OA\Property(property: 'working_hours', type: 'string', nullable: true, example: '6:00 AM - 11:00 PM'),
+                        new OA\Property(property: 'status', type: 'string', enum: ['active', 'maintenance', 'closed'], example: 'active'),
+                        new OA\Property(property: 'is_featured', type: 'boolean', example: true),
+                        new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Cairo'),
+                        new OA\Property(property: 'district', type: 'string', nullable: true, example: 'New District'),
+                        new OA\Property(property: 'latitude', type: 'number', format: 'float', nullable: true, example: 30.0444),
+                        new OA\Property(property: 'longitude', type: 'number', format: 'float', nullable: true, example: 31.2357),
+                        new OA\Property(property: 'imam', type: 'string', nullable: true, example: 'Sheikh Ahmed Updated'),
+                        new OA\Property(property: 'khatib', type: 'string', nullable: true, example: 'Sheikh Mohamed Updated'),
+                        new OA\Property(property: 'manager_id', type: 'integer', nullable: true, example: 3, description: 'User ID of a mosque_manager role user.'),
+                    ]
+                )
             )
         ),
         responses: [
@@ -445,7 +474,13 @@ class MosqueEndpoints
                             properties: [
                                 new OA\Property(property: 'id', type: 'integer', example: 1),
                                 new OA\Property(property: 'name', type: 'string', example: 'Al-Rahma Mosque Updated'),
-                                new OA\Property(property: 'image', type: 'string', nullable: true, example: 'updated.jpg'),
+                                new OA\Property(
+                                    property: 'image',
+                                    type: 'string',
+                                    nullable: true,
+                                    example: 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/images/mosque.jpg',
+                                    description: 'Full public URL of the image stored in Supabase Storage'
+                                ),
                                 new OA\Property(property: 'working_hours', type: 'string', nullable: true, example: '6:00 AM - 11:00 PM'),
                                 new OA\Property(property: 'status', type: 'string', enum: ['active', 'maintenance', 'closed'], example: 'active'),
                                 new OA\Property(property: 'is_featured', type: 'boolean', example: true),
