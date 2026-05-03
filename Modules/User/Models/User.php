@@ -131,4 +131,9 @@ class User extends Authentication implements JWTSubject
     {
         return $this->hasRole('parent');
     }
+
+    public function isTeacher(): bool
+    {
+        return $this->hasRole('teacher');
+    }
 }

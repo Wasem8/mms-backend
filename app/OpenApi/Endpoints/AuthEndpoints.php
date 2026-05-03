@@ -96,18 +96,25 @@ class AuthEndpoints
                             property: 'data',
                             type: 'object',
                             properties: [
+                                // داخل دالة login و verifyOtp في قسم الـ Data properties:
+
                                 new OA\Property(property: 'id', type: 'integer', example: 1),
                                 new OA\Property(property: 'name', type: 'string', example: 'Ahmed Ali'),
-                                new OA\Property(property: 'email', type: 'string', example: 'user@example.com'),
-                                new OA\Property(property: 'status', type: 'string', enum: ['active', 'inactive', 'blocked'], example: 'active'),
+                                new OA\Property(property: 'email', type: 'string', example: 'admin@test.com'),
+                                new OA\Property(property: 'status', type: 'string', example: 'active'),
+                                new OA\Property(property: 'email_verified_at', type: 'string', example: '2026-05-03 14:00:00', nullable: true),
                                 new OA\Property(
                                     property: 'roles',
                                     type: 'array',
-                                    items: new OA\Items(type: 'string'),
-                                    example: ['teacher']
+                                    items: new OA\Items(type: 'string', example: 'parent')
                                 ),
-                                new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
-                                new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
+// إضافة هذا الجزء الهام جداً:
+                                new OA\Property(
+                                    property: 'permissions',
+                                    type: 'array',
+                                    items: new OA\Items(type: 'string', example: 'create_student')
+                                ),
+                                new OA\Property(property: 'created_at', type: 'string', example: '2026-05-03 12:00:00'),
                             ]
                         ),
                         new OA\Property(property: 'pagination', type: 'object', nullable: true),
@@ -149,6 +156,7 @@ class AuthEndpoints
 | **Teacher** | `teacher@test.com` | `password` |
 | **Parent** | `parent@test.com` | `password` |
     ",
+
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -171,21 +179,31 @@ class AuthEndpoints
                             property: 'data',
                             type: 'object',
                             properties: [
-                                new OA\Property(property: 'access_token', type: 'string', example: 'eyJ0eXAiOiJKV1Qi...'),
+                                new OA\Property(property: 'access_token', type: 'string', example: '13|xxxxxxxxxxxx'),
                                 new OA\Property(property: 'token_type', type: 'string', example: 'Bearer'),
                                 new OA\Property(
                                     property: 'user',
                                     type: 'object',
                                     properties: [
+                                        // داخل دالة login و verifyOtp في قسم الـ Data properties:
+
                                         new OA\Property(property: 'id', type: 'integer', example: 1),
                                         new OA\Property(property: 'name', type: 'string', example: 'Ahmed Ali'),
                                         new OA\Property(property: 'email', type: 'string', example: 'admin@test.com'),
-                                        new OA\Property(property: 'created_at', type: 'string', example: '2026-04-13T11:28:02.000000Z'),
+                                        new OA\Property(property: 'status', type: 'string', example: 'active'),
+                                        new OA\Property(property: 'email_verified_at', type: 'string', example: '2026-05-03 14:00:00', nullable: true),
                                         new OA\Property(
                                             property: 'roles',
                                             type: 'array',
-                                            items: new OA\Items(type: 'string', example: 'super_admin')
+                                            items: new OA\Items(type: 'string', example: 'parent')
                                         ),
+// إضافة هذا الجزء الهام جداً:
+                                        new OA\Property(
+                                            property: 'permissions',
+                                            type: 'array',
+                                            items: new OA\Items(type: 'string', example: 'create_student')
+                                        ),
+                                        new OA\Property(property: 'created_at', type: 'string', example: '2026-05-03 12:00:00'),
                                     ]
                                 ),
                             ]
@@ -343,4 +361,73 @@ class AuthEndpoints
         ]
     )]
     public function resetPassword() {}
+
+
+    #[OA\Post(
+        path: '/auth/refresh',
+        operationId: 'refreshToken',
+        tags: ['Auth'],
+        summary: 'Refresh JWT token',
+        description: 'Bumps the current token and returns a new one. The old token will be invalidated.',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'New token generated',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Token refreshed successfully.'),
+                        new OA\Property(
+                            property: 'data',
+                            properties: [
+                                new OA\Property(property: 'access_token', type: 'string'),
+                                new OA\Property(property: 'token_type', type: 'string', example: 'Bearer'),
+                                new OA\Property(property: 'expires_in', type: 'integer', example: 3600)
+                            ],
+                            type: 'object'
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+        ]
+    )]
+    public function refreshToken() {}
+
+    #[OA\Get(
+        path: '/auth/me',
+        operationId: 'me',
+        tags: ['Auth'],
+        summary: 'Get current authenticated user profile',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Profile retrieved successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'User profile retrieved successfully.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'id', type: 'integer', example: 1),
+                                new OA\Property(property: 'name', type: 'string', example: 'Ahmed Ali'),
+                                new OA\Property(property: 'email', type: 'string', example: 'admin@test.com'),
+                                new OA\Property(property: 'status', type: 'string', example: 'active'),
+                                new OA\Property(property: 'roles', type: 'array', items: new OA\Items(type: 'string')),
+                                new OA\Property(property: 'permissions', type: 'array', items: new OA\Items(type: 'string')),
+                                new OA\Property(property: 'created_at', type: 'string', example: '2026-05-03 12:00:00'),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+        ]
+    )]
+    public function me() {}
+
 }

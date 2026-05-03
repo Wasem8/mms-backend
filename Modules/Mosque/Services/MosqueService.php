@@ -4,6 +4,7 @@ namespace Modules\Mosque\Services;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Modules\Mosque\Services\FacilityService;
 use Modules\Mosque\Models\Mosque;
@@ -136,13 +137,47 @@ class MosqueService
         ]);
     }
 
+
     private function uploadImage($image): string
     {
-        return $image->store('mosques', 'public');
-    }
+        $fileName = uniqid() . '.' . $image->getClientOriginalExtension();
 
-    private function deleteImage(string $path): void
+        $baseUrl = config('services.supabase.url');
+        $bucket = config('services.supabase.bucket');
+        $key = config('services.supabase.key');
+
+        $path = $bucket . '/' . $fileName;
+
+        $uploadUrl = $baseUrl . '/storage/v1/object/' . $path;
+
+        $response = Http::withHeaders([
+            'apikey' => $key,
+            'Authorization' => 'Bearer ' . $key,
+        ])->attach(
+            'file',
+            file_get_contents($image),
+            $fileName
+        )->post($uploadUrl);
+
+        if (!$response->successful()) {
+            throw new \Exception('Upload failed: ' . $response->body());
+        }
+
+        return $baseUrl . '/storage/v1/object/public/' . $path;
+    }
+    private function deleteImage(string $url): void
     {
-        Storage::disk('public')->delete($path);
+        $bucket = env('SUPABASE_BUCKET');
+
+        $fileName = basename($url);
+
+        $path = $bucket . '/' . $fileName;
+
+        $deleteUrl = env('SUPABASE_URL') . '/storage/v1/object/' . $path;
+
+        Http::withHeaders([
+            'apikey' => env('SUPABASE_KEY'),
+            'Authorization' => 'Bearer ' . env('SUPABASE_KEY'),
+        ])->delete($deleteUrl);
     }
 }

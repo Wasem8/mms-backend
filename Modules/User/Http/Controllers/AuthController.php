@@ -77,4 +77,35 @@ class AuthController extends Controller {
         return ApiResponse::success([],'Logged out successfully.');
     }
 
+    public function me()
+    {
+        $user = auth('api')->user();
+
+        if (!$user) {
+            return ApiResponse::error('Unauthenticated.', 401);
+        }
+
+        return ApiResponse::success(
+            new UserResource($user->load('roles.permissions')),
+            'User profile retrieved successfully.'
+        );
+    }
+
+    public function refresh()
+    {
+        try {
+            $newToken = auth('api')->refresh();
+
+            return ApiResponse::success([
+                'access_token' => $newToken,
+                'token_type' => 'Bearer',
+                'expires_in' => auth('api')->factory()->getTTL() * 60
+            ], 'Token refreshed successfully.');
+
+        } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
+
+            return ApiResponse::error('Token cannot be refreshed, please login again.', 401);
+        }
+    }
+
 }
