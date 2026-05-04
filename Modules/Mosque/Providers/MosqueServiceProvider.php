@@ -54,6 +54,10 @@ class MosqueServiceProvider extends ModuleServiceProvider
             FacilityRepositoryInterface::class,
             FacilityRepository::class
         );
+        $this->app->bind(
+            \Modules\Mosque\Repositories\MosqueNeedRepositoryInterface::class,
+            \Modules\Mosque\Repositories\MosqueNeedRepository::class
+        );
     }/**
      * Define module schedules.
      *

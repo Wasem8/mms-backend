@@ -28,12 +28,17 @@ return new class extends Migration
                 'supplies',
                 'other'
             ])->default('other');
+            $table->string('image')->nullable();
 
             $table->decimal('target_amount', 10, 2)->nullable();
             $table->decimal('collected_amount', 10, 2)->default(0);
-
-            $table->boolean('is_active')->default(true);
-            $table->date('deadline')->nullable();
+            $table->enum('status', [
+                'open',
+                'partially_fulfilled',
+                'fulfilled'
+            ])->default('open');
+            $table->boolean('is_urgent')->default(true);
+            
 
             $table->timestamps();
         });

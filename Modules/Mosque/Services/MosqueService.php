@@ -3,9 +3,9 @@
 namespace Modules\Mosque\Services;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
 use Modules\Mosque\Services\FacilityService;
 use Modules\Mosque\Models\Mosque;
 use Modules\Mosque\Repositories\MosqueRepositoryInterface;
@@ -14,7 +14,7 @@ class MosqueService
 {
     public function __construct(
         private readonly MosqueRepositoryInterface $mosqueRepository,
-        private readonly FacilityService $facilityService
+        private readonly FacilityService $facilityService,
     ) {}
 
     public function getAllMosques(array $filters = [], int $perPage = 15): LengthAwarePaginator
@@ -37,17 +37,17 @@ class MosqueService
 
     public function createMosque(array $data): Mosque
     {
-        return DB::transaction(function () use ($data) {
+        $facilityIds = $data['facility_ids'] ?? [];
+        unset($data['facility_ids']);
 
-            $facilityIds = $data['facility_ids'] ?? [];
-            unset($data['facility_ids']);
+        $data['average_rating'] = 0;
+        $data['reviews_count'] = 0;
 
-            $data['average_rating'] = 0;
-            $data['reviews_count'] = 0;
+        if (!empty($data['image']) && $data['image'] instanceof UploadedFile) {
+            $data['image'] = $this->uploadImage($data['image']);
+        }
 
-            if (isset($data['image']) && $data['image']) {
-                $data['image'] = $this->uploadImage($data['image']);
-            }
+        return DB::transaction(function () use ($data, $facilityIds) {
 
             $mosque = $this->mosqueRepository->create($data);
 
@@ -55,10 +55,9 @@ class MosqueService
                 $this->facilityService->syncMosqueFacilities($mosque, $facilityIds);
             }
 
-            return $this->getMosqueById($mosque->id);
+            return $mosque;
         });
     }
-
     public function updateMosque(Mosque $mosque, array $data): Mosque
     {
         return DB::transaction(function () use ($mosque, $data) {
@@ -66,7 +65,7 @@ class MosqueService
             $facilityIds = $data['facility_ids'] ?? null;
             unset($data['facility_ids']);
 
-            if (isset($data['image']) && $data['image']) {
+            if (!empty($data['image']) && $data['image'] instanceof UploadedFile) {
 
                 if ($mosque->image) {
                     $this->deleteImage($mosque->image);
@@ -74,7 +73,6 @@ class MosqueService
 
                 $data['image'] = $this->uploadImage($data['image']);
             }
-
             $this->mosqueRepository->update($mosque, $data);
 
             if ($facilityIds !== null) {

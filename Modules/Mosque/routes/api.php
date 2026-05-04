@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Mosque\Http\Controllers\MosqueController;
 use Modules\Mosque\Http\Controllers\FacilitiesController;
+use Modules\Mosque\Http\Controllers\MosqueNeedController;
 
 Route::prefix('facilities')->group(function () {
     Route::get('/', [FacilitiesController::class, 'index']);
@@ -21,6 +22,8 @@ Route::prefix('mosques')->group(function () {
     Route::get('/featured',      [MosqueController::class, 'featured']);
     Route::get('/city/{city}',   [MosqueController::class, 'byCity']);
     Route::get('/{mosque}',      [MosqueController::class, 'show']);
+    Route::get('/{mosque}/needs', [MosqueNeedController::class, 'index']);
+    Route::get('/{mosque}/needs/{need}', [MosqueNeedController::class, 'show']);
 
     Route::get('/{mosque}/facilities', [FacilitiesController::class, 'byMosque']);
 
@@ -40,6 +43,9 @@ Route::prefix('mosques')->group(function () {
             Route::post('/{mosque}/facilities/attach', [FacilitiesController::class, 'attach']);
             Route::post('/{mosque}/facilities/detach', [FacilitiesController::class, 'detach']);
             Route::post('/{mosque}/facilities/sync',   [FacilitiesController::class, 'sync']);
+            Route::post('/{mosque}/needs', [MosqueNeedController::class, 'store']);
+            Route::put('/{mosque}/needs/{need}', [MosqueNeedController::class, 'update']);
+            Route::delete('/{mosque}/needs/{need}', [MosqueNeedController::class, 'destroy']);
         });
     });
 });
