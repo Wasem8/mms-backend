@@ -4,7 +4,7 @@ namespace Modules\Education\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreAttendanceRequest extends FormRequest
+class StoreEvaluationRequest extends FormRequest
 {
     /**
      * Get the validation rules that apply to the request.
@@ -13,11 +13,10 @@ class StoreAttendanceRequest extends FormRequest
     {
         return [
             'halaqa_id' => 'required|exists:halaqats,id',
-            'date' => 'required|date|before_or_equal:today',
-            'attendances' => 'required|array',
-            'attendances.*.student_id' => 'required|exists:students,id',
-            'attendances.*.status' => 'required|in:present,absent,late,absent_with_excuse',
-            'attendances.*.notes' => 'nullable|string',
+            'student_id' => 'required|exists:students,id',
+            'score' => 'nullable|integer|min:0|max:100',
+            'notes' => 'nullable|string',
+            'evaluated_at' => 'nullable|date',
         ];
     }
 

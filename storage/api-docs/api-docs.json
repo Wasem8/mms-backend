@@ -24,6 +24,282 @@
         }
     ],
     "paths": {
+        "/education/attendance": {
+            "get": {
+                "tags": [
+                    "Attendance"
+                ],
+                "summary": "جلب سجل الحضور والغياب",
+                "description": "يسمح للمعلم برؤية حضور حلقته، ولولي الأمر برؤية حضور أبنائه، وللمشرف برؤية حضور مسجده.",
+                "operationId": "getAttendanceList",
+                "parameters": [
+                    {
+                        "name": "halaqa_id",
+                        "in": "query",
+                        "description": "فلترة حسب الحلقة",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "student_id",
+                        "in": "query",
+                        "description": "فلترة حسب الطالب",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "description": "فلترة حسب التاريخ (YYYY-MM-DD)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "رقم الصفحة للترقيم",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "قائمة الحضور",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم جلب سجل الحضور بنجاح."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "student": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 10
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "محمد أحمد"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "halaqa": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 5
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "حلقة البخاري"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "date": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "2026-05-04"
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "present",
+                                                        "enum": [
+                                                            "present",
+                                                            "absent",
+                                                            "late"
+                                                        ]
+                                                    },
+                                                    "notes": {
+                                                        "type": "string",
+                                                        "example": "وصل متأخراً 10 دقائق",
+                                                        "nullable": true
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "example": "2026-05-04 08:00:00"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "$ref": "#/components/schemas/PaginationMeta"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "غير مصرح - التوكن مفقود"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Attendance"
+                ],
+                "summary": "تسجيل الحضور والغياب (جماعي)",
+                "description": "يستخدم من قبل المعلم فقط لتسجيل حضور طلاب حلقته في يوم محدد. يدعم التحديث التلقائي في حال تكرار الإرسال.",
+                "operationId": "storeBulkAttendance",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "halaqa_id",
+                                    "date",
+                                    "attendances"
+                                ],
+                                "properties": {
+                                    "halaqa_id": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-05-04"
+                                    },
+                                    "attendances": {
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "student_id",
+                                                "status"
+                                            ],
+                                            "properties": {
+                                                "student_id": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "present",
+                                                    "enum": [
+                                                        "present",
+                                                        "absent",
+                                                        "late",
+                                                        "absent_with_excuse"
+                                                    ]
+                                                },
+                                                "notes": {
+                                                    "type": "string",
+                                                    "example": "ملاحظة اختيارية",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "تم التسجيل بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم تسجيل الحضور بنجاح"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {},
+                                            "example": []
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "خطأ في التحقق (مثلاً: طلاب لا ينتمون للحلقة)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "بعض الطلاب غير تابعين لهذه الحلقة"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/auth/register-parent": {
             "post": {
                 "tags": [
@@ -1511,6 +1787,583 @@
                                         "message": {
                                             "type": "string",
                                             "example": "هذا الطالب غير مسجل في هذه الحلقة."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/education/evaluations": {
+            "post": {
+                "tags": [
+                    "Evaluations"
+                ],
+                "summary": "تقييم طالب",
+                "description": "يقوم المعلم بتقييم طالب في الحلقة",
+                "operationId": "storeEvaluation",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "halaqa_id",
+                                    "student_id"
+                                ],
+                                "properties": {
+                                    "halaqa_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "student_id": {
+                                        "type": "integer",
+                                        "example": 10
+                                    },
+                                    "score": {
+                                        "type": "integer",
+                                        "example": 90,
+                                        "nullable": true
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "example": "جيد جداً",
+                                        "nullable": true
+                                    },
+                                    "evaluated_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2026-05-04 10:00:00"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "تم التقييم بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم تقييم الطالب بنجاح"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/EvaluationResource"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/education/attendance/excuses": {
+            "post": {
+                "tags": [
+                    "Attendance Excuses"
+                ],
+                "summary": "إرسال عذر غياب جديد",
+                "description": "يسمح لولي الأمر بإرسال عذر غياب لأحد أبنائه. النظام يمنع إرسال أعذار لتواريخ قديمة.",
+                "operationId": "storeAttendanceExcuse",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "student_id",
+                                    "halaqa_id",
+                                    "absence_date",
+                                    "reason"
+                                ],
+                                "properties": {
+                                    "student_id": {
+                                        "description": "معرف الطالب (يجب أن يكون من أبناء ولي الأمر)",
+                                        "type": "integer",
+                                        "example": 10
+                                    },
+                                    "halaqa_id": {
+                                        "description": "معرف الحلقة المسجل بها الطالب",
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "absence_date": {
+                                        "description": "تاريخ الغياب (YYYY-MM-DD)",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-05-10"
+                                    },
+                                    "reason": {
+                                        "type": "string",
+                                        "example": "وعكة صحية مفاجئة تستدعي الراحة",
+                                        "minLength": 10
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "تم إرسال العذر بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم إرسال عذر الغياب بنجاح، وسيتم إبلاغ المعلم."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": []
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "خطأ في التحقق من البيانات (مثلاً التاريخ في الماضي أو الطالب ليس ابنه)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "لا يمكن تقديم عذر لتاريخ في الماضي."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": {
+                                                "absence_date": [
+                                                    "لا يمكن تقديم عذر لتاريخ في الماضي."
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "غير مصرح (التوكن منتهي أو مفقود)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/education/my-excuses": {
+            "get": {
+                "tags": [
+                    "Attendance Excuses"
+                ],
+                "summary": "عرض قائمة الأعذار الخاصة بي",
+                "description": "يسمح لولي الأمر بمتابعة حالة الأعذار التي أرسلها (مقبولة، مرفوضة، أو قيد الانتظار).",
+                "operationId": "getMyExcuses",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "قائمة الأعذار",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم جلب البيانات بنجاح."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "student": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 10
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "خالد أحمد"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "absence_date": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "2026-05-10"
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "pending",
+                                                        "enum": [
+                                                            "pending",
+                                                            "accepted",
+                                                            "rejected"
+                                                        ]
+                                                    },
+                                                    "reason": {
+                                                        "type": "string",
+                                                        "example": "موعد طبي"
+                                                    },
+                                                    "admin_comment": {
+                                                        "type": "string",
+                                                        "example": "تم قبول العذر، نتمنى له الشفاء.",
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "oneOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/PaginationMeta"
+                                                }
+                                            ],
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/education/teacher/excuses": {
+            "get": {
+                "tags": [
+                    "Attendance Excuses"
+                ],
+                "summary": "عرض طلبات الأعذار للمعلم مع الفلترة",
+                "operationId": "getTeacherExcuses",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "فلترة حسب الحالة (pending, accepted, rejected)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pending",
+                                "accepted",
+                                "rejected"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "description": "فلترة حسب تاريخ الغياب (YYYY-MM-DD)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "قائمة الأعذار لطلاب المعلم",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم جلب طلبات الأعذار بنجاح."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "student_id": {
+                                                        "type": "integer",
+                                                        "example": 11
+                                                    },
+                                                    "halaqa_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "parent_id": {
+                                                        "type": "integer",
+                                                        "example": 5
+                                                    },
+                                                    "absence_date": {
+                                                        "type": "string",
+                                                        "example": "2026-05-10"
+                                                    },
+                                                    "reason": {
+                                                        "type": "string",
+                                                        "example": "وعكة صحية مفاجئة تستدعي الراحة"
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "pending"
+                                                    },
+                                                    "admin_comment": {
+                                                        "type": "string",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "example": "2026-05-04T07:33:50.000000Z"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "example": "2026-05-04T07:33:50.000000Z"
+                                                    },
+                                                    "student": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 11
+                                                            },
+                                                            "first_name": {
+                                                                "type": "string",
+                                                                "example": "أحمد"
+                                                            },
+                                                            "last_name": {
+                                                                "type": "string",
+                                                                "example": "محمد"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "halaqa": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "حلقة التحفيظ - المستوى الأول"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "$ref": "#/components/schemas/PaginationMeta"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/education/teacher/excuses/{id}/process": {
+            "put": {
+                "tags": [
+                    "Attendance Excuses"
+                ],
+                "summary": "معالجة عذر الغياب (قبول/رفض)",
+                "operationId": "processExcuse",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "معرف طلب العذر",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "description": "الحالة الجديدة للعذر",
+                                        "type": "string",
+                                        "default": "accepted",
+                                        "enum": [
+                                            "accepted",
+                                            "rejected"
+                                        ]
+                                    },
+                                    "admin_comment": {
+                                        "type": "string",
+                                        "example": "تم قبول العذر بسبب الظروف الصحية",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "تم التحديث بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم تحديث حالة العذر وتحديث سجل الحضور بنجاح."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {},
+                                            "example": []
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "خطأ منطقي (العذر ليس في حالة الانتظار)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "لا يمكن تعديل هذا العذر لأنه تم قبوله مسبقاً."
                                         },
                                         "data": {
                                             "type": "object",
@@ -5314,6 +6167,59 @@
                 },
                 "type": "object"
             },
+            "EvaluationResource": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "student": {
+                        "$ref": "#/components/schemas/StudentResource"
+                    },
+                    "halaqa": {
+                        "$ref": "#/components/schemas/HalaqaResource"
+                    },
+                    "score": {
+                        "type": "integer",
+                        "example": 95,
+                        "nullable": true
+                    },
+                    "notes": {
+                        "type": "string",
+                        "example": "أداء ممتاز",
+                        "nullable": true
+                    },
+                    "evaluated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "PaginationMeta": {
+                "properties": {
+                    "current_page": {
+                        "type": "integer"
+                    },
+                    "last_page": {
+                        "type": "integer"
+                    },
+                    "per_page": {
+                        "type": "integer"
+                    },
+                    "total": {
+                        "type": "integer"
+                    },
+                    "has_more_pages": {
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
             "ErrorResponse": {
                 "properties": {
                     "status": {
@@ -5474,12 +6380,24 @@
     },
     "tags": [
         {
+            "name": "Attendance",
+            "description": "Attendance"
+        },
+        {
             "name": "Auth",
             "description": "Auth"
         },
         {
             "name": "Education",
             "description": "Education"
+        },
+        {
+            "name": "Evaluations",
+            "description": "Evaluations"
+        },
+        {
+            "name": "Attendance Excuses",
+            "description": "Attendance Excuses"
         },
         {
             "name": "Invitations",

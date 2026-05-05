@@ -70,6 +70,45 @@ use OpenApi\Attributes as OA;
     ]
 )]
 
+#[OA\Schema(
+    schema: 'EvaluationResource',
+    type: 'object',
+    properties: [
+
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+
+        new OA\Property(
+            property: 'student',
+            ref: '#/components/schemas/StudentResource'
+        ),
+
+        new OA\Property(
+            property: 'halaqa',
+            ref: '#/components/schemas/HalaqaResource'
+        ),
+
+        new OA\Property(property: 'score', type: 'integer', example: 95, nullable: true),
+        new OA\Property(property: 'notes', type: 'string', nullable: true, example: 'أداء ممتاز'),
+        new OA\Property(property: 'evaluated_at', type: 'string', format: 'date-time'),
+        new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
+
+    ]
+)]
+
+#[OA\Schema(
+    schema: 'PaginationMeta',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'current_page', type: 'integer'),
+        new OA\Property(property: 'last_page', type: 'integer'),
+        new OA\Property(property: 'per_page', type: 'integer'),
+        new OA\Property(property: 'total', type: 'integer'),
+        new OA\Property(property: 'has_more_pages', type: 'boolean'),
+    ]
+)]
+
+
+
 // هيكل رد الخطأ الموحد الذي طلبته
 #[OA\Schema(
     schema: 'ErrorResponse',
@@ -179,4 +218,6 @@ class Schemas
             new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
         ];
     }
+
+
 }
