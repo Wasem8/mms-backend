@@ -1018,4 +1018,319 @@ class MosqueEndpoints
         ]
     )]
     public function sync() {}
+
+    //--------------------------
+
+    // Needs
+    //------------------------
+
+    #[OA\Get(
+        path: '/mosques/{mosque}/needs',
+        operationId: 'getMosqueNeeds',
+        tags: ['Needs'],
+        summary: 'List mosque needs',
+        description: 'Returns all needs for a specific mosque.',
+        parameters: [
+            new OA\Parameter(
+                name: 'mosque',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer', example: 1)
+            ),
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', example: 1)
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', example: 10)
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Needs retrieved successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Needs retrieved successfully.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(
+                                properties: [
+                                    new OA\Property(property: 'id', type: 'integer', example: 1),
+                                    new OA\Property(property: 'title', type: 'string', example: 'تجديد سجاد المصلى'),
+                                    new OA\Property(property: 'description', type: 'string', nullable: true),
+                                    new OA\Property(property: 'type', type: 'string', enum: ['financial', 'service', 'maintenance']),
+                                    new OA\Property(property: 'target_amount', type: 'number', example: 250),
+                                    new OA\Property(property: 'collected_amount', type: 'number', example: 175),
+                                    new OA\Property(property: 'status', type: 'string', enum: ['open', 'partial', 'fulfilled']),
+                                    new OA\Property(property: 'image', type: 'string', nullable: true),
+                                    new OA\Property(property: 'is_urgent', type: 'boolean', example: true),
+                                    new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
+                                ]
+                            )
+                        ),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true),
+                    ]
+                )
+            )
+        ]
+    )]
+    public function needsIndex() {}
+
+    #[OA\Get(
+        path: '/mosques/{mosque}/needs/{need}',
+        operationId: 'getMosqueNeed',
+        tags: ['Needs'],
+        summary: 'Get single need',
+        parameters: [
+            new OA\Parameter(name: 'mosque', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'need', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Need retrieved successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Need retrieved successfully.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'id', type: 'integer', example: 1),
+                                new OA\Property(property: 'title', type: 'string', example: 'تجديد سجاد المصلى'),
+                                new OA\Property(property: 'description', type: 'string', nullable: true),
+                                new OA\Property(property: 'type', type: 'string'),
+                                new OA\Property(property: 'target_amount', type: 'number'),
+                                new OA\Property(property: 'collected_amount', type: 'number'),
+                                new OA\Property(property: 'status', type: 'string'),
+                                new OA\Property(property: 'image', type: 'string', nullable: true),
+                                new OA\Property(property: 'is_urgent', type: 'boolean'),
+                            ]
+                        ),
+                    ]
+                )
+            )
+        ]
+    )]
+    public function needsShow() {}
+    #[OA\Post(
+        path: '/mosques/{mosque}/needs',
+        operationId: 'createMosqueNeed',
+        tags: ['Needs'],
+        summary: 'Create a new mosque need',
+        security: [['bearerAuth' => []]],
+
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "multipart/form-data",
+                schema: new OA\Schema(
+                    required: ['title', 'type', 'mosque_id'], // mosque_id is required by your backend
+                    properties: [
+                        new OA\Property(
+                            property: 'mosque_id',
+                            type: 'integer',
+                            description: 'The ID of the mosque (matches path parameter)',
+                            example: 1
+                        ),
+                        new OA\Property(
+                            property: 'title',
+                            type: 'string',
+                            example: 'تجديد سجاد المصلى'
+                        ),
+                        new OA\Property(
+                            property: 'description',
+                            type: 'string',
+                            nullable: true,
+                            example: 'نحتاج إلى استبدال السجاد القديم'
+                        ),
+                        new OA\Property(
+                            property: 'type',
+                            type: 'string',
+                            enum: ['financial', 'service', 'maintenance'],
+                            example: 'maintenance'
+                        ),
+                        new OA\Property(
+                            property: 'target_amount',
+                            type: 'number',
+                            format: 'float',
+                            example: 250
+                        ),
+                        new OA\Property(
+                            property: 'image',
+                            type: 'string',
+                            format: 'binary',
+                            description: 'Upload image file'
+                        ),
+                        new OA\Property(
+                            property: 'is_urgent',
+                            type: 'integer', // Use integer for multipart booleans (0 or 1)
+                            description: '0 for false, 1 for true',
+                            default: 0,
+                            example: 1
+                        ),
+                        new OA\Property(
+                            property: 'status',
+                            type: 'string',
+                            enum: ['open', 'partial', 'fulfilled'],
+                            example: 'open'
+                        ),
+                    ]
+                )
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Need created successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Need created successfully'),
+                        new OA\Property(property: 'data', type: 'object', nullable: true)
+                    ]
+                )
+            ),
+            new OA\Response(response: 422, description: 'Validation error'),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden')
+        ]
+    )]
+    public function needsStore() {}
+
+    #[OA\Put(
+        path: '/mosques/{mosque}/needs/{need}',
+        operationId: 'updateMosqueNeed',
+        tags: ['Needs'],
+        summary: 'Update mosque need',
+        security: [['bearerAuth' => []]],
+
+        parameters: [
+            new OA\Parameter(
+                name: 'mosque',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'Mosque ID'
+            ),
+            new OA\Parameter(
+                name: 'need',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'Need ID'
+            ),
+        ],
+
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\MediaType(
+                mediaType: "multipart/form-data",
+                schema: new OA\Schema(
+                    properties: [
+                        new OA\Property(
+                            property: 'title',
+                            type: 'string',
+                            example: 'تحديث العنوان'
+                        ),
+                        new OA\Property(
+                            property: 'description',
+                            type: 'string',
+                            nullable: true
+                        ),
+                        new OA\Property(
+                            property: 'type',
+                            type: 'string',
+                            enum: ['financial', 'service', 'maintenance']
+                        ),
+                        new OA\Property(
+                            property: 'target_amount',
+                            type: 'number',
+                            format: 'float'
+                        ),
+                        new OA\Property(
+                            property: 'image',
+                            type: 'string',
+                            format: 'binary',
+                            description: 'Upload new image (optional)'
+                        ),
+                        new OA\Property(
+                            property: 'is_urgent',
+                            type: 'integer',
+                            example: 1
+                        ),
+                        new OA\Property(
+                            property: 'status',
+                            type: 'string',
+                            enum: ['open', 'partially_fulfilled', 'fulfilled']
+                        ),
+                    ]
+                )
+            )
+        ),
+
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Need updated successfully'
+            ),
+            new OA\Response(response: 422, description: 'Validation error'),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden'),
+            new OA\Response(response: 404, description: 'Not found'),
+        ]
+    )]
+    public function needsUpdate() {}
+    #[OA\Delete(
+        path: '/mosques/{mosque}/needs/{need}',
+        operationId: 'deleteMosqueNeed',
+        tags: ['Needs'],
+        summary: 'Delete mosque need',
+        security: [['bearerAuth' => []]],
+
+        parameters: [
+            new OA\Parameter(
+                name: 'mosque',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'Mosque ID'
+            ),
+            new OA\Parameter(
+                name: 'need',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'Need ID'
+            ),
+        ],
+
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Need deleted successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Need deleted successfully')
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden'),
+            new OA\Response(response: 404, description: 'Not found'),
+        ]
+    )]
+    public function needsDestroy() {}
+
 }
+

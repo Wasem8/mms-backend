@@ -28,7 +28,7 @@ class MosqueRepository implements MosqueRepositoryInterface
         $query = $this->filters->apply($query, $filters);
 
         $paginator = $query->paginate($perPage);
-        
+
         $paginator->getCollection()->each(function ($mosque) {
             $mosque->facilities->makeHidden('pivot');
         });
@@ -133,6 +133,8 @@ class MosqueRepository implements MosqueRepositoryInterface
             ->with([
                 'facilities:id,name',
                 'manager:id,name',
+                'spaces:id,mosque_id,name,capacity',
+
             ])
             ->latest();
     }

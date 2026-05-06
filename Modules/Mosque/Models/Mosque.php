@@ -70,5 +70,9 @@ class Mosque extends Model
     {
         return $this->hasMany(MosqueNeed::class);
     }
+    public function spaces()
+    {
+        return $this->hasMany(MosqueSpace::class);
+    }
 
 }

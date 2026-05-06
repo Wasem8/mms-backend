@@ -20,8 +20,9 @@ class MosqueNeed extends Model
         'type',
         'target_amount',
         'collected_amount',
-        'is_active',
-        'deadline',
+        'status',
+        'image',
+        'is_urgent',
     ];
 
     public function mosque(): BelongsTo

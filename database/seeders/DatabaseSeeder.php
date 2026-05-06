@@ -9,6 +9,7 @@ use Modules\Education\Database\Seeders\EducationDatabaseSeeder;
 use Modules\Mosque\Database\Seeders\FacilitiesSeeder;
 use Modules\Mosque\Database\Seeders\MosqueSeeder;
 use Modules\Mosque\Database\Seeders\MosqueDatabaseSeeder;
+use Modules\Mosque\Database\Seeders\MosqueSpaceSeedSeeder;
 use Modules\User\Database\Seeders\RolesAndPermissionsSeeder;
 use Modules\User\Models\User;
 
@@ -26,7 +27,8 @@ class DatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             EducationDatabaseSeeder::class,
             MosqueSeeder::class,
-            FacilitiesSeeder::class
+            FacilitiesSeeder::class,
+            MosqueSpaceSeedSeeder::class,
 
         ]);
 
