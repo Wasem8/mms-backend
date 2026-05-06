@@ -31,6 +31,7 @@ class MosqueService
     {
         return $this->mosqueRepository->findById($id, [
             'facilities',
+            'spaces',
             'manager:id,name,email',
         ]);
     }
@@ -38,7 +39,8 @@ class MosqueService
     public function createMosque(array $data): Mosque
     {
         $facilityIds = $data['facility_ids'] ?? [];
-        unset($data['facility_ids']);
+        $spaces = $data['spaces'] ?? [];
+        unset($data['facility_ids'],$data['spaces']);
 
         $data['average_rating'] = 0;
         $data['reviews_count'] = 0;
@@ -55,6 +57,10 @@ class MosqueService
                 $this->facilityService->syncMosqueFacilities($mosque, $facilityIds);
             }
 
+            if (!empty($spaces)) {
+                $mosque->spaces()->createMany($spaces);
+            }
+
             return $mosque;
         });
     }
@@ -63,7 +69,8 @@ class MosqueService
         return DB::transaction(function () use ($mosque, $data) {
 
             $facilityIds = $data['facility_ids'] ?? null;
-            unset($data['facility_ids']);
+            $spaces = $data['spaces'] ?? null;
+            unset($data['facility_ids'],$data['spaces']);
 
             if (!empty($data['image']) && $data['image'] instanceof UploadedFile) {
 
@@ -77,6 +84,10 @@ class MosqueService
 
             if ($facilityIds !== null) {
                 $this->facilityService->syncMosqueFacilities($mosque, $facilityIds);
+            }
+            if ($spaces !== null) {
+                $mosque->spaces()->delete();
+                $mosque->spaces()->createMany($spaces);
             }
 
             return $this->getMosqueById($mosque->id);
@@ -163,6 +174,7 @@ class MosqueService
 
         return $baseUrl . '/storage/v1/object/public/' . $path;
     }
+
     private function deleteImage(string $url): void
     {
         $bucket = env('SUPABASE_BUCKET');

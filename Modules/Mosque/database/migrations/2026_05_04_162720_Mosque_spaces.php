@@ -15,7 +15,6 @@ return new class extends Migration
             $table->foreignId('mosque_id')->constrained()->cascadeOnDelete();
 
             $table->string('name');
-            $table->string('type')->nullable(); 
             $table->integer('capacity')->nullable();
 
             $table->timestamps();

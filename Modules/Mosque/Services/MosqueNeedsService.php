@@ -2,6 +2,7 @@
 
 namespace Modules\Mosque\Services;
 
+use Illuminate\Support\Facades\Http;
 use Modules\Mosque\Repositories\MosqueNeedRepositoryInterface;
 use Modules\Mosque\Models\MosqueNeed;
 
@@ -53,6 +54,29 @@ class MosqueNeedsService
 
     private function uploadImage($image): string
     {
-        return $image->store('needs', 'public');
+        $fileName = uniqid() . '.' . $image->getClientOriginalExtension();
+
+        $baseUrl = config('services.supabase.url');
+        $bucket = config('services.supabase.bucket');
+        $key = config('services.supabase.key');
+
+        $path = $bucket . '/' . $fileName;
+
+        $uploadUrl = $baseUrl . '/storage/v1/object/' . $path;
+
+        $response = Http::withHeaders([
+            'apikey' => $key,
+            'Authorization' => 'Bearer ' . $key,
+        ])->attach(
+            'file',
+            file_get_contents($image),
+            $fileName
+        )->post($uploadUrl);
+
+        if (!$response->successful()) {
+            throw new \Exception('Upload failed: ' . $response->body());
+        }
+
+        return $baseUrl . '/storage/v1/object/public/' . $path;
     }
 }

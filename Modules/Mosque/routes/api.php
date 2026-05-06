@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\Mosque\Http\Controllers\MosqueController;
 use Modules\Mosque\Http\Controllers\FacilitiesController;
 use Modules\Mosque\Http\Controllers\MosqueNeedController;
+use Modules\Mosque\Http\Controllers\MosqueSpaceController;
 
 Route::prefix('facilities')->group(function () {
     Route::get('/', [FacilitiesController::class, 'index']);
@@ -27,6 +28,9 @@ Route::prefix('mosques')->group(function () {
 
     Route::get('/{mosque}/facilities', [FacilitiesController::class, 'byMosque']);
 
+    Route::get('/{mosque}/spaces', [MosqueSpaceController::class, 'index']);
+    Route::get('/{mosque}/spaces/{space}', [MosqueSpaceController::class, 'show']);
+
     Route::middleware('auth:api')->group(function () {
         // ── Mosque Management ──
         Route::middleware('role:super_admin')->group(function () {
@@ -36,6 +40,9 @@ Route::prefix('mosques')->group(function () {
             Route::patch('/{mosque}/status',       [MosqueController::class, 'updateStatus']);
             Route::patch('/{mosque}/featured',     [MosqueController::class, 'toggleFeatured']);
             Route::patch('/{mosque}/rating',       [MosqueController::class, 'updateRating']);
+            Route::post('/{mosque}/spaces', [MosqueSpaceController::class, 'store']);
+            Route::put('/{mosque}/spaces/{space}', [MosqueSpaceController::class, 'update']);
+            Route::delete('/{mosque}/spaces/{space}', [MosqueSpaceController::class, 'destroy']);
         });
 
 

@@ -40,6 +40,10 @@ class UpdateMosqueRequest extends FormRequest
             ],
             'facility_ids' => ['nullable', 'array'],
             'facility_ids.*' => ['required', 'integer', 'exists:facilities,id'],
+            'spaces' => ['nullable', 'array'],
+            'spaces.*.name' => ['required', 'string', 'max:255'],
+            'spaces.*.capacity' => ['required', 'integer', 'min:1'],
+            'spaces.*.type' => ['nullable', 'string'],
         ];
     }
 
