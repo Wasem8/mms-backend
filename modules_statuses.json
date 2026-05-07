@@ -4,5 +4,6 @@
     "Invitation": true,
     "Education": true,
     "Mosque": true,
-    "Dashboard": true
+    "Dashboard": true,
+    "Community": true
 }

@@ -4,6 +4,8 @@ namespace Modules\Mosque\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Modules\Community\Models\DawahProgram;
+
 // use Modules\Mosque\Database\Factories\MosqueSpaceFactory;
 
 class MosqueSpace extends Model
@@ -21,6 +23,11 @@ class MosqueSpace extends Model
     public function mosque()
     {
         return $this->belongsTo(Mosque::class);
+    }
+
+    public function dawahPrograms()
+    {
+        return $this->hasMany(DawahProgram::class);
     }
 
     // protected static function newFactory(): MosqueSpaceFactory
