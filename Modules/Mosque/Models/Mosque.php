@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
+use Modules\Community\Models\DawahProgram;
 use Modules\User\Models\User;
 
 // use Modules\Mosque\Database\Factories\MosqueFactory;
@@ -73,6 +74,11 @@ class Mosque extends Model
     public function spaces()
     {
         return $this->hasMany(MosqueSpace::class);
+    }
+
+    public function dawahPrograms()
+    {
+        return $this->hasMany(DawahProgram::class);
     }
 
 }

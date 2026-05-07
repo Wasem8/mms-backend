@@ -1176,6 +1176,602 @@
                 ]
             }
         },
+        "/Program/mosques/{mosque}/dawah_programs": {
+            "get": {
+                "tags": [
+                    "Dawah Programs"
+                ],
+                "summary": "List Dawah programs",
+                "description": "Retrieve all Dawah programs belonging to a specific mosque.",
+                "operationId": "getMosqueDawahPrograms",
+                "parameters": [
+                    {
+                        "name": "mosque",
+                        "in": "path",
+                        "description": "Mosque ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Programs retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم جلب البرامج بنجاح"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "mosque_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "space_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "program_name": {
+                                                        "type": "string",
+                                                        "example": "درس القرآن"
+                                                    },
+                                                    "description": {
+                                                        "type": "string",
+                                                        "example": "درس لتعليم القرآن الكريم"
+                                                    },
+                                                    "image": {
+                                                        "type": "string",
+                                                        "example": "path/to/image.jpg"
+                                                    },
+                                                    "presenter": {
+                                                        "type": "string",
+                                                        "example": "الشيخ أحمد"
+                                                    },
+                                                    "start_time": {
+                                                        "type": "string",
+                                                        "format": "time",
+                                                        "example": "10:00"
+                                                    },
+                                                    "end_time": {
+                                                        "type": "string",
+                                                        "format": "time",
+                                                        "example": "11:00"
+                                                    },
+                                                    "date": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "2026-05-10"
+                                                    },
+                                                    "level": {
+                                                        "type": "string",
+                                                        "example": "beginner"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Dawah Programs"
+                ],
+                "summary": "Create new Dawah program",
+                "operationId": "createDawahProgram",
+                "parameters": [
+                    {
+                        "name": "mosque",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 4
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "space_id",
+                                    "program_name",
+                                    "start_time",
+                                    "end_time",
+                                    "date"
+                                ],
+                                "properties": {
+                                    "space_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "program_name": {
+                                        "type": "string",
+                                        "example": "درس القرآن"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "درس لتعليم القرآن الكريم"
+                                    },
+                                    "image": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "presenter": {
+                                        "type": "string",
+                                        "example": "الشيخ أحمد"
+                                    },
+                                    "start_time": {
+                                        "type": "string",
+                                        "example": "10:00"
+                                    },
+                                    "end_time": {
+                                        "type": "string",
+                                        "example": "11:00"
+                                    },
+                                    "date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-05-10"
+                                    },
+                                    "level": {
+                                        "type": "string",
+                                        "example": "beginner",
+                                        "enum": [
+                                            "beginner",
+                                            "intermediate",
+                                            "advanced"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Program created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تمت إضافة البرنامج بنجاح"
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "500": {
+                        "description": "Server error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/Program/mosques/{mosque}/dawah_programs/{program}": {
+            "get": {
+                "tags": [
+                    "Dawah Programs"
+                ],
+                "summary": "Get single Dawah program",
+                "operationId": "getSingleDawahProgram",
+                "parameters": [
+                    {
+                        "name": "mosque",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "program",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Program retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم جلب تفاصيل البرنامج بنجاح"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "mosque_id": {
+                                                    "type": "integer"
+                                                },
+                                                "space_id": {
+                                                    "type": "integer"
+                                                },
+                                                "program_name": {
+                                                    "type": "string"
+                                                },
+                                                "description": {
+                                                    "type": "string"
+                                                },
+                                                "image": {
+                                                    "type": "string"
+                                                },
+                                                "presenter": {
+                                                    "type": "string"
+                                                },
+                                                "start_time": {
+                                                    "type": "string",
+                                                    "format": "time"
+                                                },
+                                                "end_time": {
+                                                    "type": "string",
+                                                    "format": "time"
+                                                },
+                                                "date": {
+                                                    "type": "string",
+                                                    "format": "date"
+                                                },
+                                                "level": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Dawah Programs"
+                ],
+                "summary": "Update Dawah program",
+                "operationId": "updateDawahProgram",
+                "parameters": [
+                    {
+                        "name": "mosque",
+                        "in": "path",
+                        "description": "Mosque ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "program",
+                        "in": "path",
+                        "description": "Program ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 5
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "space_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "program_name": {
+                                        "type": "string",
+                                        "example": "درس القرآن"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "درس لتعليم القرآن الكريم"
+                                    },
+                                    "image": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "presenter": {
+                                        "type": "string",
+                                        "example": "الشيخ أحمد"
+                                    },
+                                    "start_time": {
+                                        "type": "string",
+                                        "example": "10:00"
+                                    },
+                                    "end_time": {
+                                        "type": "string",
+                                        "example": "11:00"
+                                    },
+                                    "date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-05-10"
+                                    },
+                                    "level": {
+                                        "type": "string",
+                                        "example": "beginner",
+                                        "enum": [
+                                            "beginner",
+                                            "intermediate",
+                                            "advanced"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Program updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم تعديل البرنامج بنجاح"
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthorized"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Program or Mosque not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Resource not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Schedule conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Conflict detected"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation error"
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "example": {
+                                                "program_name": [
+                                                    "The program name field is required."
+                                                ],
+                                                "level": [
+                                                    "The selected level is invalid."
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Internal server error"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Dawah Programs"
+                ],
+                "summary": "Delete Dawah program",
+                "operationId": "deleteDawahProgram",
+                "parameters": [
+                    {
+                        "name": "mosque",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "program",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Program deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم حذف البرنامج بنجاح"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/education/halaqat": {
             "get": {
                 "tags": [
@@ -7414,6 +8010,10 @@
         {
             "name": "Dashboard",
             "description": "Dashboard"
+        },
+        {
+            "name": "Dawah Programs",
+            "description": "Dawah Programs"
         },
         {
             "name": "Education",
