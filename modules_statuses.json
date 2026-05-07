@@ -1,0 +1,8 @@
+{
+    "Auth": true,
+    "User": true,
+    "Invitation": true,
+    "Education": true,
+    "Mosque": true,
+    "Dashboard": true
+}

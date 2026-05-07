@@ -2,9 +2,15 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
+
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Modules\Education\Database\Seeders\EducationDatabaseSeeder;
+use Modules\Mosque\Database\Seeders\FacilitiesSeeder;
+use Modules\Mosque\Database\Seeders\MosqueSeeder;
+use Modules\Mosque\Database\Seeders\MosqueDatabaseSeeder;
+use Modules\User\Database\Seeders\RolesAndPermissionsSeeder;
+use Modules\User\Models\User;
 
 class DatabaseSeeder extends Seeder
 {
@@ -16,12 +22,14 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            AuthorizationSeeder::class,
+            MosqueDatabaseSeeder::class,
+            RolesAndPermissionsSeeder::class,
+            EducationDatabaseSeeder::class,
+            MosqueSeeder::class,
+            FacilitiesSeeder::class
+
         ]);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+
     }
 }
