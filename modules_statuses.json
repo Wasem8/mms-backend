@@ -3,5 +3,6 @@
     "User": true,
     "Invitation": true,
     "Education": true,
-    "Mosque": true
+    "Mosque": true,
+    "Dashboard": true
 }

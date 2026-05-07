@@ -64,9 +64,89 @@ use OpenApi\Attributes as OA;
                 new OA\Property(property: 'name', type: 'string', example: 'جامع الراجحي الكبير')
             ]
         ),
+        new OA\Property(property: 'halaqats', type: 'array', items: new OA\Items(
+            properties: [
+                new OA\Property(property: 'id', type: 'integer', example: 1),
+                new OA\Property(property: 'name', type: 'string', example: 'حلقة التحفيظ'),
+            ]
+        )),
         new OA\Property(property: 'date_of_birth', type: 'string', format: 'date', example: '2015-05-15'),
         new OA\Property(property: 'gender', type: 'string', example: 'male'),
         new OA\Property(property: 'status', type: 'string', example: 'inactive'),
+    ]
+)]
+
+#[OA\Schema(
+    schema: 'SupervisorDashboardResponse',
+    properties: [
+        // قسم البطاقات العلوية
+        new OA\Property(property: 'cards', properties: [
+            new OA\Property(property: 'total_students', type: 'integer', example: 1240),
+            new OA\Property(property: 'total_teachers', type: 'integer', example: 48),
+            new OA\Property(property: 'total_halaqas', type: 'integer', example: 32),
+            new OA\Property(property: 'attendance_today_percentage', type: 'string', example: '94%'),
+        ]),
+
+        // بيانات الرسم البياني (7 أيام)
+        new OA\Property(
+            property: 'weekly_attendance',
+            type: 'array',
+            items: new OA\Items(
+                properties: [
+                    new OA\Property(property: 'day', type: 'string', example: 'الأحد'),
+                    new OA\Property(property: 'percentage', type: 'integer', example: 85),
+                ]
+            )
+        ),
+
+        // قسم آخر النشاطات
+        new OA\Property(
+            property: 'recent_activities',
+            type: 'array',
+            items: new OA\Items(
+                properties: [
+                    new OA\Property(property: 'title', type: 'string', example: 'تم تسجيل حضور حلقة الفجر'),
+                    new OA\Property(property: 'description', type: 'string', example: 'بواسطة الشيخ أحمد علي'),
+                    new OA\Property(property: 'time', type: 'string', example: 'منذ ١٠ دقائق'),
+                    new OA\Property(property: 'type', type: 'string', enum: ['success', 'user', 'warning'], example: 'success'),
+                ]
+            )
+        ),
+    ]
+)]
+
+#[OA\Schema(
+    schema: 'StudentDetailResource',
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 11),
+        new OA\Property(property: 'full_name', type: 'string', example: 'أحمد محمد'),
+        new OA\Property(property: 'parent', type: 'object', properties: [
+            new OA\Property(property: 'id', type: 'integer', example: 5),
+            new OA\Property(property: 'name', type: 'string', example: 'Parent'),
+            new OA\Property(property: 'email', type: 'string', example: 'parent@test.com'),
+        ]),
+        new OA\Property(property: 'mosque', type: 'object', properties: [
+            new OA\Property(property: 'id', type: 'integer', example: 1),
+            new OA\Property(property: 'name', type: 'string', example: 'جامع الراجحي الكبير'),
+        ]),
+        new OA\Property(property: 'halaqats', type: 'array', items: new OA\Items(
+            properties: [
+                new OA\Property(property: 'id', type: 'integer', example: 1),
+                new OA\Property(property: 'name', type: 'string', example: 'حلقة التحفيظ'),
+            ]
+        )),
+        new OA\Property(property: 'statistics', type: 'object', properties: [
+            new OA\Property(property: 'total_absent_days', type: 'integer', example: 1),
+            new OA\Property(property: 'total_present_days', type: 'integer', example: 10),
+            new OA\Property(property: 'attendance_rate', type: 'string', example: '90.9%'),
+            new OA\Property(property: 'last_attendance_at', type: 'string', example: '2026-05-01'),
+        ]),
+        new OA\Property(property: 'profile', type: 'object', properties: [
+            new OA\Property(property: 'date_of_birth', type: 'string', format: 'date', example: '2015-05-15'),
+            new OA\Property(property: 'gender', type: 'string', example: 'male'),
+            new OA\Property(property: 'status', type: 'string', example: 'pending'),
+            new OA\Property(property: 'joined_at', type: 'string', format: 'date', example: '2026-05-01'),
+        ]),
     ]
 )]
 
@@ -92,6 +172,75 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'evaluated_at', type: 'string', format: 'date-time'),
         new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
 
+    ]
+)]
+
+#[OA\Schema(
+    schema: 'TeacherListResponse',
+    properties: [
+        new OA\Property(property: 'status', type: 'boolean', example: true),
+        new OA\Property(property: 'message', type: 'string', example: 'تم جلب قائمة المعلمين'),
+        new OA\Property(property: 'data', type: 'array', items: new OA\Items(
+            properties: [
+                new OA\Property(property: 'id', type: 'integer', example: 1),
+                new OA\Property(property: 'name', type: 'string', example: 'محمد أحمد'),
+                new OA\Property(property: 'email', type: 'string', example: 'teacher@example.com'),
+                new OA\Property(property: 'status', type: 'string', example: 'active'),
+                new OA\Property(property: 'halaqats_count', type: 'integer', example: 2)
+            ]
+        )),
+        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+    ]
+)]
+
+#[OA\Schema(
+    schema: 'TeacherDetailResponse',
+    properties: [
+        new OA\Property(property: 'status', type: 'boolean', example: true),
+        new OA\Property(property: 'message', type: 'string', example: 'تم جلب تفاصيل المعلم'),
+        new OA\Property(property: 'data', properties: [
+            new OA\Property(property: 'id', type: 'integer', example: 1),
+            new OA\Property(property: 'name', type: 'string', example: 'محمد أحمد'),
+            new OA\Property(property: 'phone', type: 'string', example: '0500000000'),
+            new OA\Property(property: 'email', type: 'string', example: 'teacher@example.com'),
+            new OA\Property(property: 'halaqats', type: 'array', items: new OA\Items(
+                properties: [
+                    new OA\Property(property: 'id', type: 'integer', example: 10),
+                    new OA\Property(property: 'name', type: 'string', example: 'حلقة البخاري'),
+                    new OA\Property(property: 'stats', type: 'object', properties: [
+                        new OA\Property(property: 'total_students', type: 'integer', example: 15),
+                        new OA\Property(property: 'total_present_all_time', type: 'integer', example: 450),
+                        new OA\Property(property: 'total_absent_all_time', type: 'integer', example: 25),
+                        new OA\Property(property: 'overall_attendance_rate', type: 'string', example: '94.5%')
+                    ])
+                ]
+            ))
+        ]),
+        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+    ]
+)]
+
+#[OA\Schema(
+    schema: 'EvaluationListResponse',
+    properties: [
+        new OA\Property(property: 'status', type: 'boolean', example: true),
+        new OA\Property(property: 'message', type: 'string', example: 'تم جلب البيانات بنجاح'),
+        new OA\Property(property: 'data', type: 'array', items: new OA\Items(
+            properties: [
+                new OA\Property(property: 'id', type: 'integer'),
+                new OA\Property(property: 'score', type: 'integer'),
+                new OA\Property(property: 'evaluation_at', type: 'string'),
+                new OA\Property(property: 'student', type: 'object', properties: [
+                    new OA\Property(property: 'id', type: 'integer'),
+                    new OA\Property(property: 'name', type: 'string')
+                ]),
+                new OA\Property(property: 'halaqa', type: 'object', properties: [
+                    new OA\Property(property: 'id', type: 'integer'),
+                    new OA\Property(property: 'name', type: 'string')
+                ])
+            ]
+        )),
+        new OA\Property(property: 'pagination', ref: '#/components/schemas/PaginationMeta')
     ]
 )]
 

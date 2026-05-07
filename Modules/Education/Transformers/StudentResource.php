@@ -22,6 +22,10 @@ class StudentResource extends JsonResource
                 'id' => $this->mosque?->id,
                 'name' => $this->mosque?->name,
             ],
+            'halaqats' => $this->halaqats->map(fn($h) => [
+                'id' => $h->id,
+                'name' => $h->name,
+            ]),
             'date_of_birth' => $this->date_of_birth,
             'gender' => $this->gender,
             'status' => $this->status,

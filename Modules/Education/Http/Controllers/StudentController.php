@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Support\ApiResponse;
 use Modules\Education\Http\Requests\StoreStudentRequest;
 use Modules\Education\Services\StudentService;
+use Modules\Education\Transformers\StudentDetailResource;
 use Modules\Education\Transformers\StudentResource;
 
 class StudentController
@@ -37,7 +38,7 @@ class StudentController
         $student = $this->service->find($id);
 
         return ApiResponse::success(
-            new StudentResource($student), // هنا نستخدم الـ Resource
+            new StudentDetailResource($student),
             'تم جلب بيانات الطالب بنجاح.'
         );
     }
@@ -57,7 +58,6 @@ class StudentController
         return ApiResponse::success([], 'تم حذف سجل الطالب بنجاح.');
     }
 
-    // Modules/Education/Http/Controllers/StudentController.php
 
     public function approve($id)
     {

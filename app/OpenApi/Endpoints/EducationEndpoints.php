@@ -352,4 +352,42 @@ class EducationEndpoints
         ]
     )]
     public function detachStudent() {}
+
+    /////////////////
+    ///
+    ///
+    ///
+    ///
+
+
+    // --- قائمة المعلمين ---
+    #[OA\Get(
+        path: '/education/supervisor/teachers',
+        operationId: 'getTeachersList',
+        tags: ['Supervisor - Management'],
+        summary: 'قائمة معلمي المسجد (بيانات أساسية)',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(response: 200, description: 'قائمة المعلمين', content: new OA\JsonContent(ref: '#/components/schemas/TeacherListResponse'))
+        ]
+    )]
+    public function index() {}
+
+    // --- تفاصيل المعلم ---
+    #[OA\Get(
+        path: '/education/supervisor/teachers/{id}',
+        operationId: 'getTeacherDetails',
+        tags: ['Supervisor - Management'],
+        summary: 'تفاصيل المعلم مع إحصائيات الحلقات اليومية',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'تفاصيل المعلم والحلقات', content: new OA\JsonContent(ref: '#/components/schemas/TeacherDetailResponse')),
+            new OA\Response(response: 404, description: 'المعلم غير موجود')
+        ]
+    )]
+    public function show() {}
 }
+

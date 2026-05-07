@@ -26,7 +26,7 @@ class Halaqa extends Model
 
     public function students()
     {
-        return $this->belongsToMany(Student::class)
+        return $this->belongsToMany(Student::class, 'halaqa_student', 'halaqa_id', 'student_id')
             ->withPivot(['status', 'joined_at']);
     }
 
@@ -38,5 +38,10 @@ class Halaqa extends Model
     public function mosque()
     {
         return $this->belongsTo(Mosque::class);
+    }
+
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
     }
 }

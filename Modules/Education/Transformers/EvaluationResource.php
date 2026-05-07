@@ -10,7 +10,9 @@ class EvaluationResource extends JsonResource
     {
         return [
             'id' => $this->id,
-
+            'score' => $this->score,
+            'notes' => $this->notes,
+            'evaluated_at' => $this->evaluated_at,
             'student' => [
                 'id' => $this->student?->id,
                 'name' => $this->student?->first_name . ' ' . $this->student?->last_name,
@@ -21,9 +23,7 @@ class EvaluationResource extends JsonResource
                 'name' => $this->halaqa?->name,
             ],
 
-            'score' => $this->score,
-            'notes' => $this->notes,
-            'evaluated_at' => $this->evaluated_at,
+
         ];
     }
 }
