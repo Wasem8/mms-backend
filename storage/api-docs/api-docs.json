@@ -1123,6 +1123,59 @@
                 ]
             }
         },
+        "/dashboard/supervisor/stats": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "إحصائيات لوحة التحكم للمشرف",
+                "description": "يعيد أرقام البطاقات (الطلاب، المعلمين، الحلقات)، الرسم البياني للحضور الأسبوعي، وأحدث النشاطات.",
+                "operationId": "getSupervisorDashboardStats",
+                "responses": {
+                    "200": {
+                        "description": "تم جلب البيانات بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم جلب إحصائيات لوحة التحكم بنجاح"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/SupervisorDashboardResponse"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "غير مصرح له الدخول"
+                    },
+                    "403": {
+                        "description": "ليس لديك صلاحية الوصول"
+                    },
+                    "500": {
+                        "description": "خطأ في السيرفر"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/education/halaqat": {
             "get": {
                 "tags": [
@@ -1812,6 +1865,71 @@
                 ]
             }
         },
+        "/education/supervisor/teachers": {
+            "get": {
+                "tags": [
+                    "Supervisor - Management"
+                ],
+                "summary": "قائمة معلمي المسجد (بيانات أساسية)",
+                "operationId": "getTeachersList",
+                "responses": {
+                    "200": {
+                        "description": "قائمة المعلمين",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TeacherListResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/education/supervisor/teachers/{id}": {
+            "get": {
+                "tags": [
+                    "Supervisor - Management"
+                ],
+                "summary": "تفاصيل المعلم مع إحصائيات الحلقات اليومية",
+                "operationId": "getTeacherDetails",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تفاصيل المعلم والحلقات",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TeacherDetailResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "المعلم غير موجود"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/education/evaluations": {
             "post": {
                 "tags": [
@@ -1893,6 +2011,206 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/education/supervisor/evaluations": {
+            "get": {
+                "tags": [
+                    "Evaluations"
+                ],
+                "summary": "عرض تقييمات المسجد (للمشرف)",
+                "operationId": "getSupervisorEvaluations",
+                "parameters": [
+                    {
+                        "name": "halaqa_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "قائمة تقييمات المسجد",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EvaluationListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "غير مصرح"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/education/teacher/evaluations": {
+            "get": {
+                "tags": [
+                    "Evaluations"
+                ],
+                "summary": "عرض تقييمات المعلم (للمعلم)",
+                "operationId": "getTeacherEvaluations",
+                "parameters": [
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "قائمة التقييمات الخاصة بالمعلم",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EvaluationListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "غير مصرح"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/education/parent/evaluations": {
+            "get": {
+                "tags": [
+                    "Evaluations"
+                ],
+                "summary": "عرض تقييمات الأبناء (لولي الأمر)",
+                "operationId": "getParentEvaluations",
+                "parameters": [
+                    {
+                        "name": "student_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "قائمة تقييمات الأبناء",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EvaluationListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "غير مصرح"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/education/evaluations/{id}": {
+            "get": {
+                "tags": [
+                    "Evaluations"
+                ],
+                "summary": "عرض تفاصيل تقييم محدد",
+                "description": "يسمح بجلب بيانات تقييم واحد بالتفصيل باستخدام المعرف (ID). يتم التحقق من الصلاحيات تلقائياً.",
+                "operationId": "getEvaluationById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "معرف التقييم",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تفاصيل التقييم",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/EvaluationListResponse"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "التقييم غير موجود"
+                    },
+                    "403": {
+                        "description": "غير مصرح لك بعرض هذا التقييم"
                     }
                 },
                 "security": [
@@ -5266,8 +5584,8 @@
                 "tags": [
                     "Students"
                 ],
-                "summary": "عرض بيانات طالب محدد",
-                "description": "يعيد تفاصيل طالب معين حسب الصلاحيات (مشرف المسجد أو ولي الأمر).",
+                "summary": "عرض بيانات طالب محدد (تفصيلي)",
+                "description": "يعيد تفاصيل طالب معين مع الإحصائيات والحلقات المرتبطة.",
                 "operationId": "showStudent",
                 "parameters": [
                     {
@@ -5277,7 +5595,7 @@
                         "required": true,
                         "schema": {
                             "type": "integer",
-                            "example": 1
+                            "example": 11
                         }
                     }
                 ],
@@ -5297,7 +5615,7 @@
                                             "example": "تم جلب بيانات الطالب بنجاح."
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/StudentResource"
+                                            "$ref": "#/components/schemas/StudentDetailResource"
                                         },
                                         "pagination": {
                                             "type": "object",
@@ -5672,6 +5990,22 @@
                         },
                         "type": "object"
                     },
+                    "halaqats": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "integer",
+                                    "example": 1
+                                },
+                                "name": {
+                                    "type": "string",
+                                    "example": "حلقة التحفيظ"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
                     "date_of_birth": {
                         "type": "string",
                         "format": "date",
@@ -5684,6 +6018,180 @@
                     "status": {
                         "type": "string",
                         "example": "inactive"
+                    }
+                },
+                "type": "object"
+            },
+            "SupervisorDashboardResponse": {
+                "properties": {
+                    "cards": {
+                        "properties": {
+                            "total_students": {
+                                "type": "integer",
+                                "example": 1240
+                            },
+                            "total_teachers": {
+                                "type": "integer",
+                                "example": 48
+                            },
+                            "total_halaqas": {
+                                "type": "integer",
+                                "example": 32
+                            },
+                            "attendance_today_percentage": {
+                                "type": "string",
+                                "example": "94%"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "weekly_attendance": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "day": {
+                                    "type": "string",
+                                    "example": "الأحد"
+                                },
+                                "percentage": {
+                                    "type": "integer",
+                                    "example": 85
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "recent_activities": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "title": {
+                                    "type": "string",
+                                    "example": "تم تسجيل حضور حلقة الفجر"
+                                },
+                                "description": {
+                                    "type": "string",
+                                    "example": "بواسطة الشيخ أحمد علي"
+                                },
+                                "time": {
+                                    "type": "string",
+                                    "example": "منذ ١٠ دقائق"
+                                },
+                                "type": {
+                                    "type": "string",
+                                    "example": "success",
+                                    "enum": [
+                                        "success",
+                                        "user",
+                                        "warning"
+                                    ]
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "StudentDetailResource": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 11
+                    },
+                    "full_name": {
+                        "type": "string",
+                        "example": "أحمد محمد"
+                    },
+                    "parent": {
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 5
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "Parent"
+                            },
+                            "email": {
+                                "type": "string",
+                                "example": "parent@test.com"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "mosque": {
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 1
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "جامع الراجحي الكبير"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "halaqats": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "integer",
+                                    "example": 1
+                                },
+                                "name": {
+                                    "type": "string",
+                                    "example": "حلقة التحفيظ"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "statistics": {
+                        "properties": {
+                            "total_absent_days": {
+                                "type": "integer",
+                                "example": 1
+                            },
+                            "total_present_days": {
+                                "type": "integer",
+                                "example": 10
+                            },
+                            "attendance_rate": {
+                                "type": "string",
+                                "example": "90.9%"
+                            },
+                            "last_attendance_at": {
+                                "type": "string",
+                                "example": "2026-05-01"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "profile": {
+                        "properties": {
+                            "date_of_birth": {
+                                "type": "string",
+                                "format": "date",
+                                "example": "2015-05-15"
+                            },
+                            "gender": {
+                                "type": "string",
+                                "example": "male"
+                            },
+                            "status": {
+                                "type": "string",
+                                "example": "pending"
+                            },
+                            "joined_at": {
+                                "type": "string",
+                                "format": "date",
+                                "example": "2026-05-01"
+                            }
+                        },
+                        "type": "object"
                     }
                 },
                 "type": "object"
@@ -5717,6 +6225,183 @@
                     "created_at": {
                         "type": "string",
                         "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "TeacherListResponse": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "تم جلب قائمة المعلمين"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "integer",
+                                    "example": 1
+                                },
+                                "name": {
+                                    "type": "string",
+                                    "example": "محمد أحمد"
+                                },
+                                "email": {
+                                    "type": "string",
+                                    "example": "teacher@example.com"
+                                },
+                                "status": {
+                                    "type": "string",
+                                    "example": "active"
+                                },
+                                "halaqats_count": {
+                                    "type": "integer",
+                                    "example": 2
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "pagination": {
+                        "type": "object",
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "TeacherDetailResponse": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "تم جلب تفاصيل المعلم"
+                    },
+                    "data": {
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 1
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "محمد أحمد"
+                            },
+                            "phone": {
+                                "type": "string",
+                                "example": "0500000000"
+                            },
+                            "email": {
+                                "type": "string",
+                                "example": "teacher@example.com"
+                            },
+                            "halaqats": {
+                                "type": "array",
+                                "items": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 10
+                                        },
+                                        "name": {
+                                            "type": "string",
+                                            "example": "حلقة البخاري"
+                                        },
+                                        "stats": {
+                                            "properties": {
+                                                "total_students": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "total_present_all_time": {
+                                                    "type": "integer",
+                                                    "example": 450
+                                                },
+                                                "total_absent_all_time": {
+                                                    "type": "integer",
+                                                    "example": 25
+                                                },
+                                                "overall_attendance_rate": {
+                                                    "type": "string",
+                                                    "example": "94.5%"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "pagination": {
+                        "type": "object",
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "EvaluationListResponse": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "تم جلب البيانات بنجاح"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "integer"
+                                },
+                                "score": {
+                                    "type": "integer"
+                                },
+                                "evaluation_at": {
+                                    "type": "string"
+                                },
+                                "student": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                },
+                                "halaqa": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "pagination": {
+                        "$ref": "#/components/schemas/PaginationMeta"
                     }
                 },
                 "type": "object"
@@ -5909,8 +6594,16 @@
             "description": "Auth"
         },
         {
+            "name": "Dashboard",
+            "description": "Dashboard"
+        },
+        {
             "name": "Education",
             "description": "Education"
+        },
+        {
+            "name": "Supervisor - Management",
+            "description": "Supervisor - Management"
         },
         {
             "name": "Evaluations",

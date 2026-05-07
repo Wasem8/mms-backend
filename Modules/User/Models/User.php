@@ -6,6 +6,7 @@ namespace Modules\User\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authentication;
 use Illuminate\Notifications\Notifiable;
+use Modules\Education\Models\Halaqa;
 use Modules\Education\Models\Student;
 use Modules\Mosque\Models\Mosque;
 use Tymon\JWTAuth\Contracts\JWTSubject;
@@ -135,5 +136,17 @@ class User extends Authentication implements JWTSubject
     public function isTeacher(): bool
     {
         return $this->hasRole('teacher');
+    }
+
+    public function scopeRole($query, $roleName)
+    {
+        return $query->whereHas('roles', function ($q) use ($roleName) {
+            $q->where('name', $roleName);
+        });
+    }
+
+    public function halaqats()
+    {
+        return $this->hasMany(Halaqa::class, 'teacher_id');
     }
 }

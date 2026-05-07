@@ -9,7 +9,7 @@ class EvaluationEndpoints
     #[OA\Post(
         path: '/education/evaluations',
         operationId: 'storeEvaluation',
-        tags: ['Evaluations'],
+        tags: ['Evaluations'], // توحيد التاج
         summary: 'تقييم طالب',
         description: 'يقوم المعلم بتقييم طالب في الحلقة',
         security: [['bearerAuth' => []]],
@@ -44,4 +44,101 @@ class EvaluationEndpoints
         ]
     )]
     public function store() {}
+
+
+    #[OA\Get(
+        path: '/education/supervisor/evaluations',
+        operationId: 'getSupervisorEvaluations',
+        tags: ['Evaluations'], // توحيد التاج
+        summary: 'عرض تقييمات المسجد (للمشرف)',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(name: 'halaqa_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'date', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'page', in: 'query', schema: new OA\Schema(type: 'integer', default: 1))
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'قائمة تقييمات المسجد',
+                content: new OA\JsonContent(ref: '#/components/schemas/EvaluationListResponse')
+            ),
+            new OA\Response(response: 401, description: 'غير مصرح')
+        ]
+    )]
+    public function indexForSupervisor() {}
+
+    #[OA\Get(
+        path: '/education/teacher/evaluations',
+        operationId: 'getTeacherEvaluations',
+        tags: ['Evaluations'], // توحيد التاج
+        summary: 'عرض تقييمات المعلم (للمعلم)',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(name: 'date', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'page', in: 'query', schema: new OA\Schema(type: 'integer', default: 1))
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'قائمة التقييمات الخاصة بالمعلم',
+                content: new OA\JsonContent(ref: '#/components/schemas/EvaluationListResponse')
+            ),
+            new OA\Response(response: 401, description: 'غير مصرح')
+        ]
+    )]
+    public function indexForTeacher() {}
+
+    #[OA\Get(
+        path: '/education/parent/evaluations',
+        operationId: 'getParentEvaluations',
+        tags: ['Evaluations'], // توحيد التاج
+        summary: 'عرض تقييمات الأبناء (لولي الأمر)',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(name: 'student_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'page', in: 'query', schema: new OA\Schema(type: 'integer', default: 1))
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'قائمة تقييمات الأبناء',
+                content: new OA\JsonContent(ref: '#/components/schemas/EvaluationListResponse')
+            ),
+            new OA\Response(response: 401, description: 'غير مصرح')
+        ]
+    )]
+    public function indexForParent() {}
+
+    #[OA\Get(
+        path: '/education/evaluations/{id}',
+        operationId: 'getEvaluationById',
+        tags: ['Evaluations'],
+        summary: 'عرض تفاصيل تقييم محدد',
+        description: 'يسمح بجلب بيانات تقييم واحد بالتفصيل باستخدام المعرف (ID). يتم التحقق من الصلاحيات تلقائياً.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                description: 'معرف التقييم',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'تفاصيل التقييم',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'data', ref: '#/components/schemas/EvaluationListResponse')
+                    ]
+                )
+            ),
+            new OA\Response(response: 404, description: 'التقييم غير موجود'),
+            new OA\Response(response: 403, description: 'غير مصرح لك بعرض هذا التقييم')
+        ]
+    )]
+    public function show() {}
 }

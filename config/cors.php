@@ -17,7 +17,7 @@ return [
 
     // المسارات التي سيطبق عليها الـ CORS
     // أضفنا '*' لتشمل api/ و education/ و auth/ وأي مسار آخر
-    'paths' => ['api/*', 'auth/*', 'education/*', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*', 'auth/*', 'education/*','dashboard/*', 'sanctum/csrf-cookie'],
 
     // الطرق المسموح بها (GET, POST, PUT, DELETE, etc.)
     'allowed_methods' => ['*'],

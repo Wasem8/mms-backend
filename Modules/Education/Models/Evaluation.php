@@ -13,4 +13,14 @@ class Evaluation extends Model
         'notes',
         'evaluated_at'
     ];
+
+    public function student()
+    {
+        return $this->belongsTo(Student::class);
+    }
+
+    public function halaqa()
+    {
+        return $this->belongsTo(Halaqa::class);
+    }
 }

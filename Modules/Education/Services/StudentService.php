@@ -11,18 +11,22 @@ class StudentService
     public function list()
     {
         $user = auth()->user();
-        $status = request()->query('status'); // جلب الحالة من الرابط ?status=active
+        $status = request()->query('status');
 
         $query = Student::query()->with(['mosque', 'parent']);
 
-        // 1. الفلترة حسب صلاحيات المستخدم (الكود القديم الخاص بك)
         if ($user->isSupervisor()) {
             $query->where('mosque_id', $user->mosque_id);
-        } elseif ($user->isParent()) {
+        }
+        elseif ($user->isTeacher()) {
+            $query->whereHas('halaqats', function ($q) use ($user) {
+                $q->where('teacher_id', $user->id);
+            });
+        }
+        elseif ($user->isParent()) {
             $query->where('parent_id', $user->id);
         }
 
-        // 2. الفلترة حسب الحالة (التعديل الجديد)
         $query->when($status, function ($q) use ($status) {
             return $q->where('status', $status);
         });
@@ -37,7 +41,6 @@ class StudentService
 
         $student = Student::create($data);
 
-        // تحميل علاقة المسجد ليتعرف عليها الـ Resource
         return $student->load(['mosque', 'parent']);
     }
 
@@ -45,15 +48,34 @@ class StudentService
     {
         $user = auth()->user();
 
-        $query = Student::with(['mosque', 'parent', 'halaqat']);
+        $query = Student::with(['mosque', 'parent', 'halaqats'])
+            ->withCount(['attendances as total_absent' => function($q) {
+                $q->whereIn('status', ['absent', 'absent_with_excuse']);
+            }])
+            ->withCount(['attendances as total_present' => function($q) {
+                $q->where('status', 'present');
+            }]);
 
         if ($user->isSupervisor()) {
             $query->where('mosque_id', $user->mosque_id);
-        } elseif ($user->isParent()) {
+        }
+        elseif ($user->isTeacher()) {
+            $query->whereHas('halaqats', function ($q) use ($user) {
+                $q->where('teacher_id', $user->id);
+            });
+        }
+        elseif ($user->isParent()) {
             $query->where('parent_id', $user->id);
         }
 
-        return $query->findOrFail($id);
+        $student = $query->findOrFail($id);
+
+        $student->last_presence = $student->attendances()
+            ->where('status', 'present')
+            ->latest('date')
+            ->first()?->date;
+
+        return $student;
     }
 
     public function update($id, array $data)

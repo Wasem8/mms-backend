@@ -33,6 +33,17 @@ class Student extends Model
         return $this->belongsTo(Mosque::class);
     }
 
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    public function halaqats()
+    {
+        return $this->belongsToMany(Halaqa::class, 'halaqa_student', 'student_id', 'halaqa_id')
+            ->withPivot(['status', 'joined_at']);
+    }
+
     public function getFullNameAttribute()
     {
         return trim($this->first_name . ' ' . $this->last_name);

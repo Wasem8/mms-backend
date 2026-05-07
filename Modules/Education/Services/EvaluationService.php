@@ -39,24 +39,48 @@ class EvaluationService
         );
     }
 
-    public function list($filters = [])
+    public function getMosqueEvaluations($mosqueId, $filters = [])
+    {
+        return Evaluation::with(['student', 'halaqa'])
+            ->whereHas('halaqa', fn($q) => $q->where('mosque_id', $mosqueId))
+            ->when(!empty($filters['halaqa_id']), fn($q) => $q->where('halaqa_id', $filters['halaqa_id']))
+            ->when(!empty($filters['date']), fn($q) => $q->whereDate('evaluation_date', $filters['date']))
+            ->latest()
+            ->paginate(15);
+    }
+
+    // للمعلم: جلب تقييمات الحلقات التي يدرسها فقط
+    public function getTeacherEvaluations($teacherId, $filters = [])
+    {
+        return Evaluation::with(['student', 'halaqa'])
+            ->whereHas('halaqa', fn($q) => $q->where('teacher_id', $teacherId))
+            ->when(!empty($filters['date']), fn($q) => $q->whereDate('evaluation_date', $filters['date']))
+            ->latest()
+            ->paginate(15);
+    }
+
+    // لولي الأمر: جلب تقييمات أبنائه فقط
+    public function getParentEvaluations($parentId, $filters = [])
+    {
+        return Evaluation::with(['student', 'halaqa'])
+            ->whereHas('student', fn($q) => $q->where('parent_id', $parentId))
+            ->when(!empty($filters['student_id']), fn($q) => $q->where('student_id', $filters['student_id']))
+            ->latest()
+            ->paginate(15);
+    }
+
+    public function getEvaluationById($id)
     {
         $user = auth()->user();
-
         $query = Evaluation::with(['student', 'halaqa']);
 
-        if ($user->isSupervisor()) {
-            $query->whereHas('halaqa', function ($q) use ($user) {
-                $q->where('mosque_id', $user->mosque_id);
-            });
-        }
-
         if ($user->isParent()) {
-            $query->whereHas('student', function ($q) use ($user) {
-                $q->where('parent_id', $user->id);
-            });
+            $query->whereHas('student', fn($q) => $q->where('parent_id', $user->id));
+        } elseif ($user->isTeacher()) {
+            $query->whereHas('halaqa', fn($q) => $q->where('teacher_id', $user->id));
         }
 
-        return $query->latest()->paginate(15);
+
+        return $query->findOrFail($id);
     }
 }

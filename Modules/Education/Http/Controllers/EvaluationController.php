@@ -3,6 +3,7 @@
 namespace Modules\Education\Http\Controllers;
 
 use App\Support\ApiResponse;
+use Illuminate\Http\Request;
 use Modules\Education\Services\EvaluationService;
 use Modules\Education\Http\Requests\StoreEvaluationRequest;
 use Modules\Education\Transformers\EvaluationResource;
@@ -23,14 +24,27 @@ class EvaluationController
         );
     }
 
-    public function index()
+    public function indexForSupervisor(Request $request)
     {
-        $data = $this->service->list();
+        $data = $this->service->getMosqueEvaluations(auth()->user()->mosque_id, $request->all());
+        return ApiResponse::success(EvaluationResource::collection($data), 'تم جلب البيانات بنجاح', ApiResponse::pagination($data));
+    }
 
-        return ApiResponse::success(
-            EvaluationResource::collection($data),
-            'تم جلب التقييمات بنجاح',
-            ApiResponse::pagination($data)
-        );
+    public function indexForTeacher(Request $request)
+    {
+        $data = $this->service->getTeacherEvaluations(auth()->id(), $request->all());
+        return ApiResponse::success(EvaluationResource::collection($data), 'تم جلب البيانات بنجاح', ApiResponse::pagination($data));
+    }
+
+    public function indexForParent(Request $request)
+    {
+        $data = $this->service->getParentEvaluations(auth()->id(), $request->all());
+        return ApiResponse::success(EvaluationResource::collection($data), 'تم جلب البيانات بنجاح', ApiResponse::pagination($data));
+    }
+
+    public function show($id)
+    {
+        $evaluation = $this->service->getEvaluationById($id);
+        return ApiResponse::success(new EvaluationResource($evaluation),'تم جلب البيانات بنجاح');
     }
 }

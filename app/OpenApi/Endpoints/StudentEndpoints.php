@@ -97,8 +97,8 @@ class StudentEndpoints
         path: '/education/students/{id}',
         operationId: 'showStudent',
         tags: ['Students'],
-        summary: 'عرض بيانات طالب محدد',
-        description: 'يعيد تفاصيل طالب معين حسب الصلاحيات (مشرف المسجد أو ولي الأمر).',
+        summary: 'عرض بيانات طالب محدد (تفصيلي)',
+        description: 'يعيد تفاصيل طالب معين مع الإحصائيات والحلقات المرتبطة.',
         security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(
@@ -106,7 +106,7 @@ class StudentEndpoints
                 in: 'path',
                 required: true,
                 description: 'معرف الطالب',
-                schema: new OA\Schema(type: 'integer', example: 1)
+                schema: new OA\Schema(type: 'integer', example: 11)
             )
         ],
         responses: [
@@ -117,16 +117,12 @@ class StudentEndpoints
                     properties: [
                         new OA\Property(property: 'status', type: 'boolean', example: true),
                         new OA\Property(property: 'message', type: 'string', example: 'تم جلب بيانات الطالب بنجاح.'),
+                        // هنا قمنا بتغيير المرجع ليكون متوافقاً مع الريسورس الجديد
                         new OA\Property(
                             property: 'data',
-                            ref: '#/components/schemas/StudentResource'
+                            ref: '#/components/schemas/StudentDetailResource'
                         ),
-                        new OA\Property(
-                            property: 'pagination',
-                            type: 'object',
-                            nullable: true,
-                            example: null
-                        )
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
                     ]
                 )
             ),
@@ -135,9 +131,7 @@ class StudentEndpoints
             new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
         ]
     )]
-    public function show()
-    {
-    }
+    public function show() {}
 
     #[OA\Patch(
         path: '/education/students/{id}/approve',
