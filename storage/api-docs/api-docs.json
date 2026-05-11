@@ -1184,6 +1184,11 @@
                 "summary": "List all halaqat: Required Role: **halaqa_supervisor**",
                 "description": "Get paginated list of halaqat. ",
                 "operationId": "getHalaqat",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Halaqat retrieved successfully",
@@ -1233,6 +1238,11 @@
                 ],
                 "summary": "Create new halaqa: Required Role: **halaqa_supervisor**",
                 "operationId": "storeHalaqa",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -1343,6 +1353,9 @@
                 "operationId": "showHalaqa",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "id",
                         "in": "path",
                         "required": true,
@@ -1451,6 +1464,9 @@
                 "summary": "Update halaqa: Required Role: **halaqa_supervisor**",
                 "operationId": "updateHalaqa",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -1569,6 +1585,9 @@
                 "operationId": "deleteHalaqa",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "id",
                         "in": "path",
                         "required": true,
@@ -1633,6 +1652,9 @@
                 "summary": "إضافة طلاب إلى الحلقة: Required Role: **halaqa_supervisor**",
                 "operationId": "attachStudents",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -1775,6 +1797,9 @@
                 "operationId": "detachStudent",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "id",
                         "in": "path",
                         "description": "معرف الحلقة",
@@ -1872,6 +1897,11 @@
                 ],
                 "summary": "قائمة معلمي المسجد (بيانات أساسية)",
                 "operationId": "getTeachersList",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "قائمة المعلمين",
@@ -1899,6 +1929,9 @@
                 "summary": "تفاصيل المعلم مع إحصائيات الحلقات اليومية",
                 "operationId": "getTeacherDetails",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -1938,6 +1971,11 @@
                 "summary": "تقييم طالب",
                 "description": "يقوم المعلم بتقييم طالب في الحلقة",
                 "operationId": "storeEvaluation",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -2029,6 +2067,9 @@
                 "operationId": "getSupervisorEvaluations",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "halaqa_id",
                         "in": "query",
                         "required": false,
@@ -2085,6 +2126,9 @@
                 "operationId": "getTeacherEvaluations",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "date",
                         "in": "query",
                         "required": false,
@@ -2132,6 +2176,9 @@
                 "summary": "عرض تقييمات الأبناء (لولي الأمر)",
                 "operationId": "getParentEvaluations",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "student_id",
                         "in": "query",
@@ -2181,6 +2228,9 @@
                 "operationId": "getEvaluationById",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "id",
                         "in": "path",
                         "description": "معرف التقييم",
@@ -2211,6 +2261,185 @@
                     },
                     "403": {
                         "description": "غير مصرح لك بعرض هذا التقييم"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Evaluations"
+                ],
+                "summary": "تعديل تقييم طالب",
+                "operationId": "updateEvaluation",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "score": {
+                                        "type": "integer",
+                                        "example": 98
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "example": "مستوى ممتاز ومشاركة فعالة"
+                                    },
+                                    "evaluated_at": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-05-09"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "تم التحديث بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم تحديث التقييم بنجاح"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/EvaluationResource"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "خطأ في الصلاحيات",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "غير مصرح لك بتعديل هذا التقييم"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Evaluations"
+                ],
+                "summary": "حذف تقييم",
+                "operationId": "deleteEvaluation",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم الحذف بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم حذف التقييم بنجاح"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "التقييم غير موجود",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "التقييم غير موجود"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -5430,6 +5659,9 @@
                 "operationId": "getStudentsList",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "status",
                         "in": "query",
                         "description": "فلترة الطلاب حسب الحالة",
@@ -5458,7 +5690,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "تم استعادة قائمة الطلاب بنجاح."
+                                            "example": "Student list retrieved successfully / تم جلب القائمة بنجاح"
                                         },
                                         "data": {
                                             "type": "array",
@@ -5489,6 +5721,11 @@
                 "summary": "تسجيل طالب جديد (من قبل ولي الأمر)",
                 "description": "يسمح لولي الأمر بتسجيل ابنه في النظام مع تحديد المسجد المراد الالتحاق به. يتم إنشاء الحساب بحالة (غير نشط) حتى موافقة المشرف.",
                 "operationId": "storeStudent",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -5585,23 +5822,23 @@
                     "Students"
                 ],
                 "summary": "عرض بيانات طالب محدد (تفصيلي)",
-                "description": "يعيد تفاصيل طالب معين مع الإحصائيات والحلقات المرتبطة.",
                 "operationId": "showStudent",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "id",
                         "in": "path",
-                        "description": "معرف الطالب",
                         "required": true,
                         "schema": {
-                            "type": "integer",
-                            "example": 11
+                            "type": "integer"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "تم جلب بيانات الطالب بنجاح",
+                        "description": "تم بنجاح",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -5627,15 +5864,6 @@
                                 }
                             }
                         }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/Unauthenticated"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/Forbidden"
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/NotFound"
                     }
                 },
                 "security": [
@@ -5654,6 +5882,9 @@
                 "description": "يسمح لمشرف المسجد بتغيير حالة الطالب من (غير نشط) إلى (نشط) ليتمكن من الانضمام للحلقات.",
                 "operationId": "approveStudent",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -5758,6 +5989,9 @@
                 "operationId": "rejectStudent",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "id",
                         "in": "path",
                         "description": "معرف الطالب المراد رفضه",
@@ -5842,6 +6076,204 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/education/students/{id}/transfer": {
+            "post": {
+                "tags": [
+                    "Students"
+                ],
+                "summary": "نقل طالب من حلقة إلى أخرى في نفس المسجد",
+                "description": "يقوم بنقل الطالب من حلقة محددة إلى حلقة جديدة، مع التحقق من وجوده في الحلقة القديمة وتبعية الحلقات للمسجد.",
+                "operationId": "transferStudent",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "معرف الطالب المراد نقله",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 3
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "from_halaqa_id",
+                                    "to_halaqa_id"
+                                ],
+                                "properties": {
+                                    "from_halaqa_id": {
+                                        "description": "ID الحلقة الحالية للطالب",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "to_halaqa_id": {
+                                        "description": "ID الحلقة الجديدة المراد النقل إليها",
+                                        "type": "integer",
+                                        "example": 2
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "تمت عملية النقل بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم نقل الطالب بنجاح إلى حلقة (حلقة التميز)"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "full_name": {
+                                                    "type": "string",
+                                                    "example": "أحمد محمد علي"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "active"
+                                                },
+                                                "current_halaqats": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "حلقة التميز"
+                                                            },
+                                                            "teacher_name": {
+                                                                "type": "string",
+                                                                "example": "الشيخ خالد"
+                                                            },
+                                                            "joined_at": {
+                                                                "type": "string",
+                                                                "example": "2026-05-08 14:00:00"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "خطأ في منطق النقل (مثلاً الطالب ليس في الحلقة القديمة)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "عذراً، الطالب غير مسجل في الحلقة القديمة التي اخترتها، يرجى التأكد من البيانات."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "خطأ في التحقق من البيانات المرسلة",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The to halaqa id field is required."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "to_halaqa_id": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "يجب أن يكون حقل الحلقة الجديدة مختلفاً عن الحلقة القديمة."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "الطالب غير موجود أو لا يتبع لمسجدك"
+                    },
+                    "401": {
+                        "description": "غير مصرح لك (Unauthenticated)"
                     }
                 },
                 "security": [
@@ -6200,31 +6632,47 @@
                 "properties": {
                     "id": {
                         "type": "integer",
-                        "example": 1
-                    },
-                    "student": {
-                        "$ref": "#/components/schemas/StudentResource"
-                    },
-                    "halaqa": {
-                        "$ref": "#/components/schemas/HalaqaResource"
+                        "example": 2
                     },
                     "score": {
                         "type": "integer",
-                        "example": 95,
-                        "nullable": true
+                        "example": 98
                     },
                     "notes": {
                         "type": "string",
-                        "example": "أداء ممتاز",
+                        "example": "مستوى ممتاز ومشاركة فعالة",
                         "nullable": true
                     },
                     "evaluated_at": {
                         "type": "string",
-                        "format": "date-time"
+                        "format": "date",
+                        "example": "2026-05-09"
                     },
-                    "created_at": {
-                        "type": "string",
-                        "format": "date-time"
+                    "student": {
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 3
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "Student 3"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "halaqa": {
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 1
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "حلقة التحفيظ - المستوى الأول"
+                            }
+                        },
+                        "type": "object"
                     }
                 },
                 "type": "object"
@@ -6452,7 +6900,7 @@
         },
         "responses": {
             "Unauthenticated": {
-                "description": "Unauthenticated - Missing or invalid token",
+                "description": "غير مسجل دخول - توكن مفقود أو غير صحيح",
                 "content": {
                     "application/json": {
                         "schema": {
@@ -6483,7 +6931,7 @@
                 }
             },
             "Forbidden": {
-                "description": "Forbidden - Insufficient permissions",
+                "description": "صلاحيات غير كافية",
                 "content": {
                     "application/json": {
                         "schema": {
@@ -6513,7 +6961,7 @@
                 }
             },
             "NotFound": {
-                "description": "Resource not found",
+                "description": "المورد غير موجود",
                 "content": {
                     "application/json": {
                         "schema": {
@@ -6543,7 +6991,7 @@
                 }
             },
             "ValidationError": {
-                "description": "Validation failed",
+                "description": "خطأ في التحقق من البيانات",
                 "content": {
                     "application/json": {
                         "schema": {
@@ -6573,6 +7021,22 @@
                             "type": "object"
                         }
                     }
+                }
+            }
+        },
+        "parameters": {
+            "AcceptLanguageHeader": {
+                "name": "Accept-Language",
+                "in": "header",
+                "description": "حدد اللغة: ar أو en",
+                "required": false,
+                "schema": {
+                    "type": "string",
+                    "default": "ar",
+                    "enum": [
+                        "ar",
+                        "en"
+                    ]
                 }
             }
         },

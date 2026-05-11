@@ -8,6 +8,7 @@ use Modules\Education\Http\Requests\StoreStudentRequest;
 use Modules\Education\Services\StudentService;
 use Modules\Education\Transformers\StudentDetailResource;
 use Modules\Education\Transformers\StudentResource;
+use Modules\Education\Transformers\StudentTransferResource;
 
 class StudentController
 {
@@ -18,7 +19,7 @@ class StudentController
         $students = $this->service->list();
         return ApiResponse::success(
             StudentResource::collection($students),
-            'تم استعادة قائمة الطلاب بنجاح.',
+            __('messages.students_retrieved'),
             ApiResponse::pagination($students)
         );
     }
@@ -29,7 +30,7 @@ class StudentController
 
         return ApiResponse::success(
             new StudentResource($student),
-            'تم تسجيل بيانات الطالب بنجاح، يرجى انتظار موافقة مشرف الحلقات لتفعيل الحساب.'
+            __('messages.student_stored')
         );
     }
 
@@ -39,7 +40,7 @@ class StudentController
 
         return ApiResponse::success(
             new StudentDetailResource($student),
-            'تم جلب بيانات الطالب بنجاح.'
+            __('messages.student_retrieved')
         );
     }
 
@@ -47,7 +48,7 @@ class StudentController
     {
         return ApiResponse::success(
             $this->service->update($id, $request->all()),
-            'تم تحديث بيانات الطالب بنجاح.'
+            __('messages.student_updated')
         );
     }
 
@@ -55,7 +56,7 @@ class StudentController
     {
         $this->service->delete($id);
 
-        return ApiResponse::success([], 'تم حذف سجل الطالب بنجاح.');
+        return ApiResponse::success([], __('messages.student_deleted'));
     }
 
 
@@ -69,7 +70,7 @@ class StudentController
 
         return ApiResponse::success(
             new StudentResource($result['data']),
-            'تم قبول الطالب بنجاح'
+            __('messages.student_approved')
         );
     }
 
@@ -83,7 +84,26 @@ class StudentController
 
         return ApiResponse::success(
             new StudentResource($result['data']),
-            'تم رفض طلب التسجيل'
+            __('messages.student_rejected')
+        );
+    }
+
+    public function transfer(Request $request, $id)
+    {
+        $request->validate([
+            'from_halaqa_id' => 'required|exists:halaqats,id',
+            'to_halaqa_id'   => 'required|exists:halaqats,id|different:from_halaqa_id',
+        ]);
+
+        $result = $this->service->transferHalaqa($id, $request->all());
+
+        if ($result['error']) {
+            return ApiResponse::error($result['message']);
+        }
+
+        return ApiResponse::success(
+            new StudentTransferResource($result['data']),
+            $result['message']
         );
     }
 }

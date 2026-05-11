@@ -154,24 +154,30 @@ use OpenApi\Attributes as OA;
     schema: 'EvaluationResource',
     type: 'object',
     properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 2),
+        new OA\Property(property: 'score', type: 'integer', example: 98),
+        new OA\Property(property: 'notes', type: 'string', example: 'مستوى ممتاز ومشاركة فعالة', nullable: true),
+        new OA\Property(property: 'evaluated_at', type: 'string', format: 'date', example: '2026-05-09'),
 
-        new OA\Property(property: 'id', type: 'integer', example: 1),
-
+        // تعريف الطالب بشكل مختصر كما في الريسورس
         new OA\Property(
             property: 'student',
-            ref: '#/components/schemas/StudentResource'
+            type: 'object',
+            properties: [
+                new OA\Property(property: 'id', type: 'integer', example: 3),
+                new OA\Property(property: 'name', type: 'string', example: 'Student 3')
+            ]
         ),
 
+        // تعريف الحلقة بشكل مختصر كما في الريسورس
         new OA\Property(
             property: 'halaqa',
-            ref: '#/components/schemas/HalaqaResource'
+            type: 'object',
+            properties: [
+                new OA\Property(property: 'id', type: 'integer', example: 1),
+                new OA\Property(property: 'name', type: 'string', example: 'حلقة التحفيظ - المستوى الأول')
+            ]
         ),
-
-        new OA\Property(property: 'score', type: 'integer', example: 95, nullable: true),
-        new OA\Property(property: 'notes', type: 'string', nullable: true, example: 'أداء ممتاز'),
-        new OA\Property(property: 'evaluated_at', type: 'string', format: 'date-time'),
-        new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
-
     ]
 )]
 

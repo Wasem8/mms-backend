@@ -24,6 +24,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->trustProxies(at: '*');
 
+        $middleware->api(append: [
+            \App\Http\Middleware\LocalizationMiddleware::class,
+        ]);
+
         $middleware->alias([
             'auth' => Authenticate::class, // 🔥 override
             'role' => RoleMiddleware::class,
