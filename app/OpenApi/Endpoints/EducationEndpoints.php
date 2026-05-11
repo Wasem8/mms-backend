@@ -18,6 +18,9 @@ class EducationEndpoints
         summary: 'List all halaqat: ' . self::ROLE_REQUIRED,
         description: 'Get paginated list of halaqat. ' ,
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
         responses: [
             new OA\Response(
                 response: 200,
@@ -44,6 +47,7 @@ class EducationEndpoints
         summary: 'Get halaqa details' . self::ROLE_REQUIRED,
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1))
         ],
         responses: [
@@ -96,7 +100,10 @@ class EducationEndpoints
         tags: ['Education'],
         summary: 'Create new halaqa: ' . self::ROLE_REQUIRED,
         security: [['bearerAuth' => []]],
-        requestBody: new OA\RequestBody(
+parameters: [
+new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+],
+requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
                 required: ['name', 'capacity'],
@@ -141,6 +148,7 @@ class EducationEndpoints
         summary: 'Update halaqa: ' . self::ROLE_REQUIRED,
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'id',
                 in: 'path',
@@ -199,6 +207,7 @@ class EducationEndpoints
         summary: 'Delete halaqa: ' . self::ROLE_REQUIRED,
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
         ],
         responses: [
@@ -233,6 +242,7 @@ class EducationEndpoints
         summary: 'إضافة طلاب إلى الحلقة: ' . self::ROLE_REQUIRED,
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'id',
                 in: 'path',
@@ -302,18 +312,9 @@ class EducationEndpoints
             new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
         ]
     )]
-    public function attachStudents(Request $request, $id)
+    public function attachStudents()
     {
-        // 1. التحقق الأولي من صحة المدخلات (مصفوفة وأرقام)
-        $validated = $request->validate([
-            'students' => 'required|array|min:1',
-            'students.*' => 'integer'
-        ]);
 
-        // 2. استدعاء الخدمة لتنفيذ المنطق المعقد
-        $this->service->attachStudents($id, $validated['students']);
-
-        return ApiResponse::success(null, 'تم إضافة الطلاب للحلقة بنجاح.');
     }
 
     #[OA\Delete(
@@ -322,7 +323,8 @@ class EducationEndpoints
         tags: ['Education'],
         summary: 'إزالة طالب من الحلقة: ' . self::ROLE_REQUIRED,
         security: [['bearerAuth' => []]],
-        parameters: [
+        parameters:[
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'id', in: 'path', description: 'معرف الحلقة', required: true, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'studentId', in: 'path', description: 'معرف الطالب', required: true, schema: new OA\Schema(type: 'integer'))
         ],
@@ -367,6 +369,9 @@ class EducationEndpoints
         tags: ['Supervisor - Management'],
         summary: 'قائمة معلمي المسجد (بيانات أساسية)',
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
         responses: [
             new OA\Response(response: 200, description: 'قائمة المعلمين', content: new OA\JsonContent(ref: '#/components/schemas/TeacherListResponse'))
         ]
@@ -381,6 +386,7 @@ class EducationEndpoints
         summary: 'تفاصيل المعلم مع إحصائيات الحلقات اليومية',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
         ],
         responses: [

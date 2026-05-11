@@ -7,12 +7,14 @@ use OpenApi\Attributes as OA;
 /**
  * MMS API Documentation - OpenAPI/Swagger Configuration
  */
+
 #[OA\OpenAPI(
     openapi: '3.0.0'
 )]
+
 #[OA\Info(
     title: 'MMS API Documentation',
-    version: "1.0.0",
+    version: '1.0.0',
     description: 'API documentation for Mosque Management System (MMS)',
     contact: new OA\Contact(
         name: 'API Support',
@@ -24,95 +26,249 @@ use OpenApi\Attributes as OA;
         identifier: 'MIT'
     )
 )]
+
 #[OA\Server(
     url: 'http://localhost:8000',
     description: 'Local Development Server'
 )]
+
 #[OA\Server(
     url: 'https://mms-backend-rose.vercel.app/api',
     description: 'Production API Server'
 )]
 
-// ========== SECURITY SCHEMES ==========
+/*
+|--------------------------------------------------------------------------
+| Security Scheme
+|--------------------------------------------------------------------------
+*/
+
 #[OA\SecurityScheme(
     securityScheme: 'bearerAuth',
     type: 'http',
     scheme: 'bearer',
-    bearerFormat: 'Token',
-    description: 'Enter your Bearer token'
+    bearerFormat: 'JWT',
+    description: 'Enter JWT Bearer token'
 )]
 
-// ========== GLOBAL COMPONENTS (Responses & Schemas) ==========
+/*
+|--------------------------------------------------------------------------
+| Global Parameters
+|--------------------------------------------------------------------------
+*/
+
+#[OA\Parameter(
+    parameter: 'AcceptLanguageHeader',
+    name: 'Accept-Language',
+    in: 'header',
+    required: false,
+    description: 'حدد اللغة: ar أو en',
+    schema: new OA\Schema(
+        type: 'string',
+        enum: ['ar', 'en'],
+        default: 'ar'
+    )
+)]
+
+/*
+|--------------------------------------------------------------------------
+| Global Components
+|--------------------------------------------------------------------------
+*/
+
 #[OA\Components(
+
+    /*
+    |--------------------------------------------------------------------------
+    | Responses
+    |--------------------------------------------------------------------------
+    */
+
     responses: [
-        // استجابة 401: غير مسجل دخول
-        'Unauthenticated' => new OA\Response(
+
+        new OA\Response(
             response: 'Unauthenticated',
-            description: 'Unauthenticated - Missing or invalid token',
+            description: 'غير مسجل دخول - توكن مفقود أو غير صحيح',
             content: new OA\JsonContent(
                 properties: [
-                    new OA\Property(property: 'status', type: 'boolean', example: false),
-                    new OA\Property(property: 'message', type: 'string', example: 'Unauthenticated.'),
-                    new OA\Property(property: 'data', type: 'object', nullable: true, example: null),
-                    new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
+                    new OA\Property(
+                        property: 'status',
+                        type: 'boolean',
+                        example: false
+                    ),
+
+                    new OA\Property(
+                        property: 'message',
+                        type: 'string',
+                        example: 'Unauthenticated.'
+                    ),
+
+                    new OA\Property(
+                        property: 'data',
+                        type: 'object',
+                        nullable: true,
+                        example: null
+                    ),
+
+                    new OA\Property(
+                        property: 'pagination',
+                        type: 'object',
+                        nullable: true,
+                        example: null
+                    ),
                 ]
             )
         ),
 
-        // استجابة 403: صلاحيات غير كافية
-        'Forbidden' => new OA\Response(
+        new OA\Response(
             response: 'Forbidden',
-            description: 'Forbidden - Insufficient permissions',
+            description: 'صلاحيات غير كافية',
             content: new OA\JsonContent(
                 properties: [
-                    new OA\Property(property: 'status', type: 'boolean', example: false),
-                    new OA\Property(property: 'message', type: 'string', example: 'Access denied. Your role does not allow this action.'),
-                    new OA\Property(property: 'data', type: 'object', nullable: true, example: null),
-                    new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
+                    new OA\Property(
+                        property: 'status',
+                        type: 'boolean',
+                        example: false
+                    ),
+
+                    new OA\Property(
+                        property: 'message',
+                        type: 'string',
+                        example: 'Access denied. Your role does not allow this action.'
+                    ),
+
+                    new OA\Property(
+                        property: 'data',
+                        type: 'object',
+                        nullable: true,
+                        example: null
+                    ),
+
+                    new OA\Property(
+                        property: 'pagination',
+                        type: 'object',
+                        nullable: true,
+                        example: null
+                    ),
                 ]
             )
         ),
 
-        // استجابة 404: مورد غير موجود
-        'NotFound' => new OA\Response(
+        new OA\Response(
             response: 'NotFound',
-            description: 'Resource not found',
+            description: 'المورد غير موجود',
             content: new OA\JsonContent(
                 properties: [
-                    new OA\Property(property: 'status', type: 'boolean', example: false),
-                    new OA\Property(property: 'message', type: 'string', example: 'Resource not found.'),
-                    new OA\Property(property: 'data', type: 'object', nullable: true, example: null),
-                    new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
+                    new OA\Property(
+                        property: 'status',
+                        type: 'boolean',
+                        example: false
+                    ),
+
+                    new OA\Property(
+                        property: 'message',
+                        type: 'string',
+                        example: 'Resource not found.'
+                    ),
+
+                    new OA\Property(
+                        property: 'data',
+                        type: 'object',
+                        nullable: true,
+                        example: null
+                    ),
+
+                    new OA\Property(
+                        property: 'pagination',
+                        type: 'object',
+                        nullable: true,
+                        example: null
+                    ),
                 ]
             )
         ),
 
-        // استجابة 422: خطأ في التحقق من البيانات
-        'ValidationError' => new OA\Response(
+        new OA\Response(
             response: 'ValidationError',
-            description: 'Validation failed',
+            description: 'خطأ في التحقق من البيانات',
             content: new OA\JsonContent(
                 properties: [
-                    new OA\Property(property: 'status', type: 'boolean', example: false),
-                    new OA\Property(property: 'message', type: 'string', example: 'Validation error.'),
-                    new OA\Property(property: 'data', type: 'object', example: ["field" => ["Error details"]]),
-                    new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
+                    new OA\Property(
+                        property: 'status',
+                        type: 'boolean',
+                        example: false
+                    ),
+
+                    new OA\Property(
+                        property: 'message',
+                        type: 'string',
+                        example: 'Validation error.'
+                    ),
+
+                    new OA\Property(
+                        property: 'data',
+                        type: 'object',
+                        example: [
+                            'field' => ['Error details']
+                        ]
+                    ),
+
+                    new OA\Property(
+                        property: 'pagination',
+                        type: 'object',
+                        nullable: true,
+                        example: null
+                    ),
                 ]
             )
-        )
+        ),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Schemas
+    |--------------------------------------------------------------------------
+    */
+
     schemas: [
-        // تعريف الـ Pagination لكي يعمل ref: '#/components/schemas/Pagination'
-        'Pagination' => new OA\Schema(
+
+        new OA\Schema(
             schema: 'Pagination',
+            type: 'object',
+
             properties: [
-                new OA\Property(property: 'current_page', type: 'integer', example: 1),
-                new OA\Property(property: 'last_page', type: 'integer', example: 5),
-                new OA\Property(property: 'per_page', type: 'integer', example: 10),
-                new OA\Property(property: 'total', type: 'integer', example: 50),
-                new OA\Property(property: 'has_more_pages', type: 'boolean', example: true),
+
+                new OA\Property(
+                    property: 'current_page',
+                    type: 'integer',
+                    example: 1
+                ),
+
+                new OA\Property(
+                    property: 'last_page',
+                    type: 'integer',
+                    example: 5
+                ),
+
+                new OA\Property(
+                    property: 'per_page',
+                    type: 'integer',
+                    example: 10
+                ),
+
+                new OA\Property(
+                    property: 'total',
+                    type: 'integer',
+                    example: 50
+                ),
+
+                new OA\Property(
+                    property: 'has_more_pages',
+                    type: 'boolean',
+                    example: true
+                ),
             ]
-        )
+        ),
     ]
 )]
 

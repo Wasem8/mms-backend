@@ -2,6 +2,7 @@
 
 namespace Modules\Education\Services;
 
+use Modules\Education\Models\Halaqa;
 use Modules\Education\Models\Student;
 
 class StudentService
@@ -99,11 +100,11 @@ class StudentService
         $student = Student::where('mosque_id', $user->mosque_id)->findOrFail($id);
 
         if ($student->status === 'active') {
-            return ['error' => true, 'message' => 'هذا الطالب مفعل مسبقاً.'];
+            return ['error' => true, 'message' => __('messages.student_already_active')];
         }
 
         if ($student->status === 'rejected') {
-            return ['error' => true, 'message' => 'لا يمكن قبول طالب مرفوض بالفعل.'];
+            return ['error' => true, 'message' => __('messages.cannot_approve_rejected')];
         }
 
 
@@ -117,15 +118,60 @@ class StudentService
         $student = Student::where('mosque_id', $user->mosque_id)->findOrFail($id);
 
         if ($student->status === 'active') {
-            return ['error' => true, 'message' => 'لا يمكن رفض طالب مقبول بالفعل.'];
+            return ['error' => true, 'message' => __('messages.cannot_reject_active')];
         }
 
         if ($student->status === 'rejected') {
-            return ['error' => true, 'message' => 'هذا الطلب مرفوض مسبقاً.'];
+            return ['error' => true, 'message' => __('messages.student_already_rejected')];
         }
 
         $student->update(['status' => 'rejected']);
         return ['error' => false, 'data' => $student->load(['mosque', 'parent'])];
+    }
+
+    public function transferHalaqa($studentId, array $data)
+    {
+        $user = auth()->user();
+        $student = Student::where('mosque_id', $user->mosque_id)->findOrFail($studentId);
+
+        $oldHalaqaId = $data['from_halaqa_id'];
+        $newHalaqaId = $data['to_halaqa_id'];
+
+        $newHalaqa = Halaqa::where('id', $newHalaqaId)
+            ->where('mosque_id', $user->mosque_id)
+            ->first();
+
+        if (!$newHalaqa) {
+            return ['error' => true, 'message' => __('messages.target_halaqa_invalid')];
+        }
+
+        // 2. التحقق من الحلقة القديمة: هل الطالب موجود فيها فعلاً؟
+        $isInOldHalaqa = $student->halaqats()->where('halaqats.id', $oldHalaqaId)->exists();
+
+        if (!$isInOldHalaqa) {
+            return [
+                'error' => true,
+                'message' => __('messages.student_not_in_old_halaqa')
+            ];
+        }
+
+        // 3. التنفيذ الآمن:
+        // الآن نحن متأكدون أنه في القديمة، فنقوم بحذفه منها
+        $student->halaqats()->detach($oldHalaqaId);
+
+        // ثم نضيفه للجديدة (نستخدم sync لضمان عدم التكرار حتى لو ضغط المشرف مرتين)
+        $student->halaqats()->syncWithoutDetaching([
+            $newHalaqaId => [
+                'joined_at' => now(),
+                'status' => 'active'
+            ]
+        ]);
+
+        return [
+            'error' => false,
+            'message' => __('messages.transfer_success', ['name' => $newHalaqa->name]),
+            'data' => $student->load('halaqats')
+        ];
     }
 
 }

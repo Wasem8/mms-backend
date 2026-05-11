@@ -12,15 +12,16 @@ use Modules\Education\Transformers\HalaqaResource;
 
 class HalaqaController
 {
-    public function __construct(private HalaqaService $service) {}
 
+    public function __construct(protected HalaqaService $service)
+    {
+    }
     public function index()
     {
         $halaqat = $this->service->list();
-
         return ApiResponse::success(
             HalaqaResource::collection($halaqat),
-            'تم جلب الحلقات بنجاح',
+            __('messages.halaqat_retrieved'),
             ApiResponse::pagination($halaqat)
         );
     }
@@ -28,49 +29,36 @@ class HalaqaController
     public function store(StoreHalaqaRequest $request)
     {
         $halaqa = $this->service->create($request->validated());
-
-        return ApiResponse::success(new HalaqaResource($halaqa), 'تم إنشاء الحلقة بنجاح');
+        return ApiResponse::success(new HalaqaResource($halaqa), __('messages.halaqa_created'));
     }
 
     public function show($id)
     {
         $halaqa = $this->service->find($id, ['students', 'teacher', 'mosque']);
-        return ApiResponse::success(
-            new HalaqaResource($halaqa),
-            'تم جلب تفاصيل الحلقة'
-        );
+        return ApiResponse::success(new HalaqaResource($halaqa), __('messages.halaqa_details'));
     }
 
     public function update(UpdateHalaqaRequest $request, $id)
     {
         $halaqa = $this->service->update($id, $request->validated());
-
-        return ApiResponse::success(new HalaqaResource($halaqa), 'تم تحديث بيانات الحلقة بنجاح');
+        return ApiResponse::success(new HalaqaResource($halaqa), __('messages.halaqa_updated'));
     }
 
     public function destroy($id)
     {
         $this->service->delete($id);
-
-        return ApiResponse::success([], 'تم حذف الحلقة بنجاح');
+        return ApiResponse::success([], __('messages.halaqa_deleted'));
     }
 
     public function attachStudents(AttachStudentsRequest $request, $id)
     {
-        $this->service->attachStudents(
-            $id,
-            $request->validated('students')
-        );
-
-        return ApiResponse::success([], 'تم إضافة الطلاب إلى الحلقة بنجاح');
+        $this->service->attachStudents($id, $request->validated('students'));
+        return ApiResponse::success([], __('messages.students_attached'));
     }
 
     public function detachStudent($id, $studentId)
     {
         $this->service->detachStudent($id, $studentId);
-
-        return ApiResponse::success([], 'تم إزالة الطالب من الحلقة');
+        return ApiResponse::success([], __('messages.student_detached'));
     }
-
-
 }
