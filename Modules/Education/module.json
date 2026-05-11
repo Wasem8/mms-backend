@@ -1,0 +1,11 @@
+{
+    "name": "Education",
+    "alias": "education",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Education\\Providers\\EducationServiceProvider"
+    ],
+    "files": []
+}

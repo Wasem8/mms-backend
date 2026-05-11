@@ -1,0 +1,111 @@
+<?php
+
+namespace Modules\User\Http\Controllers;
+
+use App\Http\Controllers\Controller;
+use App\Support\ApiResponse;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Modules\User\Actions\ForgotPasswordAction;
+use Modules\User\Actions\LoginAction;
+use Modules\User\Actions\RegisterParentAction;
+use Modules\User\Actions\ResetPasswordAction;
+use Modules\User\Actions\VerifyOtpAction;
+use Modules\User\Http\Requests\ForgotPasswordRequest;
+use Modules\User\Http\Requests\LoginRequest;
+use Modules\User\Http\Requests\RegisterParentRequest;
+use Modules\User\Http\Requests\ResetPasswordRequest;
+use Modules\User\Http\Requests\VerifyOtpRequest;
+use Modules\User\Transformers\UserResource;
+use Tymon\JWTAuth\Facades\JWTAuth;
+
+class AuthController extends Controller {
+
+    public function registerParent(RegisterParentRequest $request,RegisterParentAction $action)
+    {
+        $user = $action->execute($request->validated());
+        return ApiResponse::success(new UserResource($user), 'Account created. An OTP has been sent to your email for verification.');
+    }
+
+
+    public function verifyOtp(VerifyOtpRequest $request, VerifyOtpAction $action)
+    {
+        $user = $action->execute($request->validated());
+
+        return ApiResponse::success(
+            new UserResource($user),
+            'Account verified successfully.'
+        );
+    }
+
+
+    public function login(LoginRequest $request, LoginAction $action)
+    {
+        $result = $action->execute($request->validated());
+
+        if ($result instanceof JsonResponse) {
+            return $result;
+        }
+
+        $user = $result;
+
+        $token = JWTAuth::fromUser($user);
+
+        return ApiResponse::success([
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'user' => new UserResource($user->load('roles.permissions')),
+        ], 'Login successful.');
+    }
+
+    public function forgotPassword(ForgotPasswordRequest $request, ForgotPasswordAction $action)
+    {
+        $action->execute($request->email);
+
+        return ApiResponse::success([], 'If the email exists, an OTP has been sent.');
+    }
+
+    public function resetPassword(ResetPasswordRequest $request, ResetPasswordAction $action)
+    {
+        $action->execute($request->validated());
+
+        return ApiResponse::success([], 'Password reset successfully.');
+    }
+
+    public function logout(Request $request) {
+        auth('api')->logout();
+        return ApiResponse::success([],'Logged out successfully.');
+    }
+
+    public function me()
+    {
+        $user = auth('api')->user();
+
+        if (!$user) {
+            return ApiResponse::error('Unauthenticated.', 401);
+        }
+
+        return ApiResponse::success(
+            new UserResource($user->load('roles.permissions')),
+            'User profile retrieved successfully.'
+        );
+    }
+
+    public function refresh()
+    {
+        try {
+            $newToken = auth('api')->refresh();
+
+            return ApiResponse::success([
+                'access_token' => $newToken,
+                'token_type' => 'Bearer',
+                'expires_in' => auth('api')->factory()->getTTL() * 60
+            ], 'Token refreshed successfully.');
+
+        } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
+
+            return ApiResponse::error('Token cannot be refreshed, please login again.', 401);
+        }
+    }
+
+}

@@ -12,7 +12,9 @@ class ApiResponse
             'status' => true,
             'message' => $message,
             'data' => $data,
-            'pagination' => $pagination
+            'pagination' => $pagination instanceof LengthAwarePaginator
+                ? self::pagination($pagination)
+                : $pagination
         ]);
     }
 

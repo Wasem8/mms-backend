@@ -1,0 +1,11 @@
+{
+    "name": "Mosque",
+    "alias": "mosque",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Mosque\\Providers\\MosqueServiceProvider"
+    ],
+    "files": []
+}
