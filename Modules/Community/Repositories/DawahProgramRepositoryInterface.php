@@ -19,4 +19,8 @@ interface DawahProgramRepositoryInterface
     public function checkConflict(int $mosqueId, int $spaceId, string $date, string $startTime, string $endTime): bool;
 
     public function getProgramsByMosque(int $mosqueId);
-}
+
+    public function createSchedules(DawahProgram $program, array $schedules);
+
+    public function syncSchedules(DawahProgram $program, array $schedules);
+    }
