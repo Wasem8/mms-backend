@@ -26,7 +26,7 @@ class HalaqaService
         $user = auth()->user();
 
         if ($user->isSupervisor() && !$user->mosque_id) {
-            throw new \Exception('هذا المشرف غير مرتبط بمسجد، لا يمكنه إنشاء حلقات.');
+            throw new \Exception(__('messages.supervisor_no_mosque'));
         }
 
         $data['mosque_id'] = $user->mosque_id;
@@ -78,23 +78,23 @@ class HalaqaService
         $missingIds = array_diff($studentIds, $foundIds);
         if (!empty($missingIds)) {
             throw ValidationException::withMessages([
-                'students' => ['المعرفات التالية غير موجودة في النظام: ' . implode(', ', $missingIds)]
+                'students' => [__('messages.student_not_found', ['ids' => implode(', ', $missingIds)])]
             ]);
         }
 
         $errors = [];
         foreach ($foundStudents as $student) {
             if ($student->mosque_id !== $halaqa->mosque_id) {
-                $errors[] = "الطالب ({$student->first_name}) يتبع لمسجد آخر.";
+                $errors[] = __('messages.student_another_mosque', ['name' => $student->first_name]);
             }
 
             if ($student->status !== 'active') {
-                $errors[] = "الطالب ({$student->first_name}) حالته حالياً ({$student->status}) ولا يمكن إضافته للحلقة.";
+                $errors[] = __('messages.student_not_active', ['name' => $student->first_name, 'status' => $student->status]);
             }
 
             $isAlreadyInHalaqa = $halaqa->students()->where('student_id', $student->id)->exists();
             if ($isAlreadyInHalaqa) {
-                $errors[] = "الطالب ({$student->first_name}) موجود بالفعل في هذه الحلقة.";
+                $errors[] = __('messages.student_already_exists', ['name' => $student->first_name]);
             }
         }
 
@@ -108,7 +108,7 @@ class HalaqaService
         if ($currentCount + count($studentIds) > $halaqa->capacity) {
             $remaining = $halaqa->capacity - $currentCount;
             throw ValidationException::withMessages([
-                'capacity' => ["عذراً، الحلقة لا تستوعب هذا العدد. المقاعد المتبقية: {$remaining}"]
+                'capacity' => [__('messages.capacity_full', ['remaining' => $remaining])]
             ]);
         }
 
@@ -127,7 +127,7 @@ class HalaqaService
 
         if (!$exists) {
             throw ValidationException::withMessages([
-                'student' => ['هذا الطالب غير مسجل في هذه الحلقة.']
+                'student' => [__('messages.student_not_in_halaqa')]
             ]);
         }
 

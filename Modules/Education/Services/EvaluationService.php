@@ -16,13 +16,13 @@ class EvaluationService
 
         if ($user->isTeacher() && $halaqa->teacher_id !== $user->id) {
             throw ValidationException::withMessages([
-                'halaqa' => ['غير مصرح لك بالتقييم لهذه الحلقة']
+                'halaqa' => [__('messages.unauthorized_evaluation')]
             ]);
         }
 
         if (! $halaqa->students->pluck('id')->contains($data['student_id'])) {
             throw ValidationException::withMessages([
-                'student_id' => ['الطالب غير تابع لهذه الحلقة']
+                'student_id' => [__('messages.student_not_in_halaqa')]
             ]);
         }
 
@@ -82,5 +82,47 @@ class EvaluationService
 
 
         return $query->findOrFail($id);
+    }
+
+    public function update($id, array $data)
+    {
+        $user = auth()->user();
+        $evaluation = Evaluation::findOrFail($id);
+
+        if ($user->isTeacher() && $evaluation->halaqa->teacher_id !== $user->id) {
+            throw ValidationException::withMessages([
+                'auth' => [__('messages.unauthorized_edit_evaluation')]
+            ]);
+        }
+
+        if ($user->isSupervisor() && $evaluation->halaqa->mosque_id !== $user->mosque_id) {
+            throw ValidationException::withMessages([
+                'auth' => [__('messages.evaluation_not_belongs_to_mosque')]
+            ]);
+        }
+
+        $evaluation->update([
+            'score' => $data['score'] ?? $evaluation->score,
+            'notes' => $data['notes'] ?? $evaluation->notes,
+            'evaluated_at' => $data['evaluated_at'] ?? $evaluation->evaluated_at,
+        ]);
+
+        return $evaluation;
+    }
+
+    public function delete($id)
+    {
+        $user = auth()->user();
+        $evaluation = Evaluation::findOrFail($id);
+
+        if ($user->isTeacher() && $evaluation->halaqa->teacher_id !== $user->id) {
+            throw new \Exception(__('messages.unauthorized_delete_evaluation'));
+        }
+
+        if ($user->isSupervisor() && $evaluation->halaqa->mosque_id !== $user->mosque_id) {
+            throw new \Exception(__('messages.evaluation_not_belongs_to_mosque'));
+        }
+
+        return $evaluation->delete();
     }
 }

@@ -13,6 +13,9 @@ class EvaluationEndpoints
         summary: 'تقييم طالب',
         description: 'يقوم المعلم بتقييم طالب في الحلقة',
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -53,6 +56,7 @@ class EvaluationEndpoints
         summary: 'عرض تقييمات المسجد (للمشرف)',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'halaqa_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'date', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
             new OA\Parameter(name: 'page', in: 'query', schema: new OA\Schema(type: 'integer', default: 1))
@@ -75,6 +79,7 @@ class EvaluationEndpoints
         summary: 'عرض تقييمات المعلم (للمعلم)',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'date', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
             new OA\Parameter(name: 'page', in: 'query', schema: new OA\Schema(type: 'integer', default: 1))
         ],
@@ -96,6 +101,7 @@ class EvaluationEndpoints
         summary: 'عرض تقييمات الأبناء (لولي الأمر)',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'student_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'page', in: 'query', schema: new OA\Schema(type: 'integer', default: 1))
         ],
@@ -118,6 +124,7 @@ class EvaluationEndpoints
         description: 'يسمح بجلب بيانات تقييم واحد بالتفصيل باستخدام المعرف (ID). يتم التحقق من الصلاحيات تلقائياً.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'id',
                 in: 'path',
@@ -141,4 +148,89 @@ class EvaluationEndpoints
         ]
     )]
     public function show() {}
+
+
+    #[OA\Put(
+        path: '/education/evaluations/{id}',
+        operationId: 'updateEvaluation',
+        tags: ['Evaluations'],
+        summary: 'تعديل تقييم طالب',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 10))
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'score', type: 'integer', example: 98),
+                    new OA\Property(property: 'notes', type: 'string', example: 'مستوى ممتاز ومشاركة فعالة'),
+                    new OA\Property(property: 'evaluated_at', type: 'string', format: 'date', example: '2026-05-09'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'تم التحديث بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم تحديث التقييم بنجاح'),
+                        new OA\Property(property: 'data', ref: '#/components/schemas/EvaluationResource'),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'خطأ في الصلاحيات',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: false),
+                        new OA\Property(property: 'message', type: 'string', example: 'غير مصرح لك بتعديل هذا التقييم')
+                    ]
+                )
+            )
+        ]
+    )]
+    public function update(){}
+
+    #[OA\Delete(
+        path: '/education/evaluations/{id}',
+        operationId: 'deleteEvaluation',
+        tags: ['Evaluations'],
+        summary: 'حذف تقييم',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 10))
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'تم الحذف بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم حذف التقييم بنجاح'),
+                        new OA\Property(property: 'data', type: 'object', nullable: true, example: null),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'التقييم غير موجود',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: false),
+                        new OA\Property(property: 'message', type: 'string', example: 'التقييم غير موجود')
+                    ]
+                )
+            )
+        ]
+    )]
+    public function destroy() {}
 }

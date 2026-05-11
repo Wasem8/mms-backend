@@ -17,6 +17,8 @@ class StudentEndpoints
         description: 'يمكن الفلترة حسب الحالة باستخدام query parameter: ?status=active أو pending أو rejected',
         security: [['bearerAuth' => []]],
         parameters: [
+
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'status',
                 in: 'query',
@@ -36,7 +38,7 @@ class StudentEndpoints
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'status', type: 'boolean', example: true),
-                        new OA\Property(property: 'message', type: 'string', example: 'تم استعادة قائمة الطلاب بنجاح.'),
+                        new OA\Property(property: 'message', type: 'string', example: 'Student list retrieved successfully / تم جلب القائمة بنجاح'),
                         new OA\Property(
                             property: 'data',
                             type: 'array',
@@ -59,6 +61,9 @@ class StudentEndpoints
         summary: 'تسجيل طالب جديد (من قبل ولي الأمر)',
         description: 'يسمح لولي الأمر بتسجيل ابنه في النظام مع تحديد المسجد المراد الالتحاق به. يتم إنشاء الحساب بحالة (غير نشط) حتى موافقة المشرف.',
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -98,37 +103,50 @@ class StudentEndpoints
         operationId: 'showStudent',
         tags: ['Students'],
         summary: 'عرض بيانات طالب محدد (تفصيلي)',
-        description: 'يعيد تفاصيل طالب معين مع الإحصائيات والحلقات المرتبطة.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+
             new OA\Parameter(
                 name: 'id',
                 in: 'path',
                 required: true,
-                description: 'معرف الطالب',
-                schema: new OA\Schema(type: 'integer', example: 11)
+                schema: new OA\Schema(type: 'integer')
             )
         ],
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'تم جلب بيانات الطالب بنجاح',
+                description: 'تم بنجاح',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'status', type: 'boolean', example: true),
-                        new OA\Property(property: 'message', type: 'string', example: 'تم جلب بيانات الطالب بنجاح.'),
-                        // هنا قمنا بتغيير المرجع ليكون متوافقاً مع الريسورس الجديد
+
+                        new OA\Property(
+                            property: 'status',
+                            type: 'boolean',
+                            example: true
+                        ),
+
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'تم جلب بيانات الطالب بنجاح.'
+                        ),
+
                         new OA\Property(
                             property: 'data',
                             ref: '#/components/schemas/StudentDetailResource'
                         ),
-                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+
+                        new OA\Property(
+                            property: 'pagination',
+                            type: 'object',
+                            nullable: true,
+                            example: null
+                        ),
                     ]
                 )
-            ),
-            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
-            new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
-            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+            )
         ]
     )]
     public function show() {}
@@ -141,6 +159,7 @@ class StudentEndpoints
         description: 'يسمح لمشرف المسجد بتغيير حالة الطالب من (غير نشط) إلى (نشط) ليتمكن من الانضمام للحلقات.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'id',
                 in: 'path',
@@ -186,18 +205,9 @@ class StudentEndpoints
             new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
         ]
     )]
-    public function approve($id)
+    public function approve()
     {
-        $result = $this->service->approve($id);
 
-        if (isset($result['error']) && $result['error']) {
-            return ApiResponse::error($result['message'], 400);
-        }
-
-        return ApiResponse::success(
-            new StudentResource($result['data']),
-            'تم قبول الطالب بنجاح وتفعيل حسابه.'
-        );
     }
 
     #[OA\Patch(
@@ -208,6 +218,7 @@ class StudentEndpoints
         description: 'يسمح لمشرف المسجد برفض طلب انضمام طالب، مما يحول حالته إلى (مرفوض).',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'id',
                 in: 'path',
@@ -253,18 +264,115 @@ class StudentEndpoints
             new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
         ]
     )]
-    public function reject($id)
+    public function reject()
     {
-        $result = $this->service->reject($id);
 
-        if (isset($result['error']) && $result['error']) {
-            return ApiResponse::error($result['message'], 400);
-        }
+    }
 
-        return ApiResponse::success(
-            new StudentResource($result['data']),
-            'تم رفض طلب تسجيل الطالب.'
-        );
+
+    #[OA\Post(
+        path: '/education/students/{id}/transfer',
+        operationId: 'transferStudent',
+        tags: ['Students'],
+        summary: 'نقل طالب من حلقة إلى أخرى في نفس المسجد',
+        description: 'يقوم بنقل الطالب من حلقة محددة إلى حلقة جديدة، مع التحقق من وجوده في الحلقة القديمة وتبعية الحلقات للمسجد.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'معرف الطالب المراد نقله',
+                schema: new OA\Schema(type: 'integer', example: 3)
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['from_halaqa_id', 'to_halaqa_id'],
+                properties: [
+                    new OA\Property(property: 'from_halaqa_id', type: 'integer', description: 'ID الحلقة الحالية للطالب', example: 1),
+                    new OA\Property(property: 'to_halaqa_id', type: 'integer', description: 'ID الحلقة الجديدة المراد النقل إليها', example: 2),
+                ]
+            )
+        ),
+        responses: [
+            // 1. حالة النجاح
+            new OA\Response(
+                response: 200,
+                description: 'تمت عملية النقل بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم نقل الطالب بنجاح إلى حلقة (حلقة التميز)'),
+                        new OA\Property(
+                            property: 'data',
+                            properties: [
+                                new OA\Property(property: 'id', type: 'integer', example: 3),
+                                new OA\Property(property: 'full_name', type: 'string', example: 'أحمد محمد علي'),
+                                new OA\Property(property: 'status', type: 'string', example: 'active'),
+                                new OA\Property(
+                                    property: 'current_halaqats',
+                                    type: 'array',
+                                    items: new OA\Items(
+                                        properties: [
+                                            new OA\Property(property: 'id', type: 'integer', example: 2),
+                                            new OA\Property(property: 'name', type: 'string', example: 'حلقة التميز'),
+                                            new OA\Property(property: 'teacher_name', type: 'string', example: 'الشيخ خالد'),
+                                            new OA\Property(property: 'joined_at', type: 'string', example: '2026-05-08 14:00:00')
+                                        ]
+                                    )
+                                ),
+
+                            ]
+                        ),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                    ]
+                )
+            ),
+
+            // 2. خطأ: الطالب غير موجود في الحلقة القديمة
+            new OA\Response(
+                response: 400,
+                description: 'خطأ في منطق النقل (مثلاً الطالب ليس في الحلقة القديمة)',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: false),
+                        new OA\Property(property: 'message', type: 'string', example: 'عذراً، الطالب غير مسجل في الحلقة القديمة التي اخترتها، يرجى التأكد من البيانات.'),
+                        new OA\Property(property: 'data', type: 'object', nullable: true, example: null),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                    ]
+                )
+            ),
+
+            // 3. خطأ: الـ Validation (مدخلات غير صحيحة)
+            new OA\Response(
+                response: 422,
+                description: 'خطأ في التحقق من البيانات المرسلة',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'The to halaqa id field is required.'),
+                        new OA\Property(
+                            property: 'errors',
+                            properties: [
+                                new OA\Property(property: 'to_halaqa_id', type: 'array', items: new OA\Items(type: 'string', example: 'يجب أن يكون حقل الحلقة الجديدة مختلفاً عن الحلقة القديمة.'))
+                            ]
+                        ),
+                        new OA\Property(property: 'data', type: 'object', nullable: true, example: null),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                    ]
+                )
+            ),
+
+            // 4. خطأ: الصلاحيات أو عدم الوجود
+            new OA\Response(response: 404, description: 'الطالب غير موجود أو لا يتبع لمسجدك'),
+            new OA\Response(response: 401, description: 'غير مصرح لك (Unauthenticated)')
+        ]
+    )]
+    public function transfer($id)
+    {
+        // الكود كما هو
     }
 }
 

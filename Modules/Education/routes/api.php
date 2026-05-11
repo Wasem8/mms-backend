@@ -11,11 +11,14 @@ use Modules\Education\Http\Controllers\TeacherController;
 Route::prefix('education')->group(function () {
 
     Route::middleware(['auth:api', 'role:halaqa_supervisor'])->group(function () {
+        Route::get('halaqat', [HalaqaController::class, 'index']);
+        Route::post('halaqat', [HalaqaController::class, 'store']);
         Route::get('halaqat/{id}', [HalaqaController::class, 'show']);
         Route::post('halaqat/{id}/students', [HalaqaController::class, 'attachStudents']);
         Route::delete('halaqat/{id}/students/{studentId}', [HalaqaController::class, 'detachStudent']);
         Route::patch('students/{id}/approve', [StudentController::class, 'approve']);
         Route::patch('students/{id}/reject', [StudentController::class, 'reject']);
+        Route::post('students/{id}/transfer', [StudentController::class, 'transfer']);
 
     });
 
@@ -56,7 +59,7 @@ Route::prefix('education')->group(function () {
     Route::middleware(['auth:api', 'role:teacher'])->group(function () {
         Route::get('teacher/excuses', [AttendanceExcuseController::class, 'indexForTeacher']);
         Route::put('teacher/excuses/{id}/process', [AttendanceExcuseController::class, 'process']);
-
+        Route::post('evaluations', [EvaluationController::class, 'store']);
 
     });
 
@@ -64,14 +67,18 @@ Route::prefix('education')->group(function () {
         Route::get('evaluations', [EvaluationController::class, 'indexForSupervisor']);
     });
 
-    // --- بوابة المعلم (Teacher Portal) ---
     Route::prefix('teacher')->middleware('role:teacher')->group(function () {
         Route::get('evaluations', [EvaluationController::class, 'indexForTeacher']);
-        Route::post('evaluations', [EvaluationController::class, 'storeBulk']); // الإدخال الجماعي
     });
 
-    // --- بوابة ولي الأمر (Parent Portal) ---
     Route::prefix('parent')->middleware('role:parent')->group(function () {
         Route::get('evaluations', [EvaluationController::class, 'indexForParent']);
     });
+
+
+        Route::middleware(['auth:api', 'role:teacher,halaqa_supervisor'])->group(function () {
+            Route::put('evaluations/{id}', [EvaluationController::class, 'update']);
+            Route::delete('evaluations/{id}', [EvaluationController::class, 'destroy']);
+        });
+
 });
