@@ -16,11 +16,12 @@ return new class extends Migration
             $table->foreignId('space_id')->constrained('mosque_spaces')->onDelete('cascade');
             $table->string('program_name');
             $table->text('description')->nullable();
+            $table->enum('type',['lecture','course','competition','other'])->default('lecture');
             $table->string('image')->nullable();
             $table->string('presenter');
-            $table->time('start_time');
-            $table->time('end_time');
-            $table->date('date');
+            $table->string('presenter_image')->nullable();
+            $table->boolean('is_featured')->default(false);
+            $table->enum('status',['active','inactive'])->default('inactive');
             $table->enum('level',['beginner','intermediate','advanced'])->default('beginner');
             $table->timestamps();
         });

@@ -18,7 +18,7 @@ class DawahProgram extends Model
      */
 
     protected $table = 'dawah_programs';
-    protected $fillable = ['mosque_id', 'space_id', 'program_name', 'description', 'image', 'presenter', 'start_time', 'end_time', 'date', 'level'];
+    protected $fillable = ['mosque_id', 'space_id', 'program_name', 'description', 'type', 'image', 'presenter', 'presenter_image', 'is_featured', 'status', 'level'];
 
 
     public function mosque()
@@ -29,6 +29,11 @@ class DawahProgram extends Model
     public function space()
     {
         return $this->belongsTo(MosqueSpace::class, 'space_id');
+    }
+
+    public function schedules()
+    {
+        return $this->hasMany(ProgramSchedule::class);
     }
     // protected static function newFactory(): DawahProgramFactory
     // {

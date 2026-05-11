@@ -30,8 +30,9 @@ class DawahProgramController extends Controller
 
     public function show(Mosque $mosque, DawahProgram $program)
     {
-        return ApiResponse::success($program, 'تم جلب البرنامج بنجاح');
+        return ApiResponse::success($program->load('schedules'), 'تم جلب البرنامج بنجاح');
     }
+
     public function store(StoreDawahProgramRequest $request, Mosque $mosque)
     {
         try {
@@ -42,9 +43,13 @@ class DawahProgramController extends Controller
                 $data['image'] = $request->file('image');
             }
 
+            if ($request->hasFile('presenter_image')) {
+                $data['presenter_image'] = $request->file('presenter_image');
+            }
+
             $program = $this->dawahProgramService->createProgram($data);
 
-            return ApiResponse::success($program, 'تم إنشاء البرنامج بنجاح', 201);
+            return ApiResponse::success($program->load('schedules'), 'تم إنشاء البرنامج بنجاح', 201);
         } catch (\Exception $e) {
             return ApiResponse::error($e->getMessage(), 400);
         }
@@ -59,9 +64,13 @@ class DawahProgramController extends Controller
                 $data['image'] = $request->file('image');
             }
 
+            if ($request->hasFile('presenter_image')) {
+                $data['presenter_image'] = $request->file('presenter_image');
+            }
+
             $updatedProgram = $this->dawahProgramService->updateProgram($program, $data);
 
-            return ApiResponse::success($updatedProgram, 'تم تحديث البرنامج بنجاح');
+            return ApiResponse::success($updatedProgram->load('schedules'), 'تم تحديث البرنامج بنجاح');
         } catch (\Exception $e) {
             return ApiResponse::error($e->getMessage(), 400);
         }
@@ -77,10 +86,10 @@ class DawahProgramController extends Controller
         }
     }
 
-    public function getProgramsByMosque($mosqueId)
+    public function getProgramsByMosque(Mosque $mosque)
     {
-        $programs = $this->dawahProgramService->getProgramsByMosque($mosqueId);
+        $programs = $this->dawahProgramService->getProgramsByMosque($mosque->id);
 
-        return ApiResponse::success($programs);
+        return ApiResponse::success($programs->load('schedules'), 'تم جلب برامج المسجد بنجاح');
     }
 }
