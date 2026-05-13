@@ -12,6 +12,9 @@ class EvaluationResource extends JsonResource
             'id' => $this->id,
             'score' => $this->score,
             'notes' => $this->notes,
+            'surah_name' => $this->surah_name,
+            'from_ayah' => $this->from_ayah,
+            'to_ayah' => $this->to_ayah,
             'evaluated_at' => $this->evaluated_at,
             'student' => [
                 'id' => $this->student?->id,

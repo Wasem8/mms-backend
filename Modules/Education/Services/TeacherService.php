@@ -7,37 +7,45 @@ use Modules\User\Models\User;
 
 class TeacherService
 {
-    /**
-     * جلب قائمة المعلمين (بيانات خفيفة)
-     */
-    public function getMosqueTeachersList($mosqueId)
+
+    public function getTeachersList()
     {
-        return User::role('teacher')
-            ->where('mosque_id', $mosqueId)
-            ->withCount('halaqats')
-            ->get(['id', 'name', 'phone', 'status', 'created_at']);
+        $user = auth()->user();
+
+        $query = User::role('teacher')
+            ->withCount('halaqats');
+
+
+        match (true) {
+
+            $user->isAreaManager() => null,
+            $user->isMosqueManager() || $user->isSupervisor()
+            => $query->where('mosque_id', $user->mosque_id),
+            $user->isTeacher() => $query->where('id', $user->id),
+            default => $query->whereRaw('1 = 0'),
+        };
+
+        return $query->latest()->get(['id', 'name', 'phone', 'status', 'created_at']);
     }
 
-    /**
-     * جلب تفاصيل معلم واحد (إحصائيات عميقة)
-     */
-    public function getTeacherDetails($mosqueId, $teacherId)
+
+    public function getTeacherDetails($teacherId)
     {
-        return User::role('teacher')
-            ->where('mosque_id', $mosqueId)
+        $user = auth()->user();
+
+        $query = User::role('teacher')
             ->with(['halaqats' => function($query) {
                 $query->withCount([
                     'students',
-                    // إجمالي حالات الغياب التاريخية
-                    'attendances as total_absent_count' => function($q) {
-                        $q->whereIn('status', ['absent', 'absent_with_excuse']);
-                    },
-                    // إجمالي حالات الحضور التاريخية
-                    'attendances as total_present_count' => function($q) {
-                        $q->where('status', 'present');
-                    }
+                    'attendances as total_absent_count' => fn($q) => $q->whereIn('status', ['absent', 'absent_with_excuse']),
+                    'attendances as total_present_count' => fn($q) => $q->where('status', 'present')
                 ]);
-            }])
-            ->findOrFail($teacherId);
+            }]);
+
+        if (!$user->isAreaManager()) {
+            $query->where('mosque_id', $user->mosque_id);
+        }
+
+        return $query->findOrFail($teacherId);
     }
 }

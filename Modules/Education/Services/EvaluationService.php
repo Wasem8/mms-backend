@@ -35,6 +35,9 @@ class EvaluationService
             [
                 'score' => $data['score'],
                 'notes' => $data['notes'] ?? null,
+                'surah_name' => $data['surah_name'] ?? null,
+                'from_ayah' => $data['from_ayah'] ?? null,
+                'to_ayah' => $data['to_ayah'] ?? null,
             ]
         );
     }
@@ -49,7 +52,7 @@ class EvaluationService
             ->paginate(15);
     }
 
-    // للمعلم: جلب تقييمات الحلقات التي يدرسها فقط
+
     public function getTeacherEvaluations($teacherId, $filters = [])
     {
         return Evaluation::with(['student', 'halaqa'])
@@ -59,7 +62,6 @@ class EvaluationService
             ->paginate(15);
     }
 
-    // لولي الأمر: جلب تقييمات أبنائه فقط
     public function getParentEvaluations($parentId, $filters = [])
     {
         return Evaluation::with(['student', 'halaqa'])
@@ -105,6 +107,9 @@ class EvaluationService
             'score' => $data['score'] ?? $evaluation->score,
             'notes' => $data['notes'] ?? $evaluation->notes,
             'evaluated_at' => $data['evaluated_at'] ?? $evaluation->evaluated_at,
+            'surah_name' => $data['surah_name'] ?? $evaluation->surah_name,
+            'from_ayah' => $data['from_ayah'] ?? $evaluation->from_ayah,
+            'to_ayah' => $data['to_ayah'] ?? $evaluation->to_ayah,
         ]);
 
         return $evaluation;

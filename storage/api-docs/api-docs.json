@@ -3608,12 +3608,13 @@
                 ]
             }
         },
-        "/education/supervisor/teachers": {
+        "/education/teachers": {
             "get": {
                 "tags": [
-                    "Supervisor - Management"
+                    "Teachers Management"
                 ],
-                "summary": "قائمة معلمي المسجد (بيانات أساسية)",
+                "summary": "قائمة المعلمين (حسب صلاحية المستخدم)",
+                "description": "تعيد القائمة بناءً على الدور: مدير المنطقة يرى الكل، مدير المسجد والمشرف يريان معلمي مسجدهما فقط.",
                 "operationId": "getTeachersList",
                 "parameters": [
                     {
@@ -3622,7 +3623,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "قائمة المعلمين",
+                        "description": "قائمة المعلمين المسترجعة",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3630,6 +3631,9 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
                     }
                 },
                 "security": [
@@ -3639,12 +3643,13 @@
                 ]
             }
         },
-        "/education/supervisor/teachers/{id}": {
+        "/education/teachers/{id}": {
             "get": {
                 "tags": [
-                    "Supervisor - Management"
+                    "Teachers Management"
                 ],
-                "summary": "تفاصيل المعلم مع إحصائيات الحلقات اليومية",
+                "summary": "تفاصيل المعلم العميقة والإحصائيات",
+                "description": "جلب بيانات المعلم، حلقاته، وإحصائيات الحضور والغياب للطلاب التابعين له.",
                 "operationId": "getTeacherDetails",
                 "parameters": [
                     {
@@ -3653,6 +3658,7 @@
                     {
                         "name": "id",
                         "in": "path",
+                        "description": "معرف المعلم (User ID)",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -3661,7 +3667,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "تفاصيل المعلم والحلقات",
+                        "description": "تفاصيل المعلم والحلقات المسترجعة",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3671,7 +3677,10 @@
                         }
                     },
                     "404": {
-                        "description": "المعلم غير موجود"
+                        "description": "المعلم غير موجود أو لا تملك صلاحية الوصول إليه"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
                     }
                 },
                 "security": [
@@ -3711,6 +3720,18 @@
                                     "student_id": {
                                         "type": "integer",
                                         "example": 10
+                                    },
+                                    "surah_name": {
+                                        "type": "string",
+                                        "example": "الفاتحة"
+                                    },
+                                    "from_ayah": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "to_ayah": {
+                                        "type": "integer",
+                                        "example": 7
                                     },
                                     "score": {
                                         "type": "integer",
@@ -3992,6 +4013,7 @@
                     "Evaluations"
                 ],
                 "summary": "تعديل تقييم طالب",
+                "description": "يسمح بتعديل درجة التقييم، الملاحظات، أو تفاصيل السورة والآيات. جميع حقول الطلب اختيارية.",
                 "operationId": "updateEvaluation",
                 "parameters": [
                     {
@@ -4000,6 +4022,7 @@
                     {
                         "name": "id",
                         "in": "path",
+                        "description": "معرف التقييم",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -4015,16 +4038,34 @@
                                 "properties": {
                                     "score": {
                                         "type": "integer",
-                                        "example": 98
+                                        "example": 98,
+                                        "nullable": true
                                     },
                                     "notes": {
                                         "type": "string",
-                                        "example": "مستوى ممتاز ومشاركة فعالة"
+                                        "example": "تم تحسين النطق في الآيات الأخيرة",
+                                        "nullable": true
+                                    },
+                                    "surah_name": {
+                                        "type": "string",
+                                        "example": "البقرة",
+                                        "nullable": true
+                                    },
+                                    "from_ayah": {
+                                        "type": "integer",
+                                        "example": 1,
+                                        "nullable": true
+                                    },
+                                    "to_ayah": {
+                                        "type": "integer",
+                                        "example": 20,
+                                        "nullable": true
                                     },
                                     "evaluated_at": {
                                         "type": "string",
                                         "format": "date",
-                                        "example": "2026-05-09"
+                                        "example": "2026-05-09",
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -4049,11 +4090,26 @@
                                         },
                                         "data": {
                                             "$ref": "#/components/schemas/EvaluationResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "خطأ في التحقق من البيانات (مثلاً رقم الآية \"إلى\" أصغر من \"من\")",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
                                         },
-                                        "pagination": {
-                                            "type": "object",
-                                            "example": null,
-                                            "nullable": true
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The to ayah must be greater than or equal to from ayah."
                                         }
                                     },
                                     "type": "object"
@@ -4062,7 +4118,7 @@
                         }
                     },
                     "403": {
-                        "description": "خطأ في الصلاحيات",
+                        "description": "خطأ في الصلاحيات (التقييم لا يخص المعلم أو المسجد)",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4080,6 +4136,9 @@
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "description": "التقييم غير موجود"
                     }
                 },
                 "security": [
@@ -8818,6 +8877,198 @@
                     }
                 ]
             }
+        },
+        "/education/students/search": {
+            "get": {
+                "tags": [
+                    "Students"
+                ],
+                "summary": "البحث المتقدم عن الطلاب",
+                "description": "تسمح هذه الدالة بالبحث عن الطلاب بالاسم، المسجد، الحالة، الجنس، أو رقم الحلقة مع دعم كامل لنظام الصلاحيات.",
+                "operationId": "7ab08c134ea16ac170732c66cdaef232",
+                "parameters": [
+                    {
+                        "name": "query",
+                        "in": "query",
+                        "description": "اسم الطالب (الأول أو الأخير)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "أحمد"
+                        }
+                    },
+                    {
+                        "name": "mosque_id",
+                        "in": "query",
+                        "description": "معرف المسجد",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "halaqa_id",
+                        "in": "query",
+                        "description": "معرف الحلقة",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 2
+                        }
+                    },
+                    {
+                        "name": "gender",
+                        "in": "query",
+                        "description": "الجنس",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "male",
+                            "enum": [
+                                "male",
+                                "female"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "حالة الطالب",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "active",
+                            "enum": [
+                                "active",
+                                "pending",
+                                "rejected"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "رقم الصفحة",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم جلب نتائج البحث بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Student list retrieved successfully."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 11
+                                                    },
+                                                    "first_name": {
+                                                        "type": "string",
+                                                        "example": "أحمد"
+                                                    },
+                                                    "last_name": {
+                                                        "type": "string",
+                                                        "example": "محمد"
+                                                    },
+                                                    "parent": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 4
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Teacher"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "mosque": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "جامع الراجحي الكبير"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "halaqats": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "integer",
+                                                                    "example": 1
+                                                                },
+                                                                "name": {
+                                                                    "type": "string",
+                                                                    "example": "حلقة التحفيظ - المستوى الأول"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    },
+                                                    "date_of_birth": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "2015-05-15"
+                                                    },
+                                                    "gender": {
+                                                        "type": "string",
+                                                        "example": "male"
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "pending"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "$ref": "#/components/schemas/Pagination"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -9307,11 +9558,27 @@
                     },
                     "score": {
                         "type": "integer",
-                        "example": 98
+                        "example": 98,
+                        "nullable": true
                     },
                     "notes": {
                         "type": "string",
                         "example": "مستوى ممتاز ومشاركة فعالة",
+                        "nullable": true
+                    },
+                    "surah_name": {
+                        "type": "string",
+                        "example": "البقرة",
+                        "nullable": true
+                    },
+                    "from_ayah": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "to_ayah": {
+                        "type": "integer",
+                        "example": 15,
                         "nullable": true
                     },
                     "evaluated_at": {
@@ -9327,10 +9594,11 @@
                             },
                             "name": {
                                 "type": "string",
-                                "example": "Student 3"
+                                "example": "أحمد محمد"
                             }
                         },
-                        "type": "object"
+                        "type": "object",
+                        "nullable": true
                     },
                     "halaqa": {
                         "properties": {
@@ -9343,7 +9611,8 @@
                                 "example": "حلقة التحفيظ - المستوى الأول"
                             }
                         },
-                        "type": "object"
+                        "type": "object",
+                        "nullable": true
                     }
                 },
                 "type": "object"
@@ -9485,21 +9754,39 @@
                         "items": {
                             "properties": {
                                 "id": {
-                                    "type": "integer"
+                                    "type": "integer",
+                                    "example": 1
                                 },
                                 "score": {
-                                    "type": "integer"
+                                    "type": "integer",
+                                    "example": 95
                                 },
-                                "evaluation_at": {
-                                    "type": "string"
+                                "surah_name": {
+                                    "type": "string",
+                                    "example": "البقرة"
+                                },
+                                "from_ayah": {
+                                    "type": "integer",
+                                    "example": 1
+                                },
+                                "to_ayah": {
+                                    "type": "integer",
+                                    "example": 20
+                                },
+                                "evaluated_at": {
+                                    "type": "string",
+                                    "format": "date",
+                                    "example": "2026-05-13"
                                 },
                                 "student": {
                                     "properties": {
                                         "id": {
-                                            "type": "integer"
+                                            "type": "integer",
+                                            "example": 11
                                         },
                                         "name": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "example": "أحمد محمد"
                                         }
                                     },
                                     "type": "object"
@@ -9507,10 +9794,12 @@
                                 "halaqa": {
                                     "properties": {
                                         "id": {
-                                            "type": "integer"
+                                            "type": "integer",
+                                            "example": 1
                                         },
                                         "name": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "example": "حلقة النور"
                                         }
                                     },
                                     "type": "object"
@@ -9745,8 +10034,8 @@
             "description": "Education"
         },
         {
-            "name": "Supervisor - Management",
-            "description": "Supervisor - Management"
+            "name": "Teachers Management",
+            "description": "Teachers Management"
         },
         {
             "name": "Evaluations",
