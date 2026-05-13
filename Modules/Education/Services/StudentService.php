@@ -7,32 +7,15 @@ use Modules\Education\Models\Student;
 
 class StudentService
 {
-    // Modules/Education/Services/StudentService.php
 
     public function list()
     {
-        $user = auth()->user();
-        $status = request()->query('status');
-
-        $query = Student::query()->with(['mosque', 'parent']);
-
-        if ($user->isSupervisor()) {
-            $query->where('mosque_id', $user->mosque_id);
-        }
-        elseif ($user->isTeacher()) {
-            $query->whereHas('halaqats', function ($q) use ($user) {
-                $q->where('teacher_id', $user->id);
-            });
-        }
-        elseif ($user->isParent()) {
-            $query->where('parent_id', $user->id);
-        }
-
-        $query->when($status, function ($q) use ($status) {
-            return $q->where('status', $status);
-        });
-
-        return $query->latest()->paginate(10);
+        return Student::query()
+            ->with(['mosque', 'parent'])
+            ->forUser(auth()->user()) // 🔥 هنا السحر
+            ->when(request('status'), fn($q, $status) => $q->where('status', $status))
+            ->latest()
+            ->paginate(10);
     }
 
     public function create(array $data)
@@ -47,36 +30,42 @@ class StudentService
 
     public function find($id)
     {
-        $user = auth()->user();
+        return Student::with(['mosque', 'parent', 'halaqats'])
+            ->withCount([
+                'attendances as total_absent' => fn($q) => $q->whereIn('status', ['absent', 'absent_with_excuse']),
+                'attendances as total_present' => fn($q) => $q->where('status', 'present')
+            ])
+            ->forUser(auth()->user())
+            ->findOrFail($id);
+    }
 
-        $query = Student::with(['mosque', 'parent', 'halaqats'])
-            ->withCount(['attendances as total_absent' => function($q) {
-                $q->whereIn('status', ['absent', 'absent_with_excuse']);
-            }])
-            ->withCount(['attendances as total_present' => function($q) {
-                $q->where('status', 'present');
-            }]);
+    public function search(array $filters)
+    {
+        return Student::query()
+            ->with(['mosque', 'parent', 'halaqats'])
+            ->forUser(auth()->user())
+            ->when(!empty($filters['query']), function ($q) use ($filters) {
+                $searchTerm = $filters['query'];
+                $q->where(function ($sub) use ($searchTerm) {
+                    $sub->where('first_name', 'ILIKE', "%{$searchTerm}%")
+                        ->orWhere('last_name', 'ILIKE', "%{$searchTerm}%")
+                        ->orWhereRaw("CONCAT(first_name, ' ', last_name) ILIKE ?", ["%{$searchTerm}%"]);
+                });
+            })
 
-        if ($user->isSupervisor()) {
-            $query->where('mosque_id', $user->mosque_id);
-        }
-        elseif ($user->isTeacher()) {
-            $query->whereHas('halaqats', function ($q) use ($user) {
-                $q->where('teacher_id', $user->id);
-            });
-        }
-        elseif ($user->isParent()) {
-            $query->where('parent_id', $user->id);
-        }
+            ->when(!empty($filters['mosque_id']), fn($q) => $q->where('mosque_id', $filters['mosque_id']))
 
-        $student = $query->findOrFail($id);
+            ->when(!empty($filters['status']), fn($q) => $q->where('status', $filters['status']))
 
-        $student->last_presence = $student->attendances()
-            ->where('status', 'present')
-            ->latest('date')
-            ->first()?->date;
+            ->when(!empty($filters['gender']), fn($q) => $q->where('gender', $filters['gender']))
 
-        return $student;
+            ->when(!empty($filters['halaqa_id']), function ($q) use ($filters) {
+                $q->whereHas('halaqats', function ($sub) use ($filters) {
+                    $sub->where('halaqats.id', $filters['halaqa_id']);
+                });
+            })
+            ->latest()
+            ->paginate(15);
     }
 
     public function update($id, array $data)
@@ -145,7 +134,6 @@ class StudentService
             return ['error' => true, 'message' => __('messages.target_halaqa_invalid')];
         }
 
-        // 2. التحقق من الحلقة القديمة: هل الطالب موجود فيها فعلاً؟
         $isInOldHalaqa = $student->halaqats()->where('halaqats.id', $oldHalaqaId)->exists();
 
         if (!$isInOldHalaqa) {
@@ -155,11 +143,8 @@ class StudentService
             ];
         }
 
-        // 3. التنفيذ الآمن:
-        // الآن نحن متأكدون أنه في القديمة، فنقوم بحذفه منها
         $student->halaqats()->detach($oldHalaqaId);
 
-        // ثم نضيفه للجديدة (نستخدم sync لضمان عدم التكرار حتى لو ضغط المشرف مرتين)
         $student->halaqats()->syncWithoutDetaching([
             $newHalaqaId => [
                 'joined_at' => now(),

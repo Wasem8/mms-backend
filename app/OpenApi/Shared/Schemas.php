@@ -155,32 +155,37 @@ use OpenApi\Attributes as OA;
     type: 'object',
     properties: [
         new OA\Property(property: 'id', type: 'integer', example: 2),
-        new OA\Property(property: 'score', type: 'integer', example: 98),
+        new OA\Property(property: 'score', type: 'integer', example: 98, nullable: true),
         new OA\Property(property: 'notes', type: 'string', example: 'مستوى ممتاز ومشاركة فعالة', nullable: true),
+
+        new OA\Property(property: 'surah_name', type: 'string', example: 'البقرة', nullable: true),
+        new OA\Property(property: 'from_ayah', type: 'integer', example: 1, nullable: true),
+        new OA\Property(property: 'to_ayah', type: 'integer', example: 15, nullable: true),
+
         new OA\Property(property: 'evaluated_at', type: 'string', format: 'date', example: '2026-05-09'),
 
-        // تعريف الطالب بشكل مختصر كما في الريسورس
         new OA\Property(
             property: 'student',
             type: 'object',
             properties: [
                 new OA\Property(property: 'id', type: 'integer', example: 3),
-                new OA\Property(property: 'name', type: 'string', example: 'Student 3')
-            ]
+                new OA\Property(property: 'name', type: 'string', example: 'أحمد محمد')
+            ],
+            nullable: true
         ),
 
-        // تعريف الحلقة بشكل مختصر كما في الريسورس
+
         new OA\Property(
             property: 'halaqa',
             type: 'object',
             properties: [
                 new OA\Property(property: 'id', type: 'integer', example: 1),
                 new OA\Property(property: 'name', type: 'string', example: 'حلقة التحفيظ - المستوى الأول')
-            ]
+            ],
+            nullable: true
         ),
     ]
 )]
-
 #[OA\Schema(
     schema: 'TeacherListResponse',
     properties: [
@@ -231,21 +236,41 @@ use OpenApi\Attributes as OA;
     properties: [
         new OA\Property(property: 'status', type: 'boolean', example: true),
         new OA\Property(property: 'message', type: 'string', example: 'تم جلب البيانات بنجاح'),
-        new OA\Property(property: 'data', type: 'array', items: new OA\Items(
-            properties: [
-                new OA\Property(property: 'id', type: 'integer'),
-                new OA\Property(property: 'score', type: 'integer'),
-                new OA\Property(property: 'evaluation_at', type: 'string'),
-                new OA\Property(property: 'student', type: 'object', properties: [
-                    new OA\Property(property: 'id', type: 'integer'),
-                    new OA\Property(property: 'name', type: 'string')
-                ]),
-                new OA\Property(property: 'halaqa', type: 'object', properties: [
-                    new OA\Property(property: 'id', type: 'integer'),
-                    new OA\Property(property: 'name', type: 'string')
-                ])
-            ]
-        )),
+        new OA\Property(
+            property: 'data',
+            type: 'array',
+            items: new OA\Items(
+                properties: [
+                    new OA\Property(property: 'id', type: 'integer', example: 1),
+                    new OA\Property(property: 'score', type: 'integer', example: 95),
+
+                    // الحقول الجديدة لبيانات الحفظ 🔥
+                    new OA\Property(property: 'surah_name', type: 'string', example: 'البقرة'),
+                    new OA\Property(property: 'from_ayah', type: 'integer', example: 1),
+                    new OA\Property(property: 'to_ayah', type: 'integer', example: 20),
+
+                    // تصحيح الاسم بناءً على ملاحظة الـ DTO Parser 🛠️
+                    new OA\Property(property: 'evaluated_at', type: 'string', format: 'date', example: '2026-05-13'),
+
+                    new OA\Property(
+                        property: 'student',
+                        type: 'object',
+                        properties: [
+                            new OA\Property(property: 'id', type: 'integer', example: 11),
+                            new OA\Property(property: 'name', type: 'string', example: 'أحمد محمد')
+                        ]
+                    ),
+                    new OA\Property(
+                        property: 'halaqa',
+                        type: 'object',
+                        properties: [
+                            new OA\Property(property: 'id', type: 'integer', example: 1),
+                            new OA\Property(property: 'name', type: 'string', example: 'حلقة النور')
+                        ]
+                    )
+                ]
+            )
+        ),
         new OA\Property(property: 'pagination', ref: '#/components/schemas/PaginationMeta')
     ]
 )]
