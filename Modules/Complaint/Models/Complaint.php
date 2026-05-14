@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\User\Models\User;
 use Modules\Mosque\Models\Mosque;
+use Modules\Complaint\Models\ComplaintStatusLog;
 // use Modules\Complaint\Database\Factories\ComplaintFactory;
 
 class Complaint extends Model
@@ -17,8 +18,18 @@ class Complaint extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = ['complaint_number', 'description', 'image', 'status', 'user_id', 'mosque_id'];
-
+    protected $fillable = [
+        'title',
+        'description',
+        'mosque_id',
+        'user_id',
+        'complaint_number',
+        'status',
+        'complaint_type',
+        'priority',
+        'email',
+        'is_anonymous'
+    ];
     // protected static function newFactory(): ComplaintFactory
     // {
     //     // return ComplaintFactory::new();
@@ -32,6 +43,11 @@ class Complaint extends Model
         return $this->belongsTo(Mosque::class);
     }
     public function statusLogs() {
-        return $this->hasMany(Complaint_status_log::class);
+        return $this->hasMany(ComplaintStatusLog::class);
     }
+
+    public function files() {
+        return $this->hasMany(ComplaintFile::class);
+    }
+
 }
