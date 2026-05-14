@@ -11,6 +11,9 @@ class Evaluation extends Model
         'student_id',
         'score',
         'notes',
+        'surah_name',
+        'from_ayah',
+        'to_ayah',
         'evaluated_at'
     ];
 

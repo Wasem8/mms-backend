@@ -44,6 +44,16 @@ class StudentController
         );
     }
 
+    public function search(Request $request)
+    {
+        $students = $this->service->search($request->all());
+        return ApiResponse::success(
+            StudentResource::collection($students),
+            __('messages.students_retrieved'),
+            ApiResponse::pagination($students)
+        );
+    }
+
     public function update(Request $request, $id)
     {
         return ApiResponse::success(

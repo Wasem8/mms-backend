@@ -48,4 +48,16 @@ class Student extends Model
     {
         return trim($this->first_name . ' ' . $this->last_name);
     }
+
+    public function scopeForUser($query, $user)
+    {
+        return match (true) {
+            $user->isAreaManager()  => $query,
+            $user->isMosqueManager()   => $query->where('mosque_id', $user->mosque_id),
+            $user->isSupervisor()   => $query->where('mosque_id', $user->mosque_id),
+            $user->isTeacher()      => $query->whereHas('halaqats', fn($q) => $q->where('teacher_id', $user->id)),
+            $user->isParent()       => $query->where('parent_id', $user->id),
+            default                 => $query->whereRaw('1 = 0'),
+        };
+    }
 }

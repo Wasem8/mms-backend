@@ -22,11 +22,13 @@ Route::prefix('education')->group(function () {
 
     });
 
-    Route::middleware('role:parent,halaqa_supervisor,teacher')->group(function () {
+    Route::middleware('auth:api')->group(function () {
+        Route::get('students/search', [StudentController::class, 'search']);
         Route::get('students', [StudentController::class, 'index']);
         Route::get('students/{id}', [StudentController::class, 'show']);
         Route::put('students/{id}', [StudentController::class, 'update']);
         Route::delete('students/{id}', [StudentController::class, 'destroy']);
+
     });
 
     Route::middleware(['auth:api', 'role:parent'])->group(function () {
@@ -34,7 +36,7 @@ Route::prefix('education')->group(function () {
 
     });
 
-    Route::prefix('supervisor')->middleware(['auth:api', 'role:halaqa_supervisor'])->group(function () {
+    Route::middleware(['auth:api', 'role:halaqa_supervisor,mosque_manager,super_admin'])->group(function () {
         Route::get('teachers', [TeacherController::class, 'index']);
         Route::get('teachers/{id}', [TeacherController::class, 'show']);
     });

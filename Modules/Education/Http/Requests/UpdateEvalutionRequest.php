@@ -15,6 +15,9 @@ class UpdateEvalutionRequest extends FormRequest
             'score' => 'sometimes|integer|min:0|max:100',
             'notes' => 'nullable|string',
             'evaluated_at' => 'sometimes|date',
+            'surah_name'   => 'sometimes|string|max:100',
+            'from_ayah'    => 'sometimes|integer|min:1',
+            'to_ayah'      => 'sometimes|integer|min:1|gte:from_ayah',
         ];
     }
 
