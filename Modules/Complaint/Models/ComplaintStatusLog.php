@@ -8,7 +8,7 @@ use Modules\User\Models\User;
 
 // use Modules\Complaint\Database\Factories\ComplaintStatusLogFactory;
 
-class Complaint_status_log extends Model
+class ComplaintStatusLog extends Model
 {
     use HasFactory;
 
@@ -17,7 +17,7 @@ class Complaint_status_log extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = ['complaint_id', 'new_status', 'note', 'changed_at', 'changed_by'];
+    protected $fillable = ['complaint_id', 'old_status','new_status', 'changed_by','changed_at', 'note'];
 
     public function complaint() {
         return $this->belongsTo(Complaint::class);

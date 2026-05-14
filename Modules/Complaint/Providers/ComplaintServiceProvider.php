@@ -4,6 +4,8 @@ namespace Modules\Complaint\Providers;
 
 use Nwidart\Modules\Support\ModuleServiceProvider;
 use Illuminate\Console\Scheduling\Schedule;
+use Modules\Complaint\Repositories\ComplaintRepository;
+use Modules\Complaint\Repositories\ComplaintRepositoryInterface;
 
 class ComplaintServiceProvider extends ModuleServiceProvider
 {
@@ -34,9 +36,15 @@ class ComplaintServiceProvider extends ModuleServiceProvider
         RouteServiceProvider::class,
     ];
 
+    public function register(): void
+    {
+        $this->app->register(RouteServiceProvider::class);
+
+        $this->app->bind(ComplaintRepositoryInterface::class, ComplaintRepository::class);
+    }
     /**
      * Define module schedules.
-     * 
+     *
      * @param $schedule
      */
     // protected function configureSchedules(Schedule $schedule): void

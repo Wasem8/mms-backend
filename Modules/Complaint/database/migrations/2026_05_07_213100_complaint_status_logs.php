@@ -13,9 +13,10 @@ return new class extends Migration
         Schema::create('complaint_status_logs', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('complaint_id');
+            $table->string('old_status')->nullable();
             $table->string('new_status');
             $table->text('note')->nullable();
-            $table->dateTime('changed_at'); 
+            $table->dateTime('changed_at');
             $table->unsignedBigInteger('changed_by');
             $table->foreign('changed_by')->references('id')->on('users');
             $table->foreign('complaint_id')->references('id')->on('complaints')->cascadeOnDelete();

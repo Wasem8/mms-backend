@@ -12,9 +12,8 @@ class UpdateComplaintRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'description' => 'nullable',
-            'image' => 'nullable|image',
-            'status' => 'nullable|in:pending,in_progress,resolved,canceled',
+            'status' => 'required|in:pending,in_progress,resolved,canceled',
+            'note' => 'nullable|string'
         ];
     }
 

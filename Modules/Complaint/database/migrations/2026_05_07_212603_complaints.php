@@ -13,15 +13,24 @@ return new class extends Migration
         Schema::create('complaints', function (Blueprint $table) {
             $table->id();
             $table->string('complaint_number')->unique();
+            $table->string('title');
             $table->text('description');
-            $table->string(('image'))->nullable();
             $table->enum('status', ['pending', 'in_progress', 'resolved','canceled'])->default('pending');
-            $table->unsignedBigInteger('user_id');
+            $table->enum('priority',['low','medium','high'])->default('medium');
+            $table->enum('complaint_type',['service_missing','power_outage','corruption','employee_misconduct','technical_issue']);
+            $table->string('email')->nullable();
+            $table->boolean('is_anonymous')->default(false);
+            $table->string('admin_notes')->nullable();
+
+
+
+            $table->unsignedBigInteger('user_id')->nullable();
             $table->foreign('user_id')->references('id')->on('users');
+
+
 
             $table->unsignedBigInteger('mosque_id');
             $table->foreign('mosque_id')->references('id')->on('mosques');
-
             $table->timestamps();
         });
     }

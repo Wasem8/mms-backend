@@ -136,9 +136,7 @@ class DawahProgramEndpoints
     )]
     public function getProgramsByMosque() {}
 
-    // ─────────────────────────────────────────────
-    //  SHOW SINGLE PROGRAM
-    // ─────────────────────────────────────────────
+
     #[OA\Get(
         path: '/program/mosques/{mosque}/dawah_programs/{program}',
         operationId: 'getSingleDawahProgram',
@@ -242,7 +240,6 @@ class DawahProgramEndpoints
                             enum: ['lecture', 'course', 'competition', 'other']
                         ),
 
-                        // ✅ IMAGE FILES (IMPORTANT)
                         new OA\Property(
                             property: 'image',
                             type: 'string',
