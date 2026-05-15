@@ -374,6 +374,117 @@ class StudentEndpoints
     {
         // الكود كما هو
     }
+
+    #[OA\Get(
+        path: '/education/students/search',
+        summary: 'البحث المتقدم عن الطلاب',
+        description: 'تسمح هذه الدالة بالبحث عن الطلاب بالاسم، المسجد، الحالة، الجنس، أو رقم الحلقة مع دعم كامل لنظام الصلاحيات.',
+        tags: ['Students'],
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'query',
+                in: 'query',
+                description: 'اسم الطالب (الأول أو الأخير)',
+                required: false,
+                schema: new OA\Schema(type: 'string', example: 'أحمد')
+            ),
+            new OA\Parameter(
+                name: 'mosque_id',
+                in: 'query',
+                description: 'معرف المسجد',
+                required: false,
+                schema: new OA\Schema(type: 'integer', example: 1)
+            ),
+            new OA\Parameter(
+                name: 'halaqa_id',
+                in: 'query',
+                description: 'معرف الحلقة',
+                required: false,
+                schema: new OA\Schema(type: 'integer', example: 2)
+            ),
+            new OA\Parameter(
+                name: 'gender',
+                in: 'query',
+                description: 'الجنس',
+                required: false,
+                schema: new OA\Schema(type: 'string', enum: ['male', 'female'], example: 'male')
+            ),
+            new OA\Parameter(
+                name: 'status',
+                in: 'query',
+                description: 'حالة الطالب',
+                required: false,
+                schema: new OA\Schema(type: 'string', enum: ['active', 'pending', 'rejected'], example: 'active')
+            ),
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                description: 'رقم الصفحة',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 1)
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'تم جلب نتائج البحث بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Student list retrieved successfully.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(
+                                properties: [
+                                    new OA\Property(property: 'id', type: 'integer', example: 11),
+                                    new OA\Property(property: 'first_name', type: 'string', example: 'أحمد'),
+                                    new OA\Property(property: 'last_name', type: 'string', example: 'محمد'),
+                                    new OA\Property(
+                                        property: 'parent',
+                                        type: 'object',
+                                        properties: [
+                                            new OA\Property(property: 'id', type: 'integer', example: 4),
+                                            new OA\Property(property: 'name', type: 'string', example: 'Teacher')
+                                        ]
+                                    ),
+                                    new OA\Property(
+                                        property: 'mosque',
+                                        type: 'object',
+                                        properties: [
+                                            new OA\Property(property: 'id', type: 'integer', example: 1),
+                                            new OA\Property(property: 'name', type: 'string', example: 'جامع الراجحي الكبير')
+                                        ]
+                                    ),
+                                    new OA\Property(
+                                        property: 'halaqats',
+                                        type: 'array',
+                                        items: new OA\Items(
+                                            properties: [
+                                                new OA\Property(property: 'id', type: 'integer', example: 1),
+                                                new OA\Property(property: 'name', type: 'string', example: 'حلقة التحفيظ - المستوى الأول')
+                                            ]
+                                        )
+                                    ),
+                                    new OA\Property(property: 'date_of_birth', type: 'string', format: 'date', example: '2015-05-15'),
+                                    new OA\Property(property: 'gender', type: 'string', example: 'male'),
+                                    new OA\Property(property: 'status', type: 'string', example: 'pending')
+                                ]
+                            )
+                        ),
+                        new OA\Property(property: 'pagination', ref: '#/components/schemas/Pagination')
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+            new OA\Response(response: 403, ref: '#/components/responses/Forbidden')
+        ]
+    )]
+
+    public function search()
+    {
+    }
 }
 
 

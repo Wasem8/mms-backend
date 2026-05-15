@@ -3,6 +3,7 @@
 namespace Modules\Education\Services;
 
 use Illuminate\Validation\ValidationException;
+use Modules\Education\Events\AttendanceRecorded;
 use Modules\Education\Models\Attendance;
 use Modules\Education\Models\Halaqa;
 
@@ -101,5 +102,7 @@ class AttendanceService
             ['halaqa_id', 'student_id', 'date'], // unique keys
             ['status', 'notes', 'updated_at']
         );
+
+        event(new AttendanceRecorded($records, $data['halaqa_id'], $data['date']));
     }
 }

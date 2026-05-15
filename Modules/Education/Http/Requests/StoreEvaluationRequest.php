@@ -17,6 +17,9 @@ class StoreEvaluationRequest extends FormRequest
             'score' => 'nullable|integer|min:0|max:100',
             'notes' => 'nullable|string',
             'evaluated_at' => 'nullable|date',
+            'surah_name'   => 'required|string|max:100',
+            'from_ayah'    => 'required|integer|min:1',
+            'to_ayah'      => 'required|integer|min:1|gte:from_ayah',
         ];
     }
 

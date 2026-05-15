@@ -45,4 +45,10 @@ return [
     'unauthorized_edit_evaluation' => 'You are not authorized to edit this evaluation.',
     'unauthorized_delete_evaluation' => 'You are not authorized to delete this evaluation.',
     'evaluation_not_belongs_to_mosque' => 'This evaluation does not belong to your mosque.',
+
+    // --- Notifications Section ---
+    'notifications_retrieved' => 'Notifications retrieved successfully.',
+    'notification_marked_read' => 'Notification marked as read.',
+    'notifications_all_marked_read' => 'All notifications marked as read.',
+    'notification_deleted' => 'Notification deleted successfully.',
 ];

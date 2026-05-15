@@ -20,8 +20,8 @@ class EvaluationController
         $evaluation = $service->store($data);
 
         return ApiResponse::success(
-            $evaluation,
-            __('messages.evaluation_retrieved'),
+            new EvaluationResource($evaluation),
+            __('messages.evaluation_stored'),
         );
     }
 

@@ -122,6 +122,15 @@ class User extends Authentication implements JWTSubject
         return $this->hasMany(Student::class, 'parent_id');
     }
 
+    public function isMosqueManager()
+    {
+        return $this->hasRole('mosque_manager');
+    }
+
+    public function isAreaManager()
+    {
+        return $this->hasRole('super_admin');
+    }
 
     public function isSupervisor(): bool
     {
