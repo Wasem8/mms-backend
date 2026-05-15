@@ -5,11 +5,11 @@ use Modules\Donation\Http\Controllers\CampaignController;
 use Modules\Donation\Http\Controllers\DonationController;
 
 Route::get('donations', [DonationController::class, 'index'])->name('donation.index');
-Route::get('donations/{id}', [DonationController::class, 'show'])->name('donation.show');
+Route::get('donations/{id}', [DonationController::class, 'show']);
 Route::post('donations', [DonationController::class, 'store'])->name('donation.store');
 
 Route::middleware(['auth:api'])->group(function () {
-    Route::put('donations/{donation}', [DonationController::class, 'update'])->name('donation.update');
+    Route::put('donations/{donation}', [DonationController::class, 'update']);
     Route::delete('donations/{donation}', [DonationController::class, 'destroy'])->name('donation.destroy');
 });
 
