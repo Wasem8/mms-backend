@@ -6,6 +6,7 @@
     "Mosque": true,
     "Dashboard": true,
     "Community": true,
+    "Common": true
     "Complaint": true,
     "Donation": true
 }

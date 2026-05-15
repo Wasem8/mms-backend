@@ -45,4 +45,10 @@ return [
     'unauthorized_edit_evaluation' => 'غير مصرح لك بتعديل هذا التقييم.',
     'unauthorized_delete_evaluation' => 'غير مصرح لك بحذف هذا التقييم.',
     'evaluation_not_belongs_to_mosque' => 'التقييم لا يتبع لمسجدك.',
+
+    // --- قسم الإشعارات ---
+    'notifications_retrieved' => 'تم جلب الإشعارات بنجاح.',
+    'notification_marked_read' => 'تم تحديد الإشعار كمقروء.',
+    'notifications_all_marked_read' => 'تم تحديد كل الإشعارات كمقروءة.',
+    'notification_deleted' => 'تم حذف الإشعار بنجاح.',
 ];
