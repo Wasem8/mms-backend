@@ -4486,17 +4486,70 @@
                 ]
             }
         },
-        "/donations": {
+        "/mosques/{mosqueId}/donations": {
             "get": {
                 "tags": [
                     "Donations"
                 ],
-                "summary": "List donations",
-                "description": "Retrieve a list of donations. This endpoint is public.",
+                "summary": "List donations for a mosque",
+                "description": "Returns a paginated list of donations. Supports filtering by donor name, type, status, and campaign.",
                 "operationId": "listDonations",
+                "parameters": [
+                    {
+                        "name": "mosqueId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 5
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search by donor name",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "cash",
+                                "in_kind"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pending",
+                                "completed"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "campaign",
+                        "in": "query",
+                        "description": "Filter by campaign ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Donations retrieved successfully",
+                        "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4507,87 +4560,34 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Donations retrieved successfully"
+                                            "example": "Success"
                                         },
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "integer",
-                                                        "example": 1
-                                                    },
-                                                    "reference": {
-                                                        "type": "string",
-                                                        "example": "DON-ABCD1234"
-                                                    },
-                                                    "mosque_id": {
-                                                        "type": "integer",
-                                                        "example": 5,
-                                                        "nullable": true
-                                                    },
-                                                    "mosque_need_id": {
-                                                        "type": "integer",
-                                                        "example": 3,
-                                                        "nullable": true
-                                                    },
-                                                    "campaign_id": {
-                                                        "type": "integer",
-                                                        "example": 2,
-                                                        "nullable": true
-                                                    },
-                                                    "user_id": {
-                                                        "type": "integer",
-                                                        "example": 7,
-                                                        "nullable": true
-                                                    },
-                                                    "type": {
-                                                        "type": "string",
-                                                        "example": "cash"
-                                                    },
-                                                    "amount": {
-                                                        "type": "number",
-                                                        "format": "float",
-                                                        "example": 150,
-                                                        "nullable": true
-                                                    },
-                                                    "item_description": {
-                                                        "type": "string",
-                                                        "example": "Winter blankets",
-                                                        "nullable": true
-                                                    },
-                                                    "donor_name": {
-                                                        "type": "string",
-                                                        "example": "Ahmed Ali",
-                                                        "nullable": true
-                                                    },
-                                                    "status": {
-                                                        "type": "string",
-                                                        "example": "pending"
-                                                    },
-                                                    "completed_at": {
-                                                        "type": "string",
-                                                        "format": "date-time",
-                                                        "example": "2026-05-12T12:00:00Z",
-                                                        "nullable": true
-                                                    },
-                                                    "created_at": {
-                                                        "type": "string",
-                                                        "format": "date-time",
-                                                        "example": "2026-05-12T11:00:00Z"
-                                                    },
-                                                    "updated_at": {
-                                                        "type": "string",
-                                                        "format": "date-time",
-                                                        "example": "2026-05-12T11:10:00Z"
-                                                    }
-                                                },
-                                                "type": "object"
+                                                "$ref": "#/components/schemas/Donation"
                                             }
                                         },
-                                        "pagination": {
-                                            "type": "object",
-                                            "nullable": true
+                                        "meta": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 12
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 120
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -4596,94 +4596,30 @@
                         }
                     }
                 }
-            },
-            "post": {
+            }
+        },
+        "/mosques/{mosqueId}/donations/summary": {
+            "get": {
                 "tags": [
                     "Donations"
                 ],
-                "summary": "Create a donation",
-                "description": "Submit a new donation.",
-                "operationId": "createDonation",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "mosque_id",
-                                    "type"
-                                ],
-                                "properties": {
-                                    "mosque_id": {
-                                        "type": "integer",
-                                        "example": 5
-                                    },
-                                    "mosque_need_id": {
-                                        "type": "integer",
-                                        "example": 3,
-                                        "nullable": true
-                                    },
-                                    "campaign_id": {
-                                        "type": "integer",
-                                        "example": 2,
-                                        "nullable": true
-                                    },
-                                    "type": {
-                                        "type": "string",
-                                        "example": "cash",
-                                        "enum": [
-                                            "cash",
-                                            "kind"
-                                        ]
-                                    },
-                                    "amount": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 150,
-                                        "nullable": true
-                                    },
-                                    "item_description": {
-                                        "type": "string",
-                                        "example": "Winter blankets",
-                                        "nullable": true
-                                    },
-                                    "donor_name": {
-                                        "type": "string",
-                                        "example": "Ahmed Ali",
-                                        "nullable": true
-                                    },
-                                    "status": {
-                                        "type": "string",
-                                        "example": "pending",
-                                        "enum": [
-                                            "pending",
-                                            "completed"
-                                        ]
-                                    },
-                                    "reference": {
-                                        "type": "string",
-                                        "example": "DON-ABCD1234",
-                                        "nullable": true
-                                    },
-                                    "user_id": {
-                                        "type": "integer",
-                                        "example": 7,
-                                        "nullable": true
-                                    },
-                                    "completed_at": {
-                                        "type": "string",
-                                        "format": "date-time",
-                                        "nullable": true
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
+                "summary": "Daily summary",
+                "description": "Returns today's total collected amount and number of operations — shown in the \"ملخص اليوم\" panel on the add donation screen.",
+                "operationId": "getDonationSummary",
+                "parameters": [
+                    {
+                        "name": "mosqueId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 5
                     }
-                },
+                ],
                 "responses": {
-                    "201": {
-                        "description": "Donation created successfully",
+                    "200": {
+                        "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4694,48 +4630,81 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Donation created successfully"
+                                            "example": "Success"
                                         },
                                         "data": {
-                                            "type": "object",
-                                            "nullable": true
-                                        },
-                                        "pagination": {
-                                            "type": "object",
-                                            "nullable": true
+                                            "properties": {
+                                                "total_today": {
+                                                    "description": "Sum of completed cash donations today",
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 12450
+                                                },
+                                                "operations_count": {
+                                                    "description": "Number of completed donations today",
+                                                    "type": "integer",
+                                                    "example": 8
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "description": "Validation error",
+                    }
+                }
+            }
+        },
+        "/mosques/{mosqueId}/donations/chart": {
+            "get": {
+                "tags": [
+                    "Donations"
+                ],
+                "summary": "Monthly distribution chart",
+                "description": "Returns this month's donation totals grouped by type (cash / in_kind) for the bar chart.",
+                "operationId": "getDonationChart",
+                "parameters": [
+                    {
+                        "name": "mosqueId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 5
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "status": {
                                             "type": "boolean",
-                                            "example": false
+                                            "example": true
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Validation error."
+                                            "example": "Success"
                                         },
                                         "data": {
-                                            "type": "object",
-                                            "example": {
-                                                "field_name": [
-                                                    "Error message"
-                                                ]
-                                            }
-                                        },
-                                        "pagination": {
-                                            "type": "object",
-                                            "example": null,
-                                            "nullable": true
+                                            "properties": {
+                                                "cash": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 45000
+                                                },
+                                                "in_kind": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 12000
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -4751,8 +4720,8 @@
                 "tags": [
                     "Donations"
                 ],
-                "summary": "Get donation details",
-                "description": "Retrieve a single donation by ID.",
+                "summary": "Get a donation",
+                "description": "Returns full donation detail including reference, donor, campaign, attachment, and received_by.",
                 "operationId": "getDonation",
                 "parameters": [
                     {
@@ -4761,12 +4730,13 @@
                         "required": true,
                         "schema": {
                             "type": "integer"
-                        }
+                        },
+                        "example": 101
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Donation retrieved successfully",
+                        "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4777,84 +4747,10 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Donation retrieved successfully"
+                                            "example": "Success"
                                         },
                                         "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "reference": {
-                                                    "type": "string",
-                                                    "example": "DON-ABCD1234"
-                                                },
-                                                "mosque_id": {
-                                                    "type": "integer",
-                                                    "example": 5,
-                                                    "nullable": true
-                                                },
-                                                "mosque_need_id": {
-                                                    "type": "integer",
-                                                    "example": 3,
-                                                    "nullable": true
-                                                },
-                                                "campaign_id": {
-                                                    "type": "integer",
-                                                    "example": 2,
-                                                    "nullable": true
-                                                },
-                                                "user_id": {
-                                                    "type": "integer",
-                                                    "example": 7,
-                                                    "nullable": true
-                                                },
-                                                "type": {
-                                                    "type": "string",
-                                                    "example": "cash"
-                                                },
-                                                "amount": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 150,
-                                                    "nullable": true
-                                                },
-                                                "item_description": {
-                                                    "type": "string",
-                                                    "example": "Winter blankets",
-                                                    "nullable": true
-                                                },
-                                                "donor_name": {
-                                                    "type": "string",
-                                                    "example": "Ahmed Ali",
-                                                    "nullable": true
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "pending"
-                                                },
-                                                "completed_at": {
-                                                    "type": "string",
-                                                    "format": "date-time",
-                                                    "example": "2026-05-12T12:00:00Z",
-                                                    "nullable": true
-                                                },
-                                                "created_at": {
-                                                    "type": "string",
-                                                    "format": "date-time",
-                                                    "example": "2026-05-12T11:00:00Z"
-                                                },
-                                                "updated_at": {
-                                                    "type": "string",
-                                                    "format": "date-time",
-                                                    "example": "2026-05-12T11:10:00Z"
-                                                }
-                                            },
-                                            "type": "object"
-                                        },
-                                        "pagination": {
-                                            "type": "object",
-                                            "nullable": true
+                                            "$ref": "#/components/schemas/Donation"
                                         }
                                     },
                                     "type": "object"
@@ -4863,43 +4759,16 @@
                         }
                     },
                     "404": {
-                        "description": "Donation not found",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Donation not found"
-                                        },
-                                        "data": {
-                                            "type": "object",
-                                            "example": null,
-                                            "nullable": true
-                                        },
-                                        "pagination": {
-                                            "type": "object",
-                                            "example": null,
-                                            "nullable": true
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Not found"
                     }
                 }
             },
-            "put": {
+            "post": {
                 "tags": [
                     "Donations"
                 ],
                 "summary": "Update a donation",
-                "description": "Update donation details. Authentication is required.",
+                "description": "Partial update. Send as multipart/form-data when replacing the attachment. Add `_method=PUT` for clients that do not support PUT with multipart.",
                 "operationId": "updateDonation",
                 "parameters": [
                     {
@@ -4908,63 +4777,48 @@
                         "required": true,
                         "schema": {
                             "type": "integer"
-                        }
+                        },
+                        "example": 101
                     }
                 ],
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "properties": {
-                                    "mosque_id": {
-                                        "type": "integer",
-                                        "example": 5,
-                                        "nullable": true
-                                    },
-                                    "mosque_need_id": {
-                                        "type": "integer",
-                                        "example": 3,
-                                        "nullable": true
-                                    },
-                                    "campaign_id": {
-                                        "type": "integer",
-                                        "example": 2,
-                                        "nullable": true
-                                    },
-                                    "type": {
+                                    "_method": {
                                         "type": "string",
-                                        "example": "cash",
-                                        "nullable": true,
-                                        "enum": [
-                                            "cash",
-                                            "kind"
-                                        ]
+                                        "example": "PUT"
                                     },
-                                    "item_description": {
+                                    "donor_name": {
                                         "type": "string",
-                                        "example": "Winter blankets",
                                         "nullable": true
                                     },
                                     "amount": {
                                         "type": "number",
                                         "format": "float",
-                                        "example": 200,
                                         "nullable": true
                                     },
-                                    "donor_name": {
+                                    "item_description": {
                                         "type": "string",
-                                        "example": "Ahmed Ali",
                                         "nullable": true
                                     },
                                     "status": {
                                         "type": "string",
-                                        "example": "completed",
                                         "nullable": true,
                                         "enum": [
                                             "pending",
                                             "completed"
                                         ]
+                                    },
+                                    "campaign_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "mosque_need_id": {
+                                        "type": "integer",
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -4974,7 +4828,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Donation updated successfully",
+                        "description": "Updated",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4985,81 +4839,25 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Donation updated successfully"
+                                            "example": "Success"
                                         },
                                         "data": {
-                                            "type": "object",
-                                            "nullable": true
-                                        },
-                                        "pagination": {
-                                            "type": "object",
-                                            "nullable": true
+                                            "$ref": "#/components/schemas/Donation"
                                         }
                                     },
                                     "type": "object"
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
                     },
                     "401": {
-                        "description": "Unauthenticated",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Unauthenticated."
-                                        },
-                                        "data": {
-                                            "type": "object",
-                                            "example": null,
-                                            "nullable": true
-                                        },
-                                        "pagination": {
-                                            "type": "object",
-                                            "example": null,
-                                            "nullable": true
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Unauthorized"
-                                        },
-                                        "data": {
-                                            "type": "object",
-                                            "example": null,
-                                            "nullable": true
-                                        },
-                                        "pagination": {
-                                            "type": "object",
-                                            "example": null,
-                                            "nullable": true
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Unauthenticated"
                     }
                 },
                 "security": [
@@ -5073,7 +4871,7 @@
                     "Donations"
                 ],
                 "summary": "Delete a donation",
-                "description": "Delete a donation by ID. Authentication is required.",
+                "description": "Soft-deletes the donation and removes its attachment from Supabase storage. Also reverses the campaign collected_amount if the donation was completed.",
                 "operationId": "deleteDonation",
                 "parameters": [
                     {
@@ -5082,12 +4880,13 @@
                         "required": true,
                         "schema": {
                             "type": "integer"
-                        }
+                        },
+                        "example": 101
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Donation deleted successfully",
+                        "description": "Deleted",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -5098,14 +4897,10 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Donation deleted successfully"
+                                            "example": "تم حذف السجل بنجاح."
                                         },
                                         "data": {
-                                            "type": "object",
-                                            "nullable": true
-                                        },
-                                        "pagination": {
-                                            "type": "object",
+                                            "example": null,
                                             "nullable": true
                                         }
                                     },
@@ -5115,28 +4910,114 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthenticated",
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/donations/online": {
+            "post": {
+                "tags": [
+                    "Donations"
+                ],
+                "summary": "إنشاء تبرع إلكتروني (Stripe)",
+                "description": "يُنشئ طلب تبرع عبر Stripe ويُعيد `client_secret` للواجهة الأمامية لإتمام الدفع.\n\n- **العملة:** USD دائماً — يُحدِّدها الخادم تلقائياً، لا يُرسلها العميل.\n- **base_amount:** يُحسب تلقائياً (amount × exchange_rate) ويُخزَّن على التبرع.\n- **الحالة الأولية:** `pending` — تتغير إلى `completed` عبر Stripe Webhook تلقائياً.\n- **التوثيق:** اختياري — الزوار يمكنهم التبرع بدون توكن.",
+                "operationId": "storeOnlineDonation",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "mosque_id",
+                                    "donation_type",
+                                    "amount"
+                                ],
+                                "properties": {
+                                    "mosque_id": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "donation_type": {
+                                        "description": "نوع التبرع",
+                                        "type": "string",
+                                        "example": "cash",
+                                        "enum": [
+                                            "cash",
+                                            "in_kind"
+                                        ]
+                                    },
+                                    "amount": {
+                                        "description": "المبلغ بالدولار الأمريكي (USD). مطلوب عند donation_type = cash",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 50
+                                    },
+                                    "item_description": {
+                                        "description": "وصف الصنف. مطلوب عند donation_type = in_kind",
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "donor_name": {
+                                        "type": "string",
+                                        "example": "فاعل خير",
+                                        "nullable": true
+                                    },
+                                    "campaign_id": {
+                                        "type": "integer",
+                                        "example": 12,
+                                        "nullable": true
+                                    },
+                                    "mosque_need_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "تم إنشاء طلب التبرع بنجاح — في انتظار تأكيد الدفع من Stripe",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "status": {
                                             "type": "boolean",
-                                            "example": false
+                                            "example": true
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Unauthenticated."
+                                            "example": "تم إنشاء طلب التبرع بنجاح."
                                         },
                                         "data": {
                                             "type": "object",
-                                            "example": null,
-                                            "nullable": true
-                                        },
-                                        "pagination": {
-                                            "type": "object",
-                                            "example": null,
-                                            "nullable": true
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/Donation"
+                                                },
+                                                {
+                                                    "properties": {
+                                                        "client_secret": {
+                                                            "description": "يُرسَل إلى Stripe.js في الواجهة الأمامية لإتمام عملية الدفع. لا يُخزَّن في قاعدة البيانات.",
+                                                            "type": "string",
+                                                            "example": "pi_3OxXxx_secret_yyy"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            ]
                                         }
                                     },
                                     "type": "object"
@@ -5144,35 +5025,306 @@
                             }
                         }
                     },
-                    "403": {
-                        "description": "Forbidden",
+                    "422": {
+                        "description": "خطأ في التحقق من صحة البيانات"
+                    },
+                    "503": {
+                        "description": "سعر الصرف غير مُهيَّأ — يجب على المدير ضبطه من لوحة التحكم"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/donations/admin/cash": {
+            "post": {
+                "tags": [
+                    "Donations"
+                ],
+                "summary": "إضافة تبرع نقدي أو عيني يدوياً (لمدير المسجد)",
+                "description": "يُسجِّل مدير المسجد التبرعات النقدية والعينية المستلمة يدوياً.\n\n- **العملة:** SYP دائماً — يُحدِّدها الخادم تلقائياً، لا يُرسلها العميل.\n- **exchange_rate:** يُطبَّق 1.0 (لا تحويل مطلوب) وbase_amount = amount.\n- **الحالة:** تُضبط على `completed` فوراً ويُضاف base_amount إلى collected_amount في نفس العملية.\n- **التوثيق:** إلزامي — يجب أن يكون المستخدم مديراً (Admin).",
+                "operationId": "storeCashDonation",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "mosque_id",
+                                    "donation_type",
+                                    "amount"
+                                ],
+                                "properties": {
+                                    "mosque_id": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "donation_type": {
+                                        "description": "نوع التبرع",
+                                        "type": "string",
+                                        "example": "cash",
+                                        "enum": [
+                                            "cash",
+                                            "in_kind"
+                                        ]
+                                    },
+                                    "amount": {
+                                        "description": "المبلغ بالليرة السورية (SYP). مطلوب عند donation_type = cash",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 500000
+                                    },
+                                    "item_description": {
+                                        "description": "وصف الصنف. مطلوب عند donation_type = in_kind",
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "donor_name": {
+                                        "type": "string",
+                                        "example": "فاعل خير",
+                                        "nullable": true
+                                    },
+                                    "donation_date": {
+                                        "description": "تاريخ استلام التبرع (اختياري — الافتراضي: اليوم)",
+                                        "type": "string",
+                                        "format": "date",
+                                        "nullable": true
+                                    },
+                                    "campaign_id": {
+                                        "type": "integer",
+                                        "example": 12,
+                                        "nullable": true
+                                    },
+                                    "mosque_need_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "user_id": {
+                                        "description": "معرف المستخدم إذا كان المتبرع مسجلاً في النظام",
+                                        "type": "integer",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "تم حفظ التبرع وإضافته إلى الحملة أو الاحتياج فوراً",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "status": {
                                             "type": "boolean",
-                                            "example": false
+                                            "example": true
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Unauthorized"
+                                            "example": "تم حفظ التبرع النقدي بنجاح."
                                         },
                                         "data": {
-                                            "type": "object",
-                                            "example": null,
-                                            "nullable": true
-                                        },
-                                        "pagination": {
-                                            "type": "object",
-                                            "example": null,
-                                            "nullable": true
+                                            "$ref": "#/components/schemas/Donation"
                                         }
                                     },
                                     "type": "object"
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "description": "غير مصرح — التوكن مفقود أو منتهي الصلاحية"
+                    },
+                    "403": {
+                        "description": "مرفوض — يجب أن تكون مديراً للمسجد"
+                    },
+                    "422": {
+                        "description": "خطأ في التحقق من صحة البيانات"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/stripe/webhook": {
+            "post": {
+                "tags": [
+                    "Donations"
+                ],
+                "summary": "Stripe webhook",
+                "description": "Called by Stripe after a payment_intent.succeeded or payment_intent.payment_failed event. Verifies the signature and marks the donation as completed. Do not call this endpoint manually.",
+                "operationId": "stripeWebhook",
+                "parameters": [
+                    {
+                        "name": "Stripe-Signature",
+                        "in": "header",
+                        "description": "HMAC signature sent by Stripe — verified against STRIPE_WEBHOOK_SECRET",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Webhook handled"
+                    },
+                    "400": {
+                        "description": "Invalid signature"
+                    }
+                }
+            }
+        },
+        "/settings": {
+            "get": {
+                "tags": [
+                    "Settings"
+                ],
+                "summary": "List all settings",
+                "description": "Returns all system settings as key-value pairs. Restricted to `super_admin`.",
+                "operationId": "getSettings",
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Setting"
+                                    }
+                                },
+                                "example": [
+                                    {
+                                        "key": "usd_to_syp_rate",
+                                        "value": "14500"
+                                    },
+                                    {
+                                        "key": "another_setting",
+                                        "value": "some_value"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires super_admin role"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/settings/exchange-rate": {
+            "put": {
+                "tags": [
+                    "Settings"
+                ],
+                "summary": "Update USD → SYP exchange rate",
+                "description": "Updates the `usd_to_syp_rate` setting used to convert online Stripe donations (USD) into\nthe base currency (SYP) before crediting campaigns and mosque needs.\n\n- Clears the cached rate immediately so subsequent donations use the new value.\n- Restricted to `super_admin` only.\n- If this setting is absent or the cache is stale, the `POST /donations/online` endpoint\n  returns **503** until the rate is configured here.",
+                "operationId": "updateExchangeRate",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "rate"
+                                ],
+                                "properties": {
+                                    "rate": {
+                                        "description": "New exchange rate: 1 USD = {rate} SYP",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 14500,
+                                        "maximum": 10000000,
+                                        "minimum": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Exchange rate updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Exchange rate updated successfully."
+                                        },
+                                        "key": {
+                                            "type": "string",
+                                            "example": "usd_to_syp_rate"
+                                        },
+                                        "new_rate": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "example": 14500
+                                        },
+                                        "unit": {
+                                            "type": "string",
+                                            "example": "1 USD = 14,500 SYP"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error — rate is missing, non-numeric, or out of bounds",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The rate field is required."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "rate": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "example": [
+                                                        "The rate must be at least 1."
+                                                    ]
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires super_admin role"
                     }
                 },
                 "security": [
@@ -11753,6 +11905,104 @@
                 },
                 "type": "object"
             },
+            "Donation": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 101
+                    },
+                    "reference": {
+                        "type": "string",
+                        "example": "REC-4892-2024"
+                    },
+                    "mosque_id": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "type": {
+                        "type": "string",
+                        "example": "cash",
+                        "enum": [
+                            "cash",
+                            "in_kind"
+                        ]
+                    },
+                    "payment_method": {
+                        "type": "string",
+                        "example": "cash",
+                        "enum": [
+                            "cash",
+                            "stripe"
+                        ]
+                    },
+                    "amount": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 5000,
+                        "nullable": true
+                    },
+                    "item_description": {
+                        "type": "string",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "donor_name": {
+                        "type": "string",
+                        "example": "أحمد عبد الله المحمود",
+                        "nullable": true
+                    },
+                    "notes": {
+                        "type": "string",
+                        "example": "تبرع مخصص لدعم صيانة المكيفات",
+                        "nullable": true
+                    },
+                    "campaign_id": {
+                        "type": "integer",
+                        "example": 12,
+                        "nullable": true
+                    },
+                    "campaign_title": {
+                        "type": "string",
+                        "example": "صيانة أجهزة التكييف",
+                        "nullable": true
+                    },
+                    "mosque_need_id": {
+                        "type": "integer",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "completed",
+                        "enum": [
+                            "pending",
+                            "completed"
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "Setting": {
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "example": "usd_to_syp_rate"
+                    },
+                    "value": {
+                        "type": "string",
+                        "example": "14500"
+                    }
+                },
+                "type": "object"
+            },
             "ProgramSchedule": {
                 "description": "A single session schedule belonging to a Dawah program",
                 "properties": {
@@ -12665,6 +12915,14 @@
     },
     "tags": [
         {
+            "name": "Donations",
+            "description": "Manage donations — cash, in-kind, and online (Stripe). Covers UC-17, UC-35, UC-72, UC-73, UC-74."
+        },
+        {
+            "name": "Settings",
+            "description": "System-wide settings management. Restricted to super_admin role."
+        },
+        {
             "name": "Attendance",
             "description": "Attendance"
         },
@@ -12691,10 +12949,6 @@
         {
             "name": "Program Schedules",
             "description": "Program Schedules"
-        },
-        {
-            "name": "Donations",
-            "description": "Donations"
         },
         {
             "name": "Education",
