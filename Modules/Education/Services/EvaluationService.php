@@ -2,9 +2,12 @@
 
 namespace Modules\Education\Services;
 
+use Illuminate\Validation\ValidationException;
+use Modules\Common\Services\NotificationService;
+use Modules\Education\Events\EvaluationUpdated;
+use Modules\Education\Events\StudentEvaluated;
 use Modules\Education\Models\Evaluation;
 use Modules\Education\Models\Halaqa;
-use Illuminate\Validation\ValidationException;
 
 class EvaluationService
 {
@@ -26,7 +29,7 @@ class EvaluationService
             ]);
         }
 
-        return Evaluation::updateOrCreate(
+        $evaluation = Evaluation::updateOrCreate(
             [
                 'halaqa_id' => $data['halaqa_id'],
                 'student_id' => $data['student_id'],
@@ -40,6 +43,10 @@ class EvaluationService
                 'to_ayah' => $data['to_ayah'] ?? null,
             ]
         );
+
+        event(new StudentEvaluated($evaluation));
+
+        return $evaluation;
     }
 
     public function getMosqueEvaluations($mosqueId, $filters = [])
@@ -111,6 +118,8 @@ class EvaluationService
             'from_ayah' => $data['from_ayah'] ?? $evaluation->from_ayah,
             'to_ayah' => $data['to_ayah'] ?? $evaluation->to_ayah,
         ]);
+
+        event(new EvaluationUpdated($evaluation));
 
         return $evaluation;
     }

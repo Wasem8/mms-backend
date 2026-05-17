@@ -1,6 +1,5 @@
 <?php
 
-
 use Illuminate\Support\Facades\Route;
 use Modules\Donation\Http\Controllers\CampaignController;
 use Modules\Donation\Http\Controllers\DonationController;
@@ -8,11 +7,7 @@ use Modules\Donation\Http\Controllers\DonationController as DonationControllerAl
 use Modules\Donation\Http\Controllers\SettingController;
 use Modules\Donation\Http\Controllers\StripeWebhookController;
 
-/*
-|--------------------------------------------------------------------------
-| Stripe Webhook — NO auth middleware, Stripe signs the payload instead
-|--------------------------------------------------------------------------
-*/
+
 Route::post('stripe/webhook', [StripeWebhookController::class, 'handle']);
 Route::middleware(['auth:api','role:super_admin'])->group(function () {
     Route::get('settings', [SettingController::class, 'index']);
@@ -36,11 +31,7 @@ Route::prefix('donations')->group(function () {
     });
 });
 
-/*
-|--------------------------------------------------------------------------
-| Campaign Routes
-|--------------------------------------------------------------------------
-*/
+
 Route::prefix('mosques/{mosqueId}/campaigns')->group(function () {
     Route::get('/',      [CampaignController::class, 'index']);
     Route::get('/stats', [CampaignController::class, 'stats']);
@@ -66,10 +57,8 @@ Route::prefix('mosques/{mosqueId}/campaigns')->group(function () {
 
 Route::prefix('campaigns')->group(function () {
 
-    // ── Public reads ──────────────────────────────────────────────────────
     Route::get('/{id}',            [CampaignController::class, 'show'])->name('campaign.show');
 
-    // ── Protected writes (mosque manager only) ────────────────────────────
     Route::middleware(['auth:api', 'role:mosque_manager'])->group(function () {
         Route::get('/{id}/analytics',  [CampaignController::class, 'analytics'])->name('campaign.analytics');
         Route::post('/',       [CampaignController::class, 'store'])->name('campaign.store');
