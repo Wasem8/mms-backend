@@ -2,58 +2,31 @@
 
 namespace Modules\Donation\Strategies;
 
+use Modules\Donation\Models\Donation;
+
 class CashPayment implements PaymentStrategyInterface
 {
-    public function pay(float $amount, array $details): array
+    public function pay(array $data): PaymentResult
     {
-        if ($amount <= 0) {
-            return [
-                'success'        => false,
-                'transaction_id' => '',
-                'gateway'        => 'cash',
-                'message'        => 'المبلغ غير صالح للتبرع النقدي.',
-            ];
-        }
+        $reference = $this->generateReference();
 
-        if (!$this->validate($details)) {
-            return [
-                'success'        => false,
-                'transaction_id' => '',
-                'gateway'        => 'cash',
-                'message'        => 'تفاصيل التبرع النقدي غير مكتملة.',
-            ];
-        }
-
-        $transactionId = uniqid('cash_', true);
-
-        return [
-            'success'        => true,
-            'transaction_id' => $transactionId,
-            'gateway'        => 'cash',
-            'message'        => 'تم تسجيل التبرع النقدي يدويًا.',
-            'raw'            => [
-                'type'         => $details['type'] ?? 'cash',
-                'reference'    => $details['reference'] ?? null,
-                'donor_name'   => $details['donor_name'] ?? null,
-                'notes'        => $details['notes'] ?? null,
-            ],
-        ];
+        return PaymentResult::cash($reference);
     }
+ 
 
-    public function validate(array $details): bool
+  
+    private function generateReference(): string
     {
-        if (!empty($details['type']) && $details['type'] !== 'cash') {
-            return false;
+        $sequence = str_pad(random_int(1000, 9999), 4, '0', STR_PAD_LEFT);
+        $year     = now()->year;
+
+        $candidate = "REC-{$sequence}-{$year}";
+
+        while (\Modules\Donation\Models\Donation::where('reference', $candidate)->exists()) {
+            $sequence  = str_pad(random_int(1000, 9999), 4, '0', STR_PAD_LEFT);
+            $candidate = "REC-{$sequence}-{$year}";
         }
 
-        if (!empty($details['donor_name']) && !is_string($details['donor_name'])) {
-            return false;
-        }
-
-        if (!empty($details['reference']) && !is_string($details['reference'])) {
-            return false;
-        }
-
-        return true;
+        return $candidate;
     }
 }

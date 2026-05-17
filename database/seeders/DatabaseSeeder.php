@@ -12,6 +12,7 @@ use Modules\Mosque\Database\Seeders\MosqueDatabaseSeeder;
 use Modules\Mosque\Database\Seeders\MosqueSpaceSeedSeeder;
 use Modules\User\Database\Seeders\RolesAndPermissionsSeeder;
 use Modules\User\Models\User;
+use Modules\Donation\Database\Seeders\SettingSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -29,6 +30,7 @@ class DatabaseSeeder extends Seeder
             MosqueSeeder::class,
             FacilitiesSeeder::class,
             MosqueSpaceSeedSeeder::class,
+            SettingSeeder::class,
 
         ]);
 
