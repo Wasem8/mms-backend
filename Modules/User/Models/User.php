@@ -23,6 +23,7 @@ class User extends Authentication implements JWTSubject
         'otp',
         'otp_expires_at',
         'email_verified_at',
+        'fcm_token',
         'mosque_id',
         'status'
     ];

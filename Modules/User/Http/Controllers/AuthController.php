@@ -121,4 +121,11 @@ class AuthController extends Controller {
         return ApiResponse::success(null, 'تم تحديث توكن الإشعارات بنجاح');
     }
 
+    public function deleteFcmToken(Request $request)
+    {
+        $request->user()->update(['fcm_token' => null]);
+
+        return ApiResponse::success(null, 'تم حذف توكن الإشعارات بنجاح');
+    }
+
 }

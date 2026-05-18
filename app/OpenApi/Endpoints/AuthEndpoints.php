@@ -430,4 +430,89 @@ class AuthEndpoints
     )]
     public function me() {}
 
+    #[OA\Post(
+        path: '/auth/update-fcm-token',
+        operationId: 'updateFcmToken',
+        tags: ['Auth'],
+        summary: 'Update user FCM notification token',
+        description: 'Updates the Firebase Cloud Messaging token for the authenticated user to enable push notifications.',
+        security: [['bearerAuth' => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['fcm_token'],
+                properties: [
+                    new OA\Property(property: 'fcm_token', type: 'string', example: 'fcm_token_string_from_firebase_sdk'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Token updated successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم تحديث توكن الإشعارات بنجاح'),
+                        new OA\Property(property: 'data', type: 'object', nullable: true, example: null),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthenticated',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: false),
+                        new OA\Property(property: 'message', type: 'string', example: 'Unauthenticated.'),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Validation Error',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: false),
+                        new OA\Property(property: 'message', type: 'string', example: 'The fcm token field is required.'),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function updateFcmToken() {}
+
+    #[OA\Delete(
+        path: '/auth/fcm-token',
+        operationId: 'deleteFcmToken',
+        tags: ['Auth'],
+        summary: 'Delete user FCM notification token on logout',
+        description: 'Flushes and removes the registered Firebase Cloud Messaging token for the authenticated user to secure privacy on shared devices.',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Token removed successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم حذف توكن الإشعارات بنجاح'),
+                        new OA\Property(property: 'data', type: 'object', nullable: true, example: null),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthenticated - Missing or invalid token',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: false),
+                        new OA\Property(property: 'message', type: 'string', example: 'Unauthenticated.'),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function deleteFcmToken() {}
+
 }

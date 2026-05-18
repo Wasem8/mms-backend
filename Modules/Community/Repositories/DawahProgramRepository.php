@@ -2,6 +2,8 @@
 namespace Modules\Community\Repositories;
 
 use Modules\Community\Models\DawahProgram;
+use Modules\Community\Models\ProgramSchedule;
+use Illuminate\Support\Facades\DB;
 
 
 class DawahProgramRepository implements DawahProgramRepositoryInterface
@@ -31,21 +33,38 @@ public function delete(DawahProgram $program): bool
 {
 return $program->delete();
 }
+    public function checkConflict(
+        int $mosqueId,
+        int $spaceId,
+        string $date,
+        string $startTime,
+        string $endTime,
+        ?int $excludeProgramId = null
+    ): bool {
+        return DB::table('program_schedules')
+            ->join('dawah_programs', 'dawah_programs.id', '=', 'program_schedules.dawah_program_id')
+            ->where('dawah_programs.mosque_id', $mosqueId)
+            ->where('dawah_programs.space_id', $spaceId)
+            ->where('program_schedules.date', $date)
+            ->where('program_schedules.start_time', '<', $endTime)
+            ->where('program_schedules.end_time', '>', $startTime)
+            ->when($excludeProgramId, fn($q) => $q->where('dawah_programs.id', '!=', $excludeProgramId))
+            ->exists();
+    }
 
-public function checkConflict(int $mosqueId, int $spaceId, string $date, string $startTime, string $endTime): bool
-{
-return DawahProgram::where('mosque_id', $mosqueId)
-->where('space_id', $spaceId)
-->where('date', $date)
-->where(function ($query) use ($startTime, $endTime) {
-$query->whereBetween('start_time', [$startTime, $endTime])
-->orWhereBetween('end_time', [$startTime, $endTime]);
-})
-->exists();
-}
 
-public function getProgramsByMosque(int $mosqueId)
+    public function getProgramsByMosque(int $mosqueId)
 {
 return DawahProgram::where('mosque_id', $mosqueId)->with(['space'])->get();
 }
+    public function createSchedules(DawahProgram $program, array $schedules): void
+    {
+        $program->schedules()->createMany($schedules);
+    }
+
+    public function syncSchedules(DawahProgram $program, array $schedules): void
+    {
+        $program->schedules()->delete();
+        $program->schedules()->createMany($schedules);
+    }
 }
