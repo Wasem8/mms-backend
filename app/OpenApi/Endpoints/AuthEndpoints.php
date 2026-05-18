@@ -482,4 +482,37 @@ class AuthEndpoints
     )]
     public function updateFcmToken() {}
 
+    #[OA\Delete(
+        path: '/auth/fcm-token',
+        operationId: 'deleteFcmToken',
+        tags: ['Auth'],
+        summary: 'Delete user FCM notification token on logout',
+        description: 'Flushes and removes the registered Firebase Cloud Messaging token for the authenticated user to secure privacy on shared devices.',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Token removed successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم حذف توكن الإشعارات بنجاح'),
+                        new OA\Property(property: 'data', type: 'object', nullable: true, example: null),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthenticated - Missing or invalid token',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: false),
+                        new OA\Property(property: 'message', type: 'string', example: 'Unauthenticated.'),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function deleteFcmToken() {}
+
 }

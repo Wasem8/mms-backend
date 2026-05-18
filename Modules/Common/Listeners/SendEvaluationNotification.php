@@ -27,14 +27,21 @@ class SendEvaluationNotification
             ? "تم تعديل تقييم الطالب {$student->first_name} في {$evaluation->surah_name}"
             : "تم إضافة تقييم جديد لـ {$student->first_name} في {$evaluation->surah_name} بدرجة {$evaluation->score}";
 
+        $type = $isUpdate ? 'evaluation_updated' : 'evaluation_added';
+
+        $extraData = [
+            'evaluation_id' => (string) $evaluation->id,
+            'student_id'    => (string) $student->id,
+        ];
+
         if ($parent) {
             $notificationService = new NotificationService();
             $notificationService->notify(
                 $parent,
                 $title,
                 $body,
-                "evaluation",
-                ['id' => (string)$evaluation->id]
+                $type,
+                $extraData
             );
         }
     }
