@@ -3,10 +3,12 @@
 namespace Modules\Donation\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Support\ApiResponse;
 use Modules\Donation\Http\Requests\StoreCashDonationRequest;
 use Modules\Donation\Http\Requests\StoreDonationRequest;
 use Modules\Donation\Http\Requests\StoreOnlineDonationRequest;
 use Modules\Donation\Http\Requests\UpdateDonationRequest;
+use Modules\Donation\Models\Donation;
 use Modules\Donation\Services\DonationService;
 use Modules\Donation\Transformers\DonationResource;
 
@@ -47,6 +49,19 @@ class DonationController extends Controller
             'status'  => true,
             'message' => 'Success',
             'data'    => $data,
+        ]);
+    }
+
+    public function receipt($id)
+    {
+        $donation = \Modules\Donation\Models\Donation::with(['mosque', 'campaign', 'mosqueNeed'])
+            ->findOrFail($id);
+
+        $pdf = $this->donationService->generateReceipt($donation);
+
+        return response($pdf, 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="receipt-' . $donation->reference . '.pdf"',
         ]);
     }
 

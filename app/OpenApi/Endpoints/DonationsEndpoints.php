@@ -609,7 +609,38 @@ public function storeCash() {}
         ]
     )]
     public function getSettings() {}
-
+    #[OA\Get(
+        path: '/donations/{id}/receipt',
+        operationId: 'downloadDonationReceipt',
+        tags: ['Donations'],
+        summary: 'تحميل إيصال التبرع (PDF)',
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                example: 101
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'ملف PDF جاهز للتحميل',
+                headers: [
+                    new OA\Header(
+                        header: 'Content-Disposition',
+                        description: 'attachment; filename="receipt-REC-4892-2024.pdf"',
+                        schema: new OA\Schema(type: 'string')
+                    ),
+                ],
+                content: new OA\MediaType(mediaType: 'application/pdf')
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 404, description: 'التبرع غير موجود'),
+        ]
+    )]
+    public function downloadReceipt() {}
     // =========================================================================
     // PUT /settings/exchange-rate
     // Updates the USD → SYP exchange rate used in online donations

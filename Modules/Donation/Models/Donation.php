@@ -5,7 +5,9 @@ namespace Modules\Donation\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\Mosque\Models\Mosque;
 use Modules\User\Models\User;
 
 // use Modules\Donation\Database\Factories\DonationFactory;
@@ -45,6 +47,7 @@ class Donation extends Model
         'exchange_rate' => 'decimal:4',
         'base_amount'   => 'decimal:2',
         'completed_at'  => 'datetime',
+        'created_at'    => 'datetime',
     ];
 
 
@@ -60,8 +63,9 @@ class Donation extends Model
 
     public function mosque(): BelongsTo
     {
-        return $this->belongsTo(\Modules\Mosque\Models\Mosque::class);
+        return $this->belongsTo(Mosque::class, 'mosque_id', 'id');
     }
+
 
     public function user(): BelongsTo
     {
