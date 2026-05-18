@@ -11,30 +11,24 @@ class StoreDonationRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'mosque_id'        => ['required', 'integer', 'exists:mosques,id'],
-            'type'             => ['required', 'string', 'in:cash,kind'],
-
-            'campaign_id'      => ['nullable', 'integer', 'exists:campaigns,id'],
-            'mosque_need_id'   => ['nullable', 'integer', 'exists:mosque_needs,id'],
-
-            'payment_method'   => ['required_if:type,cash', 'nullable', 'string', 'in:stripe,cash'],
-            'amount'           => ['required_if:type,cash', 'nullable', 'numeric', 'min:5', 'max:999999'],
-            'success_url'      => ['required_if:payment_method,stripe', 'nullable', 'url'],
-            'cancel_url'       => ['required_if:payment_method,stripe', 'nullable', 'url'],
-            'customer_email'   => ['nullable', 'email'],
-
-            'item_description' => ['required_if:type,kind', 'nullable', 'string', 'max:500'],
-
-            'donor_name'       => ['nullable', 'string', 'max:100'],
+    return [
+            'donor_name'      => ['sometimes', 'string', 'max:255'],
+            'donation_type'  => ['required', 'in:cash,in_kind'],
+            'payment_method'  => ['sometimes', 'in:cash,stripe'],
+            'amount'          => ['sometimes', 'numeric', 'min:0.01'],
+            'item_description' => ['nullable', 'string', 'max:500'],
+            'status'          => ['sometimes', 'in:pending,completed'],
+            'campaign_id'     => ['nullable', 'integer', 'exists:campaigns,id'],
+            'mosque_need_id'  => ['nullable', 'integer', 'exists:mosque_needs,id'],
         ];
+
     }
 
 
     public function withValidator($validator): void
     {
         $validator->after(function ($v) {
-            $type   = $this->input('type');
+            $type   = $this->input('donation_type');
             $needId = $this->input('mosque_need_id');
             $campId = $this->input('campaign_id');
 

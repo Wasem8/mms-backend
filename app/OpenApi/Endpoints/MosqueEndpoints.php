@@ -50,6 +50,7 @@ class MosqueEndpoints
                                     new OA\Property(property: 'reviews_count', type: 'integer', example: 10),
                                     new OA\Property(property: 'imam', type: 'string', nullable: true, example: 'Sheikh Ahmed'),
                                     new OA\Property(property: 'khatib', type: 'string', nullable: true, example: 'Sheikh Mohamed'),
+                                    new OA\Property(property: 'donation_total', type: 'number', format: 'float', example: 12500.00),
                                     new OA\Property(property: 'manager_id', type: 'integer', nullable: true, example: 2),
                                     new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
                                     new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),

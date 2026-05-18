@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Community\Http\Controllers\DawahProgramController;
 use Modules\Community\Http\Controllers\ProgramScheduleController;
+use Modules\Community\Http\Controllers\SermonController;
+use Modules\Community\Http\Controllers\TameemController;
 
 Route::prefix('program')->group(function () {
 
@@ -29,3 +31,24 @@ Route::prefix('program')->group(function () {
         Route::delete('/mosques/{mosque}/dawah_programs/{program}/schedules/{schedule}', [ProgramScheduleController::class, 'destroy']);
     });
 });
+
+Route::prefix('sermons')->middleware('auth:api')->group(function () {
+
+    Route::get('/', [SermonController::class, 'index']);
+    Route::get('/pending', [SermonController::class, 'pending']);
+
+    Route::post('/', [SermonController::class, 'store']);
+    Route::put('/{id}/approve', [SermonController::class, 'approve']);
+    // Route::put('/{id}/reject', [SermonController::class, 'reject']);
+});
+
+Route::prefix('tameems')->middleware('auth:api')->group(function () {
+
+    Route::get('/', [TameemController::class, 'index']);
+    Route::post('/', [TameemController::class, 'store']);
+
+    Route::get('/my-tameems', [TameemController::class, 'myTameems']);
+    Route::put('/{id}/read', [TameemController::class, 'markAsRead']);
+});
+
+

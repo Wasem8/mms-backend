@@ -101,7 +101,7 @@ return [
             ],
 
             'options' => extension_loaded('pdo_pgsql') ? [
-                PDO::ATTR_TIMEOUT => 5,
+                PDO::ATTR_TIMEOUT => 15,
             ] : [],
         ],
 

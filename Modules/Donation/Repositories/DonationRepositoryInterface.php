@@ -15,4 +15,5 @@ interface DonationRepositoryInterface
     public function update(int $id, array $data): Donation;
 
     public function delete(int $id): void;
+    public function markCompleted(int $id): void;
 }

@@ -34,4 +34,12 @@ class DonationRepository implements DonationRepositoryInterface
         $donation = Donation::findOrFail($id);
         $donation->delete();
     }
+    
+    public function markCompleted(int $id): void
+    {
+        Donation::where('id', $id)->update([
+            'status'       => 'completed',
+            'completed_at' => now(),
+        ]);
+    }
 }
