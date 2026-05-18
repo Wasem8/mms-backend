@@ -14,7 +14,6 @@
         "kreait/laravel-firebase": "^7.2",
         "laravel/framework": "^13.0",
         "laravel/tinker": "^3.0",
-        "mpdf/mpdf": "^6.1",
         "nwidart/laravel-modules": "^13.0",
         "resend/resend-php": "^1.1",
         "spatie/browsershot": "^5.3",
