@@ -14,6 +14,7 @@ Route::middleware(['auth:api','role:super_admin'])->group(function () {
     Route::put('settings/exchange-rate', [SettingController::class, 'updateExchangeRate']);
 });
 
+
 Route::prefix('mosques/{mosqueId}/donations')->group(function () {
     Route::get('/',        [DonationController::class, 'index']);
     Route::get('/summary', [DonationController::class, 'summary']);
@@ -23,6 +24,8 @@ Route::prefix('mosques/{mosqueId}/donations')->group(function () {
 Route::prefix('donations')->group(function () {
     Route::get('/{id}', [DonationController::class, 'show']);
     Route::post('/online', [DonationController::class, 'storeOnline']);
+    Route::get('/{id}/receipt', [DonationControllerAlias::class, 'receipt'])->name('donations.receipt');
+
 
     Route::middleware(['auth:api'])->group(function () {
         Route::post('/admin/cash', [DonationController::class, 'storeCash']);

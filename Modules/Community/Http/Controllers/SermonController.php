@@ -4,6 +4,7 @@ namespace Modules\Community\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Support\ApiResponse;
 use Modules\Community\Services\SermonService;
 
 class SermonController extends Controller
@@ -27,6 +28,15 @@ class SermonController extends Controller
         return response()->json(['message' => 'تم جلب الخطب المعلقة بنجاح', 'data' => $sermons]);
     }
 
+    public function show($id)
+    {
+        $sermon = $this->sermonService->getSermionById($id);
+        if (! $sermon) {
+            return ApiResponse::error('خطبة غير موجودة');
+        }
+        return ApiResponse::success($sermon, 'تم جلب الخطبة بنجاح');
+    }
+
     public function store(Request $request)
     {
         $validatedData = $request->validate([
@@ -45,8 +55,9 @@ class SermonController extends Controller
 
         $sermon = $this->sermonService->uploadSermon($validatedData, $mosqueManagerId, $attachments);
 
-        return response()->json(['message' => 'تم رفع الخطبة بنجاح وبانتظار الاعتماد', 'data' => $sermon], 201);
+        return ApiResponse::success(['message' => 'تم رفع الخطبة بنجاح وبانتظار الاعتماد', 'data' => $sermon], 201);
     }
+
 
     public function approve(Request $request, $id)
     {
@@ -55,7 +66,27 @@ class SermonController extends Controller
 
         $sermon = $this->sermonService->approveSermon($id, $regionManagerId, $notes);
 
-
-        return response()->json(['message' => 'تم اعتماد الخطبة بنجاح', 'data' => $sermon]);
+        return ApiResponse::success(['message' => 'تم اعتماد الخطبة بنجاح', 'data' => $sermon]);
     }
+
+    public function reject(Request $request, $id)
+    {
+        $notes = $request->input('notes');
+        $regionManagerId = auth()->id();
+
+        $sermon = $this->sermonService->rejectSermon($id, $regionManagerId, $notes);
+
+        return ApiResponse::success(['message' => 'تم رفض الخطبة بنجاح', 'data' => $sermon]);
+    }
+
+    public function checkCompleted()
+    {
+        $updatedCount = $this->sermonService->markPastSermonsAsCompleted();
+
+        return ApiResponse::success([
+            'message' => "تم التحقق بنجاح. تم تحديث حالة {$updatedCount} خطبة إلى مكتملة.",
+            'updated_count' => $updatedCount
+        ]);
+    }
+
 }

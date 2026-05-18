@@ -55,6 +55,7 @@ class DonationServiceProvider extends ModuleServiceProvider
 
     public function boot(): void
     {
+        $this->loadViewsFrom(module_path('Donation', 'resources/views'), 'donation');
         $this->commands([
             \Modules\Donation\Console\ExpireEndedCampaigns::class,
         ]);

@@ -2,17 +2,21 @@
 
 namespace Modules\Donation\Services;
 
+use Dompdf\Dompdf;
+use Dompdf\Options;
+
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Modules\Donation\Models\Donation;
 use Modules\Donation\Models\Setting;
-use Modules\Donation\Repositories\DonationRepositoryInterface;
-use Modules\Donation\Strategies\CashPayment;
-use Modules\Donation\Strategies\PaymentProcessor;
 use Modules\Donation\Strategies\PaymentStrategyFactory;
-use Modules\Donation\Strategies\StripePayment;
 use Modules\Donation\Repositories\SettingRepositoryInterface;
+use Modules\Donation\Models\Campaign;
+use Modules\Mosque\Models\MosqueNeed;
+use ArPHP\I18N\Arabic;
+use Spatie\Browsershot\Browsershot;
 
 class DonationService
 {
@@ -49,7 +53,7 @@ class DonationService
             ->where('donation_type', 'cash')
             ->where('status', 'completed');
 
-      
+
         $query->where(function ($q) {
             $q->whereDate('completed_at', today())
                 ->orWhere(function ($q2) {
@@ -131,6 +135,10 @@ class DonationService
                     $donation->campaign()->increment('collected_amount', $donation->base_amount);
                 } elseif ($donation->mosque_need_id) {
                     $donation->mosqueNeed()->increment('collected_amount', $donation->base_amount);
+                }else {
+                    // For standalone donations, we might want to track total mosque donations
+                    // This is optional and depends on your business logic
+                    $donation->mosque()->increment('donation_total', $donation->base_amount);
                 }
             }
 
@@ -142,8 +150,58 @@ class DonationService
             'client_secret' => $result->clientSecret ?? null,
         ];
     }
+    public function generateReceipt(Donation $donation): string
+    {
 
+        $donationData = Donation::with(['mosque', 'campaign', 'mosqueNeed'])->findOrFail($donation->id);
+        $target = $this->resolveTarget($donationData);
 
+        $html = view('donation::receipts.donation', [
+            'donation'       => $donationData,
+            'mosque'         => $donationData->mosque,
+            'mosque_name'    => $donationData->mosque?->name ?? 'المسجد الرئيسي',
+            'target'         => $target,
+            'donor_name'     => $donationData->donor_name ?? 'متبرع كريم', // سيظهر الآن: أويس عبود
+            'payment_method' => $donationData->payment_method === 'cash' ? 'نقدي' : $donationData->payment_method,
+            'donation_status' => $donationData->status === 'completed' ? 'مكتمل' : $donationData->status,
+            'currency'       => $donationData->currency ?? 'ليرة سورية',
+            'issued_at'      => now()->format('Y-m-d'),
+        ])->render();
+
+       return Browsershot::html($html)
+    ->setNodeBinary('C:\\Program Files\\nodejs\\node.exe')
+    ->setNpmBinary('C:\\Program Files\\nodejs\\npm.cmd')
+    ->noSandbox()
+    ->emulateMedia('print')
+    ->preferCssPageSize()
+    ->scale(1.0)
+    ->margins(0, 0, 0, 0)
+    ->paperSize(210, 297)
+    ->showBackground()
+    ->pdf();
+    }
+
+    private function resolveTarget(Donation $donation): array
+    {
+        if ($donation->campaign_id) {
+            $campaign = $donation->campaign ?? Campaign::find($donation->campaign_id);
+            if ($campaign) {
+                return ['label' => 'حملة', 'name' => $campaign->title];
+            }
+        }
+
+        if ($donation->mosque_need_id) {
+            $need = $donation->mosqueNeed ?? MosqueNeed::find($donation->mosque_need_id);
+            if ($need) {
+                return ['label' => 'احتياج', 'name' => $need->description];
+            }
+        }
+
+        return [
+            'label' => 'المسجد',
+            'name'  => $donation->mosque?->name ?? 'المسجد الرئيسي',
+        ];
+    }
     private function resolveCurrency(string $paymentMethod): string
     {
         return match ($paymentMethod) {
@@ -152,8 +210,6 @@ class DonationService
             default  => 'SYP',
         };
     }
-
-
     private function getCurrentExchangeRate(string $currency): float
     {
         if ($currency === 'SYP') {
@@ -208,7 +264,6 @@ class DonationService
         return $donation->delete();
     }
 
-
     public function markCompleted(Donation $donation): void
     {
         if ($donation->status === 'completed') {
@@ -239,5 +294,24 @@ class DonationService
             $donation->mosqueNeed()->increment('collected_amount', $baseAmount);
         }
     }
+    private function renderHtml(Donation $donation, array $target): string
+    {
+        // تأمين جلب البيانات الطازجة مباشرة من قاعدة البيانات بعد الحفظ
+        $donation = $donation->fresh(['mosque', 'campaign', 'mosqueNeed']);
+
+        return view('donation::receipts.donation', [
+            'donation'       => $donation,
+            'mosque'         => $donation->mosque,
+            'mosque_name'    => $donation->mosque?->name ?? 'المسجد الرئيسي',
+            'target'         => $target,
+            // استخدام الاسم القادم من قاعدة البيانات (مثل: أويس عبود) وفي حال عدم وجوده نضع القيمة الافتراضية
+            'donor_name'     => $donation->donor_name ?? 'متبرع كريم',
+            'payment_method' => $donation->payment_method === 'cash' ? 'نقدي' : $donation->payment_method,
+            'donation_status' => $donation->status === 'completed' ? 'مكتمل' : $donation->status,
+            'currency'       => $donation->currency ?? 'SYP', // أو اجعلها ديناميكية بناءً على الحقل لديك
+            'issued_at'      => now()->format('Y-m-d'),
+        ])->render();
+    }
+
 
 }

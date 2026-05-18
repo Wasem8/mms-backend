@@ -5,6 +5,7 @@ namespace Modules\Community\Services;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Modules\Community\Models\Sermon;
 use Modules\Community\Repositories\SermonRepositoryInterface;
 
 class SermonService
@@ -54,7 +55,17 @@ class SermonService
             }
 
             return $sermon;
-        });    }
+        });
+        }
+
+        public function getSermionById($sermonId)
+        {
+            $sermon = $this->sermonRepo->findById($sermonId);
+            if ($sermon) {
+                $sermon->load('attachments');
+            }
+            return $sermon;
+        }
 
     private function uploadImage($image): string
     {
@@ -85,11 +96,21 @@ class SermonService
 
     public function approveSermon($sermonId, $regionManagerId, $notes = null)
     {
-        return $this->sermonRepo->updateStatus($sermonId, 'Approved', $notes, $regionManagerId);
+        return $this->sermonRepo->updateStatus($sermonId, 'Scheduled', $notes, $regionManagerId);
     }
 
     public function rejectSermon($sermonId, $regionManagerId, $notes)
     {
         return $this->sermonRepo->updateStatus($sermonId, 'Rejected', $notes, $regionManagerId);
+    }
+
+    public function markPastSermonsAsCompleted()
+    {
+
+        $updatedCount = Sermon::where('status', 'scheduled')
+            ->whereDate('sermon_date', '<', now()->toDateString())
+            ->update(['status' => 'completed']);
+
+        return $updatedCount;
     }
 }

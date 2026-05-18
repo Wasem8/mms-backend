@@ -5229,6 +5229,48 @@
                 ]
             }
         },
+        "/donations/{id}/receipt": {
+            "get": {
+                "tags": [
+                    "Donations"
+                ],
+                "summary": "تحميل إيصال التبرع (PDF)",
+                "operationId": "downloadDonationReceipt",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 101
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "ملف PDF جاهز للتحميل",
+                        "headers": {
+                            "Content-Disposition": {
+                                "description": "attachment; filename=\"receipt-REC-4892-2024.pdf\"",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/pdf": {}
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "التبرع غير موجود"
+                    }
+                }
+            }
+        },
         "/settings/exchange-rate": {
             "put": {
                 "tags": [
@@ -7610,6 +7652,11 @@
                                                         "type": "string",
                                                         "example": "Sheikh Mohamed",
                                                         "nullable": true
+                                                    },
+                                                    "donation_total": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 12500
                                                     },
                                                     "manager_id": {
                                                         "type": "integer",
@@ -10965,6 +11012,521 @@
                 ]
             }
         },
+        "/sermons": {
+            "get": {
+                "tags": [
+                    "Sermons"
+                ],
+                "summary": "List all sermons",
+                "description": "Returns all sermons regardless of status. Accessible to authenticated users.",
+                "operationId": "listSermons",
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم جلب جميع الخطب بنجاح"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Sermon"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Sermons"
+                ],
+                "summary": "Upload a sermon",
+                "description": "Mosque manager uploads a new sermon. Status is set to `pending` until approved by a region manager.\n- Attachments are optional (PDF, audio, etc.) — max 10MB each.\n- `mosque_manager_id` is taken from the auth token automatically.",
+                "operationId": "storeSermon",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "content"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "خطبة الجمعة - الصبر"
+                                    },
+                                    "content": {
+                                        "type": "string",
+                                        "example": "الحمد لله..."
+                                    },
+                                    "speaker_name": {
+                                        "type": "string",
+                                        "example": "الشيخ محمد"
+                                    },
+                                    "sermon_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2024-06-28"
+                                    },
+                                    "attachments[]": {
+                                        "description": "Optional files — max 10MB each",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Sermon uploaded — awaiting approval",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم رفع الخطبة بنجاح وبانتظار الاعتماد"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Sermon"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/sermons/pending": {
+            "get": {
+                "tags": [
+                    "Sermons"
+                ],
+                "summary": "List pending sermons",
+                "description": "Returns sermons awaiting approval by a region manager.",
+                "operationId": "listPendingSermons",
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم جلب الخطب المعلقة بنجاح"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Sermon"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/sermons/{id}/approve": {
+            "put": {
+                "tags": [
+                    "Sermons"
+                ],
+                "summary": "Approve a sermon",
+                "description": "Region manager approves a pending sermon. Optional notes can be attached.",
+                "operationId": "approveSermon",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "notes": {
+                                        "type": "string",
+                                        "example": "خطبة ممتازة، جزاك الله خيراً",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Sermon approved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم اعتماد الخطبة بنجاح"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Sermon"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Sermon not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/sermons/{id}/reject": {
+            "put": {
+                "tags": [
+                    "Sermons"
+                ],
+                "summary": "Reject a sermon",
+                "description": "Region manager rejects a pending sermon. Notes should explain the reason.",
+                "operationId": "rejectSermon",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "notes": {
+                                        "type": "string",
+                                        "example": "يرجى مراجعة المحتوى وإعادة الرفع",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Sermon rejected",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم رفض الخطبة بنجاح"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Sermon"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Sermon not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/tameems": {
+            "get": {
+                "tags": [
+                    "Tameems"
+                ],
+                "summary": "List all circulars",
+                "description": "Returns all tameems visible to the authenticated user.",
+                "operationId": "listTameems",
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم جلب التعاميم بنجاح"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Tameem"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Tameems"
+                ],
+                "summary": "Send a circular",
+                "description": "Sends a tameem to one or more mosque managers.\n- `sender_id` is resolved automatically from the auth token.\n- All `recipient_ids` must be valid user IDs.",
+                "operationId": "storeTameem",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "content",
+                                    "recipient_ids"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "تعميم بشأن صلاة التراويح"
+                                    },
+                                    "content": {
+                                        "type": "string",
+                                        "example": "يُرجى الالتزام بالمواعيد المحددة..."
+                                    },
+                                    "recipient_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "example": [
+                                            3,
+                                            5,
+                                            8
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Tameem sent successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم إرسال التعميم بنجاح"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Tameem"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/tameems/my-tameems": {
+            "get": {
+                "tags": [
+                    "Tameems"
+                ],
+                "summary": "Get received circulars",
+                "description": "Returns all tameems received by the authenticated mosque manager.",
+                "operationId": "myTameems",
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم جلب التعاميم الواردة بنجاح"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Tameem"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/tameems/{id}/read": {
+            "put": {
+                "tags": [
+                    "Tameems"
+                ],
+                "summary": "Mark a circular as read",
+                "description": "Marks the tameem as read for the authenticated mosque manager.",
+                "operationId": "markTameemAsRead",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 10
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Marked as read",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم تحديث حالة التعميم إلى مقروء"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Tameem not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/education/students": {
             "get": {
                 "tags": [
@@ -12003,6 +12565,117 @@
                 },
                 "type": "object"
             },
+            "Sermon": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "خطبة الجمعة - التوبة والإنابة"
+                    },
+                    "content": {
+                        "type": "string",
+                        "example": "الحمد لله رب العالمين..."
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "pending",
+                        "enum": [
+                            "pending",
+                            "Scheduled",
+                            "rejected",
+                            "completed"
+                        ]
+                    },
+                    "notes": {
+                        "type": "string",
+                        "example": "يرجى مراجعة المقدمة",
+                        "nullable": true
+                    },
+                    "mosque_manager_id": {
+                        "type": "integer",
+                        "example": 3
+                    },
+                    "region_manager_id": {
+                        "type": "integer",
+                        "example": 7,
+                        "nullable": true
+                    },
+                    "attachments": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "example": "https://storage.example.com/sermons/file.pdf"
+                        },
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "Tameem": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 10
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "تعميم بشأن مواعيد الصلاة"
+                    },
+                    "content": {
+                        "type": "string",
+                        "example": "يُعلم جميع أئمة المساجد..."
+                    },
+                    "sender_id": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "recipients": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "integer",
+                                    "example": 5
+                                },
+                                "name": {
+                                    "type": "string",
+                                    "example": "أحمد محمد"
+                                },
+                                "is_read": {
+                                    "type": "boolean",
+                                    "example": false
+                                },
+                                "read_at": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "nullable": true
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
             "ProgramSchedule": {
                 "description": "A single session schedule belonging to a Dawah program",
                 "properties": {
@@ -12921,6 +13594,14 @@
         {
             "name": "Settings",
             "description": "System-wide settings management. Restricted to super_admin role."
+        },
+        {
+            "name": "Sermons",
+            "description": "Manage mosque sermons (خطب). Covers upload, approval, and rejection workflows."
+        },
+        {
+            "name": "Tameems",
+            "description": "Manage circulars/announcements (تعاميم) sent between mosque managers."
         },
         {
             "name": "Attendance",
