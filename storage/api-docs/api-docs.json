@@ -11782,6 +11782,57 @@
             }
         },
         "/tameems/{id}": {
+            "get": {
+                "tags": [
+                    "Tameems"
+                ],
+                "summary": "Get a circular by ID",
+                "description": "Returns the details of a specific tameem by its ID.",
+                "operationId": "getTameemById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 10
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم جلب التعميم بنجاح"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Tameem"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Tameem not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
             "put": {
                 "tags": [
                     "Tameems"

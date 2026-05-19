@@ -49,6 +49,7 @@ Route::middleware('role:super_admin')->group(function () {
     Route::put('/{id}', [TameemController::class, 'update']);
     Route::get('/', [TameemController::class, 'index']);
     Route::delete('/{id}', [TameemController::class, 'destroy']);
+    Route::get('/{id}', [TameemController::class, 'show']);
 });
 
     Route::get('/my-tameems', [TameemController::class, 'myTameems'])->middleware('role:mosque_manager');

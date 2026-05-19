@@ -523,4 +523,31 @@ class SermonTameemEndpoints
         ]
     )]
     public function markTameemAsRead() {}
+
+    #[OA\Get(
+        path: '/tameems/{id}',
+        operationId: 'getTameemById',
+        tags: ['Tameems'],
+        summary: 'Get a circular by ID',
+        description: 'Returns the details of a specific tameem by its ID.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 10),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'تم جلب التعميم بنجاح'),
+                        new OA\Property(property: 'data', ref: '#/components/schemas/Tameem'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 404, description: 'Tameem not found'),
+        ]
+    )]
+    public function getTameemById() {}
 }

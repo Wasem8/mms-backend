@@ -62,6 +62,11 @@ return $this->tameemRepo->getAll();
 return $this->tameemRepo->getForMosqueManager($mosqueManagerId);
 }
 
+public function getTameemById($id)
+{
+return $this->tameemRepo->findById($id);
+}
+
 public function sendTameem(array $data, $senderId, array $recipientIds)
 {
 return DB::transaction(function () use ($data, $senderId, $recipientIds) {
