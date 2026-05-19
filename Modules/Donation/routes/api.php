@@ -9,10 +9,13 @@ use Modules\Donation\Http\Controllers\StripeWebhookController;
 
 
 Route::post('stripe/webhook', [StripeWebhookController::class, 'handle']);
-Route::middleware(['auth:api','role:super_admin'])->group(function () {
-    Route::get('settings', [SettingController::class, 'index']);
+
+Route::middleware(['auth:api', 'role:super_admin'])->group(function () {
     Route::put('settings/exchange-rate', [SettingController::class, 'updateExchangeRate']);
 });
+
+Route::get('settings', [SettingController::class, 'index']);
+
 
 
 Route::prefix('mosques/{mosqueId}/donations')->group(function () {
@@ -22,16 +25,16 @@ Route::prefix('mosques/{mosqueId}/donations')->group(function () {
 });
 
 Route::prefix('donations')->group(function () {
-    Route::get('/{id}', [DonationController::class, 'show']);
-    Route::post('/online', [DonationController::class, 'storeOnline']);
-    Route::get('/{id}/receipt', [DonationControllerAlias::class, 'receipt'])->name('donations.receipt');
-
-
     Route::middleware(['auth:api'])->group(function () {
+        Route::get('/mine', [DonationController::class, 'mine']);
         Route::post('/admin/cash', [DonationController::class, 'storeCash']);
         Route::put('/{id}',    [DonationController::class, 'update']);
         Route::delete('/{id}', [DonationController::class, 'destroy']);
     });
+
+    Route::get('/{id}', [DonationController::class, 'show']);
+    Route::post('/online', [DonationController::class, 'storeOnline']);
+    Route::get('/{id}/receipt', [DonationControllerAlias::class, 'receipt'])->name('donations.receipt');
 });
 
 
@@ -69,5 +72,3 @@ Route::prefix('campaigns')->group(function () {
         Route::delete('/{id}', [CampaignController::class, 'destroy'])->name('campaign.destroy');
     });
 });
-
-

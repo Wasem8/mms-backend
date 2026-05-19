@@ -44,11 +44,15 @@ Route::prefix('sermons')->middleware('auth:api')->group(function () {
 
 Route::prefix('tameems')->middleware('auth:api')->group(function () {
 
-    Route::get('/', [TameemController::class, 'index']);
+Route::middleware('role:super_admin')->group(function () {  
     Route::post('/', [TameemController::class, 'store']);
+    Route::put('/{id}', [TameemController::class, 'update']);
+    Route::get('/', [TameemController::class, 'index']);
+    Route::delete('/{id}', [TameemController::class, 'destroy']);
+});
 
-    Route::get('/my-tameems', [TameemController::class, 'myTameems']);
-    Route::put('/{id}/read', [TameemController::class, 'markAsRead']);
+    Route::get('/my-tameems', [TameemController::class, 'myTameems'])->middleware('role:mosque_manager');
+    Route::patch('/{id}/read', [TameemController::class, 'markAsRead'])->middleware('role:mosque_manager');
 });
 
 

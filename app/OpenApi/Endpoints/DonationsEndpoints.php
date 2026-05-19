@@ -112,6 +112,49 @@ class DonationsEndpoints
     )]
     public function listDonations() {}
 
+    #[OA\Get(
+        path: '/donations/mine',
+        operationId: 'listMyDonations',
+        tags: ['Donations'],
+        summary: 'List authenticated user donations',
+        description: 'Returns the authenticated donor\'s donation history. Requires bearer token.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(name: 'search',   in: 'query', required: false, schema: new OA\Schema(type: 'string'),  description: 'Search by donor name'),
+            new OA\Parameter(name: 'type',     in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['cash', 'in_kind'])),
+            new OA\Parameter(name: 'status',   in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['pending', 'completed'])),
+            new OA\Parameter(name: 'campaign', in: 'query', required: false, schema: new OA\Schema(type: 'integer'), description: 'Filter by campaign ID'),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string',  example: 'Success'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/Donation')
+                        ),
+                        new OA\Property(
+                            property: 'meta',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                new OA\Property(property: 'last_page',    type: 'integer', example: 4),
+                                new OA\Property(property: 'per_page',     type: 'integer', example: 10),
+                                new OA\Property(property: 'total',        type: 'integer', example: 27),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function listMyDonations() {}
+
     // =========================================================================
     // GET /mosques/{mosqueId}/donations/summary
     // Screen 3 — "ملخص اليوم" panel
@@ -229,14 +272,14 @@ class DonationsEndpoints
     public function getDonation() {}
 
 
-// ─── POST /donations/online ───────────────────────────────────────────────────
+    // ─── POST /donations/online ───────────────────────────────────────────────────
 
-#[OA\Post(
-    path: '/donations/online',
-    operationId: 'storeOnlineDonation',
-    tags: ['Donations'],
-    summary: 'إنشاء تبرع إلكتروني (Stripe)',
-    description: <<<DESC
+    #[OA\Post(
+        path: '/donations/online',
+        operationId: 'storeOnlineDonation',
+        tags: ['Donations'],
+        summary: 'إنشاء تبرع إلكتروني (Stripe)',
+        description: <<<DESC
     يُنشئ طلب تبرع عبر Stripe ويُعيد `client_secret` للواجهة الأمامية لإتمام الدفع.
 
     - **العملة:** USD دائماً — يُحدِّدها الخادم تلقائياً، لا يُرسلها العميل.
@@ -244,106 +287,106 @@ class DonationsEndpoints
     - **الحالة الأولية:** `pending` — تتغير إلى `completed` عبر Stripe Webhook تلقائياً.
     - **التوثيق:** اختياري — الزوار يمكنهم التبرع بدون توكن.
     DESC,
-    security: [['bearerAuth' => []]],
-    requestBody: new OA\RequestBody(
-        required: true,
-        content: new OA\MediaType(
-            mediaType: 'multipart/form-data',
-            schema: new OA\Schema(
-                type: 'object',
-                required: ['mosque_id', 'donation_type', 'amount'],
-                properties: [
-                    new OA\Property(
-                        property: 'mosque_id',
-                        type: 'integer',
-                        example: 5
-                    ),
-                    new OA\Property(
-                        property: 'donation_type',
-                        type: 'string',
-                        enum: ['cash', 'in_kind'],
-                        example: 'cash',
-                        description: 'نوع التبرع'
-                    ),
-                    new OA\Property(
-                        property: 'amount',
-                        type: 'number',
-                        format: 'float',
-                        example: 50,
-                        description: 'المبلغ بالدولار الأمريكي (USD). مطلوب عند donation_type = cash'
-                    ),
-                    new OA\Property(
-                        property: 'item_description',
-                        type: 'string',
-                        nullable: true,
-                        description: 'وصف الصنف. مطلوب عند donation_type = in_kind'
-                    ),
-                    new OA\Property(
-                        property: 'donor_name',
-                        type: 'string',
-                        nullable: true,
-                        example: 'فاعل خير'
-                    ),
-                    new OA\Property(
-                        property: 'campaign_id',
-                        type: 'integer',
-                        nullable: true,
-                        example: 12
-                    ),
-                    new OA\Property(
-                        property: 'mosque_need_id',
-                        type: 'integer',
-                        nullable: true
-                    ),
-                    // payment_method & currency مُحذوفان — يُحدِّدهما الخادم تلقائياً
-                    // user_id مُحذوف — يُؤخذ من التوكن إن وُجد
-                ]
-            )
-        )
-    ),
-    responses: [
-        new OA\Response(
-            response: 201,
-            description: 'تم إنشاء طلب التبرع بنجاح — في انتظار تأكيد الدفع من Stripe',
-            content: new OA\JsonContent(
-                properties: [
-                    new OA\Property(property: 'status',  type: 'boolean', example: true),
-                    new OA\Property(property: 'message', type: 'string',  example: 'تم إنشاء طلب التبرع بنجاح.'),
-                    new OA\Property(
-                        property: 'data',
-                        type: 'object',
-                        allOf: [
-                            new OA\Schema(ref: '#/components/schemas/Donation'),
-                            new OA\Schema(
-                                properties: [
-                                    new OA\Property(
-                                        property: 'client_secret',
-                                        type: 'string',
-                                        example: 'pi_3OxXxx_secret_yyy',
-                                        description: 'يُرسَل إلى Stripe.js في الواجهة الأمامية لإتمام عملية الدفع. لا يُخزَّن في قاعدة البيانات.'
-                                    ),
-                                ]
-                            ),
-                        ]
-                    ),
-                ]
+        security: [['bearerAuth' => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    type: 'object',
+                    required: ['mosque_id', 'donation_type', 'amount'],
+                    properties: [
+                        new OA\Property(
+                            property: 'mosque_id',
+                            type: 'integer',
+                            example: 5
+                        ),
+                        new OA\Property(
+                            property: 'donation_type',
+                            type: 'string',
+                            enum: ['cash'],
+                            example: 'cash',
+                            description: 'نوع التبرع'
+                        ),
+                        new OA\Property(
+                            property: 'amount',
+                            type: 'number',
+                            format: 'float',
+                            example: 50,
+                            description: 'المبلغ بالدولار الأمريكي (USD). مطلوب عند donation_type = cash'
+                        ),
+                        new OA\Property(
+                            property: 'item_description',
+                            type: 'string',
+                            nullable: true,
+                            description: 'وصف الصنف. مطلوب عند donation_type = in_kind'
+                        ),
+                        new OA\Property(
+                            property: 'donor_name',
+                            type: 'string',
+                            nullable: true,
+                            example: 'فاعل خير'
+                        ),
+                        new OA\Property(
+                            property: 'campaign_id',
+                            type: 'integer',
+                            nullable: true,
+                            example: 12
+                        ),
+                        new OA\Property(
+                            property: 'mosque_need_id',
+                            type: 'integer',
+                            nullable: true
+                        ),
+                        // payment_method & currency مُحذوفان — يُحدِّدهما الخادم تلقائياً
+                        // user_id مُحذوف — يُؤخذ من التوكن إن وُجد
+                    ]
+                )
             )
         ),
-        new OA\Response(response: 422, description: 'خطأ في التحقق من صحة البيانات'),
-        new OA\Response(response: 503, description: 'سعر الصرف غير مُهيَّأ — يجب على المدير ضبطه من لوحة التحكم'),
-    ]
-)]
-public function storeOnline() {}
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'تم إنشاء طلب التبرع بنجاح — في انتظار تأكيد الدفع من Stripe',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string',  example: 'تم إنشاء طلب التبرع بنجاح.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            allOf: [
+                                new OA\Schema(ref: '#/components/schemas/Donation'),
+                                new OA\Schema(
+                                    properties: [
+                                        new OA\Property(
+                                            property: 'client_secret',
+                                            type: 'string',
+                                            example: 'pi_3OxXxx_secret_yyy',
+                                            description: 'يُرسَل إلى Stripe.js في الواجهة الأمامية لإتمام عملية الدفع. لا يُخزَّن في قاعدة البيانات.'
+                                        ),
+                                    ]
+                                ),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 422, description: 'خطأ في التحقق من صحة البيانات'),
+            new OA\Response(response: 503, description: 'سعر الصرف غير مُهيَّأ — يجب على المدير ضبطه من لوحة التحكم'),
+        ]
+    )]
+    public function storeOnline() {}
 
 
-// ─── POST /donations/admin/cash ───────────────────────────────────────────────
+    // ─── POST /donations/admin/cash ───────────────────────────────────────────────
 
-#[OA\Post(
-    path: '/donations/admin/cash',
-    operationId: 'storeCashDonation',
-    tags: ['Donations'],
-    summary: 'إضافة تبرع نقدي أو عيني يدوياً (لمدير المسجد)',
-    description: <<<DESC
+    #[OA\Post(
+        path: '/donations/admin/cash',
+        operationId: 'storeCashDonation',
+        tags: ['Donations'],
+        summary: 'إضافة تبرع نقدي أو عيني يدوياً (لمدير المسجد)',
+        description: <<<DESC
     يُسجِّل مدير المسجد التبرعات النقدية والعينية المستلمة يدوياً.
 
     - **العملة:** SYP دائماً — يُحدِّدها الخادم تلقائياً، لا يُرسلها العميل.
@@ -351,98 +394,98 @@ public function storeOnline() {}
     - **الحالة:** تُضبط على `completed` فوراً ويُضاف base_amount إلى collected_amount في نفس العملية.
     - **التوثيق:** إلزامي — يجب أن يكون المستخدم مديراً (Admin).
     DESC,
-    security: [['bearerAuth' => []]],
-    requestBody: new OA\RequestBody(
-        required: true,
-        content: new OA\MediaType(
-            mediaType: 'multipart/form-data',
-            schema: new OA\Schema(
-                type: 'object',
-                required: ['mosque_id', 'donation_type', 'amount'],
-                properties: [
-                    new OA\Property(
-                        property: 'mosque_id',
-                        type: 'integer',
-                        example: 5
-                    ),
-                    new OA\Property(
-                        property: 'donation_type',
-                        type: 'string',
-                        enum: ['cash', 'in_kind'],
-                        example: 'cash',
-                        description: 'نوع التبرع'
-                    ),
-                    new OA\Property(
-                        property: 'amount',
-                        type: 'number',
-                        format: 'float',
-                        example: 500000,
-                        description: 'المبلغ بالليرة السورية (SYP). مطلوب عند donation_type = cash'
-                    ),
-                    new OA\Property(
-                        property: 'item_description',
-                        type: 'string',
-                        nullable: true,
-                        description: 'وصف الصنف. مطلوب عند donation_type = in_kind'
-                    ),
-                    new OA\Property(
-                        property: 'donor_name',
-                        type: 'string',
-                        nullable: true,
-                        example: 'فاعل خير'
-                    ),
-                    new OA\Property(
-                        property: 'donation_date',
-                        type: 'string',
-                        format: 'date',
-                        nullable: true,
-                        description: 'تاريخ استلام التبرع (اختياري — الافتراضي: اليوم)'
-                    ),
-                    new OA\Property(
-                        property: 'campaign_id',
-                        type: 'integer',
-                        nullable: true,
-                        example: 12
-                    ),
-                    new OA\Property(
-                        property: 'mosque_need_id',
-                        type: 'integer',
-                        nullable: true
-                    ),
-                    new OA\Property(
-                        property: 'user_id',
-                        type: 'integer',
-                        nullable: true,
-                        description: 'معرف المستخدم إذا كان المتبرع مسجلاً في النظام'
-                    ),
-                    // payment_method & currency مُحذوفان — يُحدِّدهما الخادم تلقائياً
-                ]
-            )
-        )
-    ),
-    responses: [
-        new OA\Response(
-            response: 201,
-            description: 'تم حفظ التبرع وإضافته إلى الحملة أو الاحتياج فوراً',
-            content: new OA\JsonContent(
-                properties: [
-                    new OA\Property(property: 'status',  type: 'boolean', example: true),
-                    new OA\Property(property: 'message', type: 'string',  example: 'تم حفظ التبرع النقدي بنجاح.'),
-                    new OA\Property(
-                        property: 'data',
-                        type: 'object',
-                        ref: '#/components/schemas/Donation'
-                        // لا يوجد client_secret — الدفع نقدي ومؤكد فوراً
-                    ),
-                ]
+        security: [['bearerAuth' => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    type: 'object',
+                    required: ['mosque_id', 'donation_type', 'amount'],
+                    properties: [
+                        new OA\Property(
+                            property: 'mosque_id',
+                            type: 'integer',
+                            example: 5
+                        ),
+                        new OA\Property(
+                            property: 'donation_type',
+                            type: 'string',
+                            enum: ['cash', 'in_kind'],
+                            example: 'cash',
+                            description: 'نوع التبرع'
+                        ),
+                        new OA\Property(
+                            property: 'amount',
+                            type: 'number',
+                            format: 'float',
+                            example: 500000,
+                            description: 'المبلغ بالليرة السورية (SYP). مطلوب عند donation_type = cash'
+                        ),
+                        new OA\Property(
+                            property: 'item_description',
+                            type: 'string',
+                            nullable: true,
+                            description: 'وصف الصنف. مطلوب عند donation_type = in_kind'
+                        ),
+                        new OA\Property(
+                            property: 'donor_name',
+                            type: 'string',
+                            nullable: true,
+                            example: 'فاعل خير'
+                        ),
+                        new OA\Property(
+                            property: 'donation_date',
+                            type: 'string',
+                            format: 'date',
+                            nullable: true,
+                            description: 'تاريخ استلام التبرع (اختياري — الافتراضي: اليوم)'
+                        ),
+                        new OA\Property(
+                            property: 'campaign_id',
+                            type: 'integer',
+                            nullable: true,
+                            example: 12
+                        ),
+                        new OA\Property(
+                            property: 'mosque_need_id',
+                            type: 'integer',
+                            nullable: true
+                        ),
+                        new OA\Property(
+                            property: 'user_id',
+                            type: 'integer',
+                            nullable: true,
+                            description: 'معرف المستخدم إذا كان المتبرع مسجلاً في النظام'
+                        ),
+                        // payment_method & currency مُحذوفان — يُحدِّدهما الخادم تلقائياً
+                    ]
+                )
             )
         ),
-        new OA\Response(response: 401, description: 'غير مصرح — التوكن مفقود أو منتهي الصلاحية'),
-        new OA\Response(response: 403, description: 'مرفوض — يجب أن تكون مديراً للمسجد'),
-        new OA\Response(response: 422, description: 'خطأ في التحقق من صحة البيانات'),
-    ]
-)]
-public function storeCash() {}
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'تم حفظ التبرع وإضافته إلى الحملة أو الاحتياج فوراً',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string',  example: 'تم حفظ التبرع النقدي بنجاح.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            ref: '#/components/schemas/Donation'
+                            // لا يوجد client_secret — الدفع نقدي ومؤكد فوراً
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'غير مصرح — التوكن مفقود أو منتهي الصلاحية'),
+            new OA\Response(response: 403, description: 'مرفوض — يجب أن تكون مديراً للمسجد'),
+            new OA\Response(response: 422, description: 'خطأ في التحقق من صحة البيانات'),
+        ]
+    )]
+    public function storeCash() {}
 
 
 
@@ -567,11 +610,11 @@ public function storeCash() {}
 
 
 
-#[OA\Tag(
-    name: 'Settings',
-    description: 'System-wide settings management. Restricted to super_admin role.'
-)]
-  
+    #[OA\Tag(
+        name: 'Settings',
+        description: 'System-wide settings management. Restricted to super_admin role.'
+    )]
+
     #[OA\Schema(
         schema: 'Setting',
         type: 'object',
@@ -582,7 +625,7 @@ public function storeCash() {}
     )]
     public function schemaSetting() {}
 
-    
+
 
     #[OA\Get(
         path: '/settings',
@@ -590,7 +633,7 @@ public function storeCash() {}
         tags: ['Settings'],
         summary: 'List all settings',
         description: 'Returns all system settings as key-value pairs. Restricted to `super_admin`.',
-        security: [['bearerAuth' => []]],
+        //security: [['bearerAuth' => []]],
         responses: [
             new OA\Response(
                 response: 200,
@@ -717,5 +760,4 @@ public function storeCash() {}
         ]
     )]
     public function updateExchangeRate() {}
-
 }

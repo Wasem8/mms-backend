@@ -4,6 +4,7 @@ namespace Modules\Community\Services;
 
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Auth\Access\AuthorizationException;
 use Modules\Community\Repositories\TameemRepositoryInterface;
 
 class TameemService
@@ -19,8 +20,44 @@ public function getAllTameems()
 {
 return $this->tameemRepo->getAll();
 }
+    public function updateTameem(int $id, array $data, int $actorId)
+    {
+        $tameem = $this->tameemRepo->findById($id);
 
-public function getMosqueManagerTameems($mosqueManagerId)
+        if ($tameem->sender_id !== $actorId) {
+            throw new AuthorizationException('غير مصرح لك بتعديل هذا التعميم.');
+        }
+
+        $payload = array_filter([
+            'title'   => $data['title']   ?? null,
+            'content' => $data['content'] ?? null,
+        ], fn($v) => $v !== null);
+
+        if (!empty($payload)) {
+            $this->tameemRepo->update($id, $payload);
+        }
+
+        if (isset($data['recipient_ids'])) {
+            $this->tameemRepo->syncRecipients($id, $data['recipient_ids']);
+        }
+
+        return $this->tameemRepo->findById($id);
+    }
+
+    
+    public function deleteTameem(int $id, int $actorId): void
+    {
+        $tameem = $this->tameemRepo->findById($id);
+
+        if ($tameem->sender_id !== $actorId) {
+            throw new AuthorizationException('غير مصرح لك بحذف هذا التعميم.');
+        }
+
+        $this->tameemRepo->delete($id);
+    }
+
+
+    public function getMosqueManagerTameems($mosqueManagerId)
 {
 return $this->tameemRepo->getForMosqueManager($mosqueManagerId);
 }

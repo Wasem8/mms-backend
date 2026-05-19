@@ -29,11 +29,10 @@ class MosqueNeedController extends Controller
         );
     }
 
-    public function show($id)
+    public function show($mosqueId,$needId)
     {
         try {
-            $need = $this->service->get($id);
-
+            $need = $this->service->getNeedForMosque($mosqueId, $needId);
             return ApiResponse::success(
                 $need,
                 'Need retrieved successfully'

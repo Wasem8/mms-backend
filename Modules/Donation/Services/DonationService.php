@@ -41,6 +41,17 @@ class DonationService
             ->paginate(10);
     }
 
+    public function getByUser(int $userId, array $filters = [])
+    {
+        return Donation::where('user_id', $userId)
+            ->when($filters['search']  ?? null, fn($q, $v) => $q->where('donor_name', 'like', "%{$v}%"))
+            ->when($filters['type']    ?? null, fn($q, $v) => $q->where('donation_type', $v))
+            ->when($filters['status']  ?? null, fn($q, $v) => $q->where('status', $v))
+            ->when($filters['campaign'] ?? null, fn($q, $v) => $q->where('campaign_id', $v))
+            ->latest()
+            ->paginate(10);
+    }
+
     public function find(int $id): Donation
     {
         return Donation::findOrFail($id);
@@ -135,7 +146,7 @@ class DonationService
                     $donation->campaign()->increment('collected_amount', $donation->base_amount);
                 } elseif ($donation->mosque_need_id) {
                     $donation->mosqueNeed()->increment('collected_amount', $donation->base_amount);
-                }else {
+                } else {
                     // For standalone donations, we might want to track total mosque donations
                     // This is optional and depends on your business logic
                     $donation->mosque()->increment('donation_total', $donation->base_amount);
@@ -168,17 +179,17 @@ class DonationService
             'issued_at'      => now()->format('Y-m-d'),
         ])->render();
 
-       return Browsershot::html($html)
-    ->setNodeBinary('C:\\Program Files\\nodejs\\node.exe')
-    ->setNpmBinary('C:\\Program Files\\nodejs\\npm.cmd')
-    ->noSandbox()
-    ->emulateMedia('print')
-    ->preferCssPageSize()
-    ->scale(1.0)
-    ->margins(0, 0, 0, 0)
-    ->paperSize(210, 297)
-    ->showBackground()
-    ->pdf();
+        return Browsershot::html($html)
+            ->setNodeBinary('C:\\Program Files\\nodejs\\node.exe')
+            ->setNpmBinary('C:\\Program Files\\nodejs\\npm.cmd')
+            ->noSandbox()
+            ->emulateMedia('print')
+            ->preferCssPageSize()
+            ->scale(1.0)
+            ->margins(0, 0, 0, 0)
+            ->paperSize(210, 297)
+            ->showBackground()
+            ->pdf();
     }
 
     private function resolveTarget(Donation $donation): array
@@ -312,6 +323,4 @@ class DonationService
             'issued_at'      => now()->format('Y-m-d'),
         ])->render();
     }
-
-
 }

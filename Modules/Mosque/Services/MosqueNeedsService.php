@@ -2,6 +2,7 @@
 
 namespace Modules\Mosque\Services;
 
+use Exception;
 use Illuminate\Support\Facades\Http;
 use Modules\Mosque\Repositories\MosqueNeedRepositoryInterface;
 use Modules\Mosque\Models\MosqueNeed;
@@ -21,6 +22,19 @@ class MosqueNeedsService
     {
         return $this->repository->find($id)
             ?? throw new \Exception('Need not found');
+    }
+
+    public function getNeedForMosque($mosqueId, $needId)
+    {
+        $need = MosqueNeed::where('id', $needId)
+            ->where('mosque_id', $mosqueId)
+            ->first();
+
+        if (! $need) {
+            throw new Exception('Need not found or does not belong to the specified mosque.');
+        }
+
+        return $need;
     }
 
     public function create(array $data): MosqueNeed
