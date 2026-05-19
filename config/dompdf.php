@@ -110,7 +110,7 @@ return [
         /**
          * Whether to enable font subsetting or not.
          */
-        'enable_font_subsetting' => false,
+        'enable_font_subsetting' => true,
 
         /**
          * The PDF rendering backend to use
@@ -179,7 +179,7 @@ return [
          *
          * @var string
          */
-        'default_font' => 'serif',
+        'default_font' => 'sans-serif',
 
         /**
          * Image DPI setting
@@ -267,7 +267,7 @@ return [
          *
          * @var bool
          */
-        'enable_remote' => false,
+        'enable_remote' => true,
 
         /**
          * List of allowed remote hosts
@@ -283,12 +283,6 @@ return [
          */
         'allowed_remote_hosts' => null,
 
-        'isRemoteEnabled'      => true,
-        'isHtml5ParserEnabled' => true,
-        'isFontSubsettingEnabled' => true,
-        'defaultFont'             => 'amiri',
-
-
         /**
          * A ratio applied to the fonts height to be more like browsers' line height
          */
@@ -303,7 +297,5 @@ return [
          */
         'enable_html5_parser' => true,
     ],
-
-
 
 ];

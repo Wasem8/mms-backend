@@ -1224,6 +1224,68 @@
                 ]
             }
         },
+        "/auth/fcm-token": {
+            "delete": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Delete user FCM notification token on logout",
+                "description": "Flushes and removes the registered Firebase Cloud Messaging token for the authenticated user to secure privacy on shared devices.",
+                "operationId": "deleteFcmToken",
+                "responses": {
+                    "200": {
+                        "description": "Token removed successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم حذف توكن الإشعارات بنجاح"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated - Missing or invalid token",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/mosques/{mosqueId}/campaigns": {
             "get": {
                 "tags": [
@@ -2720,12 +2782,24 @@
                 "tags": [
                     "Dashboard"
                 ],
-                "summary": "إحصائيات لوحة التحكم للمشرف",
-                "description": "يعيد أرقام البطاقات (الطلاب، المعلمين، الحلقات)، الرسم البياني للحضور الأسبوعي، وأحدث النشاطات.",
+                "summary": "إحصائيات لوحة التحكم للمشرف التربوي مع فلترة",
+                "description": "يعيد أرقام المؤشرات السريعة، الحضور الأسبوعي، منحنى تقدم الحفظ، المعلمين الأكثر إنجازاً، تقرير الغياب العام، وأحدث الأنشطة اللحظية. يدعم الفلترة الاختيارية بناءً على معرف الحلقة.",
                 "operationId": "getSupervisorDashboardStats",
+                "parameters": [
+                    {
+                        "name": "halaqa_id",
+                        "in": "query",
+                        "description": "معرف الحلقة المراد فلترة البيانات بناءً عليها (اختياري)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "تم جلب البيانات بنجاح",
+                        "description": "تم جلب إحصائيات لوحة التحكم للمشرف التربوي بنجاح",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2736,13 +2810,138 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "تم جلب إحصائيات لوحة التحكم بنجاح"
+                                            "example": "تم جلب إحصائيات لوحة التحكم للمشرف التربوي بنجاح"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/SupervisorDashboardResponse"
+                                            "properties": {
+                                                "cards": {
+                                                    "properties": {
+                                                        "total_students": {
+                                                            "type": "integer",
+                                                            "example": 10
+                                                        },
+                                                        "total_teachers": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "total_halaqas": {
+                                                            "type": "integer",
+                                                            "example": 2
+                                                        },
+                                                        "attendance_today_percentage": {
+                                                            "type": "string",
+                                                            "example": "60%"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "weekly_attendance": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "day": {
+                                                                "type": "string",
+                                                                "example": "Monday"
+                                                            },
+                                                            "percentage": {
+                                                                "type": "integer",
+                                                                "example": 60
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "quran_progress": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "month": {
+                                                                "type": "string",
+                                                                "example": "May"
+                                                            },
+                                                            "average_score": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 88
+                                                            },
+                                                            "total_evaluations": {
+                                                                "type": "integer",
+                                                                "example": 3
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "top_teachers": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 4
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Teacher One"
+                                                            },
+                                                            "total_ayahs_reviewed": {
+                                                                "type": "integer",
+                                                                "example": 1093
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "absenteeism_report": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "student_name": {
+                                                                "type": "string",
+                                                                "example": "Student 1"
+                                                            },
+                                                            "halaqa_name": {
+                                                                "type": "string",
+                                                                "example": "حلقة النور"
+                                                            },
+                                                            "absent_days_this_month": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "recent_activities": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "title": {
+                                                                "type": "string",
+                                                                "example": "تم تسجيل حضور حلقة حلقة النور"
+                                                            },
+                                                            "description": {
+                                                                "type": "string",
+                                                                "example": "بواسطة Teacher One"
+                                                            },
+                                                            "time": {
+                                                                "type": "string",
+                                                                "example": "27 seconds ago"
+                                                            },
+                                                            "type": {
+                                                                "type": "string",
+                                                                "example": "success"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
                                         },
                                         "pagination": {
                                             "type": "object",
+                                            "example": null,
                                             "nullable": true
                                         }
                                     },
@@ -2752,13 +2951,44 @@
                         }
                     },
                     "401": {
-                        "description": "غير مصرح له الدخول"
+                        "description": "غير مصرح له الدخول - Unauthenticated"
                     },
                     "403": {
-                        "description": "ليس لديك صلاحية الوصول"
+                        "description": "ليس لديك صلاحية الوصول - Forbidden"
                     },
                     "500": {
-                        "description": "خطأ في السيرفر"
+                        "description": "خطأ داخلي في السيرفر"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/dashboard/supervisor/export-pdf": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "تنزيل تقرير لوحة التحكم بصيغة PDF",
+                "description": "يقوم بتوليد وتنزيل ملف PDF يحتوي على الإحصائيات الحالية للمشرف التربوي مع دعم نفس فلاتر البحث التلقائية.",
+                "operationId": "exportSupervisorDashboardPdf",
+                "parameters": [
+                    {
+                        "name": "halaqa_id",
+                        "in": "query",
+                        "description": "معرف الحلقة المحددة لتخصيص محتوى الـ PDF المتولد (اختياري)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "يتم إرجاع الملف كملف باينري جاهز للتحميل (.pdf Binary Stream)"
                     }
                 },
                 "security": [
