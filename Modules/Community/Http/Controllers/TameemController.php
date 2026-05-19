@@ -51,6 +51,17 @@ class TameemController extends Controller
         return ApiResponse::success($tameem, 'تم إرسال التعميم بنجاح');
     }
 
+    public function show(int $id)
+    {
+        $tameem = $this->tameemService->getTameemById($id);
+
+        if (!$tameem) {
+            return ApiResponse::error(['message' => 'التعميم غير موجود'], 404);
+        }
+
+        return ApiResponse::success($tameem, 'تم جلب التعميم بنجاح');
+    }
+
     public function update(UpdateTameemRequest $request, int $id)
     {
         try {
