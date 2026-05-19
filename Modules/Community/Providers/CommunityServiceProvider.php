@@ -45,8 +45,11 @@ class CommunityServiceProvider extends ModuleServiceProvider
         $this->app->bind(
             SermonRepositoryInterface::class,
             SermonRepository::class,
+        );
+
+        $this->app->bind(
+            TameemRepositoryInterface::class,
             TameemRepository::class,
-            TameemRepositoryInterface::class
         );
 
         $this->app->bind(

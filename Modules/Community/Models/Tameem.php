@@ -4,6 +4,7 @@ namespace Modules\Community\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Modules\User\Models\User;
 
 // use Modules\Community\Database\Factories\TameemFactory;
@@ -21,10 +22,14 @@ class Tameem extends Model
      public function sender() {
         return $this->belongsTo(User::class, 'sender_id');
     }
-    public function recipients()
+    public function recipients(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'tameem_recipients', 'tameem_id', 'mosque_manager_id')
-            ->withPivot('is_read')
+        return $this->belongsToMany(
+            related: User::class,
+            table: 'tameem_recipients',
+            foreignPivotKey: 'tameem_id',
+            relatedPivotKey: 'mosque_manager_id',
+        )->withPivot('is_read', 'read_at')
             ->withTimestamps();
     }
 

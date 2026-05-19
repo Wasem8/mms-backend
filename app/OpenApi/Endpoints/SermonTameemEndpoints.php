@@ -69,6 +69,7 @@ class SermonTameemEndpoints
     )]
     public function schemaTameem() {}
 
+
     // =========================================================================
     // GET /sermons
     // =========================================================================
@@ -305,7 +306,8 @@ class SermonTameemEndpoints
         description: <<<DESC
         Sends a tameem to one or more mosque managers.
         - `sender_id` is resolved automatically from the auth token.
-        - All `recipient_ids` must be valid user IDs.
+        - All IDs in `recipient_ids` must belong to users with `role = mosque_manager`.
+        - Passing a non-mosque-manager ID returns a `422` validation error.
         DESC,
         security: [['bearerAuth' => []]],
         requestBody: new OA\RequestBody(
@@ -318,6 +320,7 @@ class SermonTameemEndpoints
                     new OA\Property(
                         property: 'recipient_ids',
                         type: 'array',
+                        description: 'IDs of mosque managers to receive this tameem.',
                         items: new OA\Items(type: 'integer'),
                         example: [3, 5, 8]
                     ),
@@ -336,10 +339,129 @@ class SermonTameemEndpoints
                 )
             ),
             new OA\Response(response: 401, description: 'Unauthenticated'),
-            new OA\Response(response: 422, description: 'Validation error'),
+            new OA\Response(
+                response: 422,
+                description: 'Validation error — e.g. a recipient ID does not belong to a mosque manager',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'أحد المستلمين غير موجود أو ليس مدير مسجد.'),
+                    ]
+                )
+            ),
         ]
     )]
     public function storeTameem() {}
+
+    // =========================================================================
+    // PUT /tameems/{id}
+    // =========================================================================
+
+    #[OA\Put(
+        path: '/tameems/{id}',
+        operationId: 'updateTameem',
+        tags: ['Tameems'],
+        summary: 'Update a circular',
+        description: <<<DESC
+        Updates an existing tameem. Only the original sender may update.
+        - All fields are optional; only provided fields will be changed.
+        - `recipient_ids` must all belong to users with `role = mosque_manager`.
+        - Providing `recipient_ids` replaces the entire recipient list (sync).
+        - Returns `403` if the authenticated user is not the sender.
+        DESC,
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                example: 10
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'title',   type: 'string', nullable: true, example: 'تعميم مُحدَّث بشأن مواعيد الصلاة'),
+                    new OA\Property(property: 'content', type: 'string', nullable: true, example: 'يُعلم جميع الأئمة بالتعديلات الجديدة...'),
+                    new OA\Property(
+                        property: 'recipient_ids',
+                        type: 'array',
+                        nullable: true,
+                        description: 'IDs of mosque managers. Replaces the full recipient list when provided.',
+                        items: new OA\Items(type: 'integer'),
+                        example: [3, 7]
+                    ),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Tameem updated successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'تم تحديث التعميم بنجاح'),
+                        new OA\Property(property: 'data',    ref: '#/components/schemas/Tameem'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — not the original sender'),
+            new OA\Response(response: 404, description: 'Tameem not found'),
+            new OA\Response(
+                response: 422,
+                description: 'Validation error — e.g. a recipient ID does not belong to a mosque manager',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'أحد المستلمين غير موجود أو ليس مدير مسجد.'),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function updateTameem() {}
+
+    // =========================================================================
+    // DELETE /tameems/{id}
+    // =========================================================================
+
+    #[OA\Delete(
+        path: '/tameems/{id}',
+        operationId: 'deleteTameem',
+        tags: ['Tameems'],
+        summary: 'Delete a circular',
+        description: <<<DESC
+        Permanently deletes a tameem and detaches all recipients.
+        - Only the original sender may delete.
+        - Returns `403` if the authenticated user is not the sender.
+        DESC,
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                example: 10
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Tameem deleted successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'تم حذف التعميم بنجاح'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — not the original sender'),
+            new OA\Response(response: 404, description: 'Tameem not found'),
+        ]
+    )]
+    public function deleteTameem() {}
 
     // =========================================================================
     // GET /tameems/my-tameems
@@ -373,10 +495,10 @@ class SermonTameemEndpoints
     public function myTameems() {}
 
     // =========================================================================
-    // PUT /tameems/{id}/read
+    // PATCH /tameems/{id}/read
     // =========================================================================
 
-    #[OA\Put(
+    #[OA\Patch(
         path: '/tameems/{id}/read',
         operationId: 'markTameemAsRead',
         tags: ['Tameems'],

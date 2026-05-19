@@ -4598,6 +4598,114 @@
                 }
             }
         },
+        "/donations/mine": {
+            "get": {
+                "tags": [
+                    "Donations"
+                ],
+                "summary": "List authenticated user donations",
+                "description": "Returns the authenticated donor's donation history. Requires bearer token.",
+                "operationId": "listMyDonations",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search by donor name",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "cash",
+                                "in_kind"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pending",
+                                "completed"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "campaign",
+                        "in": "query",
+                        "description": "Filter by campaign ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Donation"
+                                            }
+                                        },
+                                        "meta": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 4
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 27
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/mosques/{mosqueId}/donations/summary": {
             "get": {
                 "tags": [
@@ -4951,8 +5059,7 @@
                                         "type": "string",
                                         "example": "cash",
                                         "enum": [
-                                            "cash",
-                                            "in_kind"
+                                            "cash"
                                         ]
                                     },
                                     "amount": {
@@ -5221,12 +5328,7 @@
                     "403": {
                         "description": "Forbidden — requires super_admin role"
                     }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
+                }
             }
         },
         "/donations/{id}/receipt": {
@@ -11363,7 +11465,7 @@
                     "Tameems"
                 ],
                 "summary": "Send a circular",
-                "description": "Sends a tameem to one or more mosque managers.\n- `sender_id` is resolved automatically from the auth token.\n- All `recipient_ids` must be valid user IDs.",
+                "description": "Sends a tameem to one or more mosque managers.\n- `sender_id` is resolved automatically from the auth token.\n- All IDs in `recipient_ids` must belong to users with `role = mosque_manager`.\n- Passing a non-mosque-manager ID returns a `422` validation error.",
                 "operationId": "storeTameem",
                 "requestBody": {
                     "required": true,
@@ -11385,6 +11487,7 @@
                                         "example": "يُرجى الالتزام بالمواعيد المحددة..."
                                     },
                                     "recipient_ids": {
+                                        "description": "IDs of mosque managers to receive this tameem.",
                                         "type": "array",
                                         "items": {
                                             "type": "integer"
@@ -11425,7 +11528,177 @@
                         "description": "Unauthenticated"
                     },
                     "422": {
-                        "description": "Validation error"
+                        "description": "Validation error — e.g. a recipient ID does not belong to a mosque manager",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "أحد المستلمين غير موجود أو ليس مدير مسجد."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/tameems/{id}": {
+            "put": {
+                "tags": [
+                    "Tameems"
+                ],
+                "summary": "Update a circular",
+                "description": "Updates an existing tameem. Only the original sender may update.\n- All fields are optional; only provided fields will be changed.\n- `recipient_ids` must all belong to users with `role = mosque_manager`.\n- Providing `recipient_ids` replaces the entire recipient list (sync).\n- Returns `403` if the authenticated user is not the sender.",
+                "operationId": "updateTameem",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 10
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "تعميم مُحدَّث بشأن مواعيد الصلاة",
+                                        "nullable": true
+                                    },
+                                    "content": {
+                                        "type": "string",
+                                        "example": "يُعلم جميع الأئمة بالتعديلات الجديدة...",
+                                        "nullable": true
+                                    },
+                                    "recipient_ids": {
+                                        "description": "IDs of mosque managers. Replaces the full recipient list when provided.",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "example": [
+                                            3,
+                                            7
+                                        ],
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Tameem updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم تحديث التعميم بنجاح"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Tameem"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — not the original sender"
+                    },
+                    "404": {
+                        "description": "Tameem not found"
+                    },
+                    "422": {
+                        "description": "Validation error — e.g. a recipient ID does not belong to a mosque manager",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "أحد المستلمين غير موجود أو ليس مدير مسجد."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Tameems"
+                ],
+                "summary": "Delete a circular",
+                "description": "Permanently deletes a tameem and detaches all recipients.\n- Only the original sender may delete.\n- Returns `403` if the authenticated user is not the sender.",
+                "operationId": "deleteTameem",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 10
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tameem deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم حذف التعميم بنجاح"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — not the original sender"
+                    },
+                    "404": {
+                        "description": "Tameem not found"
                     }
                 },
                 "security": [
@@ -11478,7 +11751,7 @@
             }
         },
         "/tameems/{id}/read": {
-            "put": {
+            "patch": {
                 "tags": [
                     "Tameems"
                 ],
