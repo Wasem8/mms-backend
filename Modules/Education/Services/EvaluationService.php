@@ -54,8 +54,8 @@ class EvaluationService
         return Evaluation::with(['student', 'halaqa'])
             ->whereHas('halaqa', fn($q) => $q->where('mosque_id', $mosqueId))
             ->when(!empty($filters['halaqa_id']), fn($q) => $q->where('halaqa_id', $filters['halaqa_id']))
-            ->when(!empty($filters['date']), fn($q) => $q->whereDate('evaluation_date', $filters['date']))
-            ->latest()
+            ->when(!empty($filters['date']), fn($q) => $q->whereDate('evaluated_at', $filters['date']))
+            ->latest('evaluated_at')
             ->paginate(15);
     }
 
@@ -64,8 +64,8 @@ class EvaluationService
     {
         return Evaluation::with(['student', 'halaqa'])
             ->whereHas('halaqa', fn($q) => $q->where('teacher_id', $teacherId))
-            ->when(!empty($filters['date']), fn($q) => $q->whereDate('evaluation_date', $filters['date']))
-            ->latest()
+            ->when(!empty($filters['date']), fn($q) => $q->whereDate('evaluated_at', $filters['date']))
+            ->latest('evaluated_at')
             ->paginate(15);
     }
 
