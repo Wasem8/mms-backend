@@ -313,7 +313,7 @@ class StudentEndpoints
                                 new OA\Property(property: 'full_name', type: 'string', example: 'أحمد محمد علي'),
                                 new OA\Property(property: 'status', type: 'string', example: 'active'),
                                 new OA\Property(
-                                    property: 'current_halaqats',
+                                    property: 'halaqats',
                                     type: 'array',
                                     items: new OA\Items(
                                         properties: [

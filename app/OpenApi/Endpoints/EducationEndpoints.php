@@ -111,9 +111,9 @@ requestBody: new OA\RequestBody(
                     new OA\Property(property: 'name', type: 'string', example: 'حلقة التجويد'),
                     new OA\Property(property: 'teacher_id', type: 'integer', nullable: true, example: 4),
                     new OA\Property(property: 'capacity', type: 'integer', example: 20),
-                    new OA\Property(property: 'schedule_days', type: 'array', items: new OA\Items(type: 'string'), example: ['Sunday', 'Tuesday']),
-                    new OA\Property(property: 'start_time', type: 'string', example: '16:00'),
-                    new OA\Property(property: 'end_time', type: 'string', example: '18:00'),
+                    new OA\Property(property: 'schedule_days', type: 'array', items: new OA\Items(type: 'string'), example: ['sunday', 'tuesday', 'thursday']),
+                    new OA\Property(property: 'start_time', type: 'string', format: 'time', example: '16:00:00'),
+                    new OA\Property(property: 'end_time', type: 'string', format: 'time', example: '18:00:00'),
                     new OA\Property(property: 'status', type: 'string', enum: self::HALAQA_STATUSES, example: 'active'),
                 ]
             )

@@ -16,7 +16,7 @@ class StudentTransferResource extends JsonResource
             'id' => $this->id,
             'full_name' => $this->first_name . ' ' . $this->last_name,
             'status' => $this->status,
-            'current_halaqats' => $this->halaqats->map(function ($halaqa) {
+            'halaqats' => $this->halaqats->map(function ($halaqa) {
                 return [
                     'id' => $halaqa->id,
                     'name' => $halaqa->name,

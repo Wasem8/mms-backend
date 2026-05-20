@@ -5936,17 +5936,20 @@
                                             "type": "string"
                                         },
                                         "example": [
-                                            "Sunday",
-                                            "Tuesday"
+                                            "sunday",
+                                            "tuesday",
+                                            "thursday"
                                         ]
                                     },
                                     "start_time": {
                                         "type": "string",
-                                        "example": "16:00"
+                                        "format": "time",
+                                        "example": "16:00:00"
                                     },
                                     "end_time": {
                                         "type": "string",
-                                        "example": "18:00"
+                                        "format": "time",
+                                        "example": "18:00:00"
                                     },
                                     "status": {
                                         "type": "string",
@@ -12505,7 +12508,7 @@
                                                     "type": "string",
                                                     "example": "active"
                                                 },
-                                                "current_halaqats": {
+                                                "halaqats": {
                                                     "type": "array",
                                                     "items": {
                                                         "properties": {
@@ -13495,9 +13498,13 @@
                         "type": "integer",
                         "example": 11
                     },
-                    "full_name": {
+                    "first_name": {
                         "type": "string",
-                        "example": "أحمد محمد"
+                        "example": "أحمد"
+                    },
+                    "last_name": {
+                        "type": "string",
+                        "example": "محمد"
                     },
                     "parent": {
                         "properties": {
