@@ -11,9 +11,7 @@ use Modules\Education\Http\Controllers\TeacherController;
 Route::prefix('education')->group(function () {
 
     Route::middleware(['auth:api', 'role:halaqa_supervisor'])->group(function () {
-        Route::get('halaqat', [HalaqaController::class, 'index']);
         Route::post('halaqat', [HalaqaController::class, 'store']);
-        Route::get('halaqat/{id}', [HalaqaController::class, 'show']);
         Route::post('halaqat/{id}/students', [HalaqaController::class, 'attachStudents']);
         Route::delete('halaqat/{id}/students/{studentId}', [HalaqaController::class, 'detachStudent']);
         Route::patch('students/{id}/approve', [StudentController::class, 'approve']);
@@ -51,6 +49,8 @@ Route::prefix('education')->group(function () {
     Route::middleware(['auth:api', 'role:parent,halaqa_supervisor,teacher'])->group(function () {
         Route::get('attendance', [AttendanceController::class, 'index']);
         Route::get('evaluations/{id}', [EvaluationController::class, 'show']);
+        Route::get('halaqat', [HalaqaController::class, 'index']);
+        Route::get('halaqat/{id}', [HalaqaController::class, 'show']);
     });
 
     Route::middleware(['auth:api', 'role:parent'])->group(function () {
