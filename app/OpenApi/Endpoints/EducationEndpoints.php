@@ -355,67 +355,7 @@ requestBody: new OA\RequestBody(
     )]
     public function detachStudent() {}
 
-    /////////////////
-    ///
-    ///
-    ///
-    ///
 
 
-    // --- قائمة المعلمين ---
-    #[OA\Get(
-        path: '/education/teachers',
-        operationId: 'getTeachersList',
-        tags: ['Teachers Management'],
-        summary: 'قائمة المعلمين (حسب صلاحية المستخدم)',
-        description: 'تعيد القائمة بناءً على الدور: مدير المنطقة يرى الكل، مدير المسجد والمشرف يريان معلمي مسجدهما فقط.',
-        security: [['bearerAuth' => []]],
-        parameters: [
-            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
-        ],
-        responses: [
-            new OA\Response(
-                response: 200,
-                description: 'قائمة المعلمين المسترجعة',
-                content: new OA\JsonContent(ref: '#/components/schemas/TeacherListResponse')
-            ),
-            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
-        ]
-    )]
-    public function index()
-    {
-
-    }
-
-    #[OA\Get(
-        path: '/education/teachers/{id}',
-        operationId: 'getTeacherDetails',
-        tags: ['Teachers Management'],
-        summary: 'تفاصيل المعلم العميقة والإحصائيات',
-        description: 'جلب بيانات المعلم، حلقاته، وإحصائيات الحضور والغياب للطلاب التابعين له.',
-        security: [['bearerAuth' => []]],
-        parameters: [
-            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
-            new OA\Parameter(
-                name: 'id',
-                in: 'path',
-                description: 'معرف المعلم (User ID)',
-                required: true,
-                schema: new OA\Schema(type: 'integer')
-            )
-        ],
-        responses: [
-            new OA\Response(
-                response: 200,
-                description: 'تفاصيل المعلم والحلقات المسترجعة',
-                content: new OA\JsonContent(ref: '#/components/schemas/TeacherDetailResponse')
-            ),
-            new OA\Response(response: 404, description: 'المعلم غير موجود أو لا تملك صلاحية الوصول إليه'),
-            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
-        ]
-    )]
-    public function show($id)
-    {
-    }
 }
 

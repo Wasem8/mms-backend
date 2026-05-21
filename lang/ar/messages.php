@@ -1,11 +1,14 @@
 <?php
 
 return [
+    'messages.otp_resent_successfully' => 'تم إعادة إرسال رمز التحقق OTP إلى بريدك الإلكتروني.',
+
     // --- قسم الطلاب ---
     'students_retrieved' => 'تم استعادة قائمة الطلاب بنجاح.',
     'student_stored' => 'تم تسجيل بيانات الطالب بنجاح، يرجى انتظار موافقة المشرف لتفعيل الحساب.',
     'student_retrieved' => 'تم جلب بيانات الطالب بنجاح.',
     'student_updated' => 'تم تحديث بيانات الطالب بنجاح.',
+    'student_approved_and_assigned' => 'تم قبول الطالب وإسناده للحلقة بنجاح.',
     'student_deleted' => 'تم حذف سجل الطالب بنجاح.',
     'student_approved' => 'تم قبول الطالب وتفعيل حسابه بنجاح.',
     'student_rejected' => 'تم رفض طلب التسجيل.',

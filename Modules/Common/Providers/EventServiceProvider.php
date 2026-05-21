@@ -5,9 +5,12 @@ namespace Modules\Common\Providers;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Modules\Common\Listeners\SendAttendanceNotification;
 use Modules\Common\Listeners\SendEvaluationNotification;
+use Modules\Common\Listeners\SendStudentStatusNotification;
 use Modules\Education\Events\AttendanceRecorded;
 use Modules\Education\Events\EvaluationUpdated;
+use Modules\Education\Events\StudentApproved;
 use Modules\Education\Events\StudentEvaluated;
+use Modules\Education\Events\StudentRejected;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -26,6 +29,12 @@ class EventServiceProvider extends ServiceProvider
 
         AttendanceRecorded::class => [
             SendAttendanceNotification::class,
+        ],
+        StudentApproved::class => [
+            SendStudentStatusNotification::class,
+        ],
+        StudentRejected::class => [
+            SendStudentStatusNotification::class,
         ],
     ];
 
