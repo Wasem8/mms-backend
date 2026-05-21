@@ -37,6 +37,7 @@ Route::prefix('education')->group(function () {
     Route::middleware(['auth:api', 'role:halaqa_supervisor,mosque_manager,super_admin'])->group(function () {
         Route::get('teachers', [TeacherController::class, 'index']);
         Route::get('teachers/{id}', [TeacherController::class, 'show']);
+        Route::put('teachers/{id}', [TeacherController::class, 'update']);
     });
 
 
@@ -49,8 +50,7 @@ Route::prefix('education')->group(function () {
     Route::middleware(['auth:api', 'role:parent,halaqa_supervisor,teacher'])->group(function () {
         Route::get('attendance', [AttendanceController::class, 'index']);
         Route::get('evaluations/{id}', [EvaluationController::class, 'show']);
-        Route::get('halaqat', [HalaqaController::class, 'index']);
-        Route::get('halaqat/{id}', [HalaqaController::class, 'show']);
+
     });
 
     Route::middleware(['auth:api', 'role:parent'])->group(function () {
@@ -81,6 +81,8 @@ Route::prefix('education')->group(function () {
         Route::middleware(['auth:api', 'role:teacher,halaqa_supervisor'])->group(function () {
             Route::put('evaluations/{id}', [EvaluationController::class, 'update']);
             Route::delete('evaluations/{id}', [EvaluationController::class, 'destroy']);
+            Route::get('halaqat', [HalaqaController::class, 'index']);
+            Route::get('halaqat/{id}', [HalaqaController::class, 'show']);
         });
 
 });

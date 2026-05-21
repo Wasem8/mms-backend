@@ -567,6 +567,120 @@
                 }
             }
         },
+        "/auth/resend-otp": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Resend OTP verification code",
+                "description": "Regenerate and resend a fresh OTP verification code to the user email. Rate-limited to 1 request per minute.",
+                "operationId": "resendOtp",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "parent@test.com"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OTP code resent successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "OTP verification code has been resent to your email."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": []
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error - Email not found or invalid format",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The selected email is invalid."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": {
+                                                "email": [
+                                                    "The selected email is invalid."
+                                                ]
+                                            }
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests - Throttled for 60 seconds",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Too many attempts. Please wait before retrying."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "tags": [
@@ -6672,88 +6786,6 @@
                 ]
             }
         },
-        "/education/teachers": {
-            "get": {
-                "tags": [
-                    "Teachers Management"
-                ],
-                "summary": "قائمة المعلمين (حسب صلاحية المستخدم)",
-                "description": "تعيد القائمة بناءً على الدور: مدير المنطقة يرى الكل، مدير المسجد والمشرف يريان معلمي مسجدهما فقط.",
-                "operationId": "getTeachersList",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/AcceptLanguageHeader"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "قائمة المعلمين المسترجعة",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/TeacherListResponse"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/Unauthenticated"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/education/teachers/{id}": {
-            "get": {
-                "tags": [
-                    "Teachers Management"
-                ],
-                "summary": "تفاصيل المعلم العميقة والإحصائيات",
-                "description": "جلب بيانات المعلم، حلقاته، وإحصائيات الحضور والغياب للطلاب التابعين له.",
-                "operationId": "getTeacherDetails",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/AcceptLanguageHeader"
-                    },
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "معرف المعلم (User ID)",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "تفاصيل المعلم والحلقات المسترجعة",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/TeacherDetailResponse"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "المعلم غير موجود أو لا تملك صلاحية الوصول إليه"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/Unauthenticated"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
         "/education/evaluations": {
             "post": {
                 "tags": [
@@ -12767,6 +12799,19 @@
                         "$ref": "#/components/parameters/AcceptLanguageHeader"
                     },
                     {
+                        "name": "has_halaqa",
+                        "in": "query",
+                        "description": "1 = الطلاب المرتبطون بحلقات، 0 = الطلاب غير المرتبطين بأي حلقة",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "enum": [
+                                0,
+                                1
+                            ]
+                        }
+                    },
+                    {
                         "name": "status",
                         "in": "query",
                         "description": "فلترة الطلاب حسب الحالة",
@@ -12976,16 +13021,14 @@
                         "bearerAuth": []
                     }
                 ]
-            }
-        },
-        "/education/students/{id}/approve": {
-            "patch": {
+            },
+            "put": {
                 "tags": [
                     "Students"
                 ],
-                "summary": "قبول طلب تسجيل طالب (للمشرف فقط)",
-                "description": "يسمح لمشرف المسجد بتغيير حالة الطالب من (غير نشط) إلى (نشط) ليتمكن من الانضمام للحلقات.",
-                "operationId": "approveStudent",
+                "summary": "تعديل بيانات الطالب (لولي الأمر والمشرف)",
+                "description": "تسمح بتحديث بيانات ملف الطالب الشخصية. يدعم حقول الاسم والميلاد لولي الأمر، وحقول المستوى والملاحظات الجديدة للمشرف.",
+                "operationId": "updateStudent",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/AcceptLanguageHeader"
@@ -12993,7 +13036,7 @@
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "معرف الطالب المراد قبوله",
+                        "description": "معرف الطالب المراد تعديله",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -13001,9 +13044,52 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "description": "جميع الحقول اختيارية (Update Partial) لتمكين تحديث حقول معينة فقط عند الحاجة",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "first_name": {
+                                        "description": "الاسم الأول المحدث",
+                                        "type": "string",
+                                        "example": "أحمد"
+                                    },
+                                    "last_name": {
+                                        "description": "اسم العائلة المحدث",
+                                        "type": "string",
+                                        "example": "المنصور"
+                                    },
+                                    "date_of_birth": {
+                                        "description": "تاريخ الميلاد المحدث",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2016-01-20"
+                                    },
+                                    "gender": {
+                                        "description": "الجنس",
+                                        "type": "string",
+                                        "example": "male",
+                                        "enum": [
+                                            "male",
+                                            "female"
+                                        ]
+                                    },
+                                    "mosque_id": {
+                                        "description": "نقل الطالب لمسجد آخر",
+                                        "type": "integer",
+                                        "example": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "تم قبول الطالب بنجاح",
+                        "description": "تم تحديث بيانات الطالب بنجاح وعادت البيانات الجديدة",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -13014,7 +13100,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "تم قبول الطالب بنجاح وتفعيل حسابه."
+                                            "example": "تم تحديث بيانات الطالب بنجاح."
                                         },
                                         "data": {
                                             "$ref": "#/components/schemas/StudentResource"
@@ -13030,42 +13116,8 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "خطأ في منطق الطلب (Bad Request)",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "oneOf": [
-                                                {
-                                                    "example": "هذا الطالب مفعل مسبقاً."
-                                                },
-                                                {
-                                                    "example": "لا يمكن قبول طالب مرفوض بالفعل."
-                                                }
-                                            ]
-                                        },
-                                        "data": {
-                                            "type": "object",
-                                            "example": null,
-                                            "nullable": true
-                                        },
-                                        "pagination": {
-                                            "type": "object",
-                                            "example": null,
-                                            "nullable": true
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
                     },
                     "401": {
                         "$ref": "#/components/responses/Unauthenticated"
@@ -13075,6 +13127,77 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/education/students/{id}/approve": {
+            "patch": {
+                "tags": [
+                    "Students"
+                ],
+                "summary": "قبول الطالب في المسجد وإسناده لحلقة (دمج العمليتين)",
+                "description": "يقوم بقبول الطالب وتحويل حالته إلى نشط. يمكنك تمرير (halaqa_id) بشكل اختياري ليتم إسناد الطالب للحلقة مباشرة في نفس الطلب لتوفير Round-trips للشبكة.",
+                "operationId": "approveStudent",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "معرف الطالب",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "halaqa_id": {
+                                        "description": "معرف الحلقة المراد إسناد الطالب لها فوراً (اختياري)",
+                                        "type": "integer",
+                                        "example": 12
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "تم قبول الطالب وتسكينه بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم قبول الطالب وإسناده للحلقة بنجاح."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "الطالب نشط بالفعل أو مرفوض"
                     }
                 },
                 "security": [
@@ -13571,6 +13694,416 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/education/teachers": {
+            "get": {
+                "tags": [
+                    "Teachers Management"
+                ],
+                "summary": "قائمة المعلمين: مشرف الحلقات / مدير المسجد",
+                "description": "تعيد القائمة بناءً على الدور: مدير المنطقة يرى الكل، مدير المسجد والمشرف يريان معلمي مسجدهما فقط.",
+                "operationId": "getTeachersList",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "قائمة المعلمين المسترجعة بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم جلب قائمة المعلمين بنجاح."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 5
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "الشيخ عبد الرحمن السديس"
+                                                    },
+                                                    "email": {
+                                                        "type": "string",
+                                                        "example": "teacher1@mosque.com"
+                                                    },
+                                                    "mosque_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "phone": {
+                                                        "type": "string",
+                                                        "example": "+966500000000",
+                                                        "nullable": true
+                                                    },
+                                                    "specialization": {
+                                                        "type": "string",
+                                                        "example": "التجويد والقراءات العشر",
+                                                        "nullable": true
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "active"
+                                                    },
+                                                    "notes": {
+                                                        "type": "string",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "example": "2026-05-14 07:48:51"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "$ref": "#/components/schemas/Pagination"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/education/teachers/{id}": {
+            "get": {
+                "tags": [
+                    "Teachers Management"
+                ],
+                "summary": "تفاصيل المعلم العميقة: مشرف الحلقات / مدير المسجد",
+                "description": "جلب بيانات المعلم، بروفايله الخاص، الحلقات المسندة إليه، والإحصائيات الإدارية المسجلة عنه.",
+                "operationId": "getTeacherDetails",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "معرف المعلم (User ID)",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تفاصيل المعلم والحلقات المسترجعة",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم جلب تفاصيل المعلم بنجاح."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "الشيخ عبد الرحمن السديس"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "teacher1@mosque.com"
+                                                },
+                                                "phone": {
+                                                    "type": "string",
+                                                    "example": "+966500000000",
+                                                    "nullable": true
+                                                },
+                                                "specialization": {
+                                                    "type": "string",
+                                                    "example": "التجويد والقراءات العشر",
+                                                    "nullable": true
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "paused"
+                                                },
+                                                "notes": {
+                                                    "type": "string",
+                                                    "example": "تم الإيقاف المؤقت لظروف السفر الطارئة.",
+                                                    "nullable": true
+                                                },
+                                                "halaqats": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 12
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "حلقة الإتقان والتميز"
+                                                            },
+                                                            "stats": {
+                                                                "properties": {
+                                                                    "total_students": {
+                                                                        "type": "integer",
+                                                                        "example": 15
+                                                                    },
+                                                                    "total_present_all_time": {
+                                                                        "type": "integer",
+                                                                        "example": 120
+                                                                    },
+                                                                    "total_absent_all_time": {
+                                                                        "type": "integer",
+                                                                        "example": 5
+                                                                    },
+                                                                    "overall_attendance_rate": {
+                                                                        "type": "string",
+                                                                        "example": "96%"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "example": "2026-05-14 07:48:51"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Teachers Management"
+                ],
+                "summary": "تعديل بيانات المعلم وتغيير حالته: مشرف الحلقات / مدير المسجد",
+                "description": "تعديل الاسم (في جدول المستخدمين) وتحديث بيانات البروفايل المنفصل (تخصص، ملاحظات، هاتف) ",
+                "operationId": "updateTeacher",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "معرف المعلم (User ID) المراد تعديله",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "description": "اسم المعلم كاملاً",
+                                        "type": "string",
+                                        "example": "الشيخ عبد الرحمن السديس"
+                                    },
+                                    "phone": {
+                                        "description": "رقم الهاتف الجوال للبروفايل",
+                                        "type": "string",
+                                        "example": "+966500000000"
+                                    },
+                                    "specialization": {
+                                        "description": "مجال التخصص والتدريس المعين له",
+                                        "type": "string",
+                                        "example": "عاصم عن حفص والتجويد المتقدم"
+                                    },
+                                    "status": {
+                                        "description": "حالة المعلم الوظيفية في البروفايل",
+                                        "type": "string",
+                                        "example": "active",
+                                        "enum": [
+                                            "active",
+                                            "paused",
+                                            "suspended"
+                                        ]
+                                    },
+                                    "notes": {
+                                        "description": "ملاحظات المشرف الإدارية",
+                                        "type": "string",
+                                        "example": "تم نقل المعلم لحلقات المتقدمين لكفاءته العالية."
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "تم تحديث بيانات وبروفايل المعلم بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم تحديث بيانات المعلم وحالته بنجاح."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "الشيخ عبد الرحمن السديس"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "teacher1@mosque.com"
+                                                },
+                                                "mosque_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "phone": {
+                                                    "type": "string",
+                                                    "example": "+966500000000",
+                                                    "nullable": true
+                                                },
+                                                "specialization": {
+                                                    "type": "string",
+                                                    "example": "عاصم عن حفص والتجويد المتقدم",
+                                                    "nullable": true
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "active"
+                                                },
+                                                "notes": {
+                                                    "type": "string",
+                                                    "example": "تم نقل المعلم لحلقات المتقدمين لكفاءته العالية.",
+                                                    "nullable": true
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "example": "2026-05-14 07:48:51"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "description": "خطأ في التحقق من صحة المدخلات (Validation Error)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "حالة المعلم الممررة غير صحيحة."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
                     }
                 },
                 "security": [
@@ -14867,10 +15400,6 @@
             "description": "Education"
         },
         {
-            "name": "Teachers Management",
-            "description": "Teachers Management"
-        },
-        {
             "name": "Evaluations",
             "description": "Evaluations"
         },
@@ -14905,6 +15434,10 @@
         {
             "name": "Students",
             "description": "Students"
+        },
+        {
+            "name": "Teachers Management",
+            "description": "Teachers Management"
         }
     ]
 }

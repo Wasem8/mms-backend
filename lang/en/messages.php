@@ -1,10 +1,14 @@
 <?php
 
 return [
+
+    'messages.otp_resent_successfully' => 'OTP verification code has been resent to your email.',
+
     // --- Students Section ---
     'students_retrieved' => 'Student list retrieved successfully.',
     'student_stored' => 'Student data registered successfully, please wait for supervisor approval to activate the account.',
     'student_retrieved' => 'Student data retrieved successfully.',
+    'student_approved_and_assigned' => 'Student has been approved and assigned to the halaqa successfully.',
     'student_updated' => 'Student data updated successfully.',
     'student_deleted' => 'Student record deleted successfully.',
     'student_approved' => 'Student approved successfully.',
