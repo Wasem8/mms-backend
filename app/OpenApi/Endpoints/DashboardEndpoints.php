@@ -153,4 +153,139 @@ class DashboardEndpoints
         ]
     )]
     public function exportPdfDocumentation() {}
+
+    #[OA\Get(
+        path: '/dashboard/teacher/dashboard',
+        operationId: 'getTeacherDashboardStats',
+        tags: ['Dashboard'],
+        summary: 'إحصائيات لوحة التحكم الخاصة بالمعلم لحلقته الموكلة',
+        description: 'يعيد تفاصيل حلقة المعلم، الكروت الإحصائية لليوم، التنبيهات الخاصة بالطلاب الأكثر غياباً هذا الشهر، وجدولاً بآخر التسميعات والتقييمات المنجزة مؤخراً.',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'تم جلب إحصائيات لوحة تحكم المعلم بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم جلب إحصائيات لوحة تحكم المعلم بنجاح'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'has_halaqa', type: 'boolean', example: true),
+                                new OA\Property(property: 'halaqa_name', type: 'string', example: 'حلقة زيد بن ثابت'),
+                                // 1. الكروت الإحصائية (Cards)
+                                new OA\Property(
+                                    property: 'cards',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'total_students', type: 'integer', example: 15),
+                                        new OA\Property(property: 'evaluated_today', type: 'string', example: '5 / 15'),
+                                        new OA\Property(property: 'attendance_percentage', type: 'string', example: '87%'),
+                                        new OA\Property(property: 'month_ayahs_progress', type: 'string', example: '320 آية تم تسميعها')
+                                    ]
+                                ),
+                                // 2. التنبيهات الذكية (Alerts)
+                                new OA\Property(
+                                    property: 'alerts',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(
+                                            property: 'frequent_absentees',
+                                            type: 'array',
+                                            items: new OA\Items(
+                                                type: 'object',
+                                                properties: [
+                                                    new OA\Property(property: 'student_name', type: 'string', example: 'عبد الرحمن محمد'),
+                                                    new OA\Property(property: 'absent_days', type: 'integer', example: 4)
+                                                ]
+                                            )
+                                        )
+                                    ]
+                                ),
+                                // 3. آخر التسميعات والتقييمات (Recent Evaluations)
+                                new OA\Property(
+                                    property: 'recent_evaluations',
+                                    type: 'array',
+                                    items: new OA\Items(
+                                        type: 'object',
+                                        properties: [
+                                            new OA\Property(property: 'student_name', type: 'string', example: 'أحمد محمود'),
+                                            new OA\Property(property: 'type', type: 'string', example: 'حفظ جديد'),
+                                            new OA\Property(property: 'surah', type: 'string', example: 'البقرة'),
+                                            new OA\Property(property: 'score', type: 'integer', example: 95),
+                                            new OA\Property(property: 'time', type: 'string', example: 'منذ ساعتين')
+                                        ]
+                                    )
+                                )
+                            ]
+                        )
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'غير مصرح له الدخول - Unauthenticated'),
+            new OA\Response(response: 403, description: 'ليس لديك صلاحية الوصول (ليست رتبة معلم) - Forbidden'),
+            new OA\Response(response: 500, description: 'خطأ داخلي في السيرفر')
+        ]
+    )]
+    public function getTeacherStats() {}
+
+    // 🆕 التوثيق الخاص بداشبورد ولي الأمر لمتابعة الأبناء
+    #[OA\Get(
+        path: '/dashboard/parent/dashboard',
+        operationId: 'getParentDashboardStats',
+        tags: ['Dashboard'],
+        summary: 'إحصائيات لوحة التحكم الخاصة بولي الأمر (الأب)',
+        description: 'يعيد مصفوفة بأسماء كافة الأبناء التابعين لولي الأمر الحالي، مع تفاصيل الحلقة الموكلين بها، وحالة حضورهم اليوم، بالإضافة لآخر تقييم وتسميع حصلوا عليه مع المجموع التراكمي لآيات الحفظ والمراجعة هذا الشهر.',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'تم جلب بيانات لوحة تحكم ولي الأمر بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم جلب بيانات لوحة تحكم ولي الأمر بنجاح'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'has_children', type: 'boolean', example: true),
+                                new OA\Property(
+                                    property: 'children',
+                                    type: 'array',
+                                    items: new OA\Items(
+                                        type: 'object',
+                                        properties: [
+                                            new OA\Property(property: 'id', type: 'integer', example: 12),
+                                            new OA\Property(property: 'name', type: 'string', example: 'عمر أحمد محمد'),
+                                            new OA\Property(property: 'halaqa', type: 'string', example: 'حلقة عاصم بن أبي النجود'),
+                                            new OA\Property(property: 'today_attendance', type: 'string', example: 'present'),
+                                            new OA\Property(property: 'month_progress', type: 'string', example: '145 آية المجموع التراكمي'),
+                                            new OA\Property(
+                                                property: 'last_evaluation',
+                                                type: 'object',
+                                                nullable: true,
+                                                properties: [
+                                                    new OA\Property(property: 'surah', type: 'string', example: 'الكهف'),
+                                                    new OA\Property(property: 'type', type: 'string', example: 'مراجعة ثانية'),
+                                                    new OA\Property(property: 'score', type: 'integer', example: 98),
+                                                    new OA\Property(property: 'date', type: 'string', example: 'منذ 4 ساعات')
+                                                ]
+                                            )
+                                        ]
+                                    )
+                                )
+                            ]
+                        )
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'غير مصرح له الدخول - Unauthenticated'),
+            new OA\Response(response: 403, description: 'ليس لديك صلاحية الوصول (ليست رتبة ولي أمر) - Forbidden'),
+            new OA\Response(response: 500, description: 'خطأ داخلي في السيرفر')
+        ]
+    )]
+    public function getParentStats() {}
 }

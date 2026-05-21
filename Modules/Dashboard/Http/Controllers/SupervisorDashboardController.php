@@ -23,39 +23,22 @@ class SupervisorDashboardController
         return ApiResponse::success($stats, 'تم جلب إحصائيات لوحة التحكم بنجاح');
     }
 
-    public function exportPdf(Request $request)
+    public function exportPdf(Request $request, DashboardService $service)
     {
-        try {
-            $mosqueId = auth()->user()->mosque_id;
-            $filters = $request->only(['halaqa_id']);
+        $mosqueId = auth()->user()->mosque_id;
 
-            $stats = $this->service->getSupervisorStatsForPdf($mosqueId, $filters);
+        $filters = [
+            'halaqa_id' => $request->halaqa_id,
+        ];
 
-            $viewPath = base_path('Modules/Dashboard/resources/views/Pdf/supervisor_report.blade.php');
+        $data = $service->getSupervisorStatsForPdf($mosqueId, $filters);
 
-            $html = view()->file($viewPath, [
-                'stats' => $stats,
-                'user' => auth()->user(),
-            ])->render();
+        $pdf = Pdf::loadView(
+            'dashboard::supervisor_report',
+            $data
+        );
 
-            $pdf = Pdf::loadHTML($html);
-            $pdf->setPaper('A4', 'portrait');
-
-            $filename = 'supervisor-dashboard-report-' . now()->format('Y-m-d-H-i-s') . '.pdf';
-
-            // استخدام stream() بدلاً من download()
-            return response()->streamDownload(function () use ($pdf) {
-                echo $pdf->output();
-            }, $filename, [
-                'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-                'Cache-Control' => 'public, max-age=0',
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('PDF Export Error: ' . $e->getMessage());
-            return ApiResponse::error('خطأ في تصدير التقرير: ' . $e->getMessage(), 500);
-        }
+        return $pdf->download('supervisor-report.pdf');
     }
 
 }

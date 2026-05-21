@@ -194,39 +194,39 @@ class DashboardService
         ];
     }
 
-    /**
-     * الحصول على تفاصيل الحلقات للـ PDF
-     */
-    private function getHalaqatDetailsForPdf($mosqueId, array $filters = [])
+
+    private function getHalaqatDetailsForPdf($mosqueId, $filters = [])
     {
         $query = Halaqa::where('mosque_id', $mosqueId)
-            ->with('teacher')
-            ->withCount('students');
+            ->withCount('students')
+            ->with('teacher:id,name');
 
         if (!empty($filters['halaqa_id'])) {
             $query->where('id', $filters['halaqa_id']);
         }
 
         return $query->get()->map(function ($halaqa) {
-            $today = Carbon::today()->toDateString();
 
-            $attendanceQuery = Attendance::where('halaqa_id', $halaqa->id)
-                ->whereDate('date', $today);
+            $attendance = Attendance::where('halaqa_id', $halaqa->id)
+                ->whereDate('date', Carbon::today())
+                ->selectRaw("
+                COUNT(*) as total,
+                SUM(CASE WHEN status = 'present' THEN 1 ELSE 0 END) as present
+            ")
+                ->first();
 
-            $totalAttendance = (clone $attendanceQuery)->count();
-            $presentCount = $attendanceQuery->where('status', 'present')->count();
+            $rate = 0;
 
-            $attendanceRate = $totalAttendance > 0
-                ? round(($presentCount / $totalAttendance) * 100)
-                : 0;
+            if ($attendance && $attendance->total > 0) {
+                $rate = round(($attendance->present / $attendance->total) * 100);
+            }
 
             return [
                 'name' => $halaqa->name,
-                'teacher_name' => $halaqa->teacher?->name ?? '-',
-                'students_count' => $halaqa->students_count ?? 0,
-                'attendance_rate' => $attendanceRate
+                'teacher' => $halaqa->teacher?->name ?? '-',
+                'students_count' => $halaqa->students_count,
+                'attendance_rate' => $rate . '%',
             ];
-        })->toArray();
+        });
     }
-
 }
