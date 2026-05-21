@@ -134,4 +134,6 @@ class HalaqaService
 
         $halaqa->students()->detach($studentId);
     }
+
+
 }

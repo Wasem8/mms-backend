@@ -5,6 +5,7 @@ namespace Modules\Education\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Support\ApiResponse;
 use Modules\Education\Http\Requests\StoreStudentRequest;
+use Modules\Education\Http\Requests\UpdateStudentRequest;
 use Modules\Education\Services\StudentService;
 use Modules\Education\Transformers\StudentDetailResource;
 use Modules\Education\Transformers\StudentResource;
@@ -54,13 +55,17 @@ class StudentController
         );
     }
 
-    public function update(Request $request, $id)
+
+    public function update(UpdateStudentRequest $request, $id)
     {
+        $student = $this->service->update($id, $request->validated());
+
         return ApiResponse::success(
-            $this->service->update($id, $request->all()),
+            new StudentResource($student),
             __('messages.student_updated')
         );
     }
+
 
     public function destroy($id)
     {
@@ -70,9 +75,13 @@ class StudentController
     }
 
 
-    public function approve($id)
+    public function approve(Request $request, $id)
     {
-        $result = $this->service->approve($id);
+        $validated = $request->validate([
+            'halaqa_id' => 'nullable|integer|exists:halaqats,id'
+        ]);
+
+        $result = $this->service->approve($id, $validated);
 
         if (isset($result['error']) && $result['error']) {
             return ApiResponse::error($result['message'], 400);
@@ -80,7 +89,7 @@ class StudentController
 
         return ApiResponse::success(
             new StudentResource($result['data']),
-            __('messages.student_approved')
+            __('messages.student_approved_and_assigned')
         );
     }
 
