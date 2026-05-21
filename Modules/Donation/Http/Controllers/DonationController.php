@@ -76,9 +76,9 @@ class DonationController extends Controller
 
 
 
-    public function show(int $id)
+    public function show(string  $ref)
     {
-        $donation = $this->donationService->find($id);
+        $donation = $this->donationService->findByReference($ref);
 
         return (new DonationResource($donation))->response();
     }

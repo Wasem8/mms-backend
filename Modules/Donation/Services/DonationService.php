@@ -52,6 +52,11 @@ class DonationService
             ->paginate(10);
     }
 
+    public function findByReference(string $reference)
+    {
+        return Donation::where('reference', $reference)->firstOrFail();
+    }
+
     public function find(int $id): Donation
     {
         return Donation::findOrFail($id);
