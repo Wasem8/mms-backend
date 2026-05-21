@@ -29,6 +29,25 @@ class MosqueNeedController extends Controller
         );
     }
 
+    public function AllNeeds(Request $request)
+    {
+        $perPage = $request->get('per_page', 10);
+
+        $filters = [
+            'status' => $request->get('status'),
+            'type'   => $request->get('type'),
+            'urgent' => $request->get('urgent'),
+        ];
+
+        $needs = $this->service->listAggregate($filters, $perPage);
+
+        return ApiResponse::success(
+            $needs->items(),
+            'Needs across all mosques retrieved successfully',
+            ApiResponse::pagination($needs)
+        );
+    }
+
     public function show($mosqueId,$needId)
     {
         try {
@@ -43,6 +62,21 @@ class MosqueNeedController extends Controller
                 404
             );
         }
+    }
+
+    public function NeedById($needId){
+        $need = $this->service->getNeedById($needId);
+
+        if (!$need) {
+            return ApiResponse::error(
+                'Need not found',
+                404
+            );
+        }
+        return ApiResponse::success(
+            $need,
+            'Need retrieved successfully'
+        );
     }
 
 

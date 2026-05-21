@@ -23,7 +23,11 @@ class TameemController extends Controller
     public function index()
     {
         $tameems = $this->tameemService->getAllTameems();
-        return ApiResponse::success($tameems,'تم جلب التعاميم بنجاح');
+
+        $transformed = $tameems->map(fn($tameem) => $this->transformTameem($tameem));
+
+
+        return ApiResponse::success($transformed,'تم جلب التعاميم بنجاح');
     }
 
     public function store(Request $request)
@@ -48,8 +52,7 @@ class TameemController extends Controller
 
         $tameem = $this->tameemService->sendTameem($validatedData, $senderId, $recipientIds);
 
-        return ApiResponse::success($tameem, 'تم إرسال التعميم بنجاح');
-    }
+        return ApiResponse::success($this->transformTameem($tameem), 'تم إرسال التعميم بنجاح');    }
 
     public function show(int $id)
     {
@@ -59,8 +62,7 @@ class TameemController extends Controller
             return ApiResponse::error(['message' => 'التعميم غير موجود'], 404);
         }
 
-        return ApiResponse::success($tameem, 'تم جلب التعميم بنجاح');
-    }
+        return ApiResponse::success($this->transformTameem($tameem), 'تم جلب التعميم بنجاح');    }
 
     public function update(UpdateTameemRequest $request, int $id)
     {
@@ -71,8 +73,8 @@ class TameemController extends Controller
                 actorId: auth()->id(),
             );
 
-            return ApiResponse::success($tameem, 'تم تحديث التعميم بنجاح');
-        } catch (AuthorizationException $e) {
+            return ApiResponse::success($this->transformTameem($tameem), 'تم تحديث التعميم بنجاح');
+            } catch (AuthorizationException $e) {
             return ApiResponse::error(['message' => $e->getMessage()], 403);
         }
     }
@@ -96,8 +98,11 @@ class TameemController extends Controller
         $mosqueManagerId = auth()->id();
         $tameems = $this->tameemService->getMosqueManagerTameems($mosqueManagerId);
 
-        return ApiResponse::success($tameems, 'تم جلب التعاميم الواردة بنجاح');
-    }
+        // تحويل التعاميم الواردة لمدير المسجد ليعرف حالة القراءة بدقة
+        $transformed = $tameems->map(fn($tameem) => $this->transformTameem($tameem));
+
+        return ApiResponse::success($transformed, 'تم جلب التعاميم الواردة بنجاح');
+          }
 
     public function markAsRead($id)
     {
@@ -105,5 +110,27 @@ class TameemController extends Controller
         $this->tameemService->markTameemAsRead($id, $mosqueManagerId);
 
         return ApiResponse::success(null, 'تم تحديث حالة التعميم إلى مقروء');
+    }
+
+    private function transformTameem($tameem): array
+    {
+        return [
+            'id' => $tameem->id,
+            'title' => $tameem->title,
+            'content' => $tameem->content,
+            'sender_id' => $tameem->sender_id,
+            'sent_at' => $tameem->sent_at,
+            'created_at' => $tameem->created_at,
+            'updated_at' => $tameem->updated_at,
+
+            'recipients' => $tameem->recipients->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'is_read' => $user->pivot ? (bool) $user->pivot->is_read : false,
+                    'read_at' => $user->pivot ? $user->pivot->read_at : null,
+                ];
+            })->toArray(),
+        ];
     }
 }
