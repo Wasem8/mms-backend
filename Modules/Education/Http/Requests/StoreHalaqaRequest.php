@@ -27,10 +27,10 @@ class StoreHalaqaRequest extends FormRequest
                 },
             ],
             'capacity' => 'required|integer|min:1|max:100',
-            'schedule_days' => 'nullable|array',
-            'schedule_days.*' => 'string',
-            'start_time' => 'nullable|date_format:H:i',
-            'end_time' => 'nullable|date_format:H:i',
+            'schedule_days'   => 'nullable|array',
+            'schedule_days.*' => 'string|in:sunday,monday,tuesday,wednesday,thursday,friday,saturday',
+            'start_time' => 'required|date_format:H:i:s',
+            'end_time'   => 'required|date_format:H:i:s|after:start_time',
             'status' => 'in:active,inactive'
         ];
     }

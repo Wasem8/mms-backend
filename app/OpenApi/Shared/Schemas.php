@@ -119,7 +119,8 @@ use OpenApi\Attributes as OA;
     schema: 'StudentDetailResource',
     properties: [
         new OA\Property(property: 'id', type: 'integer', example: 11),
-        new OA\Property(property: 'full_name', type: 'string', example: 'أحمد محمد'),
+        new OA\Property(property: 'first_name', type: 'string', example: 'أحمد'),
+        new OA\Property(property: 'last_name', type: 'string', example: 'محمد'),
         new OA\Property(property: 'parent', type: 'object', properties: [
             new OA\Property(property: 'id', type: 'integer', example: 5),
             new OA\Property(property: 'name', type: 'string', example: 'Parent'),
@@ -399,5 +400,5 @@ class Schemas
         ];
     }
 
-    
+
 }

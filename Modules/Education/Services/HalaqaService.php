@@ -13,14 +13,14 @@ class HalaqaService
         $user = auth()->user();
         $query = Halaqa::with('teacher');
 
-
         if ($user->isSupervisor()) {
             $query->where('mosque_id', $user->mosque_id);
+        } elseif ($user->hasRole('teacher') || $user->isTeacher()) {
+            $query->where('teacher_id', $user->id);
         }
 
         return $query->latest()->paginate(10);
     }
-
     public function create(array $data)
     {
         $user = auth()->user();
@@ -36,7 +36,6 @@ class HalaqaService
     public function find($id, array $relations = [])
     {
         $user = auth()->user();
-
         $query = Halaqa::query();
 
         if (!empty($relations)) {
@@ -45,6 +44,8 @@ class HalaqaService
 
         if ($user->isSupervisor()) {
             $query->where('mosque_id', $user->mosque_id);
+        } elseif ($user->hasRole('teacher') || $user->isTeacher()) {
+            $query->where('teacher_id', $user->id);
         }
 
         return $query->findOrFail($id);
@@ -133,4 +134,6 @@ class HalaqaService
 
         $halaqa->students()->detach($studentId);
     }
+
+
 }

@@ -50,6 +50,7 @@ class MosqueEndpoints
                                     new OA\Property(property: 'reviews_count', type: 'integer', example: 10),
                                     new OA\Property(property: 'imam', type: 'string', nullable: true, example: 'Sheikh Ahmed'),
                                     new OA\Property(property: 'khatib', type: 'string', nullable: true, example: 'Sheikh Mohamed'),
+                                    new OA\Property(property: 'donation_total', type: 'number', format: 'float', example: 12500.00),
                                     new OA\Property(property: 'manager_id', type: 'integer', nullable: true, example: 2),
                                     new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
                                     new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
@@ -72,6 +73,63 @@ class MosqueEndpoints
         ]
     )]
     public function index() {}
+
+
+    #[OA\Get(
+        path: '/mosques/nearby',
+        operationId: 'getNearbyMosques',
+        tags: ['Mosques'],
+        summary: 'List nearby mosques',
+        description: 'Returns a paginated list of mosques near the specified latitude and longitude.',
+        parameters: [
+            new OA\Parameter(name: 'latitude', in: 'query', required: true, schema: new OA\Schema(type: 'number', format: 'float', example: 30.0444)),
+            new OA\Parameter(name: 'longitude', in: 'query', required: true, schema: new OA\Schema(type: 'number', format: 'float', example: 31.2357)),
+            new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 15)),
+        ],
+        responses: [
+            new OA\Response(
+                response:200,
+                description:'list nearby mosque returned success',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Nearby mosques retrieved successfully.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(
+                                properties: [
+                                    new OA\Property(property: 'id', type: 'integer', example: 1),
+                                    new OA\Property(property: 'name', type: 'string', example: 'Al-Rahma Mosque'),
+                                    new OA\Property(
+                                        property: 'image',
+                                        type: 'string',
+                                        nullable: true,
+                                        example: 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/images/mosque.jpg',
+                                        description: 'Full public URL of the image stored in Supabase Storage'
+                                    ),
+                                    new OA\Property(property: 'working_hours', type: 'string', nullable: true, example: '5:00 AM - 10:00 PM'),
+                                    new OA\Property(property: 'status', type: 'string', enum: ['active', 'maintenance', 'closed'], example: 'active'),
+                                    new OA\Property(property: 'is_featured', type: 'boolean', example: 0),                                    new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Cairo'),
+                                    new OA\Property(property: 'district', type: 'string', nullable: true, example: 'Downtown'),
+                                    new OA\Property(property: 'latitude', type: 'number', format: 'float', nullable: true, example: 30.0444),
+                                    new OA\Property(property: 'longitude', type: 'number', format: 'float', nullable: true, example: 31.2357),
+                                    new OA\Property(property: 'average_rating', type: 'number', format: 'float', example: 4.5),
+                                    new OA\Property(property: 'reviews_count', type: 'integer', example: 10),
+                                    new OA\Property(property: 'imam', type: 'string', nullable: true, example: 'Sheikh Ahmed'),
+                                    new OA\Property(property: 'khatib', type: 'string', nullable:true, example:'Sheikh Hassan')
+                                ]
+                            )
+                        )
+                        ]
+                )
+            )
+        ]
+    )]
+    public function getNearby() {}
+
+
 
     #[OA\Get(
         path: '/mosques/search',
@@ -1069,7 +1127,7 @@ class MosqueEndpoints
                                     new OA\Property(property: 'type', type: 'string', enum: ['financial', 'service', 'maintenance']),
                                     new OA\Property(property: 'target_amount', type: 'number', example: 250),
                                     new OA\Property(property: 'collected_amount', type: 'number', example: 175),
-                                    new OA\Property(property: 'status', type: 'string', enum: ['open', 'partial', 'fulfilled']),
+                                    new OA\Property(property: 'status', type: 'string', enum: ['open', 'partially_fulfilled', 'fulfilled']),
                                     new OA\Property(property: 'image', type: 'string', nullable: true),
                                     new OA\Property(property: 'is_urgent', type: 'boolean', example: true),
                                     new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
@@ -1084,6 +1142,100 @@ class MosqueEndpoints
     )]
     public function needsIndex() {}
 
+
+    #[OA\Get(
+        path: '/allNeeds',
+        operationId: 'getAllMosquesNeeds',
+        tags: ['Needs'],
+        summary: 'List all needs across all mosques',
+        description: 'Returns a paginated list of needs from all mosques with optional filtering.',
+        parameters: [
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', example: 1)
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', example: 10)
+            ),
+            new OA\Parameter(
+                name: 'status',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string', enum: ['open', 'partially_fulfilled', 'fulfilled'])
+            ),
+            new OA\Parameter(
+                name: 'type',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string', enum: ['financial', 'service', 'maintenance'])
+            ),
+            new OA\Parameter(
+                name: 'urgent',
+                in: 'query',
+                required: false,
+                description: 'Filter by urgency (true/false or 1/0)',
+                schema: new OA\Schema(type: 'boolean', example: true)
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Needs across all mosques retrieved successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Needs across all mosques retrieved successfully'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(
+                                properties: [
+                                    new OA\Property(property: 'id', type: 'integer', example: 1),
+                                    new OA\Property(property: 'title', type: 'string', example: 'تجديد سجاد المصلى'),
+                                    new OA\Property(property: 'description', type: 'string', nullable: true),
+                                    new OA\Property(property: 'type', type: 'string', enum: ['financial', 'service', 'maintenance']),
+                                    new OA\Property(property: 'target_amount', type: 'number', example: 250),
+                                    new OA\Property(property: 'collected_amount', type: 'number', example: 175),
+                                    new OA\Property(property: 'status', type: 'string', enum: ['open', 'partially_fulfilled', 'fulfilled']),
+                                    new OA\Property(property: 'image', type: 'string', nullable: true),
+                                    new OA\Property(property: 'is_urgent', type: 'boolean', example: true),
+                                    new OA\Property(
+                                        property: 'mosque',
+                                        type: 'object',
+                                        description: 'The embedded mosque data required for the aggregate UI',
+                                        properties: [
+                                            new OA\Property(property: 'id', type: 'integer', example: 15),
+                                            new OA\Property(property: 'name', type: 'string', example: 'جامع الراجحي الكبير'),
+                                            new OA\Property(property: 'city', type: 'string', example: 'الرياض'),
+                                            new OA\Property(property: 'image_url', type: 'string', nullable: true)
+                                        ]
+                                    )
+                                ]
+                            )
+                        ),
+                        new OA\Property(
+                            property: 'pagination',
+                            type: 'object',
+                            nullable: true,
+                            properties: [
+                                new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                new OA\Property(property: 'last_page', type: 'integer', example: 5),
+                                new OA\Property(property: 'per_page', type: 'integer', example: 10),
+                                new OA\Property(property: 'total', type: 'integer', example: 45),
+                                new OA\Property(property: 'has_more_pages', type: 'boolean', example: true),
+                            ]
+                        ),
+                    ]
+                )
+            )
+        ]
+    )]
+    public function AllNeeds(){}
     #[OA\Get(
         path: '/mosques/{mosque}/needs/{need}',
         operationId: 'getMosqueNeed',
@@ -1122,6 +1274,8 @@ class MosqueEndpoints
         ]
     )]
     public function needsShow() {}
+
+
     #[OA\Post(
         path: '/mosques/{mosque}/needs',
         operationId: 'createMosqueNeed',
@@ -1181,7 +1335,7 @@ class MosqueEndpoints
                         new OA\Property(
                             property: 'status',
                             type: 'string',
-                            enum: ['open', 'partial', 'fulfilled'],
+                            enum: ['open', 'partially_fulfilled', 'fulfilled'],
                             example: 'open'
                         ),
                     ]
@@ -1331,6 +1485,53 @@ class MosqueEndpoints
         ]
     )]
     public function needsDestroy() {}
+
+    #[OA\Get(
+        path: '/mosques/needs/{id}',
+        operationId: 'getNeedById',
+        tags: ['Needs'],
+        summary: 'Get need by ID',
+        description: 'Returns a single need by its ID. Public endpoint.',
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'Need ID'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Need retrieved successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Need retrieved successfully.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'id', type: 'integer', example: 1),
+                                new OA\Property(property: 'title', type: 'string', example: 'تجديد سجاد المصلى'),
+                                new OA\Property(property: 'description', type: 'string', nullable: true),
+                                new OA\Property(property: 'type', type: 'string'),
+                                new OA\Property(property: 'target_amount', type: 'number'),
+                                new OA\Property(property: 'collected_amount', type: 'number'),
+                                new OA\Property(property: 'status', type: 'string'),
+                                new OA\Property(property: 'image', type: 'string', nullable: true),
+                                new OA\Property(property: 'is_urgent', type: 'boolean'),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 404, description: 'Need not found'),
+        ]
+    )]
+    public function needById() {}
+
 
 }
 

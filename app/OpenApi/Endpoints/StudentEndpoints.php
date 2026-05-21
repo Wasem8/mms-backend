@@ -20,6 +20,16 @@ class StudentEndpoints
 
             new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
+                name: 'has_halaqa',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(
+                    type: 'integer',
+                    enum: [0, 1]
+                ),
+                description: '1 = الطلاب المرتبطون بحلقات، 0 = الطلاب غير المرتبطين بأي حلقة'
+            ),
+            new OA\Parameter(
                 name: 'status',
                 in: 'query',
                 description: 'فلترة الطلاب حسب الحالة',
@@ -98,6 +108,56 @@ class StudentEndpoints
     {
     }
 
+    #[OA\Put(
+        path: '/education/students/{id}',
+        operationId: 'updateStudent',
+        tags: ['Students'],
+        summary: 'تعديل بيانات الطالب (لولي الأمر والمشرف)',
+        description: 'تسمح بتحديث بيانات ملف الطالب الشخصية. يدعم حقول الاسم والميلاد لولي الأمر، وحقول المستوى والملاحظات الجديدة للمشرف.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'معرف الطالب المراد تعديله',
+                schema: new OA\Schema(type: 'integer', example: 1)
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            description: 'جميع الحقول اختيارية (Update Partial) لتمكين تحديث حقول معينة فقط عند الحاجة',
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'first_name', type: 'string', description: 'الاسم الأول المحدث', example: 'أحمد'),
+                    new OA\Property(property: 'last_name', type: 'string', description: 'اسم العائلة المحدث', example: 'المنصور'),
+                    new OA\Property(property: 'date_of_birth', type: 'string', format: 'date', description: 'تاريخ الميلاد المحدث', example: '2016-01-20'),
+                    new OA\Property(property: 'gender', type: 'string', enum: ['male', 'female'], description: 'الجنس', example: 'male'),
+                    new OA\Property(property: 'mosque_id', type: 'integer', description: 'نقل الطالب لمسجد آخر', example: 1),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'تم تحديث بيانات الطالب بنجاح وعادت البيانات الجديدة',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم تحديث بيانات الطالب بنجاح.'),
+                        new OA\Property(property: 'data', ref: '#/components/schemas/StudentResource'),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                    ]
+                )
+            ),
+            new OA\Response(response: 422, ref: '#/components/responses/ValidationError'),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+            new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
+            new OA\Response(response: 404, ref: '#/components/responses/NotFound')
+        ]
+    )]
+    public function update() {}
     #[OA\Get(
         path: '/education/students/{id}',
         operationId: 'showStudent',
@@ -155,61 +215,36 @@ class StudentEndpoints
         path: '/education/students/{id}/approve',
         operationId: 'approveStudent',
         tags: ['Students'],
-        summary: 'قبول طلب تسجيل طالب (للمشرف فقط)',
-        description: 'يسمح لمشرف المسجد بتغيير حالة الطالب من (غير نشط) إلى (نشط) ليتمكن من الانضمام للحلقات.',
+        summary: 'قبول الطالب في المسجد وإسناده لحلقة (دمج العمليتين)',
+        description: 'يقوم بقبول الطالب وتحويل حالته إلى نشط. يمكنك تمرير (halaqa_id) بشكل اختياري ليتم إسناد الطالب للحلقة مباشرة في نفس الطلب لتوفير Round-trips للشبكة.',
         security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
-            new OA\Parameter(
-                name: 'id',
-                in: 'path',
-                required: true,
-                description: 'معرف الطالب المراد قبوله',
-                schema: new OA\Schema(type: 'integer', example: 1)
-            )
+            new OA\Parameter(name: 'id', in: 'path', description: 'معرف الطالب', required: true, schema: new OA\Schema(type: 'integer'))
         ],
+        requestBody: new OA\RequestBody(
+            required: false, // الحقل اختياري
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'halaqa_id', type: 'integer', description: 'معرف الحلقة المراد إسناد الطالب لها فوراً (اختياري)', example: 12)
+                ]
+            )
+        ),
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'تم قبول الطالب بنجاح',
+                description: 'تم قبول الطالب وتسكينه بنجاح',
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'status', type: 'boolean', example: true),
-                        new OA\Property(property: 'message', type: 'string', example: 'تم قبول الطالب بنجاح وتفعيل حسابه.'),
-                        new OA\Property(property: 'data', ref: '#/components/schemas/StudentResource'),
-                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                        new OA\Property(property: 'message', type: 'string', example: 'تم قبول الطالب وإسناده للحلقة بنجاح.')
                     ]
                 )
             ),
-            new OA\Response(
-                response: 400,
-                description: 'خطأ في منطق الطلب (Bad Request)',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'status', type: 'boolean', example: false),
-                        new OA\Property(
-                            property: 'message',
-                            type: 'string',
-                            oneOf: [
-                                new OA\Schema(example: 'هذا الطالب مفعل مسبقاً.'),
-                                new OA\Schema(example: 'لا يمكن قبول طالب مرفوض بالفعل.'),
-                            ]
-                        ),
-                        new OA\Property(property: 'data', type: 'object', nullable: true, example: null),
-                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
-                    ]
-                )
-            ),
-            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
-            new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
-            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+            new OA\Response(response: 400, description: 'الطالب نشط بالفعل أو مرفوض')
         ]
     )]
-    public function approve()
-    {
-
-    }
-
+    public function approve($id) {}
     #[OA\Patch(
         path: '/education/students/{id}/reject',
         operationId: 'rejectStudent',
@@ -313,7 +348,7 @@ class StudentEndpoints
                                 new OA\Property(property: 'full_name', type: 'string', example: 'أحمد محمد علي'),
                                 new OA\Property(property: 'status', type: 'string', example: 'active'),
                                 new OA\Property(
-                                    property: 'current_halaqats',
+                                    property: 'halaqats',
                                     type: 'array',
                                     items: new OA\Items(
                                         properties: [

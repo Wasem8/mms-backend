@@ -4,121 +4,173 @@ namespace Modules\Donation\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Support\ApiResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Modules\Donation\Http\Requests\StoreCashDonationRequest;
 use Modules\Donation\Http\Requests\StoreDonationRequest;
+use Modules\Donation\Http\Requests\StoreOnlineDonationRequest;
+use Modules\Donation\Http\Requests\UpdateDonationRequest;
+use Modules\Donation\Models\Donation;
 use Modules\Donation\Services\DonationService;
+use Modules\Donation\Transformers\DonationResource;
 
 class DonationController extends Controller
 {
-    protected DonationService $donationService;
+    public function __construct(
+        protected DonationService $donationService,
+    ) {}
 
-    public function __construct(DonationService $donationService)
+    public function index(int $mosqueId)
     {
-        $this->donationService = $donationService;
+        $filters   = request()->only(['search', 'type', 'status', 'campaign']);
+        $donations = $this->donationService->getByMosque($mosqueId, $filters);
+
+        return DonationResource::collection($donations)->response();
     }
 
-    public function index()
+    public function mine()
     {
-        $donations = $this->donationService->getAllDonations();
+        $userId    = auth()->guard('api')->id();
+        $filters   = request()->only(['search', 'type', 'status', 'campaign']);
+        $donations = $this->donationService->getByUser($userId, $filters);
 
-        return ApiResponse::success($donations, 'Donations retrieved successfully');
+        return DonationResource::collection($donations)->response();
     }
 
-    public function store(StoreDonationRequest $request)
+
+    // not work yet
+    public function summary(int $mosqueId)
+    {
+        $summary = $this->donationService->getDailySummary($mosqueId);
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Success',
+            'data'    => $summary,
+        ]);
+    }
+
+    // not work yet
+
+    public function chart(int $mosqueId)
+    {
+        $data = $this->donationService->getMonthlyDistribution($mosqueId);
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Success',
+            'data'    => $data,
+        ]);
+    }
+
+    public function receipt($id)
+    {
+        $donation = \Modules\Donation\Models\Donation::with(['mosque', 'campaign', 'mosqueNeed'])
+            ->findOrFail($id);
+
+        $pdf = $this->donationService->generateReceipt($donation);
+
+        return response($pdf, 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="receipt-' . $donation->reference . '.pdf"',
+        ]);
+    }
+
+
+
+    public function show(string  $ref)
+    {
+        $donation = $this->donationService->findByReference($ref);
+
+        return (new DonationResource($donation))->response();
+    }
+
+    public function storeOnline(StoreOnlineDonationRequest $request)
     {
         $data = $request->validated();
-        $type = $data['type'];
 
-        if ($type === 'kind') {
-            $donation = $this->donationService->createDonation($data);
-
-            return ApiResponse::success($donation, 'Donation created successfully');
+        if ($data['donation_type'] === 'cash') {
+            $data['payment_method'] = 'stripe';
+        } else {
+            $data['payment_method'] = 'none';
         }
 
-        $data['payment_method'] = $request->input('payment_method', 'cash');
-        $result = $this->donationService->createDonationWithPayment($data);
+        $data['user_id'] = auth()->guard('api')->check() ? auth()->guard('api')->id() : null;
 
-        if ($result['donation'] === null) {
-            return ApiResponse::error($result['payment']['message'] ?? 'Payment processing failed', 422);
+        $result = $this->donationService->create($data);
+
+        $response = (new DonationResource($result['donation']))->toArray($request);
+
+        if (!empty($result['client_secret'])) {
+            $response['client_secret'] = $result['client_secret'];
         }
 
-        return ApiResponse::success([
-            'donation' => $result['donation'],
-            'payment' => $result['payment'],
-        ], 'Donation created successfully');
+        return response()->json([
+            'status'  => true,
+            'message' => 'تم إنشاء طلب التبرع بنجاح.',
+            'data'    => $response,
+        ], 201);
     }
 
-    public function show($id)
-    {
-        $donation = $this->donationService->getDonationById($id);
 
-        if (!$donation) {
-            return ApiResponse::error('Donation not found', 404);
+    public function storeCash(StoreCashDonationRequest $request)
+    {
+        $authUser = auth()->guard('api')->user();
+
+        if (!$authUser || !$authUser->hasRole('mosque_manager')) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'غير مصرح. مدراء المسجد فقط يمكنهم إضافة تبرعات نقدية.'
+            ], 403);
         }
 
-        return ApiResponse::success($donation, 'Donation retrieved successfully');
+        $data = $request->validated();
+
+        $data['payment_method'] = 'cash';
+
+
+        $result = $this->donationService->create($data);
+
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'تم حفظ التبرع النقدي بنجاح.',
+            'data'    => new DonationResource($result['donation']),
+        ], 201);
+    }
+    /*
+    public function store(StoreDonationRequest $request)
+    {
+        $result = $this->donationService->create($request->validated());
+
+        $response = (new DonationResource($result['donation']))->toArray($request);
+
+        if ($result['client_secret']) {
+            $response['client_secret'] = $result['client_secret'];
+        }
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'تم حفظ التبرع بنجاح.',
+            'data'    => $response,
+        ], 201);
+    }
+*/
+
+    public function update(UpdateDonationRequest $request, int $id)
+    {
+        $donation = $this->donationService->update($id, $request->validated());
+
+        return (new DonationResource($donation))->response();
     }
 
-    public function update(Request $request, $id)
+
+    public function destroy(int $id)
     {
-        $donation = $this->donationService->getDonationById($id);
+        $this->donationService->delete($id);
 
-        if (!$donation) {
-            return ApiResponse::error('Donation not found', 404);
-        }
-
-        if (! $this->canManageDonation($donation)) {
-            return ApiResponse::error('Unauthorized', 403);
-        }
-
-        $rules = [
-            'mosque_id' => ['sometimes', 'integer', 'exists:mosques,id'],
-            'mosque_need_id' => ['nullable', 'integer', 'exists:mosque_needs,id'],
-            'campaign_id' => ['nullable', 'integer', 'exists:campaigns,id'],
-            'type' => ['sometimes', 'string', 'in:cash,kind'],
-            'item_description' => ['sometimes', 'required_if:type,kind', 'string', 'max:255'],
-            'amount' => ['sometimes', 'nullable', 'numeric', 'min:1', 'max:999999'],
-            'donor_name' => ['nullable', 'string', 'max:100'],
-            'status' => ['sometimes', 'string', 'in:pending,completed'],
-        ];
-
-        $data = $request->validate($rules);
-
-        $donation = $this->donationService->updateDonation($id, $data);
-
-        return ApiResponse::success($donation, 'Donation updated successfully');
-    }
-
-    public function destroy($id)
-    {
-        $donation = $this->donationService->getDonationById($id);
-
-        if (!$donation) {
-            return ApiResponse::error('Donation not found', 404);
-        }
-
-        if (! $this->canManageDonation($donation)) {
-            return ApiResponse::error('Unauthorized', 403);
-        }
-
-        $this->donationService->deleteDonation($id);
-
-        return ApiResponse::success(null, 'Donation deleted successfully');
-    }
-
-    private function canManageDonation($donation): bool
-    {
-        $user = Auth::user();
-
-        if (! $user) {
-            return false;
-        }
-
-        if ($user->hasRole(['mosque_manager'])) {
-            return true;
-        }
-
-        return isset($donation->user_id) && $donation->user_id === $user->id;
+        return response()->json([
+            'status'  => true,
+            'message' => 'تم حذف السجل بنجاح.',
+            'data'    => null,
+        ]);
     }
 }

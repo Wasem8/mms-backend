@@ -2,6 +2,7 @@
 
 namespace Modules\Education\Services;
 
+use Illuminate\Support\Facades\DB;
 use Modules\Education\Models\Halaqa;
 use Modules\Education\Models\Student;
 
@@ -11,9 +12,30 @@ class StudentService
     public function list()
     {
         return Student::query()
-            ->with(['mosque', 'parent'])
-            ->forUser(auth()->user()) // 🔥 هنا السحر
-            ->when(request('status'), fn($q, $status) => $q->where('status', $status))
+            ->with([
+                'mosque',
+                'parent',
+                'halaqats:id,name'
+            ])
+
+            ->forUser(auth()->user())
+
+            ->when(
+                request('status'),
+                fn($q, $status) => $q->where('status', $status)
+            )
+
+            ->when(request()->has('has_halaqa'), function ($q) {
+
+                if (request('has_halaqa') == 1) {
+                    $q->whereHas('halaqats');
+                }
+
+                if (request('has_halaqa') == 0) {
+                    $q->whereDoesntHave('halaqats');
+                }
+            })
+
             ->latest()
             ->paginate(10);
     }
@@ -68,12 +90,15 @@ class StudentService
             ->paginate(15);
     }
 
-    public function update($id, array $data)
+    public function update(int $id, array $data): Student
     {
-        $student = Student::findOrFail($id);
+        $student = Student::query()
+            ->forUser(auth()->user())
+            ->findOrFail($id);
+
         $student->update($data);
 
-        return $student;
+        return $student->load(['mosque', 'parent', 'halaqats']);
     }
 
     public function delete($id)
@@ -83,22 +108,38 @@ class StudentService
 
 
 
-    public function approve($id)
+    public function approve(int $id, array $data = [])
     {
         $user = auth()->user();
-        $student = Student::where('mosque_id', $user->mosque_id)->findOrFail($id);
 
-        if ($student->status === 'active') {
-            return ['error' => true, 'message' => __('messages.student_already_active')];
-        }
+        return DB::transaction(function () use ($id, $data, $user) {
+            $student = Student::where('mosque_id', $user->mosque_id)->findOrFail($id);
 
-        if ($student->status === 'rejected') {
-            return ['error' => true, 'message' => __('messages.cannot_approve_rejected')];
-        }
+            if ($student->status === 'active') {
+                return ['error' => true, 'message' => __('messages.student_already_active')];
+            }
 
+            if ($student->status === 'rejected') {
+                return ['error' => true, 'message' => __('messages.cannot_approve_rejected')];
+            }
 
-        $student->update(['status' => 'active']);
-        return ['error' => false, 'data' => $student->load(['mosque', 'parent'])];
+            if (!empty($data['halaqa_id'])) {
+                $halaqa = Halaqa::where('mosque_id', $user->mosque_id)->findOrFail($data['halaqa_id']);
+                $student->halaqats()->syncWithoutDetaching([$halaqa->id]);
+            }
+
+            $student->update(['status' => 'active']);
+
+            $loadedStudent = $student->load(['mosque', 'parent', 'halaqats']);
+
+            // 🎯 إطلاق حدث الموافقة وإرسال كائن الطالب محمل بالبيانات
+            event(new \Modules\Education\Events\StudentApproved($loadedStudent));
+
+            return [
+                'error' => false,
+                'data'  => $loadedStudent
+            ];
+        });
     }
 
     public function reject($id)
@@ -115,48 +156,13 @@ class StudentService
         }
 
         $student->update(['status' => 'rejected']);
-        return ['error' => false, 'data' => $student->load(['mosque', 'parent'])];
-    }
 
-    public function transferHalaqa($studentId, array $data)
-    {
-        $user = auth()->user();
-        $student = Student::where('mosque_id', $user->mosque_id)->findOrFail($studentId);
+        $loadedStudent = $student->load(['mosque', 'parent']);
 
-        $oldHalaqaId = $data['from_halaqa_id'];
-        $newHalaqaId = $data['to_halaqa_id'];
 
-        $newHalaqa = Halaqa::where('id', $newHalaqaId)
-            ->where('mosque_id', $user->mosque_id)
-            ->first();
+        event(new \Modules\Education\Events\StudentRejected($loadedStudent));
 
-        if (!$newHalaqa) {
-            return ['error' => true, 'message' => __('messages.target_halaqa_invalid')];
-        }
-
-        $isInOldHalaqa = $student->halaqats()->where('halaqats.id', $oldHalaqaId)->exists();
-
-        if (!$isInOldHalaqa) {
-            return [
-                'error' => true,
-                'message' => __('messages.student_not_in_old_halaqa')
-            ];
-        }
-
-        $student->halaqats()->detach($oldHalaqaId);
-
-        $student->halaqats()->syncWithoutDetaching([
-            $newHalaqaId => [
-                'joined_at' => now(),
-                'status' => 'active'
-            ]
-        ]);
-
-        return [
-            'error' => false,
-            'message' => __('messages.transfer_success', ['name' => $newHalaqa->name]),
-            'data' => $student->load('halaqats')
-        ];
+        return ['error' => false, 'data' => $loadedStudent];
     }
 
 }

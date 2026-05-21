@@ -2,10 +2,13 @@
 
 namespace Modules\Donation\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Mosque\Models\Mosque;
-use Modules\Mosque\Models\MosqueNeed;
+use Modules\User\Models\User;
 
 // use Modules\Donation\Database\Factories\DonationFactory;
 
@@ -18,25 +21,65 @@ class Donation extends Model
      */
 
     protected $table = 'donations';
-    protected $fillable = ['reference', 'mosque_id', 'mosque_need_id', 'campaign_id', 'user_id', 'type', 'amount', 'item_description', 'donor_name', 'status', 'completed_at'];
+    use SoftDeletes;
+
+    protected $fillable = [
+        'reference',
+        'mosque_id',
+        'user_id',
+        'campaign_id',
+        'mosque_need_id',
+        'donation_type',
+        'payment_method',
+        'amount',
+        'item_description',
+        'donor_name',
+        'stripe_payment_intent_id',
+        'status',
+        'currency',
+        'exchange_rate',
+        'base_amount',
+
+    ];
+
+    protected $casts = [
+        'amount'        => 'decimal:2',
+        'exchange_rate' => 'decimal:4',
+        'base_amount'   => 'decimal:2',
+        'completed_at'  => 'datetime',
+        'created_at'    => 'datetime',
+    ];
 
 
-    public function campaign()
+    public function campaign(): BelongsTo
     {
         return $this->belongsTo(Campaign::class);
     }
-    public function mosque()
+
+    public function mosqueNeed(): BelongsTo
     {
-        return $this->belongsTo(Mosque::class);
+        return $this->belongsTo(\Modules\Mosque\Models\MosqueNeed::class);
     }
 
-    public function mosqueNeed()
+    public function mosque(): BelongsTo
     {
-        return $this->belongsTo(MosqueNeed::class);
+        return $this->belongsTo(Mosque::class, 'mosque_id', 'id');
     }
 
-    // protected static function newFactory(): DonationFactory
-    // {
-    //     // return DonationFactory::new();
-    // }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+
+    public function scopeCompleted($query)
+    {
+        return $query->where('status', 'completed');
+    }
+
+    public function scopeCash($query)
+    {
+        return $query->where('donation_type', 'cash');
+    }
 }

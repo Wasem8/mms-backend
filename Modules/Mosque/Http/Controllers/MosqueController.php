@@ -17,6 +17,24 @@ class MosqueController extends Controller
     ) {}
 
 
+    public function nearby(Request $request)
+    {
+        $validated = $request->validate([
+            'latitude'   => 'required|numeric|between:-90,90',
+            'longitude'   => 'required|numeric|between:-180,180',
+            'limit' => 'nullable|integer|min:1|max:100',
+        ]);
+
+        $paginatedMosques = $this->mosqueService->getNearbyMosques($request->all());
+
+        return ApiResponse::success(
+            $paginatedMosques->items(),
+            'تم جلب المساجد الأقرب لموقعك بنجاح',
+            $paginatedMosques
+        );
+    }
+
+
     public function index(Request $request)
     {
         $data = $this->mosqueService->getAllMosques(

@@ -8,6 +8,7 @@ use Modules\Facility\Repositories\Facilites\FacilityRepository as FacilitesFacil
 use Modules\Facility\Repositories\Facilites\FacilityRepositoryInterface as FacilitesFacilityRepositoryInterface;
 use Modules\Mosque\Repositories\FacilityRepository;
 use Modules\Mosque\Repositories\FacilityRepositoryInterface;
+use Modules\Mosque\Console\GenerateMosqueInsights;
 use Modules\Mosque\Repositories\MosqueRepository;
 use Modules\Mosque\Repositories\MosqueRepositoryInterface;
 
@@ -62,7 +63,18 @@ class MosqueServiceProvider extends ModuleServiceProvider
             \Modules\Mosque\Repositories\MosqueSpaceRepositoryInterface::class,
             \Modules\Mosque\Repositories\MosqueSpaceRepository::class
         );
-    }/**
+    }
+
+    public function boot(): void
+    {
+        parent::boot();
+
+        $this->commands([
+            GenerateMosqueInsights::class,
+        ]);
+    }
+
+    /**
      * Define module schedules.
      *
      * @param $schedule

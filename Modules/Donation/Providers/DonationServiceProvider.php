@@ -8,6 +8,8 @@ use Modules\Donation\Repositories\CampaignRepository;
 use Modules\Donation\Repositories\CampaignRepositoryInterface;
 use Modules\Donation\Repositories\DonationRepository;
 use Modules\Donation\Repositories\DonationRepositoryInterface;
+use Modules\Donation\Repositories\SettingRepository;
+use Modules\Donation\Repositories\SettingRepositoryInterface;
 
 class DonationServiceProvider extends ModuleServiceProvider
 {
@@ -46,12 +48,14 @@ class DonationServiceProvider extends ModuleServiceProvider
 
         $this->app->bind(CampaignRepositoryInterface::class, CampaignRepository::class);
         $this->app->bind(DonationRepositoryInterface::class, DonationRepository::class);
+        $this->app->bind(SettingRepositoryInterface::class, SettingRepository::class);
 
     }
 
 
     public function boot(): void
     {
+        $this->loadViewsFrom(module_path('Donation', 'resources/views'), 'donation');
         $this->commands([
             \Modules\Donation\Console\ExpireEndedCampaigns::class,
         ]);
