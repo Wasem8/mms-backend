@@ -8549,6 +8549,159 @@
                 ]
             }
         },
+        "/mosques/nearby": {
+            "get": {
+                "tags": [
+                    "Mosques"
+                ],
+                "summary": "List nearby mosques",
+                "description": "Returns a paginated list of mosques near the specified latitude and longitude.",
+                "operationId": "getNearbyMosques",
+                "parameters": [
+                    {
+                        "name": "latitude",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "number",
+                            "format": "float",
+                            "example": 30.0444
+                        }
+                    },
+                    {
+                        "name": "longitude",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "number",
+                            "format": "float",
+                            "example": 31.2357
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "list nearby mosque returned success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Nearby mosques retrieved successfully."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Al-Rahma Mosque"
+                                                    },
+                                                    "image": {
+                                                        "description": "Full public URL of the image stored in Supabase Storage",
+                                                        "type": "string",
+                                                        "example": "https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/images/mosque.jpg",
+                                                        "nullable": true
+                                                    },
+                                                    "working_hours": {
+                                                        "type": "string",
+                                                        "example": "5:00 AM - 10:00 PM",
+                                                        "nullable": true
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "active",
+                                                        "enum": [
+                                                            "active",
+                                                            "maintenance",
+                                                            "closed"
+                                                        ]
+                                                    },
+                                                    "is_featured": {
+                                                        "type": "boolean",
+                                                        "example": 0
+                                                    },
+                                                    "city": {
+                                                        "type": "string",
+                                                        "example": "Cairo",
+                                                        "nullable": true
+                                                    },
+                                                    "district": {
+                                                        "type": "string",
+                                                        "example": "Downtown",
+                                                        "nullable": true
+                                                    },
+                                                    "latitude": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 30.0444,
+                                                        "nullable": true
+                                                    },
+                                                    "longitude": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 31.2357,
+                                                        "nullable": true
+                                                    },
+                                                    "average_rating": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 4.5
+                                                    },
+                                                    "reviews_count": {
+                                                        "type": "integer",
+                                                        "example": 10
+                                                    },
+                                                    "imam": {
+                                                        "type": "string",
+                                                        "example": "Sheikh Ahmed",
+                                                        "nullable": true
+                                                    },
+                                                    "khatib": {
+                                                        "type": "string",
+                                                        "example": "Sheikh Hassan",
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/mosques/search": {
             "get": {
                 "tags": [
@@ -10482,22 +10635,51 @@
                 ]
             }
         },
-        "/mosques/{mosque}/needs": {
+        "/mosques/needs": {
             "get": {
                 "tags": [
                     "Needs"
                 ],
-                "summary": "List mosque needs",
-                "description": "Returns all needs for a specific mosque.",
-                "operationId": "getMosqueNeeds",
+                "summary": "List aggregate mosque needs",
+                "description": "Returns a paginated list of needs across all mosques with filtration supports.",
+                "operationId": "getGlobalNeeds",
                 "parameters": [
                     {
-                        "name": "mosque",
-                        "in": "path",
-                        "required": true,
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter needs by status",
+                        "required": false,
                         "schema": {
-                            "type": "integer",
-                            "example": 1
+                            "type": "string",
+                            "enum": [
+                                "open",
+                                "partially_fulfilled",
+                                "fulfilled"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "Filter needs by type",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "financial",
+                                "service",
+                                "maintenance"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "urgent",
+                        "in": "query",
+                        "description": "Filter by urgency status (accepts true/false or 1/0)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "true"
                         }
                     },
                     {
@@ -10521,7 +10703,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Needs retrieved successfully",
+                        "description": "Aggregate needs retrieved successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -10532,7 +10714,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Needs retrieved successfully."
+                                            "example": "تم جلب إجمالي احتياجات المساجد بنجاح."
                                         },
                                         "data": {
                                             "type": "array",
@@ -10548,6 +10730,7 @@
                                                     },
                                                     "description": {
                                                         "type": "string",
+                                                        "example": "بحاجة لتغيير فرش المصلى الرئيسي بالكامل",
                                                         "nullable": true
                                                     },
                                                     "type": {
@@ -10570,7 +10753,7 @@
                                                         "type": "string",
                                                         "enum": [
                                                             "open",
-                                                            "partial",
+                                                            "partially_fulfilled",
                                                             "fulfilled"
                                                         ]
                                                     },
@@ -10585,12 +10768,56 @@
                                                     "created_at": {
                                                         "type": "string",
                                                         "format": "date-time"
+                                                    },
+                                                    "mosque": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 15
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "جامع الراجحي الكبير"
+                                                            },
+                                                            "city": {
+                                                                "type": "string",
+                                                                "example": "الرياض"
+                                                            },
+                                                            "district": {
+                                                                "type": "string",
+                                                                "example": "حي الجزيرة"
+                                                            }
+                                                        },
+                                                        "type": "object",
+                                                        "nullable": true
                                                     }
                                                 },
                                                 "type": "object"
                                             }
                                         },
                                         "pagination": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "has_more_pages": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                }
+                                            },
                                             "type": "object",
                                             "nullable": true
                                         }
@@ -10601,118 +10828,6 @@
                         }
                     }
                 }
-            },
-            "post": {
-                "tags": [
-                    "Needs"
-                ],
-                "summary": "Create a new mosque need",
-                "operationId": "createMosqueNeed",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "required": [
-                                    "title",
-                                    "type",
-                                    "mosque_id"
-                                ],
-                                "properties": {
-                                    "mosque_id": {
-                                        "description": "The ID of the mosque (matches path parameter)",
-                                        "type": "integer",
-                                        "example": 1
-                                    },
-                                    "title": {
-                                        "type": "string",
-                                        "example": "تجديد سجاد المصلى"
-                                    },
-                                    "description": {
-                                        "type": "string",
-                                        "example": "نحتاج إلى استبدال السجاد القديم",
-                                        "nullable": true
-                                    },
-                                    "type": {
-                                        "type": "string",
-                                        "example": "maintenance",
-                                        "enum": [
-                                            "financial",
-                                            "service",
-                                            "maintenance"
-                                        ]
-                                    },
-                                    "target_amount": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 250
-                                    },
-                                    "image": {
-                                        "description": "Upload image file",
-                                        "type": "string",
-                                        "format": "binary"
-                                    },
-                                    "is_urgent": {
-                                        "description": "0 for false, 1 for true",
-                                        "type": "integer",
-                                        "example": 1,
-                                        "default": 0
-                                    },
-                                    "status": {
-                                        "type": "string",
-                                        "example": "open",
-                                        "enum": [
-                                            "open",
-                                            "partial",
-                                            "fulfilled"
-                                        ]
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Need created successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Need created successfully"
-                                        },
-                                        "data": {
-                                            "type": "object",
-                                            "nullable": true
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error"
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
             }
         },
         "/mosques/{mosque}/needs/{need}": {
@@ -10959,6 +11074,202 @@
                         "bearerAuth": []
                     }
                 ]
+            }
+        },
+        "/mosques/{mosque}/needs": {
+            "post": {
+                "tags": [
+                    "Needs"
+                ],
+                "summary": "Create a new mosque need",
+                "operationId": "createMosqueNeed",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "type",
+                                    "mosque_id"
+                                ],
+                                "properties": {
+                                    "mosque_id": {
+                                        "description": "The ID of the mosque (matches path parameter)",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "title": {
+                                        "type": "string",
+                                        "example": "تجديد سجاد المصلى"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "نحتاج إلى استبدال السجاد القديم",
+                                        "nullable": true
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "example": "maintenance",
+                                        "enum": [
+                                            "financial",
+                                            "service",
+                                            "maintenance"
+                                        ]
+                                    },
+                                    "target_amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 250
+                                    },
+                                    "image": {
+                                        "description": "Upload image file",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "is_urgent": {
+                                        "description": "0 for false, 1 for true",
+                                        "type": "integer",
+                                        "example": 1,
+                                        "default": 0
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "open",
+                                        "enum": [
+                                            "open",
+                                            "partially_fulfilled",
+                                            "fulfilled"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Need created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Need created successfully"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/mosques/needs/{id}": {
+            "get": {
+                "tags": [
+                    "Needs"
+                ],
+                "summary": "Get need by ID",
+                "description": "Returns a single need by its ID. Public endpoint.",
+                "operationId": "getNeedById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Need ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Need retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Need retrieved successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "title": {
+                                                    "type": "string",
+                                                    "example": "تجديد سجاد المصلى"
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "type": {
+                                                    "type": "string"
+                                                },
+                                                "target_amount": {
+                                                    "type": "number"
+                                                },
+                                                "collected_amount": {
+                                                    "type": "number"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "image": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "is_urgent": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Need not found"
+                    }
+                }
             }
         },
         "/mosques/{mosque}/spaces": {

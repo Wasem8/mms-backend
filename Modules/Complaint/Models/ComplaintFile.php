@@ -13,13 +13,13 @@ class ComplaintFile extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = ['complaint_id', 'file_path', 'file_type'];
+    protected $fillable = ['complaint_id', 'file', 'file_type'];
 
     public function complaint() {
         return $this->belongsTo(Complaint::class);
     }
 
-    
+
 
     // protected static function newFactory(): ComplaintFileFactory
     // {

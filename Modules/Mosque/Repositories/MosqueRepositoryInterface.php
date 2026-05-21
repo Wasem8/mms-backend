@@ -13,6 +13,7 @@ interface MosqueRepositoryInterface
 
     public function getAllPaginated(array $filters = [], int $perPage = 15): LengthAwarePaginator;
 
+    public function getNearbyMosques(float $lat, float $lng, int $perPage = 15);
 
     public function getAll(array $filters = []): Collection;
 

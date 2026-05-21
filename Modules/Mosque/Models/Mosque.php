@@ -89,5 +89,16 @@ class Mosque extends Model
         return $this->hasMany(Donation::class);
     }
 
-   
+    public function scopeScopeNearby($query, $latitude, $longitude)
+    {
+        // معادلة هافرسين لحساب المسافة الجغرافية بالكيلومترات
+        return $query->select('*')
+            ->selectRaw(
+                '( 6371 * acos( cos( radians(?) ) * cos( radians( latitude ) ) * cos( radians( longitude ) - radians(?) ) + sin( radians(?) ) * sin( radians( latitude ) ) ) ) AS distance',
+                [$latitude, $longitude, $latitude]
+            )
+            ->orderBy('distance', 'asc');
+    }
+
+
 }

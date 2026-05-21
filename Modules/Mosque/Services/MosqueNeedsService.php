@@ -3,6 +3,7 @@
 namespace Modules\Mosque\Services;
 
 use Exception;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Http;
 use Modules\Mosque\Repositories\MosqueNeedRepositoryInterface;
 use Modules\Mosque\Models\MosqueNeed;
@@ -12,6 +13,11 @@ class MosqueNeedsService
     public function __construct(
         private MosqueNeedRepositoryInterface $repository
     ) {}
+
+    public function listAggregate(array $filters, int $perPage): LengthAwarePaginator
+    {
+        return $this->repository->getAllPaginated($filters, $perPage);
+    }
 
     public function list(int $perPage = 10)
     {
@@ -36,6 +42,17 @@ class MosqueNeedsService
 
         return $need;
     }
+
+    public function getNeedById($needId){
+        $need = MosqueNeed::where('id',$needId)
+        ->first();
+
+        if(! $need) {
+            throw new Exception('Need not found');
+        }
+        return $need;
+
+        }
 
     public function create(array $data): MosqueNeed
     {
