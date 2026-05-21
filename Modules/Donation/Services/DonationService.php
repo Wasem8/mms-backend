@@ -310,22 +310,5 @@ class DonationService
             $donation->mosqueNeed()->increment('collected_amount', $baseAmount);
         }
     }
-    private function renderHtml(Donation $donation, array $target): string
-    {
-        // تأمين جلب البيانات الطازجة مباشرة من قاعدة البيانات بعد الحفظ
-        $donation = $donation->fresh(['mosque', 'campaign', 'mosqueNeed']);
-
-        return view('donation::receipts.donation', [
-            'donation'       => $donation,
-            'mosque'         => $donation->mosque,
-            'mosque_name'    => $donation->mosque?->name ?? 'المسجد الرئيسي',
-            'target'         => $target,
-            // استخدام الاسم القادم من قاعدة البيانات (مثل: أويس عبود) وفي حال عدم وجوده نضع القيمة الافتراضية
-            'donor_name'     => $donation->donor_name ?? 'متبرع كريم',
-            'payment_method' => $donation->payment_method === 'cash' ? 'نقدي' : $donation->payment_method,
-            'donation_status' => $donation->status === 'completed' ? 'مكتمل' : $donation->status,
-            'currency'       => $donation->currency ?? 'SYP', // أو اجعلها ديناميكية بناءً على الحقل لديك
-            'issued_at'      => now()->format('Y-m-d'),
-        ])->render();
-    }
+   
 }

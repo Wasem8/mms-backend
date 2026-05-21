@@ -5299,7 +5299,7 @@
                     {
                         "name": "reference",
                         "in": "path",
-                        "description": "The unique secure string reference of the donation (e.g., REC-2026-XYZ)",
+                        "description": "The unique secure string reference of the donation (e.g., REC-XYZ-2026)",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -5322,7 +5322,7 @@
                                                 },
                                                 "reference": {
                                                     "type": "string",
-                                                    "example": "REC-2026-0521-A9B8"
+                                                    "example": "REC-0000-2026"
                                                 },
                                                 "amount": {
                                                     "type": "number",
@@ -8113,6 +8113,907 @@
                         }
                     }
                 }
+            }
+        },
+        "/maintenance": {
+            "get": {
+                "tags": [
+                    "Maintenance Requests"
+                ],
+                "summary": "List maintenance requests for a mosque",
+                "description": "Returns a paginated list of maintenance requests scoped to a single mosque. Filterable by status.",
+                "operationId": "mosque.maintenanceRequests.index",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by request status.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "pending",
+                            "enum": [
+                                "pending",
+                                "in_progress",
+                                "completed",
+                                "rejected"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of results per page. Defaults to 15.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15,
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Maintenance requests retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Maintenance requests retrieved successfully."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 42
+                                                    },
+                                                    "title": {
+                                                        "type": "string",
+                                                        "example": "AC unit not cooling"
+                                                    },
+                                                    "description": {
+                                                        "type": "string",
+                                                        "example": "The main hall AC has stopped cooling since yesterday."
+                                                    },
+                                                    "category": {
+                                                        "properties": {
+                                                            "value": {
+                                                                "type": "string",
+                                                                "example": "hvac"
+                                                            },
+                                                            "label": {
+                                                                "type": "string",
+                                                                "example": "HVAC"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "is_urgent": {
+                                                        "type": "string",
+                                                        "example": "high",
+                                                        "enum": [
+                                                            "low",
+                                                            "medium",
+                                                            "high",
+                                                            "urgent"
+                                                        ]
+                                                    },
+                                                    "status": {
+                                                        "properties": {
+                                                            "value": {
+                                                                "type": "string",
+                                                                "example": "pending"
+                                                            },
+                                                            "label": {
+                                                                "type": "string",
+                                                                "example": "Pending"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "rejection_reason": {
+                                                        "type": "string",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "attachments": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        },
+                                                        "example": [
+                                                            "uploads/ac-photo.jpg"
+                                                        ]
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "example": "21 May 2026, 10:30 AM"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "example": "21 May 2026, 10:30 AM"
+                                                    },
+                                                    "mosque": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 7
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Al-Noor Mosque"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "has_more": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Maintenance Requests"
+                ],
+                "summary": "Create a new maintenance request",
+                "description": "Creates a maintenance request for the authenticated mosque manager's mosque. Status is always set to `pending` on creation.",
+                "operationId": "mosque.maintenanceRequests.store",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "description",
+                                    "category"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "AC unit not cooling",
+                                        "maxLength": 255
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "The main hall AC has stopped cooling since yesterday."
+                                    },
+                                    "category": {
+                                        "type": "string",
+                                        "example": "hvac",
+                                        "enum": [
+                                            "hvac",
+                                            "electrical",
+                                            "plumbing",
+                                            "sound_system",
+                                            "general"
+                                        ]
+                                    },
+                                    "is_urgent": {
+                                        "type": "string",
+                                        "example": "low",
+                                        "default": "low",
+                                        "enum": [
+                                            "low",
+                                            "medium",
+                                            "high",
+                                            "urgent"
+                                        ]
+                                    },
+                                    "attachments[]": {
+                                        "description": "Optional file attachments (images, documents).",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Maintenance request created successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Maintenance request created successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 42
+                                                },
+                                                "title": {
+                                                    "type": "string",
+                                                    "example": "AC unit not cooling"
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "example": "The main hall AC has stopped cooling since yesterday."
+                                                },
+                                                "category": {
+                                                    "properties": {
+                                                        "value": {
+                                                            "type": "string",
+                                                            "example": "hvac"
+                                                        },
+                                                        "label": {
+                                                            "type": "string",
+                                                            "example": "HVAC"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "is_urgent": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "status": {
+                                                    "properties": {
+                                                        "value": {
+                                                            "type": "string",
+                                                            "example": "pending"
+                                                        },
+                                                        "label": {
+                                                            "type": "string",
+                                                            "example": "Pending"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "rejection_reason": {
+                                                    "type": "string",
+                                                    "example": null,
+                                                    "nullable": true
+                                                },
+                                                "attachments[]": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "example": [
+                                                        "uploads/ac-photo.jpg"
+                                                    ]
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "example": "21 May 2026, 10:30 AM"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "example": "21 May 2026, 10:30 AM"
+                                                },
+                                                "mosque": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 7
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "Al-Noor Mosque"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/maintenance/admin": {
+            "get": {
+                "tags": [
+                    "Maintenance Requests"
+                ],
+                "summary": "List all maintenance requests across all mosques",
+                "description": "Returns a paginated list of all maintenance requests. Filterable by status, category, and is_urgent. Requires the region_manager role.",
+                "operationId": "admin.maintenanceRequests.index",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "pending",
+                            "enum": [
+                                "pending",
+                                "in_progress",
+                                "completed",
+                                "rejected"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "hvac",
+                            "enum": [
+                                "hvac",
+                                "electrical",
+                                "plumbing",
+                                "sound_system",
+                                "general"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "is_urgent",
+                        "in": "query",
+                        "description": "Filter by urgency level. Accepts low, medium, high, urgent.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "high",
+                            "enum": [
+                                "low",
+                                "medium",
+                                "high",
+                                "urgent"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15,
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "All maintenance requests retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "All maintenance requests retrieved successfully."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 42
+                                                    },
+                                                    "title": {
+                                                        "type": "string",
+                                                        "example": "AC unit not cooling"
+                                                    },
+                                                    "description": {
+                                                        "type": "string",
+                                                        "example": "The main hall AC has stopped cooling since yesterday."
+                                                    },
+                                                    "category": {
+                                                        "properties": {
+                                                            "value": {
+                                                                "type": "string",
+                                                                "example": "hvac"
+                                                            },
+                                                            "label": {
+                                                                "type": "string",
+                                                                "example": "HVAC"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "is_urgent": {
+                                                        "type": "string",
+                                                        "example": "high",
+                                                        "enum": [
+                                                            "low",
+                                                            "medium",
+                                                            "high",
+                                                            "urgent"
+                                                        ]
+                                                    },
+                                                    "status": {
+                                                        "properties": {
+                                                            "value": {
+                                                                "type": "string",
+                                                                "example": "pending"
+                                                            },
+                                                            "label": {
+                                                                "type": "string",
+                                                                "example": "Pending"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "rejection_reason": {
+                                                        "type": "string",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "attachments": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        },
+                                                        "example": [
+                                                            "uploads/ac-photo.jpg"
+                                                        ]
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "example": "21 May 2026, 10:30 AM"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "example": "21 May 2026, 10:30 AM"
+                                                    },
+                                                    "mosque": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 7
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Al-Noor Mosque"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 43
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "has_more": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/maintenance/track/{reference}": {
+            "get": {
+                "tags": [
+                    "Maintenance Requests"
+                ],
+                "summary": "Track a maintenance request by reference number",
+                "description": "Retrieve a maintenance request using its reference number. Accessible to mosque managers (for their mosque) and super admins.",
+                "operationId": "maintenance.track",
+                "parameters": [
+                    {
+                        "name": "reference",
+                        "in": "path",
+                        "description": "Public reference number of the maintenance request.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "MR-000123"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Maintenance request retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Maintenance request retrieved successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 42
+                                                },
+                                                "reference_number": {
+                                                    "type": "string",
+                                                    "example": "MR-000123"
+                                                },
+                                                "title": {
+                                                    "type": "string",
+                                                    "example": "AC unit not cooling"
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "example": "The main hall AC has stopped cooling since yesterday."
+                                                },
+                                                "is_urgent": {
+                                                    "type": "string",
+                                                    "example": "high",
+                                                    "enum": [
+                                                        "low",
+                                                        "medium",
+                                                        "high",
+                                                        "urgent"
+                                                    ]
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "pending"
+                                                },
+                                                "rejection_reason": {
+                                                    "type": "string",
+                                                    "example": null,
+                                                    "nullable": true
+                                                },
+                                                "attachments": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "example": "21 May 2026, 10:30 AM"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/maintenance/{id}/process": {
+            "put": {
+                "tags": [
+                    "Maintenance Requests"
+                ],
+                "summary": "Process a maintenance request",
+                "description": "Updates the status of a maintenance request. Automatically stamps the authenticated region manager's ID. A `rejection_reason` is required when setting status to `rejected`.",
+                "operationId": "admin.maintenanceRequests.process",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The ID of the maintenance request.",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 42
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "example": "rejected",
+                                        "enum": [
+                                            "pending",
+                                            "in_progress",
+                                            "completed",
+                                            "rejected"
+                                        ]
+                                    },
+                                    "rejection_reason": {
+                                        "description": "Required when status is `rejected`.",
+                                        "type": "string",
+                                        "example": "Duplicate request — already handled under ticket #39.",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Maintenance request processed successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Maintenance request processed successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 42
+                                                },
+                                                "title": {
+                                                    "type": "string",
+                                                    "example": "AC unit not cooling"
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "example": "The main hall AC has stopped cooling since yesterday."
+                                                },
+                                                "category": {
+                                                    "properties": {
+                                                        "value": {
+                                                            "type": "string",
+                                                            "example": "hvac"
+                                                        },
+                                                        "label": {
+                                                            "type": "string",
+                                                            "example": "HVAC"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "is_urgent": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "status": {
+                                                    "properties": {
+                                                        "value": {
+                                                            "type": "string",
+                                                            "example": "rejected"
+                                                        },
+                                                        "label": {
+                                                            "type": "string",
+                                                            "example": "Rejected"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "rejection_reason": {
+                                                    "type": "string",
+                                                    "example": "Duplicate request — already handled under ticket #39.",
+                                                    "nullable": true
+                                                },
+                                                "attachments": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "example": [
+                                                        "uploads/ac-photo.jpg"
+                                                    ]
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "example": "21 May 2026, 10:30 AM"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "example": "21 May 2026, 11:00 AM"
+                                                },
+                                                "mosque": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 7
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "Al-Noor Mosque"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "region_manager": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 3
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "Ahmad Al-Farsi"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/mosques": {
@@ -14881,6 +15782,10 @@
         {
             "name": "Invitations",
             "description": "Invitations"
+        },
+        {
+            "name": "Maintenance Requests",
+            "description": "Maintenance Requests"
         },
         {
             "name": "Mosques",
