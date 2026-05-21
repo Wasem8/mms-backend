@@ -32,7 +32,7 @@ Route::prefix('donations')->group(function () {
         Route::delete('/{id}', [DonationController::class, 'destroy']);
     });
 
-    Route::get('/{id}', [DonationController::class, 'show']);
+    Route::get('/{reference}', [DonationController::class, 'show']);
     Route::post('/online', [DonationController::class, 'storeOnline']);
     Route::get('/{id}/receipt', [DonationControllerAlias::class, 'receipt'])->name('donations.receipt');
 });

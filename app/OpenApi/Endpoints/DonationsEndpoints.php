@@ -246,27 +246,44 @@ class DonationsEndpoints
     // =========================================================================
 
     #[OA\Get(
-        path: '/donations/{id}',
+        path: '/donations/{reference}',
         operationId: 'getDonation',
         tags: ['Donations'],
         summary: 'Get a donation',
         description: 'Returns full donation detail including reference, donor, campaign, attachment, and received_by.',
         parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 101),
+            new OA\Parameter(
+                name: 'reference',
+                in: 'path',
+                required: true,
+                description: 'The unique secure string reference of the donation (e.g., REC-XYZ-2026)',
+                schema: new OA\Schema(type: 'string', example: 'REC-2026-0521-A9B8') // تغيير النوع إلى string
+            ),
         ],
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Success',
+                description: 'Donation details retrieved successfully',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'status',  type: 'boolean', example: true),
-                        new OA\Property(property: 'message', type: 'string',  example: 'Success'),
-                        new OA\Property(property: 'data', ref: '#/components/schemas/Donation'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'id', type: 'integer', example: 125),
+                                new OA\Property(property: 'reference', type: 'string', example: 'REC-0000-2026'),
+                                new OA\Property(property: 'amount', type: 'number', example: 150.00),
+                                new OA\Property(property: 'status', type: 'string', example: 'completed'),
+                                // بقية العلاقات (donor, campaign, received_by) تظل كما هي...
+                            ]
+                        )
                     ]
                 )
             ),
-            new OA\Response(response: 404, description: 'Not found'),
+            new OA\Response(
+                response: 404,
+                description: 'Donation reference not found'
+            )
         ]
     )]
     public function getDonation() {}
