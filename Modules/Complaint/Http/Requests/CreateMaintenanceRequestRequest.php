@@ -75,7 +75,7 @@ class CreateMaintenanceRequestRequest extends FormRequest
 
         return $baseUrl . '/storage/v1/object/public/' . $path;
     }
-}/
+
     public function authorize(): bool
     {
         return true;
