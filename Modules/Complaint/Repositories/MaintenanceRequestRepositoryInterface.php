@@ -3,44 +3,36 @@
 namespace Modules\Complaint\Repositories;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Modules\Complaint\DTO\CreateMaintenanceRequestDTO;
 use Modules\Complaint\DTO\ProcessMaintenanceRequestDTO;
-use Modules\Complaint\Models\MaintenanceRequest as ModelsMaintenanceRequest;
+use Modules\Complaint\Models\MaintenanceRequest;
 
 interface MaintenanceRequestRepositoryInterface
 {
-    public function listForMosque(
-        int $mosqueId,
+    public function findByMosque(
+        int     $mosqueId,
         ?string $status,
-        int $perPage = 15,
+        int     $perPage = 15,
     ): LengthAwarePaginator;
 
     public function listForAdmin(
-        ?string $status,
-        ?string $category,
-        ?string $urgency,
-        int $perPage = 15,
+        ?string $status   = null,
+        ?string $category = null,
+        ?string $urgency  = null,
+        int     $perPage  = 15,
     ): LengthAwarePaginator;
 
-    public function findByMosque(
-        int $mosqueId,
-        ?string $status,
-        int $perPage,
-    ): LengthAwarePaginator;
+    public function findById(int $id): ?MaintenanceRequest;
 
+    public function findByReference(string $reference): ?MaintenanceRequest;
 
-    public function findById(int $id): ModelsMaintenanceRequest;
+    public function create(array $data): MaintenanceRequest;
 
-    public function findByReference(string $reference): ModelsMaintenanceRequest;
+    public function attachFile(MaintenanceRequest $request, array $fileData): void;
 
-
-    public function create(CreateMaintenanceRequestDTO $dto, array $attachmentUrls = []): ModelsMaintenanceRequest;
     public function process(
-        ModelsMaintenanceRequest $request,
+        MaintenanceRequest           $request,
         ProcessMaintenanceRequestDTO $dto,
-    ): ModelsMaintenanceRequest;
+    ): MaintenanceRequest;
 
-    public function logStatusChange(ModelsMaintenanceRequest $request, array $logData): void;
-
-    public function attachFiles(ModelsMaintenanceRequest $request, array $files): void;
+    public function logStatusChange(MaintenanceRequest $request, array $logData): void;
 }

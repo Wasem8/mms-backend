@@ -8334,20 +8334,86 @@
                                 "schema": {
                                     "properties": {
                                         "status": {
-                                            "type": "string",
-                                            "example": "success"
+                                            "type": "boolean",
+                                            "example": true
                                         },
                                         "message": {
                                             "type": "string",
                                             "example": "Maintenance request submitted successfully."
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/MaintenanceRequestItem"
-                                        },
-                                        "pagination": {
-                                            "type": "object",
-                                            "example": null,
-                                            "nullable": true
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "reference_number": {
+                                                    "type": "string",
+                                                    "example": "MR-123456"
+                                                },
+                                                "mosque_id": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "title": {
+                                                    "type": "string",
+                                                    "example": "AC unit not cooling"
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "example": "The main hall AC has stopped cooling since yesterday."
+                                                },
+                                                "category": {
+                                                    "type": "string",
+                                                    "example": "hvac"
+                                                },
+                                                "urgency": {
+                                                    "type": "string",
+                                                    "example": "high"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "pending"
+                                                },
+                                                "attachments": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": "string",
+                                                                "example": "https://example.com/storage/image.png"
+                                                            },
+                                                            "file_type": {
+                                                                "type": "string",
+                                                                "example": "image/png"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "example": "22 May 2026, 06:33 PM"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "example": "22 May 2026, 06:33 PM"
+                                                },
+                                                "mosque": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 15
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "مسجد التقوى"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"

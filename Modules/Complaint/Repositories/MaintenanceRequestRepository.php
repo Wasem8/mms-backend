@@ -3,36 +3,22 @@
 namespace Modules\Complaint\Repositories;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Modules\Complaint\DTO\CreateMaintenanceRequestDTO;
 use Modules\Complaint\DTO\ProcessMaintenanceRequestDTO;
 use Modules\Complaint\Models\MaintenanceRequest;
 
 class MaintenanceRequestRepository implements MaintenanceRequestRepositoryInterface
 {
-
     public function __construct(
         private readonly MaintenanceRequest $model,
     ) {}
 
-    public function listForMosque(
-        int $mosqueId,
-        ?string $status,
-        int $perPage = 15,
+    public function findByMosque(
+        int     $mosqueId,
+        ?string $status  = null,
+        int     $perPage = 15,
     ): LengthAwarePaginator {
         return $this->model
             ->with('mosque')
-            ->where('mosque_id', $mosqueId)
-            ->when($status, fn($q) => $q->where('status', $status))
-            ->latest()
-            ->paginate($perPage);
-    }
-
-    public function findByMosque(
-        int $mosqueId,
-        ?string $status,
-        int $perPage,
-    ): LengthAwarePaginator {
-        return $this->model
             ->where('mosque_id', $mosqueId)
             ->when($status, fn($q) => $q->where('status', $status))
             ->latest()
@@ -40,78 +26,63 @@ class MaintenanceRequestRepository implements MaintenanceRequestRepositoryInterf
     }
 
     public function listForAdmin(
-        ?string $status,
-        ?string $category,
-        ?string $urgency,
-        int $perPage = 15,
+        ?string $status   = null,
+        ?string $category = null,
+        ?string $urgency  = null,
+        int     $perPage  = 15,
     ): LengthAwarePaginator {
         return $this->model
             ->with('mosque')
             ->when($status,   fn($q) => $q->where('status', $status))
             ->when($category, fn($q) => $q->where('category', $category))
-            ->when(
-                ! is_null($urgency),
-                fn($q) => $q->where('urgency', $urgency)
-            )
+            ->when($urgency,  fn($q) => $q->where('urgency', $urgency))
             ->latest()
             ->paginate($perPage);
     }
 
-    public function attachFiles(MaintenanceRequest $request, array $files): void
-    {
-        $request->files()->createMany($files);
-    }
-
-
-    public function findById(int $id): MaintenanceRequest
+    public function findById(int $id): ?MaintenanceRequest
     {
         return $this->model->with('mosque')->find($id);
     }
 
-    public function findByReference(string $reference): MaintenanceRequest
+    public function findByReference(string $reference): ?MaintenanceRequest
     {
-        return $this->model->with(['mosque', 'statusLogs', 'regionManager'])
+        return $this->model
+            ->with(['mosque', 'statusLogs', 'regionManager'])
             ->where('reference_number', $reference)
             ->first();
     }
 
-    public function create(CreateMaintenanceRequestDTO $dto, array $attachmentUrls = []): MaintenanceRequest
+    public function create(array $data): MaintenanceRequest
     {
         return $this->model->create([
             'reference_number' => $this->generateReference(),
-            'mosque_id'        => $dto->mosqueId,
-            'title'            => $dto->title,
-            'description'      => $dto->description,
-            'category'         => $dto->category,
-            'urgency'          => $dto->urgency,
-            'attachments'      => $attachmentUrls, // ← final public URLs from Supabase
+            'mosque_id'        => $data['mosque_id'],
+            'title'            => $data['title'],
+            'description'      => $data['description'],
+            'category'         => $data['category'],
+            'urgency'          => $data['urgency'],
             'status'           => 'pending',
         ]);
     }
-    private function generateReference(): string
-    {
-        // Generate a 6-digit numeric reference with MR- prefix; ensure uniqueness
-        do {
-            $num = random_int(1, 999999);
-            $ref = sprintf('MR-%06d', $num);
-        } while ($this->model->where('reference_number', $ref)->exists());
 
-        return $ref;
+    public function attachFile(MaintenanceRequest $request, array $fileData): void
+    {
+        $request->files()->create($fileData);
     }
 
     public function process(
-        MaintenanceRequest $request,
+        MaintenanceRequest           $request,
         ProcessMaintenanceRequestDTO $dto,
     ): MaintenanceRequest {
         $oldStatus = $request->status;
 
         $request->update([
-            'status'             => $dto->status,
-            'rejection_reason'   => $dto->rejectionReason,
-            'region_manager_id'  => $dto->regionManagerId,
+            'status'            => $dto->status,
+            'rejection_reason'  => $dto->rejectionReason,
+            'region_manager_id' => $dto->regionManagerId,
         ]);
 
-        // Log status change when status actually changed
         if ($oldStatus !== $dto->status) {
             $this->logStatusChange($request, [
                 'old_status' => $oldStatus,
@@ -128,5 +99,14 @@ class MaintenanceRequestRepository implements MaintenanceRequestRepositoryInterf
     public function logStatusChange(MaintenanceRequest $request, array $logData): void
     {
         $request->statusLogs()->create($logData);
+    }
+
+    private function generateReference(): string
+    {
+        do {
+            $ref = sprintf('MR-%06d', random_int(1, 999999));
+        } while ($this->model->where('reference_number', $ref)->exists());
+
+        return $ref;
     }
 }
