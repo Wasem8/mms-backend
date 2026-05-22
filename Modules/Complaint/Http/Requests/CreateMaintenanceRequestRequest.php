@@ -27,54 +27,24 @@ class CreateMaintenanceRequestRequest extends FormRequest
     }
     public function toDTO(): CreateMaintenanceRequestDTO
     {
+        $files = $this->hasFile('attachments')
+            ? (is_array($this->file('attachments'))
+                ? $this->file('attachments')
+                : [$this->file('attachments')])
+            : [];
+
+        $validFiles = array_values(
+            array_filter($files, fn($f) => $f instanceof UploadedFile && $f->isValid())
+        );
+
         return new CreateMaintenanceRequestDTO(
             mosqueId: $this->integer('mosque_id'),
             title: $this->string('title')->toString(),
             description: $this->string('description')->toString(),
             category: $this->string('category')->toString(),
             urgency: $this->string('urgency', 'low')->toString(),
-            attachments: $this->storeAttachments(),
+            attachments: $validFiles,
         );
-    }
-
-    private function storeAttachments(): array
-    {
-        if (! $this->hasFile('attachments')) {
-            return [];
-        }
-
-        $files = $this->file('attachments');
-        $files = is_array($files) ? $files : [$files];
-
-        return array_values(array_map(
-            fn(UploadedFile $file) => $this->uploadToSupabase($file),
-            array_filter($files, fn($f) => $f instanceof UploadedFile && $f->isValid()),
-        ));
-    }
-
-    private function uploadToSupabase(UploadedFile $file): string
-    {
-        $fileName  = uniqid() . '.' . $file->getClientOriginalExtension();
-        $baseUrl   = config('services.supabase.url');
-        $bucket    = config('services.supabase.bucket');
-        $key       = config('services.supabase.key');
-        $path      = $bucket . '/maintenance-attachments/' . $fileName;
-        $uploadUrl = $baseUrl . '/storage/v1/object/' . $path;
-
-        $response = Http::withHeaders([
-            'apikey'        => $key,
-            'Authorization' => 'Bearer ' . $key,
-        ])->attach(
-            'file',
-            file_get_contents($file),
-            $fileName,
-        )->post($uploadUrl);
-
-        if (! $response->successful()) {
-            throw new \RuntimeException('Upload failed: ' . $response->body());
-        }
-
-        return $baseUrl . '/storage/v1/object/public/' . $path;
     }
 
     public function authorize(): bool

@@ -26,7 +26,7 @@ class MaintenanceRequestRepository implements MaintenanceRequestRepositoryInterf
             ->latest()
             ->paginate($perPage);
     }
-    
+
     public function findByMosque(
         int $mosqueId,
         ?string $status,
@@ -70,24 +70,19 @@ class MaintenanceRequestRepository implements MaintenanceRequestRepositoryInterf
             ->first();
     }
 
-    public function create(CreateMaintenanceRequestDTO $dto): MaintenanceRequest
+    public function create(CreateMaintenanceRequestDTO $dto, array $attachmentUrls = []): MaintenanceRequest
     {
-        $ref = $this->generateReference();
-
-        $request = $this->model->create([
+        return $this->model->create([
+            'reference_number' => $this->generateReference(),
             'mosque_id'        => $dto->mosqueId,
             'title'            => $dto->title,
             'description'      => $dto->description,
             'category'         => $dto->category,
             'urgency'          => $dto->urgency,
-            'attachments'      => $dto->attachments,
+            'attachments'      => $attachmentUrls, // ← final public URLs from Supabase
             'status'           => 'pending',
-            'reference_number' => $ref,
         ]);
-
-        return $request->fresh(['mosque']);
     }
-
     private function generateReference(): string
     {
         // Generate a 6-digit numeric reference with MR- prefix; ensure uniqueness

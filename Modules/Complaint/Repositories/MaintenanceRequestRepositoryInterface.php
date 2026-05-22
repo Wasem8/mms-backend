@@ -34,8 +34,7 @@ interface MaintenanceRequestRepositoryInterface
     public function findByReference(string $reference): ModelsMaintenanceRequest;
 
 
-    public function create(CreateMaintenanceRequestDTO $dto): ModelsMaintenanceRequest;
-
+    public function create(CreateMaintenanceRequestDTO $dto, array $attachmentUrls = []): ModelsMaintenanceRequest;
     public function process(
         ModelsMaintenanceRequest $request,
         ProcessMaintenanceRequestDTO $dto,
