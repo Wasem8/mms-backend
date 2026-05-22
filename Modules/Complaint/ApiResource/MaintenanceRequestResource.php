@@ -12,38 +12,22 @@ class MaintenanceRequestResource extends JsonResource
         return [
             'id'               => $this->id,
             'reference_number' => $this->reference_number,
+            'mosque_id'        => $this->mosque_id,
             'title'            => $this->title,
             'description'      => $this->description,
-
-            'category' => $this->category,
-
-            // keep API property name `is_urgent` for backward compatibility
-            // but return the new urgency level (low|medium|high|urgent)
-            'is_urgent' => $this->urgency ?? 'low',
-
-            'status' => $this->status,
-
+            'category'         => $this->category,
+            'urgency'          => $this->urgency,
+            'status'           => $this->status,
             'rejection_reason' => $this->rejection_reason,
             'attachments'      => $this->attachments ?? [],
+            'created_at'       => $this->created_at->toIso8601String(),
+            'updated_at'       => $this->updated_at->toIso8601String(),
 
-            'created_at' => $this->created_at?->format('d F Y, h:i A'),
-            'updated_at' => $this->updated_at?->format('d F Y, h:i A'),
-
-            'mosque' => $this->whenLoaded(
-                'mosque',
-                fn() => [
-                    'id'   => $this->mosque->id,
-                    'name' => $this->mosque->name,
-                ],
-            ),
-
-            'region_manager' => $this->whenLoaded(
-                'regionManager',
-                fn() => [
-                    'id'   => $this->regionManager->id,
-                    'name' => $this->regionManager->name,
-                ],
-            ),
+            // Only included when the mosque relationship is eager-loaded
+            'mosque' => $this->whenLoaded('mosque', fn() => [
+                'id'   => $this->mosque->id,
+                'name' => $this->mosque->name,
+            ]),
         ];
     }
 }

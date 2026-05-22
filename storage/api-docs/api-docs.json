@@ -8153,7 +8153,7 @@
                     "Maintenance Requests"
                 ],
                 "summary": "List maintenance requests for a mosque",
-                "description": "Returns a paginated list of maintenance requests scoped to a single mosque. Filterable by status.",
+                "description": "Returns a paginated list of maintenance requests scoped to the authenticated mosque manager's mosque. Filterable by status.",
                 "operationId": "mosque.maintenanceRequests.index",
                 "parameters": [
                     {
@@ -8205,80 +8205,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "integer",
-                                                        "example": 42
-                                                    },
-                                                    "title": {
-                                                        "type": "string",
-                                                        "example": "AC unit not cooling"
-                                                    },
-                                                    "description": {
-                                                        "type": "string",
-                                                        "example": "The main hall AC has stopped cooling since yesterday."
-                                                    },
-                                                    "category": {
-                                                        "type": "string",
-                                                        "example": "hvac"
-                                                    },
-                                                    "is_urgent": {
-                                                        "type": "string",
-                                                        "example": "high",
-                                                        "enum": [
-                                                            "low",
-                                                            "medium",
-                                                            "high",
-                                                            "urgent"
-                                                        ]
-                                                    },
-                                                    "status": {
-                                                        "type": "string",
-                                                        "example": "pending",
-                                                        "enum": [
-                                                            "pending",
-                                                            "in_progress",
-                                                            "completed",
-                                                            "rejected"
-                                                        ]
-                                                    },
-                                                    "rejection_reason": {
-                                                        "type": "string",
-                                                        "example": null,
-                                                        "nullable": true
-                                                    },
-                                                    "attachments": {
-                                                        "type": "array",
-                                                        "items": {
-                                                            "type": "string"
-                                                        },
-                                                        "example": [
-                                                            "uploads/ac-photo.jpg"
-                                                        ]
-                                                    },
-                                                    "created_at": {
-                                                        "type": "string",
-                                                        "example": "21 May 2026, 10:30 AM"
-                                                    },
-                                                    "updated_at": {
-                                                        "type": "string",
-                                                        "example": "21 May 2026, 10:30 AM"
-                                                    },
-                                                    "mosque": {
-                                                        "properties": {
-                                                            "id": {
-                                                                "type": "integer",
-                                                                "example": 7
-                                                            },
-                                                            "name": {
-                                                                "type": "string",
-                                                                "example": "Al-Noor Mosque"
-                                                            }
-                                                        },
-                                                        "type": "object"
-                                                    }
-                                                },
-                                                "type": "object"
+                                                "$ref": "#/components/schemas/MaintenanceRequestItem"
                                             }
                                         },
                                         "pagination": {
@@ -8314,6 +8241,9 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
                     }
                 },
                 "security": [
@@ -8326,8 +8256,8 @@
                 "tags": [
                     "Maintenance Requests"
                 ],
-                "summary": "Create a new maintenance request",
-                "description": "Creates a maintenance request for the authenticated mosque manager's mosque. Status is always set to `pending` on creation.",
+                "summary": "Submit a new maintenance request",
+                "description": "Creates a maintenance request for the authenticated mosque manager's mosque. The `mosque_id` is resolved from the auth token — it is not accepted in the request body. Status is always set to `pending` on creation.",
                 "operationId": "mosque.maintenanceRequests.store",
                 "parameters": [
                     {
@@ -8345,6 +8275,11 @@
                                     "category"
                                 ],
                                 "properties": {
+                                    "mosque_id": {
+                                        "description": "ID of the mosque submitting the request.",
+                                        "type": "integer",
+                                        "example": 7
+                                    },
                                     "title": {
                                         "type": "string",
                                         "example": "AC unit not cooling",
@@ -8352,7 +8287,8 @@
                                     },
                                     "description": {
                                         "type": "string",
-                                        "example": "The main hall AC has stopped cooling since yesterday."
+                                        "example": "The main hall AC has stopped cooling since yesterday.",
+                                        "maxLength": 5000
                                     },
                                     "category": {
                                         "type": "string",
@@ -8365,9 +8301,9 @@
                                             "general"
                                         ]
                                     },
-                                    "is_urgent": {
+                                    "urgency": {
                                         "type": "string",
-                                        "example": "low",
+                                        "example": "high",
                                         "default": "low",
                                         "enum": [
                                             "low",
@@ -8377,7 +8313,7 @@
                                         ]
                                     },
                                     "attachments[]": {
-                                        "description": "Optional file attachments (images, documents).",
+                                        "description": "Optional file attachments. Accepted types: jpg, jpeg, png, pdf, doc, docx. Max 5 MB each.",
                                         "type": "array",
                                         "items": {
                                             "type": "string",
@@ -8403,25 +8339,96 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Maintenance request created successfully."
+                                            "example": "Maintenance request submitted successfully."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MaintenanceRequestItem"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/maintenance/track/{reference}": {
+            "get": {
+                "tags": [
+                    "Maintenance Requests"
+                ],
+                "summary": "Track a maintenance request by reference number",
+                "description": "Retrieve a maintenance request and its full status history using its public reference number. Accessible to mosque managers (own mosque only) and super admins.",
+                "operationId": "mosque.maintenanceRequests.track",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "reference",
+                        "in": "path",
+                        "description": "Public reference number of the maintenance request (e.g. MR-XXXXXXXX).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "MR-000123"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Maintenance request tracking data retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Maintenance request status retrieved successfully."
                                         },
                                         "data": {
                                             "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 42
+                                                "reference_number": {
+                                                    "type": "string",
+                                                    "example": "MR-000123"
                                                 },
                                                 "title": {
                                                     "type": "string",
                                                     "example": "AC unit not cooling"
                                                 },
-                                                "description": {
+                                                "current_status": {
                                                     "type": "string",
-                                                    "example": "The main hall AC has stopped cooling since yesterday."
-                                                },
-                                                "category": {
-                                                    "type": "string",
-                                                    "example": "hvac"
+                                                    "example": "in_progress",
+                                                    "enum": [
+                                                        "pending",
+                                                        "in_progress",
+                                                        "completed",
+                                                        "rejected"
+                                                    ]
                                                 },
                                                 "is_urgent": {
                                                     "type": "string",
@@ -8433,50 +8440,41 @@
                                                         "urgent"
                                                     ]
                                                 },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "pending",
-                                                    "enum": [
-                                                        "pending",
-                                                        "in_progress",
-                                                        "completed",
-                                                        "rejected"
-                                                    ]
-                                                },
-                                                "rejection_reason": {
+                                                "admin_resolution_note": {
                                                     "type": "string",
                                                     "example": null,
                                                     "nullable": true
-                                                },
-                                                "attachments": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string"
-                                                    },
-                                                    "example": [
-                                                        "uploads/ac-photo.jpg"
-                                                    ]
                                                 },
                                                 "created_at": {
                                                     "type": "string",
                                                     "example": "21 May 2026, 10:30 AM"
                                                 },
-                                                "updated_at": {
-                                                    "type": "string",
-                                                    "example": "21 May 2026, 10:30 AM"
-                                                },
-                                                "mosque": {
-                                                    "properties": {
-                                                        "id": {
-                                                            "type": "integer",
-                                                            "example": 7
+                                                "status_history": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "status": {
+                                                                "type": "string",
+                                                                "example": "pending",
+                                                                "enum": [
+                                                                    "pending",
+                                                                    "in_progress",
+                                                                    "completed",
+                                                                    "rejected"
+                                                                ]
+                                                            },
+                                                            "date": {
+                                                                "type": "string",
+                                                                "example": "21 May 2026, 10:30 AM"
+                                                            },
+                                                            "note": {
+                                                                "type": "string",
+                                                                "example": "Request created",
+                                                                "nullable": true
+                                                            }
                                                         },
-                                                        "name": {
-                                                            "type": "string",
-                                                            "example": "Al-Noor Mosque"
-                                                        }
-                                                    },
-                                                    "type": "object"
+                                                        "type": "object"
+                                                    }
                                                 }
                                             },
                                             "type": "object"
@@ -8495,8 +8493,11 @@
                     "401": {
                         "$ref": "#/components/responses/Unauthenticated"
                     },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationError"
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
                     }
                 },
                 "security": [
@@ -8700,114 +8701,6 @@
                                 }
                             }
                         }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/Unauthenticated"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/Forbidden"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/maintenance/track/{reference}": {
-            "get": {
-                "tags": [
-                    "Maintenance Requests"
-                ],
-                "summary": "Track a maintenance request by reference number",
-                "description": "Retrieve a maintenance request using its reference number. Accessible to mosque managers (for their mosque) and super admins.",
-                "operationId": "maintenance.track",
-                "parameters": [
-                    {
-                        "name": "reference",
-                        "in": "path",
-                        "description": "Public reference number of the maintenance request.",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "example": "MR-000123"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Maintenance request retrieved successfully.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "success"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Maintenance request retrieved successfully."
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 42
-                                                },
-                                                "reference_number": {
-                                                    "type": "string",
-                                                    "example": "MR-000123"
-                                                },
-                                                "title": {
-                                                    "type": "string",
-                                                    "example": "AC unit not cooling"
-                                                },
-                                                "description": {
-                                                    "type": "string",
-                                                    "example": "The main hall AC has stopped cooling since yesterday."
-                                                },
-                                                "is_urgent": {
-                                                    "type": "string",
-                                                    "example": "high",
-                                                    "enum": [
-                                                        "low",
-                                                        "medium",
-                                                        "high",
-                                                        "urgent"
-                                                    ]
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "pending"
-                                                },
-                                                "rejection_reason": {
-                                                    "type": "string",
-                                                    "example": null,
-                                                    "nullable": true
-                                                },
-                                                "attachments": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string"
-                                                    }
-                                                },
-                                                "created_at": {
-                                                    "type": "string",
-                                                    "example": "21 May 2026, 10:30 AM"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/NotFound"
                     },
                     "401": {
                         "$ref": "#/components/responses/Unauthenticated"
@@ -15186,6 +15079,94 @@
                     "value": {
                         "type": "string",
                         "example": "14500"
+                    }
+                },
+                "type": "object"
+            },
+            "MaintenanceRequestItem": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 42
+                    },
+                    "reference_number": {
+                        "type": "string",
+                        "example": "MR-000123"
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "AC unit not cooling"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "The main hall AC has stopped cooling since yesterday."
+                    },
+                    "category": {
+                        "type": "string",
+                        "example": "hvac",
+                        "enum": [
+                            "hvac",
+                            "electrical",
+                            "plumbing",
+                            "sound_system",
+                            "general"
+                        ]
+                    },
+                    "urgency": {
+                        "type": "string",
+                        "example": "high",
+                        "enum": [
+                            "low",
+                            "medium",
+                            "high",
+                            "urgent"
+                        ]
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "pending",
+                        "enum": [
+                            "pending",
+                            "in_progress",
+                            "completed",
+                            "rejected"
+                        ]
+                    },
+                    "rejection_reason": {
+                        "type": "string",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "attachments": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "uploads/maintenance/ac-photo.jpg"
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "example": "21 May 2026, 10:30 AM"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "example": "21 May 2026, 10:30 AM"
+                    },
+                    "mosque": {
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 7
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "Al-Noor Mosque"
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
                     }
                 },
                 "type": "object"

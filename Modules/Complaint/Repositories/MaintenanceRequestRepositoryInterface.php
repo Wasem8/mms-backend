@@ -22,6 +22,12 @@ interface MaintenanceRequestRepositoryInterface
         int $perPage = 15,
     ): LengthAwarePaginator;
 
+    public function findByMosque(
+        int $mosqueId,
+        ?string $status,
+        int $perPage,
+    ): LengthAwarePaginator;
+
 
     public function findById(int $id): ModelsMaintenanceRequest;
 

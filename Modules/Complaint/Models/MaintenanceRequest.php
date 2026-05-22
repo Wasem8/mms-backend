@@ -6,6 +6,7 @@ namespace Modules\Complaint\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\Mosque\Models\Mosque;
 use Modules\User\Models\User;
 
@@ -18,8 +19,8 @@ class MaintenanceRequest extends Model
     /**
      * The attributes that are mass assignable.
      */
-
     protected $fillable = [
+        'reference_number',
         'mosque_id',
         'region_manager_id',
         'title',
@@ -29,23 +30,23 @@ class MaintenanceRequest extends Model
         'status',
         'rejection_reason',
         'attachments',
-        'reference_number',
     ];
 
     protected $casts = [
-
         'attachments' => 'array',
     ];
 
+    // ─── Relationships ────────────────────────────────────────────────────────
 
     public function mosque(): BelongsTo
     {
-        return $this->belongsTo(Mosque::class, 'mosque_id');
+        return $this->belongsTo(Mosque::class);
     }
 
-    public function statusLogs()
+    public function statusLogs(): HasMany
     {
-        return $this->hasMany(MaintenanceRequestStatusLog::class);
+        return $this->hasMany(MaintenanceRequestStatusLog::class)
+            ->orderBy('changed_at');
     }
 
     public function regionManager(): BelongsTo
