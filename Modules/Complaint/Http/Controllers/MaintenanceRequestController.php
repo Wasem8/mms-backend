@@ -3,17 +3,14 @@
 namespace Modules\Complaint\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Modules\Complaint\ApiResource;
 use App\Support\ApiResponse;
 use Illuminate\Http\Request;
 use Modules\Complaint\ApiResource\MaintenanceRequestResource;
 use Modules\Complaint\Http\Requests\CreateMaintenanceRequestRequest;
 use Modules\Complaint\Service\MaintenanceRequestService;
-use Modules\Mosque\Models\Mosque;
 
 class MaintenanceRequestController extends Controller
 {
-
     public function __construct(
         private readonly MaintenanceRequestService $service,
     ) {}
@@ -43,12 +40,16 @@ class MaintenanceRequestController extends Controller
 
     public function store(CreateMaintenanceRequestRequest $request)
     {
-        $maintenanceRequest = $this->service->create($request->toDTO());
-
-        return ApiResponse::success(
-            data: new MaintenanceRequestResource($maintenanceRequest->load('mosque')),
-            message: 'Maintenance request submitted successfully.',
+        $result = $this->service->create(
+            data: $request->validated(),
+            files: $request->file('attachments', []),
         );
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Maintenance request submitted successfully.',
+            'data'    => $result,
+        ]);
     }
 
     public function track(string $reference)

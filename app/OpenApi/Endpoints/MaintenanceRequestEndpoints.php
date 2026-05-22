@@ -157,8 +157,8 @@ class MaintenanceRequestEndpoints
                         new OA\Property(
                             property: 'attachments[]',
                             type: 'array',
-                            items: new OA\Items(type: 'string', format: 'binary'),
                             description: 'Optional file attachments. Accepted types: jpg, jpeg, png, pdf, doc, docx. Max 5 MB each.',
+                            items: new OA\Items(type: 'string', format: 'binary'),
                         ),
                     ],
                 ),
@@ -170,10 +170,43 @@ class MaintenanceRequestEndpoints
                 description: 'Maintenance request created successfully.',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'status', type: 'string', example: 'success'),
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
                         new OA\Property(property: 'message', type: 'string', example: 'Maintenance request submitted successfully.'),
-                        new OA\Property(property: 'data', ref: '#/components/schemas/MaintenanceRequestItem'),
-                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'id', type: 'integer', example: 1),
+                                new OA\Property(property: 'reference_number', type: 'string', example: 'MR-123456'),
+                                new OA\Property(property: 'mosque_id', type: 'integer', example: 15),
+                                new OA\Property(property: 'title', type: 'string', example: 'AC unit not cooling'),
+                                new OA\Property(property: 'description', type: 'string', example: 'The main hall AC has stopped cooling since yesterday.'),
+                                new OA\Property(property: 'category', type: 'string', example: 'hvac'),
+                                new OA\Property(property: 'urgency', type: 'string', example: 'high'),
+                                new OA\Property(property: 'status', type: 'string', example: 'pending'),
+                                new OA\Property(
+                                    property: 'attachments',
+                                    type: 'array',
+                                    items: new OA\Items(
+                                        type: 'object',
+                                        properties: [
+                                            new OA\Property(property: 'url', type: 'string', example: 'https://example.com/storage/image.png'),
+                                            new OA\Property(property: 'file_type', type: 'string', example: 'image/png')
+                                        ]
+                                    )
+                                ),
+                                new OA\Property(property: 'created_at', type: 'string', example: '22 May 2026, 06:33 PM'),
+                                new OA\Property(property: 'updated_at', type: 'string', example: '22 May 2026, 06:33 PM'),
+                                new OA\Property(
+                                    property: 'mosque',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'id', type: 'integer', example: 15),
+                                        new OA\Property(property: 'name', type: 'string', example: 'مسجد التقوى')
+                                    ]
+                                )
+                            ]
+                        )
                     ],
                 ),
             ),
@@ -183,7 +216,6 @@ class MaintenanceRequestEndpoints
         ],
     )]
     public function store() {}
-
     // ─── GET /maintenance/track/{reference} ───────────────────────────────────
 
     #[OA\Get(

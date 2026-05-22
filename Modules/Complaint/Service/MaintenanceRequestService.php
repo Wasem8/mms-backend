@@ -7,11 +7,9 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
-use Modules\Complaint\DTO\CreateMaintenanceRequestDTO;
 use Modules\Complaint\DTO\ProcessMaintenanceRequestDTO;
 use Modules\Complaint\Repositories\MaintenanceRequestRepositoryInterface;
 use Modules\Complaint\Models\MaintenanceRequest;
-
 
 class MaintenanceRequestService
 {
@@ -21,7 +19,7 @@ class MaintenanceRequestService
 
     public function listForMosque(
         int     $mosqueId,
-        ?string $status,
+        ?string $status  = null,
         int     $perPage = 15,
     ): LengthAwarePaginator {
         return $this->repository->findByMosque(
@@ -30,30 +28,48 @@ class MaintenanceRequestService
             perPage: $perPage,
         );
     }
-    public function create(CreateMaintenanceRequestDTO $dto): MaintenanceRequest
+
+    public function create(array $data, array $files = []): array
     {
-        $complaint = $this->repository->create($dto);
+        $maintenanceRequest = $this->repository->create($data);
 
-        if (! empty($dto->attachments)) {
-            $fileRecords = [];
+        $uploadedFiles = [];
+        foreach ($files as $file) {
+            if ($file instanceof UploadedFile) {
+                $publicUrl = $this->uploadImage($file);
 
-            foreach ($dto->attachments as $file) {
-                if ($file instanceof UploadedFile) {
-                    $fileRecords[] = [
-                        'file'      => $this->uploadImage($file),
-                        'file_type' => $file->getClientMimeType(),
-                    ];
-                }
-            }
+                $this->repository->attachFile($maintenanceRequest, [
+                    'file'      => $publicUrl,
+                    'file_type' => $file->getMimeType(),
+                ]);
 
-            if (! empty($fileRecords)) {
-                $this->repository->attachFiles($complaint, $fileRecords);
+                $uploadedFiles[] = [
+                    'url'       => $publicUrl,
+                    'file_type' => $file->getMimeType(),
+                ];
             }
         }
 
-        return $complaint->load('files');
-    }
+        $mosque = $maintenanceRequest->mosque;
 
+        return [
+            'id'               => $maintenanceRequest->id,
+            'reference_number' => $maintenanceRequest->reference_number,
+            'mosque_id'        => $maintenanceRequest->mosque_id,
+            'title'            => $maintenanceRequest->title,
+            'description'      => $maintenanceRequest->description,
+            'category'         => $maintenanceRequest->category,
+            'urgency'          => $maintenanceRequest->urgency,
+            'status'           => $maintenanceRequest->status,
+            'attachments'      => $uploadedFiles,
+            'created_at'       => $maintenanceRequest->created_at->format('d M Y, h:i A'),
+            'updated_at'       => $maintenanceRequest->updated_at->format('d M Y, h:i A'),
+            'mosque'           => $mosque ? [
+                'id'   => $mosque->id,
+                'name' => $mosque->name,
+            ] : null,
+        ];
+    }
 
     public function listForAdmin(
         ?string $status   = null,
@@ -94,7 +110,7 @@ class MaintenanceRequestService
     }
 
     public function process(
-        MaintenanceRequest $maintenanceRequest,
+        MaintenanceRequest           $maintenanceRequest,
         ProcessMaintenanceRequestDTO $dto,
     ): MaintenanceRequest {
         return DB::transaction(
@@ -102,35 +118,32 @@ class MaintenanceRequestService
         );
     }
 
-   private function uploadImage(UploadedFile $image): string
-{
-    $fileName  = uniqid() . '.' . $image->getClientOriginalExtension();
-    $mimeType  = $image->getMimeType();
+    private function uploadImage(UploadedFile $image): string
+    {
+        $fileName = uniqid() . '.' . $image->getClientOriginalExtension();
+        $mimeType = $image->getMimeType();
+        $baseUrl  = config('services.supabase.url');
+        $bucket   = config('services.supabase.bucket');
+        $key      = config('services.supabase.key');
 
-    $baseUrl = config('services.supabase.url');
-    $bucket  = config('services.supabase.bucket');
-    $key     = config('services.supabase.key');
+        $response = Http::withHeaders([
+            'apikey'        => $key,
+            'Authorization' => 'Bearer ' . $key,
+            'Content-Type'  => $mimeType,
+            'x-upsert'      => 'false',
+        ])->withBody(
+            file_get_contents($image->getRealPath()),
+            $mimeType
+        )->post("{$baseUrl}/storage/v1/object/{$bucket}/{$fileName}");
 
-    $uploadUrl = "{$baseUrl}/storage/v1/object/{$bucket}/{$fileName}";
+        if (! $response->successful()) {
+            throw new \RuntimeException(
+                'Supabase upload failed [' . $response->status() . ']: ' . $response->body()
+            );
+        }
 
-    $response = Http::withHeaders([
-        'apikey'        => $key,
-        'Authorization' => 'Bearer ' . $key,
-        'Content-Type'  => $mimeType,         // ← required by Supabase
-        'x-upsert'      => 'false',           // ← reject duplicates
-    ])->withBody(
-        file_get_contents($image->getRealPath()), // ← raw binary, not multipart
-        $mimeType
-    )->post($uploadUrl);
-
-    if (! $response->successful()) {
-        throw new \RuntimeException(
-            'Supabase upload failed [' . $response->status() . ']: ' . $response->body()
-        );
+        return "{$baseUrl}/storage/v1/object/public/{$bucket}/{$fileName}";
     }
-
-    return "{$baseUrl}/storage/v1/object/public/{$bucket}/{$fileName}";
-}
 
     private function deleteImage(string $url): void
     {
@@ -138,7 +151,7 @@ class MaintenanceRequestService
         $bucket  = config('services.supabase.bucket');
         $key     = config('services.supabase.key');
 
-        $fileName  = basename(parse_url($url, PHP_URL_PATH)); // safer than basename($url)
+        $fileName  = basename(parse_url($url, PHP_URL_PATH));
         $deleteUrl = "{$baseUrl}/storage/v1/object/{$bucket}/{$fileName}";
 
         Http::withHeaders([
