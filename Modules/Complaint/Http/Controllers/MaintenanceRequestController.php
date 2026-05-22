@@ -72,7 +72,7 @@ class MaintenanceRequestController extends Controller
 
         // Build status history: initial creation entry + change logs
         $initial = [
-            'status' => $maintenanceRequest->status ?? 'pending',
+            'status' => 'pending',
             'date' => $maintenanceRequest->created_at,
             'note' => 'Request created',
         ];

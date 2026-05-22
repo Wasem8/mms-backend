@@ -177,7 +177,7 @@ class DonationService
             'mosque'         => $donationData->mosque,
             'mosque_name'    => $donationData->mosque?->name ?? 'المسجد الرئيسي',
             'target'         => $target,
-            'donor_name'     => $donationData->donor_name ?? 'متبرع كريم', // سيظهر الآن: أويس عبود
+            'donor_name'     => $donationData->donor_name ?? 'متبرع كريم', 
             'payment_method' => $donationData->payment_method === 'cash' ? 'نقدي' : $donationData->payment_method,
             'donation_status' => $donationData->status === 'completed' ? 'مكتمل' : $donationData->status,
             'currency'       => $donationData->currency ?? 'ليرة سورية',

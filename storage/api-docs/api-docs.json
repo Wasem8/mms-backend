@@ -8219,17 +8219,8 @@
                                                         "example": "The main hall AC has stopped cooling since yesterday."
                                                     },
                                                     "category": {
-                                                        "properties": {
-                                                            "value": {
-                                                                "type": "string",
-                                                                "example": "hvac"
-                                                            },
-                                                            "label": {
-                                                                "type": "string",
-                                                                "example": "HVAC"
-                                                            }
-                                                        },
-                                                        "type": "object"
+                                                        "type": "string",
+                                                        "example": "hvac"
                                                     },
                                                     "is_urgent": {
                                                         "type": "string",
@@ -8242,17 +8233,14 @@
                                                         ]
                                                     },
                                                     "status": {
-                                                        "properties": {
-                                                            "value": {
-                                                                "type": "string",
-                                                                "example": "pending"
-                                                            },
-                                                            "label": {
-                                                                "type": "string",
-                                                                "example": "Pending"
-                                                            }
-                                                        },
-                                                        "type": "object"
+                                                        "type": "string",
+                                                        "example": "pending",
+                                                        "enum": [
+                                                            "pending",
+                                                            "in_progress",
+                                                            "completed",
+                                                            "rejected"
+                                                        ]
                                                     },
                                                     "rejection_reason": {
                                                         "type": "string",
@@ -8432,41 +8420,35 @@
                                                     "example": "The main hall AC has stopped cooling since yesterday."
                                                 },
                                                 "category": {
-                                                    "properties": {
-                                                        "value": {
-                                                            "type": "string",
-                                                            "example": "hvac"
-                                                        },
-                                                        "label": {
-                                                            "type": "string",
-                                                            "example": "HVAC"
-                                                        }
-                                                    },
-                                                    "type": "object"
+                                                    "type": "string",
+                                                    "example": "hvac"
                                                 },
                                                 "is_urgent": {
-                                                    "type": "boolean",
-                                                    "example": true
+                                                    "type": "string",
+                                                    "example": "high",
+                                                    "enum": [
+                                                        "low",
+                                                        "medium",
+                                                        "high",
+                                                        "urgent"
+                                                    ]
                                                 },
                                                 "status": {
-                                                    "properties": {
-                                                        "value": {
-                                                            "type": "string",
-                                                            "example": "pending"
-                                                        },
-                                                        "label": {
-                                                            "type": "string",
-                                                            "example": "Pending"
-                                                        }
-                                                    },
-                                                    "type": "object"
+                                                    "type": "string",
+                                                    "example": "pending",
+                                                    "enum": [
+                                                        "pending",
+                                                        "in_progress",
+                                                        "completed",
+                                                        "rejected"
+                                                    ]
                                                 },
                                                 "rejection_reason": {
                                                     "type": "string",
                                                     "example": null,
                                                     "nullable": true
                                                 },
-                                                "attachments[]": {
+                                                "attachments": {
                                                     "type": "array",
                                                     "items": {
                                                         "type": "string"
@@ -8626,17 +8608,8 @@
                                                         "example": "The main hall AC has stopped cooling since yesterday."
                                                     },
                                                     "category": {
-                                                        "properties": {
-                                                            "value": {
-                                                                "type": "string",
-                                                                "example": "hvac"
-                                                            },
-                                                            "label": {
-                                                                "type": "string",
-                                                                "example": "HVAC"
-                                                            }
-                                                        },
-                                                        "type": "object"
+                                                        "type": "string",
+                                                        "example": "hvac"
                                                     },
                                                     "is_urgent": {
                                                         "type": "string",
@@ -8649,17 +8622,14 @@
                                                         ]
                                                     },
                                                     "status": {
-                                                        "properties": {
-                                                            "value": {
-                                                                "type": "string",
-                                                                "example": "pending"
-                                                            },
-                                                            "label": {
-                                                                "type": "string",
-                                                                "example": "Pending"
-                                                            }
-                                                        },
-                                                        "type": "object"
+                                                        "type": "string",
+                                                        "example": "pending",
+                                                        "enum": [
+                                                            "pending",
+                                                            "in_progress",
+                                                            "completed",
+                                                            "rejected"
+                                                        ]
                                                     },
                                                     "rejection_reason": {
                                                         "type": "string",
@@ -8879,7 +8849,7 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "application/x-www-form-urlencoded": {
                             "schema": {
                                 "required": [
                                     "status"
@@ -8937,34 +8907,28 @@
                                                     "example": "The main hall AC has stopped cooling since yesterday."
                                                 },
                                                 "category": {
-                                                    "properties": {
-                                                        "value": {
-                                                            "type": "string",
-                                                            "example": "hvac"
-                                                        },
-                                                        "label": {
-                                                            "type": "string",
-                                                            "example": "HVAC"
-                                                        }
-                                                    },
-                                                    "type": "object"
+                                                    "type": "string",
+                                                    "example": "hvac"
                                                 },
                                                 "is_urgent": {
-                                                    "type": "boolean",
-                                                    "example": true
+                                                    "type": "string",
+                                                    "example": "high",
+                                                    "enum": [
+                                                        "low",
+                                                        "medium",
+                                                        "high",
+                                                        "urgent"
+                                                    ]
                                                 },
                                                 "status": {
-                                                    "properties": {
-                                                        "value": {
-                                                            "type": "string",
-                                                            "example": "rejected"
-                                                        },
-                                                        "label": {
-                                                            "type": "string",
-                                                            "example": "Rejected"
-                                                        }
-                                                    },
-                                                    "type": "object"
+                                                    "type": "string",
+                                                    "example": "rejected",
+                                                    "enum": [
+                                                        "pending",
+                                                        "in_progress",
+                                                        "completed",
+                                                        "rejected"
+                                                    ]
                                                 },
                                                 "rejection_reason": {
                                                     "type": "string",
