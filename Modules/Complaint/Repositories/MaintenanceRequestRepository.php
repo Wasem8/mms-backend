@@ -26,6 +26,18 @@ class MaintenanceRequestRepository implements MaintenanceRequestRepositoryInterf
             ->latest()
             ->paginate($perPage);
     }
+    
+    public function findByMosque(
+        int $mosqueId,
+        ?string $status,
+        int $perPage,
+    ): LengthAwarePaginator {
+        return $this->model
+            ->where('mosque_id', $mosqueId)
+            ->when($status, fn($q) => $q->where('status', $status))
+            ->latest()
+            ->paginate($perPage);
+    }
 
     public function listForAdmin(
         ?string $status,

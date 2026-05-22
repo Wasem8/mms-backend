@@ -31,19 +31,24 @@ class SupabaseStorageService
         $response = Http::withHeaders([
             'apikey'        => $this->key,
             'Authorization' => 'Bearer ' . $this->key,
-        ])->attach(
-            'file',
-            file_get_contents($file->getRealPath()),
-            $fileName
+            'Content-Type'  => $file->getMimeType(), 
+        ])->withBody(
+            file_get_contents($file->getRealPath()), // 👈 إرسال محتوى الملف مباشرة
+            $file->getMimeType()
         )->post($uploadUrl);
 
         if (! $response->successful()) {
+            // إضافة تفاصيل الخطأ في السجل (Log) لمساعدتك في التتبع على Vercel
+            \Illuminate\Support\Facades\Log::error('Supabase Upload Error', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+
             throw new \RuntimeException('Supabase upload failed: ' . $response->body());
         }
 
         return $this->baseUrl . '/storage/v1/object/public/' . $path;
     }
-
     /**
      * Upload multiple files and return an array of public URLs.
      *

@@ -22,23 +22,20 @@ class MaintenanceRequestController extends Controller
     {
         $authUser = auth()->user();
 
-        if (! $authUser || ! $authUser->isMosqueManager() || ! $authUser->mosque_id) {
-            abort(403, 'Unauthorized access to maintenance requests.');
-        }
-
-        $mosqueId = $authUser->mosque_id;
+        abort_if(
+            ! $authUser?->isMosqueManager() || ! $authUser->mosque_id,
+            403,
+            'Only mosque managers may list maintenance requests.',
+        );
 
         $paginator = $this->service->listForMosque(
-            mosqueId: $mosqueId,
+            mosqueId: $authUser->mosque_id,
             status: $request->query('status'),
             perPage: (int) $request->query('per_page', 15),
         );
 
-        $data = MaintenanceRequestResource::collection($paginator);
-
-
         return ApiResponse::success(
-            data: $data,
+            data: MaintenanceRequestResource::collection($paginator),
             message: 'Maintenance requests retrieved successfully.',
             pagination: $paginator,
         );
@@ -48,52 +45,26 @@ class MaintenanceRequestController extends Controller
     {
         $maintenanceRequest = $this->service->create($request->toDTO());
 
-        $resource = new MaintenanceRequestResource(
-            $maintenanceRequest->load('mosque')
-        );
-
         return ApiResponse::success(
-            data: $resource,
-            message: 'Maintenance request created successfully.',
+            data: new MaintenanceRequestResource($maintenanceRequest->load('mosque')),
+            message: 'Maintenance request submitted successfully.',
         );
     }
 
     public function track(string $reference)
     {
-        $authUser = auth()->user();
-        if (! $authUser || (! $authUser->isMosqueManager() && ! $authUser->hasRole('super_admin'))) {
-            abort(403, 'Unauthorized access to maintenance request tracking.');
-        }
-
         $maintenanceRequest = $this->service->findByReference($reference);
-        if ($authUser->isMosqueManager() && $maintenanceRequest->mosque_id !== $authUser->mosque_id) {
-            abort(404);
-        }
 
-        // Build status history: initial creation entry + change logs
-        $initial = [
-            'status' => 'pending',
-            'date' => $maintenanceRequest->created_at,
-            'note' => 'Request created',
-        ];
-
-        $logs = $maintenanceRequest->statusLogs->map(function ($log) {
-            return [
-                'status' => $log->new_status,
-                'date' => $log->changed_at,
-                'note' => $log->note,
-            ];
-        });
-
-        $fullHistory = collect([$initial])->concat($logs);
-
-        return ApiResponse::success([
-            'reference_number' => $maintenanceRequest->reference_number,
-            'title' => $maintenanceRequest->title,
-            'current_status' => $maintenanceRequest->status,
-            'admin_resolution_note' => $maintenanceRequest->rejection_reason,
-            'created_at' => $maintenanceRequest->created_at,
-            'status_history' => $fullHistory,
-        ], 'Maintenance request status retrieved successfully.');
+        return ApiResponse::success(
+            data: [
+                'reference_number'      => $maintenanceRequest->reference_number,
+                'title'                 => $maintenanceRequest->title,
+                'current_status'        => $maintenanceRequest->status,
+                'admin_resolution_note' => $maintenanceRequest->rejection_reason,
+                'created_at'            => $maintenanceRequest->created_at->toIso8601String(),
+                'status_history'        => $this->service->buildStatusHistory($maintenanceRequest),
+            ],
+            message: 'Maintenance request status retrieved successfully.',
+        );
     }
 }
