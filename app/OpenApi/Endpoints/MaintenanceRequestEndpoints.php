@@ -52,23 +52,9 @@ class MaintenanceRequestEndpoints
                                     new OA\Property(property: 'id', type: 'integer', example: 42),
                                     new OA\Property(property: 'title', type: 'string', example: 'AC unit not cooling'),
                                     new OA\Property(property: 'description', type: 'string', example: 'The main hall AC has stopped cooling since yesterday.'),
-                                    new OA\Property(
-                                        property: 'category',
-                                        type: 'object',
-                                        properties: [
-                                            new OA\Property(property: 'value', type: 'string', example: 'hvac'),
-                                            new OA\Property(property: 'label', type: 'string', example: 'HVAC'),
-                                        ]
-                                    ),
+                                    new OA\Property(property: 'category', type: 'string', example: 'hvac'),
                                     new OA\Property(property: 'is_urgent', type: 'string', enum: ['low', 'medium', 'high', 'urgent'], example: 'high'),
-                                    new OA\Property(
-                                        property: 'status',
-                                        type: 'object',
-                                        properties: [
-                                            new OA\Property(property: 'value', type: 'string', example: 'pending'),
-                                            new OA\Property(property: 'label', type: 'string', example: 'Pending'),
-                                        ]
-                                    ),
+                                    new OA\Property(property: 'status', type: 'string', enum: ['pending', 'in_progress', 'completed', 'rejected'], example: 'pending'),
                                     new OA\Property(property: 'rejection_reason', type: 'string', nullable: true, example: null),
                                     new OA\Property(
                                         property: 'attachments',
@@ -162,26 +148,12 @@ class MaintenanceRequestEndpoints
                                 new OA\Property(property: 'id', type: 'integer', example: 42),
                                 new OA\Property(property: 'title', type: 'string', example: 'AC unit not cooling'),
                                 new OA\Property(property: 'description', type: 'string', example: 'The main hall AC has stopped cooling since yesterday.'),
-                                new OA\Property(
-                                    property: 'category',
-                                    type: 'object',
-                                    properties: [
-                                        new OA\Property(property: 'value', type: 'string', example: 'hvac'),
-                                        new OA\Property(property: 'label', type: 'string', example: 'HVAC'),
-                                    ]
-                                ),
-                                new OA\Property(property: 'is_urgent', type: 'boolean', example: true),
-                                new OA\Property(
-                                    property: 'status',
-                                    type: 'object',
-                                    properties: [
-                                        new OA\Property(property: 'value', type: 'string', example: 'pending'),
-                                        new OA\Property(property: 'label', type: 'string', example: 'Pending'),
-                                    ]
-                                ),
+                                new OA\Property(property: 'category', type: 'string', example: 'hvac'),
+                                new OA\Property(property: 'is_urgent', type: 'string', enum: ['low', 'medium', 'high', 'urgent'], example: 'high'),
+                                new OA\Property(property: 'status', type: 'string', enum: ['pending', 'in_progress', 'completed', 'rejected'], example: 'pending'),
                                 new OA\Property(property: 'rejection_reason', type: 'string', nullable: true, example: null),
                                 new OA\Property(
-                                    property: 'attachments[]',
+                                    property: 'attachments',
                                     type: 'array',
                                     items: new OA\Items(type: 'string'),
                                     example: ['uploads/ac-photo.jpg']
@@ -276,23 +248,9 @@ class MaintenanceRequestEndpoints
                                     new OA\Property(property: 'id', type: 'integer', example: 42),
                                     new OA\Property(property: 'title', type: 'string', example: 'AC unit not cooling'),
                                     new OA\Property(property: 'description', type: 'string', example: 'The main hall AC has stopped cooling since yesterday.'),
-                                    new OA\Property(
-                                        property: 'category',
-                                        type: 'object',
-                                        properties: [
-                                            new OA\Property(property: 'value', type: 'string', example: 'hvac'),
-                                            new OA\Property(property: 'label', type: 'string', example: 'HVAC'),
-                                        ]
-                                    ),
+                                    new OA\Property(property: 'category', type: 'string', example: 'hvac'),
                                     new OA\Property(property: 'is_urgent', type: 'string', enum: ['low', 'medium', 'high', 'urgent'], example: 'high'),
-                                    new OA\Property(
-                                        property: 'status',
-                                        type: 'object',
-                                        properties: [
-                                            new OA\Property(property: 'value', type: 'string', example: 'pending'),
-                                            new OA\Property(property: 'label', type: 'string', example: 'Pending'),
-                                        ]
-                                    ),
+                                    new OA\Property(property: 'status', type: 'string', enum: ['pending', 'in_progress', 'completed', 'rejected'], example: 'pending'),
                                     new OA\Property(property: 'rejection_reason', type: 'string', nullable: true, example: null),
                                     new OA\Property(
                                         property: 'attachments',
@@ -403,23 +361,27 @@ class MaintenanceRequestEndpoints
         ],
         requestBody: new OA\RequestBody(
             required: true,
-            content: new OA\JsonContent(
-                required: ['status'],
-                properties: [
-                    new OA\Property(
-                        property: 'status',
-                        type: 'string',
-                        enum: ['pending', 'in_progress', 'completed', 'rejected'],
-                        example: 'rejected'
-                    ),
-                    new OA\Property(
-                        property: 'rejection_reason',
-                        type: 'string',
-                        nullable: true,
-                        description: 'Required when status is `rejected`.',
-                        example: 'Duplicate request — already handled under ticket #39.'
-                    ),
-                ]
+            content: new OA\MediaType(
+                mediaType: 'application/x-www-form-urlencoded',
+                schema: new OA\Schema(
+                    type: 'object',
+                    required: ['status'],
+                    properties: [
+                        new OA\Property(
+                            property: 'status',
+                            type: 'string',
+                            enum: ['pending', 'in_progress', 'completed', 'rejected'],
+                            example: 'rejected'
+                        ),
+                        new OA\Property(
+                            property: 'rejection_reason',
+                            type: 'string',
+                            nullable: true,
+                            description: 'Required when status is `rejected`.',
+                            example: 'Duplicate request — already handled under ticket #39.'
+                        ),
+                    ]
+                )
             )
         ),
         responses: [
@@ -437,23 +399,9 @@ class MaintenanceRequestEndpoints
                                 new OA\Property(property: 'id', type: 'integer', example: 42),
                                 new OA\Property(property: 'title', type: 'string', example: 'AC unit not cooling'),
                                 new OA\Property(property: 'description', type: 'string', example: 'The main hall AC has stopped cooling since yesterday.'),
-                                new OA\Property(
-                                    property: 'category',
-                                    type: 'object',
-                                    properties: [
-                                        new OA\Property(property: 'value', type: 'string', example: 'hvac'),
-                                        new OA\Property(property: 'label', type: 'string', example: 'HVAC'),
-                                    ]
-                                ),
-                                new OA\Property(property: 'is_urgent', type: 'boolean', example: true),
-                                new OA\Property(
-                                    property: 'status',
-                                    type: 'object',
-                                    properties: [
-                                        new OA\Property(property: 'value', type: 'string', example: 'rejected'),
-                                        new OA\Property(property: 'label', type: 'string', example: 'Rejected'),
-                                    ]
-                                ),
+                                new OA\Property(property: 'category', type: 'string', example: 'hvac'),
+                                new OA\Property(property: 'is_urgent', type: 'string', enum: ['low', 'medium', 'high', 'urgent'], example: 'high'),
+                                new OA\Property(property: 'status', type: 'string', enum: ['pending', 'in_progress', 'completed', 'rejected'], example: 'rejected'),
                                 new OA\Property(
                                     property: 'rejection_reason',
                                     type: 'string',

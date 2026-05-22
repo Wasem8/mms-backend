@@ -13,6 +13,7 @@ return new class extends Migration
 
         Schema::create('maintenance_requests', function (Blueprint $table) {
             $table->id();
+            $table->string('reference_number')->unique();
 
             $table->foreignId('mosque_id')
                 ->constrained('mosques')
@@ -34,7 +35,7 @@ return new class extends Migration
                 'general',
             ]);
 
-            $table->boolean('is_urgent')->default(false);
+            $table->enum('urgency', ['low', 'medium', 'high', 'urgent'])->default('low');
 
             $table->enum('status', [
                 'pending',

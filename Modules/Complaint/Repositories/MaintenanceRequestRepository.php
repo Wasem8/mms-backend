@@ -63,13 +63,13 @@ class MaintenanceRequestRepository implements MaintenanceRequestRepositoryInterf
         $ref = $this->generateReference();
 
         $request = $this->model->create([
-            'mosque_id'       => $dto->mosqueId,
-            'title'           => $dto->title,
-            'description'     => $dto->description,
-            'category'        => $dto->category,
-            'urgency'         => $dto->isUrgent,
-            'attachments'     => $dto->attachments,
-            'status'          => 'pending',
+            'mosque_id'        => $dto->mosqueId,
+            'title'            => $dto->title,
+            'description'      => $dto->description,
+            'category'         => $dto->category,
+            'urgency'          => $dto->urgency,
+            'attachments'      => $dto->attachments,
+            'status'           => 'pending',
             'reference_number' => $ref,
         ]);
 

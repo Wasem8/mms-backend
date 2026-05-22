@@ -18,6 +18,7 @@ class CreateMaintenanceRequestRequest extends FormRequest
             'description' => ['required', 'string'],
             'category'    => ['required', 'string', 'in:hvac,electrical,plumbing,sound_system,general'],
             // Accept urgency levels as strings: low, medium, high, urgent
+            'urgency'     => ['sometimes', 'in:low,medium,high,urgent'],
             'is_urgent'   => ['sometimes', 'in:low,medium,high,urgent'],
 
             'attachments' => 'nullable|array',
@@ -27,7 +28,7 @@ class CreateMaintenanceRequestRequest extends FormRequest
 
     public function toDTO(): CreateMaintenanceRequestDTO
     {
-        $authUser = auth()->user();
+        $authUser = $this->user();
         $mosqueId = $authUser?->mosque_id;
 
         if (! $mosqueId) {
@@ -50,7 +51,7 @@ class CreateMaintenanceRequestRequest extends FormRequest
             title: $this->string('title')->toString(),
             description: $this->string('description')->toString(),
             category: $this->string('category')->toString(),
-            isUrgent: $this->input('is_urgent', 'low'),
+            urgency: $this->input('urgency', $this->input('is_urgent', 'low')),
             attachments: $attachmentUrls ?: null,
         );
     }
