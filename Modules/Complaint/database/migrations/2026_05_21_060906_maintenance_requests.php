@@ -45,7 +45,6 @@ return new class extends Migration
             ])->default('pending');
 
             $table->text('rejection_reason')->nullable();
-            $table->json('attachments')->nullable();
 
             $table->timestamps();
         });

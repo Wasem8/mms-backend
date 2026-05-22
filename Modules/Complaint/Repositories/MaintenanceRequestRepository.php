@@ -57,6 +57,11 @@ class MaintenanceRequestRepository implements MaintenanceRequestRepositoryInterf
             ->paginate($perPage);
     }
 
+    public function attachFiles(MaintenanceRequest $request, array $files): void
+    {
+        $request->files()->createMany($files);
+    }
+
 
     public function findById(int $id): MaintenanceRequest
     {

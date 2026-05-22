@@ -41,4 +41,6 @@ interface MaintenanceRequestRepositoryInterface
     ): ModelsMaintenanceRequest;
 
     public function logStatusChange(ModelsMaintenanceRequest $request, array $logData): void;
+
+    public function attachFiles(ModelsMaintenanceRequest $request, array $files): void;
 }

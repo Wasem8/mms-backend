@@ -16,6 +16,7 @@ use Modules\Donation\Repositories\SettingRepositoryInterface;
 use Modules\Donation\Models\Campaign;
 use Modules\Mosque\Models\MosqueNeed;
 use ArPHP\I18N\Arabic;
+use Illuminate\Validation\ValidationException;
 use Spatie\Browsershot\Browsershot;
 
 class DonationService
@@ -116,6 +117,46 @@ class DonationService
     }
     public function create(array $data): array
     {
+
+        if (!empty($data['campaign_id'])) {
+            $campaign  = Campaign::lockForUpdate()->findOrFail($data['campaign_id']);
+            $remaining = (float) $campaign->target_amount - (float) $campaign->collected_amount;
+
+            if ($remaining <= 0) {
+                throw ValidationException::withMessages([
+                    'campaign_id' => __('messages.campaign_already_completed'),
+                ]);
+            }
+
+            if ((float) ($data['amount'] ?? 0) > $remaining) {
+                throw ValidationException::withMessages([
+                    'amount' => __('messages.exceeds_remaining', [
+                        'remaining' => number_format($remaining, 2),
+                        'currency'  => $this->resolveCurrency($data['payment_method']),
+                    ]),
+                ]);
+            }
+        }
+        if (!empty($data['mosque_need_id'])) {
+            $mosqueNeed = MosqueNeed::lockForUpdate()->findOrFail($data['mosque_need_id']);
+            $remaining  = (float) $mosqueNeed->target_amount - (float) $mosqueNeed->collected_amount;
+
+            if ($remaining <= 0) {
+                throw ValidationException::withMessages([
+                    'mosque_need_id' => __('messages.mosque_need_already_fulfilled'),
+                ]);
+            }
+
+            if ((float) ($data['amount'] ?? 0) > $remaining) {
+                throw ValidationException::withMessages([
+                    'amount' => __('messages.exceeds_remaining', [
+                        'remaining' => number_format($remaining, 2),
+                        'currency'  => $this->resolveCurrency($data['payment_method']),
+                    ]),
+                ]);
+            }
+        }
+
         $strategy = PaymentStrategyFactory::make($data['payment_method']);
         $result   = $strategy->pay($data);
 
@@ -177,7 +218,7 @@ class DonationService
             'mosque'         => $donationData->mosque,
             'mosque_name'    => $donationData->mosque?->name ?? 'المسجد الرئيسي',
             'target'         => $target,
-            'donor_name'     => $donationData->donor_name ?? 'متبرع كريم', 
+            'donor_name'     => $donationData->donor_name ?? 'متبرع كريم',
             'payment_method' => $donationData->payment_method === 'cash' ? 'نقدي' : $donationData->payment_method,
             'donation_status' => $donationData->status === 'completed' ? 'مكتمل' : $donationData->status,
             'currency'       => $donationData->currency ?? 'ليرة سورية',
@@ -310,5 +351,5 @@ class DonationService
             $donation->mosqueNeed()->increment('collected_amount', $baseAmount);
         }
     }
-   
+
 }

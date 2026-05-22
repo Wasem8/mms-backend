@@ -4,6 +4,7 @@ namespace Modules\Complaint\Service;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Modules\Complaint\DTO\CreateMaintenanceRequestDTO;
@@ -31,12 +32,28 @@ class MaintenanceRequestService
     }
     public function create(CreateMaintenanceRequestDTO $dto): MaintenanceRequest
     {
-        $attachmentUrls = $this->uploadImage($dto->attachments);
+        $complaint = $this->repository->create($dto);
 
-        return DB::transaction(
-            fn() => $this->repository->create($dto, $attachmentUrls)
-        );
+        if (! empty($dto->attachments)) {
+            $fileRecords = [];
+
+            foreach ($dto->attachments as $file) {
+                if ($file instanceof UploadedFile) {
+                    $fileRecords[] = [
+                        'file'      => $this->uploadImage($file),
+                        'file_type' => $file->getClientMimeType(),
+                    ];
+                }
             }
+
+            if (! empty($fileRecords)) {
+                $this->repository->attachFiles($complaint, $fileRecords);
+            }
+        }
+
+        return $complaint->load('files');
+    }
+
 
     public function listForAdmin(
         ?string $status   = null,
@@ -85,31 +102,48 @@ class MaintenanceRequestService
         );
     }
 
-    private function uploadImage($image): string
+   private function uploadImage(UploadedFile $image): string
+{
+    $fileName  = uniqid() . '.' . $image->getClientOriginalExtension();
+    $mimeType  = $image->getMimeType();
+
+    $baseUrl = config('services.supabase.url');
+    $bucket  = config('services.supabase.bucket');
+    $key     = config('services.supabase.key');
+
+    $uploadUrl = "{$baseUrl}/storage/v1/object/{$bucket}/{$fileName}";
+
+    $response = Http::withHeaders([
+        'apikey'        => $key,
+        'Authorization' => 'Bearer ' . $key,
+        'Content-Type'  => $mimeType,         // ← required by Supabase
+        'x-upsert'      => 'false',           // ← reject duplicates
+    ])->withBody(
+        file_get_contents($image->getRealPath()), // ← raw binary, not multipart
+        $mimeType
+    )->post($uploadUrl);
+
+    if (! $response->successful()) {
+        throw new \RuntimeException(
+            'Supabase upload failed [' . $response->status() . ']: ' . $response->body()
+        );
+    }
+
+    return "{$baseUrl}/storage/v1/object/public/{$bucket}/{$fileName}";
+}
+
+    private function deleteImage(string $url): void
     {
-        $fileName = uniqid() . '.' . $image->getClientOriginalExtension();
-
         $baseUrl = config('services.supabase.url');
-        $bucket = config('services.supabase.bucket');
-        $key = config('services.supabase.key');
+        $bucket  = config('services.supabase.bucket');
+        $key     = config('services.supabase.key');
 
-        $path = $bucket . '/' . $fileName;
+        $fileName  = basename(parse_url($url, PHP_URL_PATH)); // safer than basename($url)
+        $deleteUrl = "{$baseUrl}/storage/v1/object/{$bucket}/{$fileName}";
 
-        $uploadUrl = $baseUrl . '/storage/v1/object/' . $path;
-
-        $response = Http::withHeaders([
-            'apikey' => $key,
+        Http::withHeaders([
+            'apikey'        => $key,
             'Authorization' => 'Bearer ' . $key,
-        ])->attach(
-            'file',
-            file_get_contents($image),
-            $fileName
-        )->post($uploadUrl);
-
-        if (!$response->successful()) {
-            throw new \Exception('Upload failed: ' . $response->body());
-        }
-
-        return $baseUrl . '/storage/v1/object/public/' . $path;
+        ])->delete($deleteUrl);
     }
 }
