@@ -4,6 +4,8 @@ namespace App\Services;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use RuntimeException;
 
 class SupabaseStorageService
 {
@@ -13,9 +15,14 @@ class SupabaseStorageService
 
     public function __construct()
     {
-        $this->baseUrl = config('services.supabase.url');
-        $this->bucket  = config('services.supabase.bucket');
-        $this->key     = config('services.supabase.key');
+        $this->baseUrl = config('services.supabase.url')
+            ?? throw new RuntimeException('SUPABASE_URL is not set in environment.');
+
+        $this->bucket  = config('services.supabase.bucket')
+            ?? throw new RuntimeException('SUPABASE_BUCKET is not set in environment.');
+
+        $this->key     = config('services.supabase.key')
+            ?? throw new RuntimeException('SUPABASE_KEY is not set in environment.');
     }
 
     /**
@@ -23,32 +30,46 @@ class SupabaseStorageService
      */
     public function upload(UploadedFile $file, string $folder = ''): string
     {
-        $fileName = $this->generateFileName($file);
-        $path     = $this->buildPath($fileName, $folder);
-
+        $fileName  = $this->generateFileName($file);
+        $path      = $this->buildPath($fileName, $folder);
         $uploadUrl = $this->baseUrl . '/storage/v1/object/' . $path;
+
+        // getRealPath() can return false on read-only serverless filesystems
+        // (e.g. Vercel). Use the stream from the UploadedFile directly instead.
+        $stream = fopen($file->getRealPath() ?: $file->getPathname(), 'rb');
+
+        if ($stream === false) {
+            throw new RuntimeException(
+                "Cannot open uploaded file [{$file->getClientOriginalName()}] for reading."
+            );
+        }
 
         $response = Http::withHeaders([
             'apikey'        => $this->key,
             'Authorization' => 'Bearer ' . $this->key,
-            'Content-Type'  => $file->getMimeType(), 
+            'Content-Type'  => $file->getMimeType(),
         ])->withBody(
-            file_get_contents($file->getRealPath()), // 👈 إرسال محتوى الملف مباشرة
-            $file->getMimeType()
+            stream_get_contents($stream),
+            $file->getMimeType(),
         )->post($uploadUrl);
 
+        fclose($stream);
+
         if (! $response->successful()) {
-            // إضافة تفاصيل الخطأ في السجل (Log) لمساعدتك في التتبع على Vercel
-            \Illuminate\Support\Facades\Log::error('Supabase Upload Error', [
+            Log::error('Supabase Upload Error', [
+                'file'   => $file->getClientOriginalName(),
                 'status' => $response->status(),
-                'body' => $response->body()
+                'body'   => $response->body(),
             ]);
 
-            throw new \RuntimeException('Supabase upload failed: ' . $response->body());
+            throw new RuntimeException(
+                "Supabase upload failed for [{$file->getClientOriginalName()}]: " . $response->body()
+            );
         }
 
         return $this->baseUrl . '/storage/v1/object/public/' . $path;
     }
+
     /**
      * Upload multiple files and return an array of public URLs.
      *
@@ -59,11 +80,11 @@ class SupabaseStorageService
     {
         return array_map(
             fn(UploadedFile $file) => $this->upload($file, $folder),
-            $files
+            $files,
         );
     }
 
-    // ─── Private helpers ──────────────────────────────────────────────────
+    // ─── Private helpers ──────────────────────────────────────────────────────
 
     private function generateFileName(UploadedFile $file): string
     {
