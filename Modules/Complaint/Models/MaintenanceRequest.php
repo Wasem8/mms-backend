@@ -19,6 +19,7 @@ class MaintenanceRequest extends Model
     /**
      * The attributes that are mass assignable.
      */
+
     protected $fillable = [
         'reference_number',
         'mosque_id',
@@ -29,18 +30,16 @@ class MaintenanceRequest extends Model
         'urgency',
         'status',
         'rejection_reason',
-        'attachments',
     ];
-
-    protected $casts = [
-        'attachments' => 'array',
-    ];
-
-    // ─── Relationships ────────────────────────────────────────────────────────
 
     public function mosque(): BelongsTo
     {
         return $this->belongsTo(Mosque::class);
+    }
+
+    public function files(): HasMany
+    {
+        return $this->hasMany(MaintenanceRequestFile::class);
     }
 
     public function statusLogs(): HasMany
@@ -48,7 +47,6 @@ class MaintenanceRequest extends Model
         return $this->hasMany(MaintenanceRequestStatusLog::class)
             ->orderBy('changed_at');
     }
-
     public function regionManager(): BelongsTo
     {
         return $this->belongsTo(
