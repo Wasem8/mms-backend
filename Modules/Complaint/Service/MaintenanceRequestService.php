@@ -5,6 +5,7 @@ namespace Modules\Complaint\Service;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Modules\Complaint\DTO\CreateMaintenanceRequestDTO;
 use Modules\Complaint\DTO\ProcessMaintenanceRequestDTO;
 use Modules\Complaint\Repositories\MaintenanceRequestRepositoryInterface;
@@ -30,8 +31,12 @@ class MaintenanceRequestService
     }
     public function create(CreateMaintenanceRequestDTO $dto): MaintenanceRequest
     {
-        return DB::transaction(fn() => $this->repository->create($dto));
-    }
+        $attachmentUrls = $this->uploadImage($dto->attachments);
+
+        return DB::transaction(
+            fn() => $this->repository->create($dto, $attachmentUrls)
+        );
+            }
 
     public function listForAdmin(
         ?string $status   = null,
@@ -78,5 +83,33 @@ class MaintenanceRequestService
         return DB::transaction(
             fn(): MaintenanceRequest => $this->repository->process($maintenanceRequest, $dto)
         );
+    }
+
+    private function uploadImage($image): string
+    {
+        $fileName = uniqid() . '.' . $image->getClientOriginalExtension();
+
+        $baseUrl = config('services.supabase.url');
+        $bucket = config('services.supabase.bucket');
+        $key = config('services.supabase.key');
+
+        $path = $bucket . '/' . $fileName;
+
+        $uploadUrl = $baseUrl . '/storage/v1/object/' . $path;
+
+        $response = Http::withHeaders([
+            'apikey' => $key,
+            'Authorization' => 'Bearer ' . $key,
+        ])->attach(
+            'file',
+            file_get_contents($image),
+            $fileName
+        )->post($uploadUrl);
+
+        if (!$response->successful()) {
+            throw new \Exception('Upload failed: ' . $response->body());
+        }
+
+        return $baseUrl . '/storage/v1/object/public/' . $path;
     }
 }
