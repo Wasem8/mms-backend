@@ -16,6 +16,7 @@ use Modules\Donation\Repositories\SettingRepositoryInterface;
 use Modules\Donation\Models\Campaign;
 use Modules\Mosque\Models\MosqueNeed;
 use ArPHP\I18N\Arabic;
+use Illuminate\Validation\ValidationException;
 use Spatie\Browsershot\Browsershot;
 
 class DonationService
@@ -39,6 +40,22 @@ class DonationService
             ->when($filters['campaign'] ?? null, fn($q, $v) => $q->where('campaign_id', $v))
             ->latest()
             ->paginate(10);
+    }
+
+    public function getByUser(int $userId, array $filters = [])
+    {
+        return Donation::where('user_id', $userId)
+            ->when($filters['search']  ?? null, fn($q, $v) => $q->where('donor_name', 'like', "%{$v}%"))
+            ->when($filters['type']    ?? null, fn($q, $v) => $q->where('donation_type', $v))
+            ->when($filters['status']  ?? null, fn($q, $v) => $q->where('status', $v))
+            ->when($filters['campaign'] ?? null, fn($q, $v) => $q->where('campaign_id', $v))
+            ->latest()
+            ->paginate(10);
+    }
+
+    public function findByReference(string $reference)
+    {
+        return Donation::where('reference', $reference)->firstOrFail();
     }
 
     public function find(int $id): Donation
@@ -100,6 +117,46 @@ class DonationService
     }
     public function create(array $data): array
     {
+
+        if (!empty($data['campaign_id'])) {
+            $campaign  = Campaign::lockForUpdate()->findOrFail($data['campaign_id']);
+            $remaining = (float) $campaign->target_amount - (float) $campaign->collected_amount;
+
+            if ($remaining <= 0) {
+                throw ValidationException::withMessages([
+                    'campaign_id' => __('messages.campaign_already_completed'),
+                ]);
+            }
+
+            if ((float) ($data['amount'] ?? 0) > $remaining) {
+                throw ValidationException::withMessages([
+                    'amount' => __('messages.exceeds_remaining', [
+                        'remaining' => number_format($remaining, 2),
+                        'currency'  => $this->resolveCurrency($data['payment_method']),
+                    ]),
+                ]);
+            }
+        }
+        if (!empty($data['mosque_need_id'])) {
+            $mosqueNeed = MosqueNeed::lockForUpdate()->findOrFail($data['mosque_need_id']);
+            $remaining  = (float) $mosqueNeed->target_amount - (float) $mosqueNeed->collected_amount;
+
+            if ($remaining <= 0) {
+                throw ValidationException::withMessages([
+                    'mosque_need_id' => __('messages.mosque_need_already_fulfilled'),
+                ]);
+            }
+
+            if ((float) ($data['amount'] ?? 0) > $remaining) {
+                throw ValidationException::withMessages([
+                    'amount' => __('messages.exceeds_remaining', [
+                        'remaining' => number_format($remaining, 2),
+                        'currency'  => $this->resolveCurrency($data['payment_method']),
+                    ]),
+                ]);
+            }
+        }
+
         $strategy = PaymentStrategyFactory::make($data['payment_method']);
         $result   = $strategy->pay($data);
 
@@ -135,7 +192,7 @@ class DonationService
                     $donation->campaign()->increment('collected_amount', $donation->base_amount);
                 } elseif ($donation->mosque_need_id) {
                     $donation->mosqueNeed()->increment('collected_amount', $donation->base_amount);
-                }else {
+                } else {
                     // For standalone donations, we might want to track total mosque donations
                     // This is optional and depends on your business logic
                     $donation->mosque()->increment('donation_total', $donation->base_amount);
@@ -161,24 +218,24 @@ class DonationService
             'mosque'         => $donationData->mosque,
             'mosque_name'    => $donationData->mosque?->name ?? 'المسجد الرئيسي',
             'target'         => $target,
-            'donor_name'     => $donationData->donor_name ?? 'متبرع كريم', // سيظهر الآن: أويس عبود
+            'donor_name'     => $donationData->donor_name ?? 'متبرع كريم',
             'payment_method' => $donationData->payment_method === 'cash' ? 'نقدي' : $donationData->payment_method,
             'donation_status' => $donationData->status === 'completed' ? 'مكتمل' : $donationData->status,
             'currency'       => $donationData->currency ?? 'ليرة سورية',
             'issued_at'      => now()->format('Y-m-d'),
         ])->render();
 
-       return Browsershot::html($html)
-    ->setNodeBinary('C:\\Program Files\\nodejs\\node.exe')
-    ->setNpmBinary('C:\\Program Files\\nodejs\\npm.cmd')
-    ->noSandbox()
-    ->emulateMedia('print')
-    ->preferCssPageSize()
-    ->scale(1.0)
-    ->margins(0, 0, 0, 0)
-    ->paperSize(210, 297)
-    ->showBackground()
-    ->pdf();
+        return Browsershot::html($html)
+            ->setNodeBinary('C:\\Program Files\\nodejs\\node.exe')
+            ->setNpmBinary('C:\\Program Files\\nodejs\\npm.cmd')
+            ->noSandbox()
+            ->emulateMedia('print')
+            ->preferCssPageSize()
+            ->scale(1.0)
+            ->margins(0, 0, 0, 0)
+            ->paperSize(210, 297)
+            ->showBackground()
+            ->pdf();
     }
 
     private function resolveTarget(Donation $donation): array
@@ -294,24 +351,5 @@ class DonationService
             $donation->mosqueNeed()->increment('collected_amount', $baseAmount);
         }
     }
-    private function renderHtml(Donation $donation, array $target): string
-    {
-        // تأمين جلب البيانات الطازجة مباشرة من قاعدة البيانات بعد الحفظ
-        $donation = $donation->fresh(['mosque', 'campaign', 'mosqueNeed']);
-
-        return view('donation::receipts.donation', [
-            'donation'       => $donation,
-            'mosque'         => $donation->mosque,
-            'mosque_name'    => $donation->mosque?->name ?? 'المسجد الرئيسي',
-            'target'         => $target,
-            // استخدام الاسم القادم من قاعدة البيانات (مثل: أويس عبود) وفي حال عدم وجوده نضع القيمة الافتراضية
-            'donor_name'     => $donation->donor_name ?? 'متبرع كريم',
-            'payment_method' => $donation->payment_method === 'cash' ? 'نقدي' : $donation->payment_method,
-            'donation_status' => $donation->status === 'completed' ? 'مكتمل' : $donation->status,
-            'currency'       => $donation->currency ?? 'SYP', // أو اجعلها ديناميكية بناءً على الحقل لديك
-            'issued_at'      => now()->format('Y-m-d'),
-        ])->render();
-    }
-
 
 }

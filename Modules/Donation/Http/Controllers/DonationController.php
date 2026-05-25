@@ -26,8 +26,17 @@ class DonationController extends Controller
         return DonationResource::collection($donations)->response();
     }
 
+    public function mine()
+    {
+        $userId    = auth()->guard('api')->id();
+        $filters   = request()->only(['search', 'type', 'status', 'campaign']);
+        $donations = $this->donationService->getByUser($userId, $filters);
 
-// not work yet
+        return DonationResource::collection($donations)->response();
+    }
+
+
+    // not work yet
     public function summary(int $mosqueId)
     {
         $summary = $this->donationService->getDailySummary($mosqueId);
@@ -67,9 +76,9 @@ class DonationController extends Controller
 
 
 
-    public function show(int $id)
+    public function show(string  $ref)
     {
-        $donation = $this->donationService->find($id);
+        $donation = $this->donationService->findByReference($ref);
 
         return (new DonationResource($donation))->response();
     }
@@ -127,7 +136,7 @@ class DonationController extends Controller
             'data'    => new DonationResource($result['donation']),
         ], 201);
     }
-/*
+    /*
     public function store(StoreDonationRequest $request)
     {
         $result = $this->donationService->create($request->validated());

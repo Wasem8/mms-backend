@@ -9,19 +9,16 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
-    {
-        Schema::create('maintenance_request_attachments', function (Blueprint $table) {
+    public function up(): void {
+        Schema::create('maintenance_request_files', function (Blueprint $table) {
             $table->id();
+
             $table->foreignId('maintenance_request_id')
-                ->constrained()
+                ->constrained('maintenance_requests')
                 ->cascadeOnDelete();
 
-            $table->string('file_path');
-
-            $table->foreignId('uploaded_by')
-                ->constrained('users')
-                ->cascadeOnDelete();
+            $table->string('file');       // public Supabase URL
+            $table->string('file_type'); // MIME type
 
             $table->timestamps();
         });
@@ -30,8 +27,5 @@ return new class extends Migration
     /**
      * Reverse the migrations.
      */
-    public function down(): void
-    {
-        Schema::dropIfExists('maintenance_request_attachments');
-    }
+    public function down(): void {}
 };

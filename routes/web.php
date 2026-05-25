@@ -9,3 +9,7 @@ Route::get('/', function () {
 Route::get('/was', function () {
     return "waseem";
 });
+
+Route::get('/dashboard-test', function () {
+    return view('dashboard-test');
+});

@@ -25,7 +25,7 @@ class DawahProgramController extends Controller
         $perPage = $request->input('per_page', 10);
         $programs = $this->dawahProgramService->getAllPrograms($perPage);
 
-        return ApiResponse::success($programs, 'تم جلب البرامج بنجاح');
+        return ApiResponse::success($programs->items(), 'تم جلب البرامج بنجاح', $programs);
     }
 
     public function show(Mosque $mosque, DawahProgram $program)
