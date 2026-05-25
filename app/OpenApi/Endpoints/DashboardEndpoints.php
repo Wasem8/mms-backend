@@ -133,23 +133,45 @@ class DashboardEndpoints
         path: '/dashboard/supervisor/export-pdf',
         operationId: 'exportSupervisorDashboardPdf',
         tags: ['Dashboard'],
-        summary: 'تنزيل تقرير لوحة التحكم بصيغة PDF',
-        description: 'يقوم بتوليد وتنزيل ملف PDF يحتوي على الإحصائيات الحالية للمشرف التربوي مع دعم نفس فلاتر البحث التلقائية.',
+        summary: 'تصدير تقرير المشرف PDF',
+        description: 'تحميل تقرير PDF شامل لإحصائيات المشرف',
         security: [['bearerAuth' => []]],
+
         parameters: [
             new OA\Parameter(
                 name: 'halaqa_id',
                 in: 'query',
-                description: 'معرف الحلقة المحددة لتخصيص محتوى الـ PDF المتولد (اختياري)',
                 required: false,
-                schema: new OA\Schema(type: 'integer')
+                description: 'فلترة حسب الحلقة',
+                schema: new OA\Schema(type: 'integer', example: 1)
+            ),
+            // 🎯 البديل البرمي الذكي: إجبار الـ Swagger UI على طلب ملف PDF في الـ Headers تلقائياً
+            new OA\Parameter(
+                name: 'Accept',
+                in: 'header',
+                required: false,
+                description: 'نوع الرد المطلوب',
+                schema: new OA\Schema(type: 'string', default: 'application/pdf')
             )
         ],
+
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'يتم إرجاع الملف كملف باينري جاهز للتحميل (.pdf Binary Stream)'
-            )
+                description: 'تم توليد ملف الـ PDF بنجاح',
+                content: [
+                    // 🎯 هنا يتم إعلام المتصفح والسواجر رسمياً بنوع الملف الثنائي الصادر
+                    new OA\MediaType(
+                        mediaType: 'application/pdf',
+                        schema: new OA\Schema(
+                            type: 'string',
+                            format: 'binary'
+                        )
+                    )
+                ]
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 500, description: 'Server error')
         ]
     )]
     public function exportPdfDocumentation() {}
@@ -231,6 +253,35 @@ class DashboardEndpoints
     )]
     public function getTeacherStats() {}
 
+    #[OA\Get(
+        path: '/dashboard/teacher/export-pdf',
+        operationId: 'downloadTeacherDashboardPdf',
+        tags: ['Dashboard'],
+        summary: 'تحميل تقرير لوحة تحكم المعلم PDF',
+        description: 'يقوم بإنشاء وتحميل تقرير PDF يحتوي على إحصائيات المعلم والحلقة الخاصة به.',
+        security: [['bearerAuth' => []]],
+
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'ملف PDF جاهز للتحميل',
+                headers: [
+                    new OA\Header(
+                        header: 'Content-Disposition',
+                        description: 'attachment; filename="teacher-dashboard-report.pdf"',
+                        schema: new OA\Schema(type: 'string')
+                    )
+                ],
+                content: new OA\MediaType(
+                    mediaType: 'application/pdf'
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden'),
+        ]
+    )]
+    public function exportPdfDoc() {}
+
     // 🆕 التوثيق الخاص بداشبورد ولي الأمر لمتابعة الأبناء
     #[OA\Get(
         path: '/dashboard/parent/dashboard',
@@ -288,4 +339,74 @@ class DashboardEndpoints
         ]
     )]
     public function getParentStats() {}
+
+    #[OA\Get(
+        path: '/dashboard/parent/export-pdf',
+        operationId: 'exportParentDashboardPdf',
+        tags: ['Dashboard'],
+
+        summary: 'تحميل تقرير ولي الأمر PDF',
+
+        description: 'يقوم بإنشاء وتنزيل تقرير PDF متعدد الصفحات يحتوي على متابعة الأبناء، الحضور، التقييمات، والتقدم الشهري.',
+
+        security: [['bearerAuth' => []]],
+
+        responses: [
+
+            new OA\Response(
+                response: 200,
+
+                description: 'تم إنشاء ملف PDF بنجاح',
+
+                headers: [
+
+                    new OA\Header(
+                        header: 'Content-Disposition',
+
+                        description: 'attachment; filename="parent-report.pdf"',
+
+                        schema: new OA\Schema(
+                            type: 'string'
+                        )
+                    ),
+
+                    new OA\Header(
+                        header: 'Content-Type',
+
+                        description: 'application/pdf',
+
+                        schema: new OA\Schema(
+                            type: 'string',
+                            example: 'application/pdf'
+                        )
+                    ),
+                ],
+
+                content: new OA\MediaType(
+                    mediaType: 'application/pdf'
+                )
+            ),
+
+            new OA\Response(
+                response: 401,
+                description: 'غير مصرح - يجب تسجيل الدخول'
+            ),
+
+            new OA\Response(
+                response: 403,
+                description: 'ليس لديك صلاحية للوصول'
+            ),
+
+            new OA\Response(
+                response: 404,
+                description: 'لا يوجد أبناء مرتبطون بالحساب'
+            ),
+
+            new OA\Response(
+                response: 500,
+                description: 'حدث خطأ أثناء إنشاء التقرير'
+            ),
+        ]
+    )]
+    public function exportPdf() {}
 }

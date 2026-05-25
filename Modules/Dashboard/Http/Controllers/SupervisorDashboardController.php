@@ -23,22 +23,32 @@ class SupervisorDashboardController
         return ApiResponse::success($stats, 'تم جلب إحصائيات لوحة التحكم بنجاح');
     }
 
-    public function exportPdf(Request $request, DashboardService $service)
+    public function exportPdf(Request $request)
     {
         $mosqueId = auth()->user()->mosque_id;
+        $filters = $request->only(['halaqa_id']);
 
-        $filters = [
-            'halaqa_id' => $request->halaqa_id,
-        ];
-
-        $data = $service->getSupervisorStatsForPdf($mosqueId, $filters);
-
-        $pdf = Pdf::loadView(
-            'dashboard::supervisor_report',
-            $data
+        // جلب محتوى الـ PDF كـ Binary String من السيرفس
+        $pdfContent = $this->service->generateSupervisorReportPdf(
+            $mosqueId,
+            $filters
         );
 
-        return $pdf->download('supervisor-report.pdf');
+        // 🎯 الحل: استخدام الـ Stream Response لفرض نوع المحتوى بشكل صارم على المتصفح والسواجر
+        return response()->stream(
+            function () use ($pdfContent) {
+                echo $pdfContent;
+            },
+            200,
+            [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="supervisor-report.pdf"',
+                'Content-Transfer-Encoding' => 'binary',
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+                'Pragma' => 'no-cache',
+                'Expires' => '0',
+            ]
+        );
     }
 
 }

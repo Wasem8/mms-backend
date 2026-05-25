@@ -89,6 +89,12 @@ class Mosque extends Model
         return $this->hasMany(Donation::class);
     }
 
+
+    protected static function newFactory()
+    {
+        return \Modules\Mosque\Database\Factories\MosqueFactory::new();
+    }
+
     public function scopeScopeNearby($query, $latitude, $longitude)
     {
         // معادلة هافرسين لحساب المسافة الجغرافية بالكيلومترات

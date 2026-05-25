@@ -62,7 +62,14 @@ class ExcuseEndpoints
         description: 'يسمح لولي الأمر بمتابعة حالة الأعذار التي أرسلها (مقبولة، مرفوضة، أو قيد الانتظار).',
         security: [['bearerAuth' => []]],
         parameters: [
-            new OA\Parameter(name: 'page', in: 'query', schema: new OA\Schema(type: 'integer', default: 1))
+            new OA\Parameter(name: 'page', in: 'query', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(
+                name: 'student_id',
+                in: 'query',
+                required: false,
+                description: 'معرف الابن (الطالب) لفلترة الأعذار الخاصة به فقط بشكل مستقل',
+                schema: new OA\Schema(type: 'integer', example: 7)
+            )
         ],
         responses: [
             new OA\Response(

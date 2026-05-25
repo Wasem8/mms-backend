@@ -62,7 +62,7 @@ class HalaqaService
 
     public function delete($id)
     {
-        $halaqa = Halaqa::findOrFail($id);
+        $halaqa = $this->find($id);
         $halaqa->delete();
     }
 

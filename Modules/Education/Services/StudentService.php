@@ -53,10 +53,14 @@ class StudentService
     public function find($id)
     {
         return Student::with(['mosque', 'parent', 'halaqats'])
+            ->with([
+                'evaluations' => fn($q) => $q->latest('evaluated_at')
+            ])
             ->withCount([
                 'attendances as total_absent' => fn($q) => $q->whereIn('status', ['absent', 'absent_with_excuse']),
                 'attendances as total_present' => fn($q) => $q->where('status', 'present')
             ])
+            ->withAvg('evaluations', 'score')
             ->forUser(auth()->user())
             ->findOrFail($id);
     }

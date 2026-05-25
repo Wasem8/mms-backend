@@ -125,6 +125,8 @@ use OpenApi\Attributes as OA;
             new OA\Property(property: 'id', type: 'integer', example: 5),
             new OA\Property(property: 'name', type: 'string', example: 'Parent'),
             new OA\Property(property: 'email', type: 'string', example: 'parent@test.com'),
+            // 🎯 التعديل 1: إضافة رقم هاتف ولي الأمر لحل مشكلة تواصل المشرفين (البند 2.3)
+            new OA\Property(property: 'phone', type: 'string', example: '+966500000000'),
         ]),
         new OA\Property(property: 'mosque', type: 'object', properties: [
             new OA\Property(property: 'id', type: 'integer', example: 1),
@@ -142,11 +144,31 @@ use OpenApi\Attributes as OA;
             new OA\Property(property: 'attendance_rate', type: 'string', example: '90.9%'),
             new OA\Property(property: 'last_attendance_at', type: 'string', example: '2026-05-01'),
         ]),
+
+        // 🎯 التعديل 2: إضافة ملخص التقدير العام التراكمي للطالب لـ (البند 6.2) لإنهاء الـ Mock في الموبايل
+        new OA\Property(property: 'evaluation_summary', type: 'object', properties: [
+            new OA\Property(property: 'score_avg', type: 'string', example: '92.5%'),
+            new OA\Property(
+                property: 'label',
+                type: 'string',
+                enum: ['excellent', 'very_good', 'good', 'acceptable'],
+                example: 'excellent'
+            ),
+        ]),
+
         new OA\Property(property: 'profile', type: 'object', properties: [
             new OA\Property(property: 'date_of_birth', type: 'string', format: 'date', example: '2015-05-15'),
             new OA\Property(property: 'gender', type: 'string', example: 'male'),
             new OA\Property(property: 'status', type: 'string', example: 'pending'),
             new OA\Property(property: 'joined_at', type: 'string', format: 'date', example: '2026-05-01'),
+
+            // 🎯 توثيق الحقل الجديد للسواجر هنا
+            new OA\Property(property: 'progress', type: 'object', properties: [
+                new OA\Property(property: 'juz_number', type: 'integer', example: 30),
+                new OA\Property(property: 'juz_name', type: 'string', example: 'جزء عمّ'),
+                new OA\Property(property: 'last_sura', type: 'string', example: 'النازعات'),
+                new OA\Property(property: 'mastery_pct', type: 'string', example: '92.5%'),
+            ]),
         ]),
     ]
 )]

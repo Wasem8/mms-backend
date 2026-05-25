@@ -14,10 +14,12 @@ Route::prefix('dashboard')->group(function () {
     });
     Route::middleware(['auth:api', 'role:teacher'])->group(function () {
     Route::get('/teacher/dashboard', [TeacherDashboardController::class, 'index']);
+            Route::get('/teacher/export-pdf', [TeacherDashboardController::class, 'exportPdf']);
     });
 
     Route::middleware(['auth:api', 'role:parent'])->group(function () {
         Route::get('/parent/dashboard', [ParentDashboardController::class, 'index']);
+        Route::get('/parent/export-pdf', [ParentDashboardController::class, 'exportPdf']);
     });
 });
 
