@@ -60,23 +60,20 @@ class TeacherService
     public function updateTeacher(int $id, array $data): User
     {
         return DB::transaction(function () use ($id, $data) {
-            // 1. جلب المستخدم والتأكد من نطاق مسجد المشرف الحالي
+
             $user = User::where('mosque_id', auth()->user()->mosque_id)
                 ->findOrFail($id);
 
-            // 2. التحقق الصارم من أن الحساب يمتلك دور معلم وليس دوراً آخر (مثل مشرف أو ولي أمر)
             if (!$user->hasRole('teacher')) {
                 throw ValidationException::withMessages([
                     'teacher' => __('messages.user_is_not_a_teacher / الحساب المحدد ليس لمعلم.')
                 ]);
             }
 
-            // 3. تحديث الاسم في جدول users الأساسي إذا تم تمريره
             if (isset($data['name'])) {
                 $user->update(['name' => $data['name']]);
             }
 
-            // 4. تحديث أو إنشاء البروفايل المنفصل (الحقول والـ Enum)
             $user->teacherProfile()->updateOrCreate(
                 ['user_id' => $user->id],
                 [
@@ -87,7 +84,7 @@ class TeacherService
                 ]
             );
 
-            // إرجاع المعلم محمل بالعلاقات المطلوبة للعرض (دون الحلقات كونه لم يتم تعديلها هنا)
+
             return $user->load(['teacherProfile']);
         });
     }

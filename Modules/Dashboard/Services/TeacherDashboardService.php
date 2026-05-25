@@ -8,6 +8,7 @@ use Modules\Education\Models\Attendance;
 use Modules\Education\Models\Evaluation;
 use Modules\Education\Models\Halaqa;
 use Modules\Education\Models\Student;
+use Spatie\Browsershot\Browsershot;
 
 class TeacherDashboardService
 {
@@ -108,5 +109,260 @@ class TeacherDashboardService
                     'time'         => Carbon::parse($ev->evaluated_at)->diffForHumans()
                 ];
             });
+    }
+
+
+    public function generateTeacherReportPdf(
+        int $teacherId
+    ): string {
+
+        $data = $this->getData($teacherId);
+
+        $html = view(
+            'dashboard::reports.teacher',
+            $data
+        )->render();
+
+        return Browsershot::html($html)
+            ->setChromePath(
+                'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+            )
+            ->noSandbox()
+            ->timeout(120)
+            ->format('A4')
+            ->margins(5, 5, 5, 5)
+            ->showBackground()
+            ->waitUntilNetworkIdle()
+            ->pdf();
+    }
+
+    private function getData($teacherId)
+    {
+        $teacher = auth()->user();
+
+        $halaqa = Halaqa::where(
+            'teacher_id',
+            $teacherId
+        )->first();
+
+        if (!$halaqa) {
+            return [
+                'has_halaqa' => false
+            ];
+        }
+
+        $today = Carbon::today();
+
+        /*
+        |-----------------------------------
+        | Students in halaqa
+        |-----------------------------------
+        */
+
+        $halaqaStudents = Student::whereHas(
+            'halaqats',
+            function ($q) use ($halaqa) {
+                $q->where(
+                    'halaqats.id',
+                    $halaqa->id
+                );
+            }
+        )->get();
+
+        /*
+        |-----------------------------------
+        | Student details
+        |-----------------------------------
+        */
+
+        $students = $halaqaStudents->map(
+            function ($student) use (
+                $today,
+                $halaqa
+            ) {
+
+                $attendanceToday =
+                    Attendance::where(
+                        'student_id',
+                        $student->id
+                    )
+                        ->where(
+                            'halaqa_id',
+                            $halaqa->id
+                        )
+                        ->whereDate(
+                            'date',
+                            $today
+                        )
+                        ->value('status')
+                    ?? 'لم يرصد';
+
+                $attendancePercentage =
+                    Attendance::where(
+                        'student_id',
+                        $student->id
+                    )
+                        ->where(
+                            'halaqa_id',
+                            $halaqa->id
+                        )
+                        ->whereMonth(
+                            'date',
+                            now()->month
+                        )
+                        ->selectRaw("
+                        ROUND(
+                            (
+                                SUM(
+                                    CASE
+                                        WHEN status='present'
+                                        THEN 1
+                                        ELSE 0
+                                    END
+                                )::decimal
+                                /
+                                NULLIF(COUNT(*),0)
+                            ) * 100
+                        ) as percentage
+                    ")
+                        ->value('percentage')
+                    ?? 0;
+
+                $averageScore =
+                    round(
+                        Evaluation::where(
+                            'student_id',
+                            $student->id
+                        )
+                            ->where(
+                                'halaqa_id',
+                                $halaqa->id
+                            )
+                            ->avg('score')
+                        ?? 0
+                    );
+
+                $performance = match (true) {
+                    $averageScore >= 90 => 'ممتاز',
+                    $averageScore >= 75 => 'جيد جداً',
+                    $averageScore >= 60 => 'جيد',
+                    default => 'بحاجة متابعة',
+                };
+
+                return [
+
+                    'name' =>
+                        "{$student->first_name} {$student->last_name}",
+
+                    'attendance' =>
+                        $attendanceToday,
+
+                    'attendance_percentage' =>
+                        $attendancePercentage,
+
+                    'average_score' =>
+                        $averageScore,
+
+                    'performance' =>
+                        $performance,
+                ];
+            }
+        );
+
+        /*
+        |-----------------------------------
+        | Attendance summary
+        |-----------------------------------
+        */
+
+        $attendanceToday =
+            Attendance::where(
+                'halaqa_id',
+                $halaqa->id
+            )
+                ->whereDate(
+                    'date',
+                    $today
+                )
+                ->get();
+
+        $present =
+            $attendanceToday
+                ->where(
+                    'status',
+                    'present'
+                )
+                ->count();
+
+        $studentsCount =
+            $halaqaStudents->count();
+
+        $attendanceRate =
+            $studentsCount
+                ? round(
+                ($present / $studentsCount) * 100
+            )
+                : 0;
+
+        /*
+        |-----------------------------------
+        | Latest evaluations
+        |-----------------------------------
+        */
+
+        $evaluations =
+            Evaluation::where(
+                'halaqa_id',
+                $halaqa->id
+            )
+                ->with('student')
+                ->latest('evaluated_at')
+                ->take(10)
+                ->get();
+
+        /*
+        |-----------------------------------
+        | General average score
+        |-----------------------------------
+        */
+
+        $averageScore =
+            round(
+                $students->avg(
+                    'average_score'
+                ) ?? 0
+            );
+
+        return [
+
+            'has_halaqa' => true,
+
+            'teacher' =>
+                $teacher,
+
+            'halaqa' =>
+                $halaqa,
+
+            'cards' => [
+
+                'students' =>
+                    $studentsCount,
+
+                'attendance_rate' =>
+                    $attendanceRate,
+
+                'evaluations_today' =>
+                    $evaluations->count(),
+
+                'average_score' =>
+                    $averageScore,
+            ],
+
+            'students' =>
+                $students,
+
+            'evaluations' =>
+                $evaluations,
+        ];
     }
 }

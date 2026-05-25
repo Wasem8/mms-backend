@@ -3086,23 +3086,48 @@
                 "tags": [
                     "Dashboard"
                 ],
-                "summary": "تنزيل تقرير لوحة التحكم بصيغة PDF",
-                "description": "يقوم بتوليد وتنزيل ملف PDF يحتوي على الإحصائيات الحالية للمشرف التربوي مع دعم نفس فلاتر البحث التلقائية.",
+                "summary": "تصدير تقرير المشرف PDF",
+                "description": "تحميل تقرير PDF شامل لإحصائيات المشرف",
                 "operationId": "exportSupervisorDashboardPdf",
                 "parameters": [
                     {
                         "name": "halaqa_id",
                         "in": "query",
-                        "description": "معرف الحلقة المحددة لتخصيص محتوى الـ PDF المتولد (اختياري)",
+                        "description": "فلترة حسب الحلقة",
                         "required": false,
                         "schema": {
-                            "type": "integer"
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "Accept",
+                        "in": "header",
+                        "description": "نوع الرد المطلوب",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "application/pdf"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "يتم إرجاع الملف كملف باينري جاهز للتحميل (.pdf Binary Stream)"
+                        "description": "تم توليد ملف الـ PDF بنجاح",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "500": {
+                        "description": "Server error"
                     }
                 },
                 "security": [
@@ -3241,6 +3266,43 @@
                 ]
             }
         },
+        "/dashboard/teacher/export-pdf": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "تحميل تقرير لوحة تحكم المعلم PDF",
+                "description": "يقوم بإنشاء وتحميل تقرير PDF يحتوي على إحصائيات المعلم والحلقة الخاصة به.",
+                "operationId": "downloadTeacherDashboardPdf",
+                "responses": {
+                    "200": {
+                        "description": "ملف PDF جاهز للتحميل",
+                        "headers": {
+                            "Content-Disposition": {
+                                "description": "attachment; filename=\"teacher-dashboard-report.pdf\"",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/pdf": {}
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/dashboard/parent/dashboard": {
             "get": {
                 "tags": [
@@ -3337,6 +3399,56 @@
                     },
                     "500": {
                         "description": "خطأ داخلي في السيرفر"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/dashboard/parent/export-pdf": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "تحميل تقرير ولي الأمر PDF",
+                "description": "يقوم بإنشاء وتنزيل تقرير PDF متعدد الصفحات يحتوي على متابعة الأبناء، الحضور، التقييمات، والتقدم الشهري.",
+                "operationId": "exportParentDashboardPdf",
+                "responses": {
+                    "200": {
+                        "description": "تم إنشاء ملف PDF بنجاح",
+                        "headers": {
+                            "Content-Disposition": {
+                                "description": "attachment; filename=\"parent-report.pdf\"",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            },
+                            "Content-Type": {
+                                "description": "application/pdf",
+                                "schema": {
+                                    "type": "string",
+                                    "example": "application/pdf"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/pdf": {}
+                        }
+                    },
+                    "401": {
+                        "description": "غير مصرح - يجب تسجيل الدخول"
+                    },
+                    "403": {
+                        "description": "ليس لديك صلاحية للوصول"
+                    },
+                    "404": {
+                        "description": "لا يوجد أبناء مرتبطون بالحساب"
+                    },
+                    "500": {
+                        "description": "حدث خطأ أثناء إنشاء التقرير"
                     }
                 },
                 "security": [
@@ -7338,6 +7450,16 @@
                         "schema": {
                             "type": "integer",
                             "default": 1
+                        }
+                    },
+                    {
+                        "name": "student_id",
+                        "in": "query",
+                        "description": "معرف الابن (الطالب) لفلترة الأعذار الخاصة به فقط بشكل مستقل",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 7
                         }
                     }
                 ],
@@ -14052,6 +14174,10 @@
                             "email": {
                                 "type": "string",
                                 "example": "parent@test.com"
+                            },
+                            "phone": {
+                                "type": "string",
+                                "example": "+966500000000"
                             }
                         },
                         "type": "object"
@@ -14106,6 +14232,25 @@
                         },
                         "type": "object"
                     },
+                    "evaluation_summary": {
+                        "properties": {
+                            "score_avg": {
+                                "type": "string",
+                                "example": "92.5%"
+                            },
+                            "label": {
+                                "type": "string",
+                                "example": "excellent",
+                                "enum": [
+                                    "excellent",
+                                    "very_good",
+                                    "good",
+                                    "acceptable"
+                                ]
+                            }
+                        },
+                        "type": "object"
+                    },
                     "profile": {
                         "properties": {
                             "date_of_birth": {
@@ -14125,6 +14270,27 @@
                                 "type": "string",
                                 "format": "date",
                                 "example": "2026-05-01"
+                            },
+                            "progress": {
+                                "properties": {
+                                    "juz_number": {
+                                        "type": "integer",
+                                        "example": 30
+                                    },
+                                    "juz_name": {
+                                        "type": "string",
+                                        "example": "جزء عمّ"
+                                    },
+                                    "last_sura": {
+                                        "type": "string",
+                                        "example": "النازعات"
+                                    },
+                                    "mastery_pct": {
+                                        "type": "string",
+                                        "example": "92.5%"
+                                    }
+                                },
+                                "type": "object"
                             }
                         },
                         "type": "object"

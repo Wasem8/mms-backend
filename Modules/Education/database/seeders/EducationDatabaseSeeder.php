@@ -3,14 +3,18 @@
 namespace Modules\Education\Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+
+use Modules\User\Models\User;
+use Modules\User\Models\Role;
+
+use Modules\Mosque\Models\Mosque;
+
 use Modules\Education\Models\Halaqa;
 use Modules\Education\Models\Student;
 use Modules\Education\Models\Attendance;
-use Modules\Education\Models\Evaluation; // 💡 تم إضافة موديل التقييمات
-use Modules\Mosque\Models\Mosque;
-use Modules\User\Models\User;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+use Modules\Education\Models\Evaluation;
 
 class EducationDatabaseSeeder extends Seeder
 {
@@ -19,131 +23,405 @@ class EducationDatabaseSeeder extends Seeder
         DB::beginTransaction();
 
         try {
-            // 🕌 1. جلب المساجد والتأكد من وجودها
-            $mosques = Mosque::take(2)->get();
-            $mosque1 = $mosques[0] ?? null;
-            $mosque2 = $mosques[1] ?? null;
 
-            if (!$mosque1) {
-                // خطوة احترازية إذا كانت قاعدة البيانات فارغة تماماً من المساجد
-                $mosque1 = Mosque::create(['name' => 'المسجد الكبير']);
-                $mosque2 = Mosque::create(['name' => 'مسجد النور']);
-            }
+            /*
+            |--------------------------------------------------------------------------
+            | MOSQUES
+            |--------------------------------------------------------------------------
+            */
 
-            // 👨‍🏫 2. إنشاء المدرسين وربطهم بالمسجد الأول
-            $teacher = User::firstOrCreate(
-                ['email' => 'teacher@test.com'],
-                [
-                    'name' => 'Teacher One',
-                    'password' => bcrypt('password'),
-                    'mosque_id' => $mosque1->id, // 💡 ربط المعلم بالمسجد
-                ]
-            );
-
-            if (!$teacher->hasRole('teacher')) {
-                $teacher->assignRole('teacher');
-            }
-
-            // 📚 3. إنشاء الحلقات
-            $halaqa1 = Halaqa::create([
-                'name' => 'حلقة التحفيظ - المستوى الأول',
-                'teacher_id' => $teacher->id,
-                'mosque_id' => $mosque1->id,
-                'capacity' => 10,
-                'schedule_days' => ['sunday', 'tuesday', 'thursday'],
-                'start_time' => '16:00',
-                'end_time' => '18:00',
-                'status' => 'active',
+            $mosque1 = Mosque::firstOrCreate([
+                'name' => 'مسجد النور'
             ]);
 
-            $halaqa2 = Halaqa::create([
-                'name' => 'حلقة النور',
-                'teacher_id' => $teacher->id,
-                'mosque_id' => $mosque2->id,
-                'capacity' => 15,
-                'schedule_days' => ['saturday', 'monday'],
-                'start_time' => '15:00',
-                'end_time' => '17:00',
-                'status' => 'active',
+            $mosque2 = Mosque::firstOrCreate([
+                'name' => 'المسجد الكبير'
             ]);
 
-            // 👦 4. إنشاء الطلاب
-            $students = collect();
-            for ($i = 1; $i <= 10; $i++) {
-                $students->push(
-                    Student::create([
-                        'first_name' => "Student",
-                        'last_name' => "$i",
-                        'mosque_id' => $i <= 5 ? $mosque1->id : $mosque2->id,
-                        'date_of_birth' => now()->subYears(10 + $i)->toDateString(),
-                        'status' => 'active',
-                    ])
+            /*
+            |--------------------------------------------------------------------------
+            | MAIN PARENT (existing)
+            |--------------------------------------------------------------------------
+            */
+
+            $mainParent = User::where(
+                'email',
+                'parent@test.com'
+            )->first();
+
+            if (!$mainParent) {
+                throw new \Exception(
+                    'parent@test.com not found'
                 );
             }
 
-            // 🔗 5. ربط الطلاب بالحلقات
-            $halaqa1->students()->attach(
-                $students->take(5)->pluck('id')->mapWithKeys(fn ($id) => [
-                    $id => ['joined_at' => now(), 'status' => 'active']
-                ])
-            );
+            /*
+            |--------------------------------------------------------------------------
+            | ROLE
+            |--------------------------------------------------------------------------
+            */
 
-            $halaqa2->students()->attach(
-                $students->skip(5)->pluck('id')->mapWithKeys(fn ($id) => [
-                    $id => ['joined_at' => now(), 'status' => 'active']
-                ])
-            );
+            $parentRole = Role::where(
+                'name',
+                'parent'
+            )->first();
 
-            // 📅 6. توليد سجل حضور وغياب مكثف (لآخر 7 أيام) لتغذية الشارت الأسبوعي
-            for ($dayOffset = 6; $dayOffset >= 0; $dayOffset--) {
-                $targetDate = Carbon::today()->subDays($dayOffset);
+            /*
+            |--------------------------------------------------------------------------
+            | SUPERVISORS
+            |--------------------------------------------------------------------------
+            */
+
+            $supervisors = collect();
+
+            for ($i = 1; $i <= 2; $i++) {
+
+                $supervisor = User::firstOrCreate(
+                    ['email' => "supervisor$i@test.com"],
+                    [
+                        'name' => "Supervisor $i",
+                        'password' => bcrypt('password'),
+                        'mosque_id' =>
+                            $i === 1
+                                ? $mosque1->id
+                                : $mosque2->id,
+                    ]
+                );
+
+                $supervisors->push($supervisor);
+            }
+
+            /*
+|--------------------------------------------------------------------------
+| MAIN TEACHER (existing)
+|--------------------------------------------------------------------------
+*/
+
+            $mainTeacher = User::where(
+                'email',
+                'teacher@test.com'
+            )->first();
+
+            if (!$mainTeacher) {
+                throw new \Exception(
+                    'teacher@test.com not found'
+                );
+            }
+
+            /*
+  |--------------------------------------------------------------------------
+  | TEACHERS
+  |--------------------------------------------------------------------------
+  */
+
+            $teachers = collect();
+
+            /*
+            |--------------------------------------------------------------------------
+            | المعلم الرئيسي الموجود مسبقاً
+            |--------------------------------------------------------------------------
+            */
+
+            $teachers->push($mainTeacher);
+
+            /*
+            |--------------------------------------------------------------------------
+            | باقي المعلمين
+            |--------------------------------------------------------------------------
+            */
+
+            for ($i = 1; $i <= 6; $i++) {
+
+                $teacher = User::firstOrCreate(
+                    ['email' => "teacher$i@test.com"],
+                    [
+                        'name' => "Teacher $i",
+                        'password' => bcrypt('password'),
+                        'mosque_id' =>
+                            $i <= 3
+                                ? $mosque1->id
+                                : $mosque2->id,
+                    ]
+                );
+
+                $teachers->push($teacher);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | EXTRA PARENTS
+            |--------------------------------------------------------------------------
+            */
+
+            $parents = collect();
+
+            $parents->push($mainParent);
+
+            for ($i = 1; $i <= 12; $i++) {
+
+                $parent = User::firstOrCreate(
+                    ['email' => "parent$i@test.com"],
+                    [
+                        'name' => "ولي أمر $i",
+                        'password' => bcrypt('password'),
+                        'mosque_id' =>
+                            $i <= 6
+                                ? $mosque1->id
+                                : $mosque2->id,
+                    ]
+                );
+
+                if (
+                    $parentRole &&
+                    !$parent->hasRole('parent')
+                ) {
+                    $parent->roles()
+                        ->syncWithoutDetaching([
+                            $parentRole->id
+                        ]);
+                }
+
+                $parents->push($parent);
+            }
+
+            /*
+  |--------------------------------------------------------------------------
+  | HALAQAT
+  |--------------------------------------------------------------------------
+  */
+
+            $halaqat = collect();
+
+            $counter = 1;
+
+            foreach ($teachers as $teacher) {
+
+                /*
+                |--------------------------------------------------------------------------
+                | teacher@test.com => 2 أو 3 حلقات
+                |--------------------------------------------------------------------------
+                */
+
+                $halaqaCount =
+                    $teacher->id === $mainTeacher->id
+                        ? rand(2, 3)
+                        : 1;
+
+                for ($i = 1; $i <= $halaqaCount; $i++) {
+
+                    $halaqa = Halaqa::create([
+
+                        'name' => 'حلقة ' . $counter,
+
+                        'teacher_id' => $teacher->id,
+
+                        'mosque_id' => $teacher->mosque_id,
+
+                        'capacity' => rand(10, 25),
+
+                        'schedule_days' => collect([
+                            ['sunday', 'tuesday', 'thursday'],
+                            ['monday', 'wednesday'],
+                            ['saturday', 'monday'],
+                        ])->random(),
+
+                        'start_time' => '16:00',
+
+                        'end_time' => '18:00',
+
+                        'status' => 'active',
+                    ]);
+
+                    $halaqat->push($halaqa);
+
+                    $counter++;
+                }
+            }
+
+            /*
+ |--------------------------------------------------------------------------
+ | STUDENTS
+ |--------------------------------------------------------------------------
+ */
+
+            $students = collect();
+
+            /*
+            |--------------------------------------------------------------------------
+            | اختار عدد ثابت بين 3 و4 للحساب الرئيسي
+            |--------------------------------------------------------------------------
+            */
+
+            $mainParentChildrenCount = rand(3, 4);
+
+            for ($i = 1; $i <= 60; $i++) {
+
+                $student = Student::create([
+
+                    'first_name' => 'طالب',
+
+                    'last_name' => $i,
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | فقط أول 3 أو 4 للحساب الرئيسي
+                    |--------------------------------------------------------------------------
+                    */
+                    'parent_id' =>
+                        $i <= $mainParentChildrenCount
+                            ? $mainParent->id
+                            : $parents
+                            ->where('id', '!=', $mainParent->id)
+                            ->random()
+                            ->id,
+
+                    'mosque_id' =>
+                        $i <= 30
+                            ? $mosque1->id
+                            : $mosque2->id,
+
+                    'date_of_birth' => now()
+                        ->subYears(rand(8, 18))
+                        ->toDateString(),
+
+                    'status' => 'active',
+                ]);
+
+                $students->push($student);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | ATTACH TO HALAQAT
+            |--------------------------------------------------------------------------
+            */
+
+            foreach ($students as $student) {
+
+                $halaqa = $halaqat->random();
+
+                $halaqa->students()->attach([
+
+                    $student->id => [
+
+                        'joined_at' => now(),
+
+                        'status' => 'active'
+                    ]
+                ]);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | ATTENDANCE
+            |--------------------------------------------------------------------------
+            */
+
+            for ($day = 90; $day >= 0; $day--) {
+
+                $date = Carbon::today()
+                    ->subDays($day);
 
                 foreach ($students as $student) {
-                    // جعل الطالب رقم 1 يغيب كثيراً ليظهر بوضوح في "تقرير الغياب العام"
-                    if ($student->id == 1 && $dayOffset % 2 == 0) {
-                        $status = 'absent';
-                    } else {
-                        $status = collect(['present', 'present', 'present', 'late', 'absent'])->random();
+
+                    $halaqaId = $student
+                        ->halaqats()
+                        ->first()?->id;
+
+                    if (!$halaqaId) {
+                        continue;
                     }
 
+                    $status = collect([
+                        'present',
+                        'present',
+                        'late',
+                        'absent',
+                        'excused'
+                    ])->random();
+
                     Attendance::create([
-                        'halaqa_id' => $student->id <= 5 ? $halaqa1->id : $halaqa2->id,
+
+                        'halaqa_id' => $halaqaId,
+
                         'student_id' => $student->id,
-                        'date' => $targetDate->toDateString(),
+
+                        'date' => $date,
+
                         'status' => $status,
-                        'notes' => $status === 'absent' ? 'غياب بدون عذر' : null,
+
+                        'notes' => null,
                     ]);
                 }
             }
 
-            // 📝 7. توليد بيانات تقييمات (Evaluations) لآخر 5 أشهر لتغذية منحنى الحفظ
-            $surahs = ['البقرة', 'آل عمران', 'النساء', 'المائدة', 'الأنعام'];
+            /*
+            |--------------------------------------------------------------------------
+            | EVALUATIONS
+            |--------------------------------------------------------------------------
+            */
 
-            for ($monthOffset = 4; $monthOffset >= 0; $monthOffset--) {
-                $evaluatedMonth = Carbon::today()->subMonths($monthOffset);
+            $surahs = [
 
-                // نختار عينة عشوائية من الطلاب لوضع تقييمات لهم كل شهر
+                'الفاتحة',
+                'البقرة',
+                'آل عمران',
+                'النساء',
+                'المائدة',
+                'الأنعام',
+            ];
+
+            for ($month = 11; $month >= 0; $month--) {
+
                 foreach ($students as $student) {
-                    $fromAyah = rand(1, 50);
-                    $toAyah = $fromAyah + rand(10, 30); // توليد فارق آيات مناسب للإنجاز
 
-                    Evaluation::create([
-                        'halaqa_id' => $student->id <= 5 ? $halaqa1->id : $halaqa2->id,
-                        'student_id' => $student->id,
-                        'surah_name' => collect($surahs)->random(),
-                        'from_ayah' => $fromAyah,
-                        'to_ayah' => $toAyah,
-                        'score' => rand(80, 100), // درجات ممتازة ليرتفع منحنى الأداء
-                        'notes' => 'قراءة ممتازة مع مراعاة أحكام التجويد',
-                        'evaluated_at' => $evaluatedMonth->subDays(rand(1, 20))->toDateTimeString(),
-                    ]);
+                    $halaqaId = $student
+                        ->halaqats()
+                        ->first()?->id;
+
+                    if (!$halaqaId) {
+                        continue;
+                    }
+
+                    for ($i = 0; $i < rand(8, 15); $i++) {
+
+                        $from = rand(1, 150);
+
+                        Evaluation::create([
+
+                            'halaqa_id' => $halaqaId,
+
+                            'student_id' => $student->id,
+
+                            'surah_name' =>
+                                collect($surahs)->random(),
+
+                            'from_ayah' => $from,
+
+                            'to_ayah' =>
+                                $from + rand(3, 20),
+
+                            'score' =>
+                                rand(65, 100),
+
+                            'notes' =>
+                                'تقييم دوري',
+
+                            'evaluated_at' =>
+                                Carbon::today()
+                                    ->subMonths($month)
+                                    ->subDays(rand(1, 25)),
+                        ]);
+                    }
                 }
             }
 
             DB::commit();
 
         } catch (\Throwable $e) {
+
             DB::rollBack();
+
             throw $e;
         }
     }

@@ -31,4 +31,23 @@ class ParentDashboardController extends Controller
             'data'    => $stats
         ]);
     }
+
+    public function exportPdf()
+    {
+        $parentId = auth()->id();
+
+        $pdf = $this->parentDashboardService->generateParentReportPdf($parentId);
+
+        return response()->stream(
+            function () use ($pdf) {
+                echo $pdf;
+            },
+            200,
+            [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="parent-report.pdf"',
+                'Cache-Control' => 'no-store, no-cache, must-revalidate',
+            ]
+        );
+    }
 }

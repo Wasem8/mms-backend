@@ -89,5 +89,10 @@ class Mosque extends Model
         return $this->hasMany(Donation::class);
     }
 
-   
+
+    protected static function newFactory()
+    {
+        return \Modules\Mosque\Database\Factories\MosqueFactory::new();
+    }
+
 }

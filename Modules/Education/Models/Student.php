@@ -3,11 +3,14 @@
 namespace Modules\Education\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Mosque\Models\Mosque;
 use Modules\User\Models\User;
 
 class Student extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'parent_id',
         'first_name',
@@ -58,5 +61,16 @@ class Student extends Model
             $user->isParent()        => $query->where('parent_id', $user->id),
             default                  => $query->whereRaw('1 = 0'),
         };
+    }
+
+
+    public function evaluations()
+    {
+        return $this->hasMany(Evaluation::class);
+    }
+
+    protected static function newFactory()
+    {
+        return \Modules\Education\Database\Factories\StudentFactory::new();
     }
 }
