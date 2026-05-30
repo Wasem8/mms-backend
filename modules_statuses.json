@@ -8,5 +8,6 @@
     "Community": true,
     "Common": true,
     "Complaint": true,
-    "Donation": true
+    "Donation": true,
+    "MaintenanceRequest": true
 }

@@ -24,16 +24,3 @@ Route::middleware(['auth:api',])->prefix('complaints/member')->group(function ()
     Route::post('/', [ComplaintController::class, 'storeMember']);
 });
 
-
-Route::prefix('maintenance')->middleware(['auth:api'])->group(function () {
-    Route::middleware(['role:mosque_manager,super_admin'])->group(function () {
-        Route::get('/track/{reference}', [MaintenanceRequestController::class, 'track']);
-        Route::get('/', [MaintenanceRequestController::class, 'index']);
-        Route::post('/', [MaintenanceRequestController::class, 'store']);
-    });
-
-    Route::middleware(['role:super_admin'])->group(function () {
-        Route::get('/admin', [AdminMaintenanceRequestController::class, 'index']);
-        Route::put('/{id}/process', [AdminMaintenanceRequestController::class, 'process']);
-    });
-});
