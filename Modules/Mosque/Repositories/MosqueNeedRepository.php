@@ -12,6 +12,26 @@ class MosqueNeedRepository implements MosqueNeedRepositoryInterface
         return MosqueNeed::latest()->paginate($perPage);
     }
 
+    public function getAllPaginated(array $filters, int $perPage = 10): LengthAwarePaginator
+    {
+        $query = MosqueNeed::query()->with('mosque');
+
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['type'])) {
+            $query->where('type', $filters['type']);
+        }
+
+        if (isset($filters['urgent'])) {
+            $isUrgent = filter_var($filters['urgent'], FILTER_VALIDATE_BOOLEAN);
+            $query->where('is_urgent', $isUrgent);
+        }
+
+        return $query->latest()->paginate($perPage);
+    }
+
     public function find(int $id): ?MosqueNeed
     {
         return MosqueNeed::find($id);

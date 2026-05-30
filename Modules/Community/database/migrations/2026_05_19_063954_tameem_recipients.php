@@ -9,29 +9,25 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
-    {
-        Schema::create('maintenance_request_attachments', function (Blueprint $table) {
+    public function up(): void {
+        Schema::create('tameem_recipients', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('maintenance_request_id')
-                ->constrained()
+            $table->foreignId('tameem_id')
+                ->constrained('tameems')
                 ->cascadeOnDelete();
-
-            $table->string('file_path');
-
-            $table->foreignId('uploaded_by')
+            $table->foreignId('mosque_manager_id')
                 ->constrained('users')
                 ->cascadeOnDelete();
-
+            $table->boolean('is_read')->default(false);
+            $table->timestamp('read_at')->nullable();
             $table->timestamps();
+
+            $table->unique(['tameem_id', 'mosque_manager_id']);
         });
     }
 
     /**
      * Reverse the migrations.
      */
-    public function down(): void
-    {
-        Schema::dropIfExists('maintenance_request_attachments');
-    }
+    public function down(): void {}
 };

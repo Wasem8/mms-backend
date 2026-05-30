@@ -1,0 +1,11 @@
+{
+    "name": "MaintenanceRequest",
+    "alias": "maintenancerequest",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\MaintenanceRequest\\Providers\\MaintenanceRequestServiceProvider"
+    ],
+    "files": []
+}

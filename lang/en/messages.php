@@ -55,4 +55,12 @@ return [
     'notification_marked_read' => 'Notification marked as read.',
     'notifications_all_marked_read' => 'All notifications marked as read.',
     'notification_deleted' => 'Notification deleted successfully.',
+
+
+    //Donation
+    // lang/en/messages.php  — add these keys
+    'campaign_already_completed' => 'This campaign has already reached its target and is no longer accepting donations.',
+    'exceeds_remaining'          => 'Your donation amount exceeds the remaining balance of :remaining :currency for this campaign.',
+    'mosque_need_already_fulfilled' => 'This mosque need has already been fulfilled and is no longer accepting donations.',
+
 ];

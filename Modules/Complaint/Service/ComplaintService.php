@@ -41,8 +41,6 @@ class ComplaintService
                 $this->repository->attachFiles($complaint, $fileRecords);
             }
         }
-
-
         return $complaint;
     }
 

@@ -146,6 +146,23 @@ class MosqueService
         ]);
     }
 
+    public function getNearbyMosques(array $params)
+    {
+        $lat = (float) $params['latitude'];
+        $lng = (float) $params['longitude'];
+        $perPage = (int) ($params['limit'] ?? $params['per_page'] ?? 15);
+
+        return $this->mosqueRepository->getNearbyMosques($lat, $lng, $perPage);
+    }
+
+
+
+
+
+
+
+
+
 
     private function uploadImage($image): string
     {

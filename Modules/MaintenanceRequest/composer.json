@@ -1,0 +1,30 @@
+{
+    "name": "nwidart/maintenancerequest",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\MaintenanceRequest\\": "app/",
+            "Modules\\MaintenanceRequest\\Database\\Factories\\": "database/factories/",
+            "Modules\\MaintenanceRequest\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\MaintenanceRequest\\Tests\\": "tests/"
+        }
+    }
+}

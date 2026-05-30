@@ -51,12 +51,12 @@ class StripePayment implements PaymentStrategyInterface
 
     private function generateReference(): string
     {
-        $sequence  = str_pad(random_int(1000, 9999), 4, '0', STR_PAD_LEFT);
+        $sequence  = str_pad(random_int(1000, 9999), 6, '0', STR_PAD_LEFT);
         $year      = now()->year;
         $candidate = "REC-{$sequence}-{$year}";
 
         while (\Modules\Donation\Models\Donation::where('reference', $candidate)->exists()) {
-            $sequence  = str_pad(random_int(1000, 9999), 4, '0', STR_PAD_LEFT);
+            $sequence  = str_pad(random_int(1000, 9999), 6, '0', STR_PAD_LEFT);
             $candidate = "REC-{$sequence}-{$year}";
         }
 

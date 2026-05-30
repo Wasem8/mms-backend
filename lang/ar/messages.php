@@ -54,4 +54,9 @@ return [
     'notification_marked_read' => 'تم تحديد الإشعار كمقروء.',
     'notifications_all_marked_read' => 'تم تحديد كل الإشعارات كمقروءة.',
     'notification_deleted' => 'تم حذف الإشعار بنجاح.',
+
+    //التبرعات
+    'campaign_already_completed' => 'لقد بلغت هذه الحملة هدفها ولم تعد تقبل التبرعات.',
+    'exceeds_remaining'          => 'مبلغ تبرعك يتجاوز المبلغ المتبقي وهو :remaining :currency لهذه الحملة.',
+    'mosque_need_already_fulfilled' => 'تم استيفاء هذه الحاجة بالكامل ولم تعد تقبل التبرعات.',
 ];
