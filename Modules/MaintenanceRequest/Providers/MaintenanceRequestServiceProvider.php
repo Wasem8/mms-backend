@@ -1,25 +1,23 @@
 <?php
 
-namespace Modules\Complaint\Providers;
+namespace Modules\MaintenanceRequest\Providers;
 
 use Nwidart\Modules\Support\ModuleServiceProvider;
 use Illuminate\Console\Scheduling\Schedule;
-use Modules\Complaint\Repositories\ComplaintRepository;
-use Modules\Complaint\Repositories\ComplaintRepositoryInterface;
-use Modules\Complaint\Repositories\MaintenanceRequestRepository;
-use Modules\Complaint\Repositories\MaintenanceRequestRepositoryInterface;
+use Modules\MaintenanceRequest\Repositories\MaintenanceRepository;
+use Modules\MaintenanceRequest\Repositories\MaintenanceRepositoryInterface;
 
-class ComplaintServiceProvider extends ModuleServiceProvider
+class MaintenanceRequestServiceProvider extends ModuleServiceProvider
 {
     /**
      * The name of the module.
      */
-    protected string $name = 'Complaint';
+    protected string $name = 'MaintenanceRequest';
 
     /**
      * The lowercase version of the module name.
      */
-    protected string $nameLower = 'complaint';
+    protected string $nameLower = 'maintenancerequest';
 
     /**
      * Command classes to register.
@@ -42,8 +40,12 @@ class ComplaintServiceProvider extends ModuleServiceProvider
     {
         $this->app->register(RouteServiceProvider::class);
 
-        $this->app->bind(ComplaintRepositoryInterface::class, ComplaintRepository::class);
+        $this->app->bind(
+        MaintenanceRepositoryInterface::class,
+        MaintenanceRepository::class,
+        );
     }
+
     /**
      * Define module schedules.
      *

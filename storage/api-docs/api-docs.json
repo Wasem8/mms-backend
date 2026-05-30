@@ -8274,9 +8274,9 @@
                 "tags": [
                     "Maintenance Requests"
                 ],
-                "summary": "List maintenance requests for a mosque",
-                "description": "Returns a paginated list of maintenance requests scoped to the authenticated mosque manager's mosque. Filterable by status.",
-                "operationId": "mosque.maintenanceRequests.index",
+                "summary": "List maintenance requests",
+                "description": "Returns a paginated list of maintenance requests scoped to the authenticated mosque manager's mosque. Filterable by status and priority.",
+                "operationId": "maintenance.index",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/AcceptLanguageHeader"
@@ -8284,7 +8284,6 @@
                     {
                         "name": "status",
                         "in": "query",
-                        "description": "Filter by request status.",
                         "required": false,
                         "schema": {
                             "type": "string",
@@ -8293,14 +8292,28 @@
                                 "pending",
                                 "in_progress",
                                 "completed",
-                                "rejected"
+                                "cancelled"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "priority",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "high",
+                            "enum": [
+                                "low",
+                                "medium",
+                                "high",
+                                "urgent"
                             ]
                         }
                     },
                     {
                         "name": "per_page",
                         "in": "query",
-                        "description": "Number of results per page. Defaults to 15.",
                         "required": false,
                         "schema": {
                             "type": "integer",
@@ -8327,7 +8340,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/MaintenanceRequestItem"
+                                                "$ref": "#/components/schemas/MaintenanceRequest"
                                             }
                                         },
                                         "pagination": {
@@ -8342,7 +8355,7 @@
                                                 },
                                                 "total": {
                                                     "type": "integer",
-                                                    "example": 3
+                                                    "example": 8
                                                 },
                                                 "last_page": {
                                                     "type": "integer",
@@ -8379,8 +8392,8 @@
                     "Maintenance Requests"
                 ],
                 "summary": "Submit a new maintenance request",
-                "description": "Creates a maintenance request for the authenticated mosque manager's mosque. The `mosque_id` is resolved from the auth token — it is not accepted in the request body. Status is always set to `pending` on creation.",
-                "operationId": "mosque.maintenanceRequests.store",
+                "description": "Creates a maintenance request. A unique `maintenance_number` (MR-YYYY-XXXXXX) is auto-generated. Status defaults to `pending`. `requested_by` is automatically resolved from the authenticated user's token.",
+                "operationId": "maintenance.store",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/AcceptLanguageHeader"
@@ -8392,13 +8405,13 @@
                         "multipart/form-data": {
                             "schema": {
                                 "required": [
+                                    "mosque_id",
                                     "title",
                                     "description",
                                     "category"
                                 ],
                                 "properties": {
                                     "mosque_id": {
-                                        "description": "ID of the mosque submitting the request.",
                                         "type": "integer",
                                         "example": 7
                                     },
@@ -8414,19 +8427,19 @@
                                     },
                                     "category": {
                                         "type": "string",
-                                        "example": "hvac",
+                                        "example": "electrical",
                                         "enum": [
-                                            "hvac",
                                             "electrical",
                                             "plumbing",
-                                            "sound_system",
-                                            "general"
+                                            "carpentry",
+                                            "cleaning",
+                                            "other"
                                         ]
                                     },
-                                    "urgency": {
+                                    "priority": {
                                         "type": "string",
                                         "example": "high",
-                                        "default": "low",
+                                        "default": "medium",
                                         "enum": [
                                             "low",
                                             "medium",
@@ -8434,8 +8447,19 @@
                                             "urgent"
                                         ]
                                     },
-                                    "attachments[]": {
-                                        "description": "Optional file attachments. Accepted types: jpg, jpeg, png, pdf, doc, docx. Max 5 MB each.",
+                                    "scheduled_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2026-06-01T09:00:00Z",
+                                        "nullable": true
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "example": "Please come after Fajr prayer.",
+                                        "nullable": true
+                                    },
+                                    "files[]": {
+                                        "description": "Optional attachments. Accepted: jpg, jpeg, png, pdf, doc, docx. Max 10 MB each. Up to 10 files.",
                                         "type": "array",
                                         "items": {
                                             "type": "string",
@@ -8450,92 +8474,21 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Maintenance request created successfully.",
+                        "description": "Maintenance request submitted successfully.",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "status": {
-                                            "type": "boolean",
-                                            "example": true
+                                            "type": "string",
+                                            "example": "success"
                                         },
                                         "message": {
                                             "type": "string",
                                             "example": "Maintenance request submitted successfully."
                                         },
                                         "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "reference_number": {
-                                                    "type": "string",
-                                                    "example": "MR-123456"
-                                                },
-                                                "mosque_id": {
-                                                    "type": "integer",
-                                                    "example": 15
-                                                },
-                                                "title": {
-                                                    "type": "string",
-                                                    "example": "AC unit not cooling"
-                                                },
-                                                "description": {
-                                                    "type": "string",
-                                                    "example": "The main hall AC has stopped cooling since yesterday."
-                                                },
-                                                "category": {
-                                                    "type": "string",
-                                                    "example": "hvac"
-                                                },
-                                                "urgency": {
-                                                    "type": "string",
-                                                    "example": "high"
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "pending"
-                                                },
-                                                "attachments": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "properties": {
-                                                            "url": {
-                                                                "type": "string",
-                                                                "example": "https://example.com/storage/image.png"
-                                                            },
-                                                            "file_type": {
-                                                                "type": "string",
-                                                                "example": "image/png"
-                                                            }
-                                                        },
-                                                        "type": "object"
-                                                    }
-                                                },
-                                                "created_at": {
-                                                    "type": "string",
-                                                    "example": "22 May 2026, 06:33 PM"
-                                                },
-                                                "updated_at": {
-                                                    "type": "string",
-                                                    "example": "22 May 2026, 06:33 PM"
-                                                },
-                                                "mosque": {
-                                                    "properties": {
-                                                        "id": {
-                                                            "type": "integer",
-                                                            "example": 15
-                                                        },
-                                                        "name": {
-                                                            "type": "string",
-                                                            "example": "مسجد التقوى"
-                                                        }
-                                                    },
-                                                    "type": "object"
-                                                }
-                                            },
-                                            "type": "object"
+                                            "$ref": "#/components/schemas/MaintenanceRequest"
                                         }
                                     },
                                     "type": "object"
@@ -8560,32 +8513,31 @@
                 ]
             }
         },
-        "/maintenance/track/{reference}": {
+        "/maintenance/{id}": {
             "get": {
                 "tags": [
                     "Maintenance Requests"
                 ],
-                "summary": "Track a maintenance request by reference number",
-                "description": "Retrieve a maintenance request and its full status history using its public reference number. Accessible to mosque managers (own mosque only) and super admins.",
-                "operationId": "mosque.maintenanceRequests.track",
+                "summary": "Get a maintenance request",
+                "description": "Returns the details of a single maintenance request. Mosque managers can only access requests belonging to their own mosque.",
+                "operationId": "maintenance.show",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/AcceptLanguageHeader"
                     },
                     {
-                        "name": "reference",
+                        "name": "id",
                         "in": "path",
-                        "description": "Public reference number of the maintenance request (e.g. MR-XXXXXXXX).",
                         "required": true,
                         "schema": {
-                            "type": "string",
-                            "example": "MR-000123"
+                            "type": "integer",
+                            "example": 42
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Maintenance request tracking data retrieved successfully.",
+                        "description": "Maintenance request retrieved successfully.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -8596,81 +8548,253 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Maintenance request status retrieved successfully."
+                                            "example": "Maintenance request retrieved successfully."
                                         },
                                         "data": {
-                                            "properties": {
-                                                "reference_number": {
-                                                    "type": "string",
-                                                    "example": "MR-000123"
-                                                },
-                                                "title": {
-                                                    "type": "string",
-                                                    "example": "AC unit not cooling"
-                                                },
-                                                "current_status": {
-                                                    "type": "string",
-                                                    "example": "in_progress",
-                                                    "enum": [
-                                                        "pending",
-                                                        "in_progress",
-                                                        "completed",
-                                                        "rejected"
-                                                    ]
-                                                },
-                                                "is_urgent": {
-                                                    "type": "string",
-                                                    "example": "high",
-                                                    "enum": [
-                                                        "low",
-                                                        "medium",
-                                                        "high",
-                                                        "urgent"
-                                                    ]
-                                                },
-                                                "admin_resolution_note": {
-                                                    "type": "string",
-                                                    "example": null,
-                                                    "nullable": true
-                                                },
-                                                "created_at": {
-                                                    "type": "string",
-                                                    "example": "21 May 2026, 10:30 AM"
-                                                },
-                                                "status_history": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "properties": {
-                                                            "status": {
-                                                                "type": "string",
-                                                                "example": "pending",
-                                                                "enum": [
-                                                                    "pending",
-                                                                    "in_progress",
-                                                                    "completed",
-                                                                    "rejected"
-                                                                ]
-                                                            },
-                                                            "date": {
-                                                                "type": "string",
-                                                                "example": "21 May 2026, 10:30 AM"
-                                                            },
-                                                            "note": {
-                                                                "type": "string",
-                                                                "example": "Request created",
-                                                                "nullable": true
-                                                            }
-                                                        },
-                                                        "type": "object"
-                                                    }
-                                                }
-                                            },
-                                            "type": "object"
+                                            "$ref": "#/components/schemas/MaintenanceRequest"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Maintenance Requests"
+                ],
+                "summary": "Update a maintenance request",
+                "description": "Updates editable fields of a maintenance request. All fields are optional — only send what needs to change.",
+                "operationId": "maintenance.update",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 42
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "AC unit not cooling — urgent",
+                                        "maxLength": 255
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Updated description.",
+                                        "maxLength": 5000
+                                    },
+                                    "category": {
+                                        "type": "string",
+                                        "example": "plumbing",
+                                        "enum": [
+                                            "electrical",
+                                            "plumbing",
+                                            "carpentry",
+                                            "cleaning",
+                                            "other"
+                                        ]
+                                    },
+                                    "priority": {
+                                        "type": "string",
+                                        "example": "urgent",
+                                        "enum": [
+                                            "low",
+                                            "medium",
+                                            "high",
+                                            "urgent"
+                                        ]
+                                    },
+                                    "scheduled_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2026-06-05T08:00:00Z",
+                                        "nullable": true
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "example": "Updated note.",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Maintenance request updated successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
                                         },
-                                        "pagination": {
-                                            "type": "object",
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Maintenance request updated successfully."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MaintenanceRequest"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Maintenance Requests"
+                ],
+                "summary": "Delete a maintenance request",
+                "description": "Soft-deletes the maintenance request and removes all attached files from Supabase storage.",
+                "operationId": "maintenance.destroy",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 42
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Maintenance request deleted successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Maintenance request deleted successfully."
+                                        },
+                                        "data": {
                                             "example": null,
                                             "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/maintenance/track/{maintenance_number}": {
+            "get": {
+                "tags": [
+                    "Maintenance Requests"
+                ],
+                "summary": "Track a request by maintenance number",
+                "description": "Returns the maintenance request and its full status history using the public `maintenance_number` (e.g. MR-2026-AB1C2D).",
+                "operationId": "maintenance.track",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "maintenance_number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "MR-2026-AB1C2D"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Maintenance request retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Maintenance request retrieved successfully."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MaintenanceRequest"
                                         }
                                     },
                                     "type": "object"
@@ -8698,11 +8822,11 @@
         "/maintenance/admin": {
             "get": {
                 "tags": [
-                    "Maintenance Requests"
+                    "Maintenance Requests — Admin"
                 ],
-                "summary": "List all maintenance requests across all mosques",
-                "description": "Returns a paginated list of all maintenance requests. Filterable by status, category, and is_urgent. Requires the region_manager role.",
-                "operationId": "admin.maintenanceRequests.index",
+                "summary": "List all maintenance requests (admin)",
+                "description": "Returns a paginated list of all maintenance requests across all mosques. Filterable by status, category, and priority.",
+                "operationId": "admin.maintenance.index",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/AcceptLanguageHeader"
@@ -8718,7 +8842,7 @@
                                 "pending",
                                 "in_progress",
                                 "completed",
-                                "rejected"
+                                "cancelled"
                             ]
                         }
                     },
@@ -8728,24 +8852,23 @@
                         "required": false,
                         "schema": {
                             "type": "string",
-                            "example": "hvac",
+                            "example": "electrical",
                             "enum": [
-                                "hvac",
                                 "electrical",
                                 "plumbing",
-                                "sound_system",
-                                "general"
+                                "carpentry",
+                                "cleaning",
+                                "other"
                             ]
                         }
                     },
                     {
-                        "name": "is_urgent",
+                        "name": "priority",
                         "in": "query",
-                        "description": "Filter by urgency level. Accepts low, medium, high, urgent.",
                         "required": false,
                         "schema": {
                             "type": "string",
-                            "example": "high",
+                            "example": "urgent",
                             "enum": [
                                 "low",
                                 "medium",
@@ -8783,80 +8906,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "integer",
-                                                        "example": 42
-                                                    },
-                                                    "title": {
-                                                        "type": "string",
-                                                        "example": "AC unit not cooling"
-                                                    },
-                                                    "description": {
-                                                        "type": "string",
-                                                        "example": "The main hall AC has stopped cooling since yesterday."
-                                                    },
-                                                    "category": {
-                                                        "type": "string",
-                                                        "example": "hvac"
-                                                    },
-                                                    "is_urgent": {
-                                                        "type": "string",
-                                                        "example": "high",
-                                                        "enum": [
-                                                            "low",
-                                                            "medium",
-                                                            "high",
-                                                            "urgent"
-                                                        ]
-                                                    },
-                                                    "status": {
-                                                        "type": "string",
-                                                        "example": "pending",
-                                                        "enum": [
-                                                            "pending",
-                                                            "in_progress",
-                                                            "completed",
-                                                            "rejected"
-                                                        ]
-                                                    },
-                                                    "rejection_reason": {
-                                                        "type": "string",
-                                                        "example": null,
-                                                        "nullable": true
-                                                    },
-                                                    "attachments": {
-                                                        "type": "array",
-                                                        "items": {
-                                                            "type": "string"
-                                                        },
-                                                        "example": [
-                                                            "uploads/ac-photo.jpg"
-                                                        ]
-                                                    },
-                                                    "created_at": {
-                                                        "type": "string",
-                                                        "example": "21 May 2026, 10:30 AM"
-                                                    },
-                                                    "updated_at": {
-                                                        "type": "string",
-                                                        "example": "21 May 2026, 10:30 AM"
-                                                    },
-                                                    "mosque": {
-                                                        "properties": {
-                                                            "id": {
-                                                                "type": "integer",
-                                                                "example": 7
-                                                            },
-                                                            "name": {
-                                                                "type": "string",
-                                                                "example": "Al-Noor Mosque"
-                                                            }
-                                                        },
-                                                        "type": "object"
-                                                    }
-                                                },
-                                                "type": "object"
+                                                "$ref": "#/components/schemas/MaintenanceRequest"
                                             }
                                         },
                                         "pagination": {
@@ -8904,14 +8954,14 @@
                 ]
             }
         },
-        "/maintenance/{id}/process": {
+        "/maintenance/admin/{id}": {
             "put": {
                 "tags": [
-                    "Maintenance Requests"
+                    "Maintenance Requests — Admin"
                 ],
                 "summary": "Process a maintenance request",
-                "description": "Updates the status of a maintenance request. Automatically stamps the authenticated region manager's ID. A `rejection_reason` is required when setting status to `rejected`.",
-                "operationId": "admin.maintenanceRequests.process",
+                "description": "Updates the status of a maintenance request. Cannot be set back to `pending`. A `notes` field is required when setting status to `cancelled`.",
+                "operationId": "admin.maintenance.process",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/AcceptLanguageHeader"
@@ -8919,7 +8969,6 @@
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "The ID of the maintenance request.",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -8937,19 +8986,19 @@
                                 ],
                                 "properties": {
                                     "status": {
+                                        "description": "Cannot be set back to `pending`.",
                                         "type": "string",
-                                        "example": "rejected",
+                                        "example": "in_progress",
                                         "enum": [
-                                            "pending",
                                             "in_progress",
                                             "completed",
-                                            "rejected"
+                                            "cancelled"
                                         ]
                                     },
-                                    "rejection_reason": {
-                                        "description": "Required when status is `rejected`.",
+                                    "notes": {
+                                        "description": "Required when status is `cancelled`.",
                                         "type": "string",
-                                        "example": "Duplicate request — already handled under ticket #39.",
+                                        "example": "Duplicate — already handled under MR-2026-XY3Z4W.",
                                         "nullable": true
                                     }
                                 },
@@ -8974,98 +9023,7 @@
                                             "example": "Maintenance request processed successfully."
                                         },
                                         "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 42
-                                                },
-                                                "title": {
-                                                    "type": "string",
-                                                    "example": "AC unit not cooling"
-                                                },
-                                                "description": {
-                                                    "type": "string",
-                                                    "example": "The main hall AC has stopped cooling since yesterday."
-                                                },
-                                                "category": {
-                                                    "type": "string",
-                                                    "example": "hvac"
-                                                },
-                                                "is_urgent": {
-                                                    "type": "string",
-                                                    "example": "high",
-                                                    "enum": [
-                                                        "low",
-                                                        "medium",
-                                                        "high",
-                                                        "urgent"
-                                                    ]
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "rejected",
-                                                    "enum": [
-                                                        "pending",
-                                                        "in_progress",
-                                                        "completed",
-                                                        "rejected"
-                                                    ]
-                                                },
-                                                "rejection_reason": {
-                                                    "type": "string",
-                                                    "example": "Duplicate request — already handled under ticket #39.",
-                                                    "nullable": true
-                                                },
-                                                "attachments": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string"
-                                                    },
-                                                    "example": [
-                                                        "uploads/ac-photo.jpg"
-                                                    ]
-                                                },
-                                                "created_at": {
-                                                    "type": "string",
-                                                    "example": "21 May 2026, 10:30 AM"
-                                                },
-                                                "updated_at": {
-                                                    "type": "string",
-                                                    "example": "21 May 2026, 11:00 AM"
-                                                },
-                                                "mosque": {
-                                                    "properties": {
-                                                        "id": {
-                                                            "type": "integer",
-                                                            "example": 7
-                                                        },
-                                                        "name": {
-                                                            "type": "string",
-                                                            "example": "Al-Noor Mosque"
-                                                        }
-                                                    },
-                                                    "type": "object"
-                                                },
-                                                "region_manager": {
-                                                    "properties": {
-                                                        "id": {
-                                                            "type": "integer",
-                                                            "example": 3
-                                                        },
-                                                        "name": {
-                                                            "type": "string",
-                                                            "example": "Ahmad Al-Farsi"
-                                                        }
-                                                    },
-                                                    "type": "object"
-                                                }
-                                            },
-                                            "type": "object"
-                                        },
-                                        "pagination": {
-                                            "type": "object",
-                                            "example": null,
-                                            "nullable": true
+                                            "$ref": "#/components/schemas/MaintenanceRequest"
                                         }
                                     },
                                     "type": "object"
@@ -15271,15 +15229,88 @@
                 },
                 "type": "object"
             },
-            "MaintenanceRequestItem": {
+            "MaintenanceFile": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "file_name": {
+                        "type": "string",
+                        "example": "ac-photo.jpg"
+                    },
+                    "file_path": {
+                        "type": "string",
+                        "example": "https://xyz.supabase.co/storage/v1/object/public/maintenance/ac-photo.jpg"
+                    },
+                    "file_type": {
+                        "type": "string",
+                        "example": "image/jpeg"
+                    },
+                    "file_size": {
+                        "description": "Size in bytes",
+                        "type": "integer",
+                        "example": 204800
+                    }
+                },
+                "type": "object"
+            },
+            "MaintenanceStatusLog": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "old_status": {
+                        "type": "string",
+                        "example": null,
+                        "nullable": true,
+                        "enum": [
+                            "pending",
+                            "in_progress",
+                            "completed",
+                            "cancelled"
+                        ]
+                    },
+                    "new_status": {
+                        "type": "string",
+                        "example": "pending",
+                        "enum": [
+                            "pending",
+                            "in_progress",
+                            "completed",
+                            "cancelled"
+                        ]
+                    },
+                    "changed_by": {
+                        "type": "string",
+                        "example": "Ahmed Hassan"
+                    },
+                    "notes": {
+                        "type": "string",
+                        "example": "Request created.",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "example": "21 May 2026, 10:30 AM"
+                    }
+                },
+                "type": "object"
+            },
+            "MaintenanceRequest": {
                 "properties": {
                     "id": {
                         "type": "integer",
                         "example": 42
                     },
-                    "reference_number": {
+                    "maintenance_number": {
                         "type": "string",
-                        "example": "MR-000123"
+                        "example": "MR-2026-AB1C2D"
+                    },
+                    "mosque_id": {
+                        "type": "integer",
+                        "example": 7
                     },
                     "title": {
                         "type": "string",
@@ -15291,16 +15322,16 @@
                     },
                     "category": {
                         "type": "string",
-                        "example": "hvac",
+                        "example": "electrical",
                         "enum": [
-                            "hvac",
                             "electrical",
                             "plumbing",
-                            "sound_system",
-                            "general"
+                            "carpentry",
+                            "cleaning",
+                            "other"
                         ]
                     },
-                    "urgency": {
+                    "priority": {
                         "type": "string",
                         "example": "high",
                         "enum": [
@@ -15317,30 +15348,49 @@
                             "pending",
                             "in_progress",
                             "completed",
-                            "rejected"
+                            "cancelled"
                         ]
                     },
-                    "rejection_reason": {
+                    "requested_by": {
+                        "description": "Automatically resolved from the authenticated user's token. Not accepted as input.",
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 12
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "Ahmed Hassan"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "scheduled_at": {
+                        "type": "string",
+                        "example": "01 Jun 2026, 09:00 AM",
+                        "nullable": true
+                    },
+                    "completed_at": {
                         "type": "string",
                         "example": null,
                         "nullable": true
                     },
-                    "attachments": {
+                    "notes": {
+                        "type": "string",
+                        "example": "Please come after Fajr prayer.",
+                        "nullable": true
+                    },
+                    "files": {
                         "type": "array",
                         "items": {
-                            "type": "string"
-                        },
-                        "example": [
-                            "uploads/maintenance/ac-photo.jpg"
-                        ]
+                            "$ref": "#/components/schemas/MaintenanceFile"
+                        }
                     },
-                    "created_at": {
-                        "type": "string",
-                        "example": "21 May 2026, 10:30 AM"
-                    },
-                    "updated_at": {
-                        "type": "string",
-                        "example": "21 May 2026, 10:30 AM"
+                    "status_logs": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/MaintenanceStatusLog"
+                        }
                     },
                     "mosque": {
                         "properties": {
@@ -15355,6 +15405,14 @@
                         },
                         "type": "object",
                         "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "example": "21 May 2026, 10:30 AM"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "example": "21 May 2026, 10:30 AM"
                     }
                 },
                 "type": "object"
@@ -16492,6 +16550,10 @@
         {
             "name": "Maintenance Requests",
             "description": "Maintenance Requests"
+        },
+        {
+            "name": "Maintenance Requests — Admin",
+            "description": "Maintenance Requests — Admin"
         },
         {
             "name": "Mosques",
