@@ -19,7 +19,7 @@ class Maintenance extends Model
      * The attributes that are mass assignable.
      */
 
-    protected $table = 'maintenance';
+    protected $table = 'maintenances';
     protected $fillable = [
         'mosque_id',
         'maintenance_number',
