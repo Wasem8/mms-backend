@@ -10,7 +10,7 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void {
-        Schema::create('maintenance', function (Blueprint $table) {
+        Schema::create('maintenances', function (Blueprint $table) {
             $table->id();
             $table->string('maintenance_number')->unique();
             $table->foreignId('mosque_id')->constrained('mosques')->cascadeOnDelete();
