@@ -2,6 +2,7 @@
 
 namespace Modules\Complaint\Service;
 
+use Illuminate\Support\Facades\Log;
 use Modules\Complaint\Repositories\ComplaintRepositoryInterface;
 use Illuminate\Support\Str;
 use Illuminate\Http\UploadedFile;
@@ -111,32 +112,65 @@ class ComplaintService
         ];
     }
 
-    private function uploadImage($image): string
+    private function uploadImage(UploadedFile $image): string
     {
-        $fileName = uniqid() . '.' . $image->getClientOriginalExtension();
+        $fileName =
+            uniqid() . '.' .
+            $image->getClientOriginalExtension();
 
-        $baseUrl = config('services.supabase.url');
-        $bucket = config('services.supabase.bucket');
-        $key = config('services.supabase.key');
+        $baseUrl =
+            config('services.supabase.url');
 
-        $path = $bucket . '/' . $fileName;
+        $bucket =
+            config('services.supabase.bucket');
 
-        $uploadUrl = $baseUrl . '/storage/v1/object/' . $path;
+        $key =
+            config('services.supabase.key');
 
-        $response = Http::withHeaders([
-            'apikey' => $key,
-            'Authorization' => 'Bearer ' . $key,
-        ])->attach(
-            'file',
-            file_get_contents($image),
-            $fileName
-        )->post($uploadUrl);
+        $path =
+            $bucket . '/' . $fileName;
 
-        if (!$response->successful()) {
-            throw new \Exception('Upload failed: ' . $response->body());
+        $uploadUrl =
+            $baseUrl .
+            '/storage/v1/object/' .
+            $path;
+
+        $response =
+            Http::withHeaders([
+                'apikey' => $key,
+                'Authorization' => 'Bearer ' . $key,
+                'Content-Type' => $image->getMimeType(),
+            ])
+                ->withBody(
+                    file_get_contents(
+                        $image->getRealPath()
+                    ),
+                    $image->getMimeType()
+                )
+                ->post($uploadUrl);
+
+        if (! $response->successful()) {
+
+            Log::error(
+                'Supabase upload failed',
+                [
+                    'status' =>
+                        $response->status(),
+
+                    'body' =>
+                        $response->body(),
+                ]
+            );
+
+            throw new \Exception(
+                'Upload failed'
+            );
         }
 
-        return $baseUrl . '/storage/v1/object/public/' . $path;
+        return
+            $baseUrl .
+            '/storage/v1/object/public/' .
+            $path;
     }
 
     private function deleteImage(string $url): void
