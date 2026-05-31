@@ -26,7 +26,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             MosqueDatabaseSeeder::class,
             RolesAndPermissionsSeeder::class,
-            EducationDatabaseSeeder::class,
+           // EducationDatabaseSeeder::class,
             MosqueSeeder::class,
             FacilitiesSeeder::class,
             MosqueSpaceSeedSeeder::class,
