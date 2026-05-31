@@ -1,17 +1,43 @@
 <?php
 
-// DEBUG ONLY - احذفه بعد التشخيص
-if (isset($_GET['debug_server'])) {
+// 1. إصلاح مسار التخزين المؤقت في Vercel
+putenv('TMPDIR=/tmp');
+$_ENV['TMPDIR'] = '/tmp';
+$_SERVER['TMPDIR'] = '/tmp';
+
+require __DIR__.'/../vendor/autoload.php';
+$app = require_once __DIR__.'/../bootstrap/app.php';
+$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+
+// ==========================================
+// 💣 الخيار النووي: تجاوز الموجه (Router)
+// ==========================================
+try {
+    \Illuminate\Support\Facades\Artisan::call('route:clear');
+    \Illuminate\Support\Facades\Artisan::call('config:clear');
+    \Illuminate\Support\Facades\Artisan::call('cache:clear');
+
+    // إجبار تحديث قاعدة البيانات لحل مشكلة priority
+    \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+    $migrationLog = \Illuminate\Support\Facades\Artisan::output();
+
+    // إرجاع النتيجة فوراً وإيقاف التطبيق
+    http_response_code(200);
     header('Content-Type: application/json');
     echo json_encode([
-        'REQUEST_URI' => $_SERVER['REQUEST_URI'] ?? 'NOT SET',
-        'PATH_INFO' => $_SERVER['PATH_INFO'] ?? 'NOT SET',
-        'HTTP_X_FORWARDED_URI' => $_SERVER['HTTP_X_FORWARDED_URI'] ?? 'NOT SET',
-        'SCRIPT_NAME' => $_SERVER['SCRIPT_NAME'] ?? 'NOT SET',
-        'all_headers' => getallheaders(),
-    ]);
+        'status' => 'تم اختراق الكاش وتحديث قاعدة البيانات بنجاح! ✅',
+        'migration_log' => $migrationLog
+    ], JSON_UNESCAPED_UNICODE);
+    exit; // إيقاف التنفيذ هنا
+
+} catch (\Throwable $e) {
+    http_response_code(500);
+    header('Content-Type: application/json');
+    echo json_encode([
+        'status' => 'حدث خطأ ❌',
+        'error' => $e->getMessage()
+    ], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-// توجيه الطلبات إلى ملف الاندكس الأصلي في لارفيل
-require __DIR__ . '/../public/index.php';
+// ... باقي الكود (لن يصل إليه حالياً)
