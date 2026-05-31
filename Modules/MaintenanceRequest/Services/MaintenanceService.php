@@ -150,7 +150,7 @@ class MaintenanceService
         ];
     }
 
-    // ─── Supabase Helpers ─────────────────────────────────────────────────────
+  // ─── Supabase Helpers ─────────────────────────────────────────────────────
 
     private function uploadImage(UploadedFile $file): string
     {
@@ -163,16 +163,25 @@ class MaintenanceService
         $path      = $bucket . '/' . $fileName;
         $uploadUrl = $baseUrl . '/storage/v1/object/' . $path;
 
+        // 1. قراءة الملف من المسار المؤقت المسموح به
+        $fileContent = file_get_contents($file->getRealPath());
+
+        // 2. إرسال الملف كـ Raw Body مع تحديد الـ MimeType الحقيقي (الحل الجذري لـ Vercel و Supabase)
         $response = Http::withHeaders([
             'apikey'        => $key,
             'Authorization' => 'Bearer ' . $key,
-        ])->attach(
-            'file',
-            file_get_contents($file->getRealPath()),
-            $fileName,
+            'Content-Type'  => $file->getMimeType(), // 👈 هام جداً لكي تقبله Supabase
+        ])->withBody(
+            $fileContent,
+            $file->getMimeType()
         )->post($uploadUrl);
 
         if (! $response->successful()) {
+            // تسجيل الخطأ الفعلي في اللوج لمساعدتك لو حدثت مشكلة مستقبلاً
+            \Illuminate\Support\Facades\Log::error('Supabase Upload Error', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
             throw new \Exception('Upload failed: ' . $response->body());
         }
 
@@ -181,14 +190,18 @@ class MaintenanceService
 
     private function deleteImage(string $url): void
     {
-        $bucket    = env('SUPABASE_BUCKET');
+        // 💡 استخدام config بدلاً من env لأن env قد يعود بـ null في بيئة Vercel المخبأة (Cached)
+        $baseUrl = config('services.supabase.url');
+        $bucket  = config('services.supabase.bucket');
+        $key     = config('services.supabase.key');
+
         $fileName  = basename($url);
         $path      = $bucket . '/' . $fileName;
-        $deleteUrl = env('SUPABASE_URL') . '/storage/v1/object/' . $path;
+        $deleteUrl = $baseUrl . '/storage/v1/object/' . $path;
 
         Http::withHeaders([
-            'apikey'        => env('SUPABASE_KEY'),
-            'Authorization' => 'Bearer ' . env('SUPABASE_KEY'),
+            'apikey'        => $key,
+            'Authorization' => 'Bearer ' . $key,
         ])->delete($deleteUrl);
     }
 }
