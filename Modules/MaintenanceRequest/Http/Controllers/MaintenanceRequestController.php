@@ -19,23 +19,26 @@ class MaintenanceRequestController extends Controller
 
     public function index(Request $request)
     {
-        $filters = $request->only(['status', 'priority', 'per_page']);
-        $mosque = $request->user()->mosque;
+        try {
+            $filters = $request->only(['status', 'priority', 'per_page']);
+            $filters['mosque_id'] = $request->user()->mosque_id;
 
-        if (!$mosque) {
-            return ApiResponse::success([], 'No mosque assigned to this user.');
+            $data = $this->service->getList($filters);
+
+            return ApiResponse::success(
+                $data->items(),
+                'Maintenance requests retrieved successfully.',
+                ApiResponse::pagination($data)
+            );
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => false,
+                'error_message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ], 500);
         }
-
-        $filters['mosque_id'] = $mosque->id;
-        $paginator = $this->service->getList($filters);
-
-        return ApiResponse::success(
-            $paginator->items(),
-            'Maintenance requests retrieved successfully.',
-            ApiResponse::pagination($paginator)
-        );
     }
-
     // POST /maintenance
     public function store(CreateMaintenanceRequest $request)
     {
