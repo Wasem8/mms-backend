@@ -114,63 +114,44 @@ class ComplaintService
 
     private function uploadImage(UploadedFile $image): string
     {
-        $fileName =
-            uniqid() . '.' .
-            $image->getClientOriginalExtension();
+        try {
+            // 1. فحص أمان مسبق: التأكد من أن الملف صالح وموجود في المسار المؤقت
+            if (! $image->isValid() || ! $image->getRealPath()) {
+                throw new \Exception('الملف غير صالح أو تم منعه من قِبل نظام ملفات Vercel. مسار الملف المفقود: ' . $image->getErrorMessage());
+            }
 
-        $baseUrl =
-            config('services.supabase.url');
+            $fileName = uniqid() . '.' . $image->getClientOriginalExtension();
+            $baseUrl  = config('services.supabase.url');
+            $bucket   = config('services.supabase.bucket');
+            $key      = config('services.supabase.key');
 
-        $bucket =
-            config('services.supabase.bucket');
+            $path = $bucket . '/' . $fileName;
+            $uploadUrl = $baseUrl . '/storage/v1/object/' . $path;
 
-        $key =
-            config('services.supabase.key');
+            // 2. قراءة الملف بشكل محمي لتجنب الانهيار المفاجئ
+            $fileContent = @file_get_contents($image->getRealPath());
+            if ($fileContent === false) {
+                throw new \Exception('تم منع قراءة محتوى الملف من المسار: ' . $image->getRealPath());
+            }
 
-        $path =
-            $bucket . '/' . $fileName;
-
-        $uploadUrl =
-            $baseUrl .
-            '/storage/v1/object/' .
-            $path;
-
-        $response =
-            Http::withHeaders([
+            $response = Http::withHeaders([
                 'apikey' => $key,
                 'Authorization' => 'Bearer ' . $key,
                 'Content-Type' => $image->getMimeType(),
             ])
-                ->withBody(
-                    file_get_contents(
-                        $image->getRealPath()
-                    ),
-                    $image->getMimeType()
-                )
+                ->withBody($fileContent, $image->getMimeType())
                 ->post($uploadUrl);
 
-        if (! $response->successful()) {
+            // 3. التقاط أخطاء Supabase بوضوح
+            if (! $response->successful()) {
+                throw new \Exception('رفض من Supabase: ' . $response->body());
+            }
 
-            Log::error(
-                'Supabase upload failed',
-                [
-                    'status' =>
-                        $response->status(),
-
-                    'body' =>
-                        $response->body(),
-                ]
-            );
-
-            throw new \Exception(
-                'Upload failed'
-            );
+            return $baseUrl . '/storage/v1/object/public/' . $path;
+        } catch (\Throwable $e) {
+            // 4. إجبار لارافل على إرجاع الخطأ الحقيقي كاستجابة بدلاً من شاشة 500 البيضاء
+            abort(500, 'فشل الرفع: ' . $e->getMessage());
         }
-
-        return
-            $baseUrl .
-            '/storage/v1/object/public/' .
-            $path;
     }
 
     private function deleteImage(string $url): void
