@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void {
         Schema::create('maintenance_files', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('maintenance_id')->constrained('maintenance')->cascadeOnDelete();
+            $table->foreignId('maintenance_id')->constrained('maintenances')->cascadeOnDelete();
             $table->string('file_name');
             $table->string('file_path');
             $table->string('file_type')->comment('mime type e.g. image/jpeg, application/pdf');

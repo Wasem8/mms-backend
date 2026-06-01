@@ -3,11 +3,8 @@
 namespace Modules\MaintenanceRequest\Repositories;
 
 
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
-use Modules\MaintenanceRequest\Models\MaintenanceFile;
 use Modules\MaintenanceRequest\Models\Maintenance;
-use Modules\MaintenanceRequest\Models\MaintenanceStatusLog;
 
 class MaintenanceRepository implements MaintenanceRepositoryInterface
 {
@@ -50,7 +47,7 @@ class MaintenanceRepository implements MaintenanceRepositoryInterface
         return Maintenance::with(['files', 'statusLogs'])
             ->when(isset($filters['status']),    fn($q) => $q->where('status',    $filters['status']))
             ->when(isset($filters['category']),  fn($q) => $q->where('category',  $filters['category']))
-           // ->when(isset($filters['priority']),  fn($q) => $q->where('priority',  $filters['priority']))
+            ->when(isset($filters['priority']),  fn($q) => $q->where('priority',  $filters['priority']))
             ->when(isset($filters['mosque_id']), fn($q) => $q->where('mosque_id', $filters['mosque_id']))
             ->latest()
             ->paginate($filters['per_page'] ?? 15);

@@ -36,19 +36,20 @@ class MaintenanceRequestServiceProvider extends ModuleServiceProvider
         RouteServiceProvider::class,
     ];
 
+
+
     public function register(): void
     {
         $this->app->register(RouteServiceProvider::class);
 
         $this->app->bind(
-        MaintenanceRepositoryInterface::class,
-        MaintenanceRepository::class,
+            MaintenanceRepositoryInterface::class,
+            MaintenanceRepository::class,
         );
     }
-
     /**
      * Define module schedules.
-     *
+     * 
      * @param $schedule
      */
     // protected function configureSchedules(Schedule $schedule): void

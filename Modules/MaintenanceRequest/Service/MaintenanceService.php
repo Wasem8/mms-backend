@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\MaintenanceRequest\Services;
+namespace Modules\MaintenanceRequest\Service;
 
 use Google\Cloud\Core\Timestamp;
 use Illuminate\Http\UploadedFile;
@@ -15,7 +15,6 @@ class MaintenanceService
         protected MaintenanceRepositoryInterface $repository,
     ) {}
 
-    // ─── Mosque Manager ───────────────────────────────────────────────────────
 
     public function submitRequest(array $data, array $files = [])
     {
@@ -46,7 +45,6 @@ class MaintenanceService
             }
         }
 
-        // Log initial status
         $this->repository->logStatusChange($maintenance, [
             'old_status' => null,
             'new_status' => 'pending',
@@ -95,14 +93,13 @@ class MaintenanceService
         $this->repository->delete($id);
     }
 
-    // ─── Admin ────────────────────────────────────────────────────────────────
 
     public function getForAdmin(array $filters = [])
     {
         return $this->repository->getFiltered($filters);
     }
 
-    public function updateStatus(int $id,string $newStatus, string $changedBy, ?string $note = null)
+    public function updateStatus(int $id, string $newStatus, string $changedBy, ?string $note = null)
     {
         $maintenance = $this->repository->find($id);
         $oldStatus   = $maintenance->status;
@@ -111,7 +108,7 @@ class MaintenanceService
             'status' => $newStatus,
             'notes'  => $note,
             'completed_at' => $newStatus === 'completed' ? now() : $maintenance->completed_at,
-            ]);
+        ]);
 
         $this->repository->logStatusChange($maintenance, [
             'old_status' => $oldStatus,
@@ -150,7 +147,7 @@ class MaintenanceService
         ];
     }
 
-  // ─── Supabase Helpers ─────────────────────────────────────────────────────
+    // ─── Supabase Helpers ─────────────────────────────────────────────────────
 
     private function uploadImage(UploadedFile $file): string
     {
@@ -163,22 +160,20 @@ class MaintenanceService
         $path      = $bucket . '/' . $fileName;
         $uploadUrl = $baseUrl . '/storage/v1/object/' . $path;
 
-        // 1. قراءة الملف من المسار المؤقت المسموح به
         $fileContent = file_get_contents($file->getRealPath());
 
-        // 2. إرسال الملف كـ Raw Body مع تحديد الـ MimeType الحقيقي (الحل الجذري لـ Vercel و Supabase)
         $response = Http::withHeaders([
             'apikey'        => $key,
             'Authorization' => 'Bearer ' . $key,
-            'Content-Type'  => $file->getMimeType(), // 👈 هام جداً لكي تقبله Supabase
+            'Content-Type'  => $file->getMimeType(),
         ])->withBody(
             $fileContent,
             $file->getMimeType()
         )->post($uploadUrl);
 
         if (! $response->successful()) {
-            // تسجيل الخطأ الفعلي في اللوج لمساعدتك لو حدثت مشكلة مستقبلاً
-            \Illuminate\Support\Facades\Log::error('Supabase Upload Error', [
+
+        \Illuminate\Support\Facades\Log::error('Supabase Upload Error', [
                 'status' => $response->status(),
                 'body' => $response->body()
             ]);
@@ -190,7 +185,6 @@ class MaintenanceService
 
     private function deleteImage(string $url): void
     {
-        // 💡 استخدام config بدلاً من env لأن env قد يعود بـ null في بيئة Vercel المخبأة (Cached)
         $baseUrl = config('services.supabase.url');
         $bucket  = config('services.supabase.bucket');
         $key     = config('services.supabase.key');
