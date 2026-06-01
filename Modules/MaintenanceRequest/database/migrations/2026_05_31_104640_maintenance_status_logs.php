@@ -10,9 +10,10 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void {
-        Schema::create('maintenance_status_log', function (Blueprint $table) {
+
+        Schema::create('maintenance_status_logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('maintenance_id')->constrained('maintenance')->cascadeOnDelete();
+            $table->foreignId('maintenance_id')->constrained('maintenances')->cascadeOnDelete();
             $table->enum('old_status', ['pending', 'in_progress', 'completed', 'cancelled'])->nullable()
                 ->comment('null on first log entry');
             $table->enum('new_status', ['pending', 'in_progress', 'completed', 'cancelled']);

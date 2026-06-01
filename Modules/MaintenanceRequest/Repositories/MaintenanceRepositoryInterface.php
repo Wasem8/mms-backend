@@ -3,10 +3,7 @@
 namespace Modules\MaintenanceRequest\Repositories;
 
 
-use Illuminate\Pagination\LengthAwarePaginator;
 use Modules\MaintenanceRequest\Models\Maintenance;
-use Modules\MaintenanceRequest\Models\MaintenanceFile;
-use Modules\MaintenanceRequest\Models\MaintenanceStatusLog;
 
 interface MaintenanceRepositoryInterface
 {

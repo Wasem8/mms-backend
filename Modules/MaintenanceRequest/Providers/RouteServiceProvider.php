@@ -43,10 +43,8 @@ class RouteServiceProvider extends ServiceProvider
      *
      * These routes are typically stateless.
      */
-
     protected function mapApiRoutes(): void
     {
-        Route::middleware('api')
-            ->group(module_path($this->name, '/routes/api.php'));
+        Route::middleware('api')->name('api.')->group(module_path($this->name, '/routes/api.php'));
     }
 }

@@ -12,11 +12,7 @@ class MaintenanceFile extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     */
-    protected $table = 'maintenance_files';
-
+    
     protected $fillable = [
         'maintenance_id',
         'file_name',
@@ -31,8 +27,4 @@ class MaintenanceFile extends Model
     {
         return $this->belongsTo(Maintenance::class, 'maintenance_id');
     }
-    // protected static function newFactory(): MaintenanceFileFactory
-    // {
-    //     // return MaintenanceFileFactory::new();
-    // }
 }

@@ -7,10 +7,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Facades\Storage;
 use Modules\Community\Models\DawahProgram;
 use Modules\Donation\Models\Donation;
+use Modules\MaintenanceRequest\Models\Maintenance;
 use Modules\User\Models\User;
 
 // use Modules\Mosque\Database\Factories\MosqueFactory;
@@ -68,7 +68,7 @@ class Mosque extends Model
 
     public function maintenanceRequests(): HasMany
     {
-        return $this->hasMany(MaintenanceRequest::class);
+        return $this->hasMany(Maintenance::class);
     }
     public function needs()
     {

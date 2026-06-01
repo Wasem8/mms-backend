@@ -3,9 +3,6 @@
 namespace Modules\MaintenanceRequest\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rules\Enum;
-use Modules\MaintenanceRequest\Enums\MaintenanceCategory;
-use Modules\MaintenanceRequest\Enums\MaintenancePriority;
 
 class CreateMaintenanceRequest extends FormRequest
 {
@@ -14,19 +11,16 @@ class CreateMaintenanceRequest extends FormRequest
      */
     public function rules(): array
     {
-       return [
+        return [
             'mosque_id'    => ['required', 'integer', 'exists:mosques,id'],
             'title'        => ['required', 'string', 'max:255'],
             'description'  => ['required', 'string', 'max:5000'],
-            'category'     => ['required', 'string', 'in:electrical,plumbing,carpentry,cleaning,other'],
-            'priority'     => ['sometimes', 'string', 'in:low,medium,high,urgent'],
-          //  'requested_by' => ['required', 'string', 'max:255'],
+            'category'     => ['required', 'string', 'in:electrical,plumbing,carpentry,cleaning, other'],
+            'priority'     => ['sometimes', 'string', 'in:low,medium,high, urgent'],
             'scheduled_at' => ['nullable', 'date', 'after:now'],
             'notes'        => ['nullable', 'string'],
             'files'        => ['nullable', 'array', 'max:10'],
-            'files.*'      => ['file', 'max:10240', 'mimes:jpg,jpeg,png,pdf,doc,docx'],
-        ];
-
+            'files.*'      => ['file', 'max:10240', 'mimes:jpg,jpeg,png,pdf,doc,docx'],];
     }
 
     /**
