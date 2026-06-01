@@ -1,5 +1,9 @@
 <?php
 
+ini_set('upload_tmp_dir', '/tmp');
+ini_set('sys_temp_dir', '/tmp');
+
+define('LARAVEL_START', microtime(true));
 // DEBUG ONLY - احذفه بعد التشخيص
 if (isset($_GET['debug_server'])) {
     header('Content-Type: application/json');
