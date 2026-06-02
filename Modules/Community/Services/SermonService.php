@@ -3,6 +3,7 @@
 namespace Modules\Community\Services;
 
 use Illuminate\Http\UploadedFile;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Modules\Community\Models\Sermon;
@@ -19,54 +20,73 @@ class SermonService
 
     public function getAllSermons()
     {
-        return $this->sermonRepo->getAll();
+        return Sermon::with('attachments')->get();
     }
-
     public function getPendingSermons()
     {
-        return $this->sermonRepo->getAllPending();
+        return Sermon::with('attachments')->where('status', 'Pending')->get();
     }
 
-    public function uploadSermon(array $data, $mosqueManagerId, array $attachments = [])
+    public function getArchivedSermons()
     {
-        return DB::transaction(function () use ($data, $mosqueManagerId, $attachments) {
+        return Sermon::with('attachments')->where('status', 'Archived')->get();
+    }
 
-            $data['mosque_manager_id'] = $mosqueManagerId;
-            $data['status'] = 'Pending';
+    public function createSermon(array $data, int $mosqueManagerId, array $files = []): Sermon
+    {
+        $data['mosque_manager_id'] = $mosqueManagerId;
+        $data['status'] = 'Pending';
 
+        return DB::transaction(function () use ($data, $files) {
             $sermon = $this->sermonRepo->create($data);
 
-            $attachmentRecords = [];
+            foreach ($files as $file) {
+                $fileUrl = $this->uploadImage($file);
 
-            foreach ($attachments as $attachment) {
-                if ($attachment instanceof UploadedFile) {
-                    $filePath = $this->uploadImage($attachment);
-
-                    $attachmentRecords[] = [
-                        'file_path' => $filePath,
-                        'file_type' => $attachment->getClientMimeType(),
-                    ];
-                }
+                $sermon->attachments()->create([
+                    'file_path' => $fileUrl,
+                    'file_type' => $file->getClientOriginalExtension(),
+                ]);
             }
-
-            if (!empty($attachmentRecords)) {
-                $this->sermonRepo->attachAttachments($sermon, $attachmentRecords);
-                $sermon->load('attachments');
-            }
-
-            return $sermon;
+            return $sermon->load('attachments');
         });
+    }
+
+    public function getSermonById(int $sermonId): ?Sermon
+    {
+        return $this->sermonRepo->findById($sermonId);
+    }
+
+    public function approveSermon(int $sermonId, int $adminId): Sermon
+    {
+        $sermon = $this->sermonRepo->findById($sermonId);
+
+        $sermon->region_manager_id = $adminId;
+        $sermon->save();
+
+        $this->sermonRepo->updateStatus($sermon, 'Archived');
+
+        return $sermon;
+    }
+
+    public function rejectAndDestroySermon(int $sermonId): void
+    {
+        $sermon = $this->sermonRepo->findById($sermonId);
+        $this->sermonRepo->delete($sermon);
+    }
+
+    // 4. تنظيف النظام التلقائي من الخطب المتروكة التي حل وقتها ولم تُعتمد
+    public function purgeExpiredPendingSermons(): int
+    {
+        $today = Carbon::today()->toDateString();
+        $expiredSermons = $this->sermonRepo->getExpiredPendingSermons($today);
+
+        foreach ($expiredSermons as $sermon) {
+            $this->sermonRepo->delete($sermon);
         }
 
-        public function getSermionById($sermonId)
-        {
-            $sermon = $this->sermonRepo->findById($sermonId);
-            if ($sermon) {
-                $sermon->load('attachments');
-            }
-            return $sermon;
-        }
-
+        return count($expiredSermons);
+    }
     private function uploadImage($image): string
     {
         $fileName = uniqid() . '.' . $image->getClientOriginalExtension();
@@ -94,23 +114,11 @@ class SermonService
         return $baseUrl . '/storage/v1/object/public/' . $path;
     }
 
-    public function approveSermon($sermonId, $regionManagerId, $notes = null)
-    {
-        return $this->sermonRepo->updateStatus($sermonId, 'Scheduled', $notes, $regionManagerId);
-    }
 
     public function rejectSermon($sermonId, $regionManagerId, $notes)
     {
         return $this->sermonRepo->updateStatus($sermonId, 'Rejected', $notes, $regionManagerId);
     }
 
-    public function markPastSermonsAsCompleted()
-    {
 
-        $updatedCount = Sermon::where('status', 'scheduled')
-            ->whereDate('sermon_date', '<', now()->toDateString())
-            ->update(['status' => 'completed']);
-
-        return $updatedCount;
-    }
 }

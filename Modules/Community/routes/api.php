@@ -34,17 +34,19 @@ Route::prefix('program')->group(function () {
 
 Route::prefix('sermons')->middleware('auth:api')->group(function () {
 
-    Route::get('/', [SermonController::class, 'index']);
-    Route::get('/pending', [SermonController::class, 'pending']);
 
-    Route::post('/', [SermonController::class, 'store']);
-    Route::put('/{id}/approve', [SermonController::class, 'approve']);
-    // Route::put('/{id}/reject', [SermonController::class, 'reject']);
+    Route::post('/', [SermonController::class, 'store'])->middleware('role:mosque_manager');
+    Route::get('/{id}', [SermonController::class, 'show'])->whereNumber('id');
+    Route::get('/pending', [SermonController::class, 'pending']);
+    Route::get('/archived', [SermonController::class, 'archived']);
+    Route::get('/', [SermonController::class, 'index']);
+    Route::put('/{id}/approve', [SermonController::class, 'approve'])->middleware('role:super_admin');
+    Route::put('/{id}/reject', [SermonController::class, 'reject'])->middleware('role:super_admin');
 });
 
 Route::prefix('tameems')->middleware('auth:api')->group(function () {
 
-Route::middleware('role:super_admin')->group(function () {  
+Route::middleware('role:super_admin')->group(function () {
     Route::post('/', [TameemController::class, 'store']);
     Route::put('/{id}', [TameemController::class, 'update']);
     Route::get('/', [TameemController::class, 'index']);

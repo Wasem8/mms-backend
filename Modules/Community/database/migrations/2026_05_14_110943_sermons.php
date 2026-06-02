@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('speaker_name')->nullable();
             $table->date('sermon_date')->nullable();
 
-            $table->enum('status', ['Pending', 'Scheduled', 'Completed', 'Rejected'])->default('Pending');
+            $table->enum('status', ['Pending', 'Archived', 'Rejected'])->default('Pending');
 
             $table->text('notes')->nullable();
             $table->foreignId('mosque_manager_id')->constrained('users');

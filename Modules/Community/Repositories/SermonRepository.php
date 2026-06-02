@@ -8,42 +8,30 @@ use Modules\Community\Repositories\SermonRepositoryInterface;
 
 class SermonRepository implements SermonRepositoryInterface
 {
-    public function getAll()
-    {
-        return Sermon::with(['mosqueManager', 'regionManager', 'attachments'])->latest()->get();
-    }
-
-    public function getAllPending()
-    {
-        return Sermon::with(['mosqueManager', 'attachments'])
-            ->where('status', 'Pending')
-            ->latest()
-            ->get();
-    }
-
-    public function findById($id)
-    {
-        return Sermon::findOrFail($id);
-    }
-
-    public function create(array $data)
+    public function create(array $data): Sermon
     {
         return Sermon::create($data);
     }
 
-    public function attachAttachments($sermon, array $attachments)
+    public function findById(int $id): ?Sermon
     {
-        return $sermon->attachments()->createMany($attachments);
+        return Sermon::findOrFail($id);
     }
 
-    public function updateStatus($id, $status, $notes = null, $regionManagerId = null)
+    public function updateStatus(Sermon $sermon, string $status): bool
     {
-        $sermon = $this->findById($id);
-        $sermon->update([
-            'status' => $status,
-            'notes' => $notes,
-            'region_manager_id' => $regionManagerId
-        ]);
-        return $sermon;
+        return $sermon->update(['status' => $status]);
+    }
+
+    public function delete(Sermon $sermon): bool
+    {
+        return $sermon->delete();
+    }
+
+    public function getExpiredPendingSermons(string $currentDate)
+    {
+        return Sermon::where('status', 'pending')
+            ->where('sermon_date', '<=', $currentDate)
+            ->get();
     }
 }

@@ -5,6 +5,7 @@ namespace Modules\Community\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Support\ApiResponse;
+use Modules\Community\Http\Requests\CreateSermon;
 use Modules\Community\Services\SermonService;
 
 class SermonController extends Controller
@@ -16,77 +17,53 @@ class SermonController extends Controller
         $this->sermonService = $sermonService;
     }
 
-    public function index()
+    public function store(CreateSermon $request)
     {
-        $sermons = $this->sermonService->getAllSermons();
-        return response()->json(['message' => 'تم جلب جميع الخطب بنجاح', 'data' => $sermons]);
-    }
+        $validatedData = $request->validated();
 
-    public function pending()
-    {
-        $sermons = $this->sermonService->getPendingSermons();
-        return response()->json(['message' => 'تم جلب الخطب المعلقة بنجاح', 'data' => $sermons]);
+        $files = $request->file('attachments') ?? [];
+
+        $sermon = $this->sermonService->createSermon($validatedData, auth()->id(), $files);
+
+        return ApiResponse::success($sermon, 'Sermon submitted successfully with its attachments and is pending approval.');
     }
 
     public function show($id)
     {
-        $sermon = $this->sermonService->getSermionById($id);
-        if (! $sermon) {
-            return ApiResponse::error('خطبة غير موجودة');
-        }
-        return ApiResponse::success($sermon, 'تم جلب الخطبة بنجاح');
-    }
+        $sermon = $this->sermonService->getSermonById($id);
 
-    public function store(Request $request)
-    {
-        $validatedData = $request->validate([
-            'title' => 'required|string|max:255',
-            'content' => 'required|string',
-            'attachments' => 'sometimes|array',
-            'attachments.*' => 'file|max:10240',
-        ]);
-
-        $attachments = $request->file('attachments', []);
-        if ($attachments && !is_array($attachments)) {
-            $attachments = [$attachments];
+        if (!$sermon) {
+            return ApiResponse::error('Sermon not found.', 404);
         }
 
-        $mosqueManagerId = auth()->id();
-
-        $sermon = $this->sermonService->uploadSermon($validatedData, $mosqueManagerId, $attachments);
-
-        return ApiResponse::success(['message' => 'تم رفع الخطبة بنجاح وبانتظار الاعتماد', 'data' => $sermon], 201);
+        return ApiResponse::success($sermon, 'Sermon details retrieved successfully.');
     }
 
-
-    public function approve(Request $request, $id)
+    public function approve($id)
     {
-        $notes = $request->input('notes');
-        $regionManagerId = auth()->id();
-
-        $sermon = $this->sermonService->approveSermon($id, $regionManagerId, $notes);
-
-        return ApiResponse::success(['message' => 'تم اعتماد الخطبة بنجاح', 'data' => $sermon]);
+        $sermon = $this->sermonService->approveSermon($id, auth()->id());
+        return ApiResponse::success($sermon, 'Sermon approved and archived for public mosque use.');
     }
 
-    public function reject(Request $request, $id)
+    public function reject($id)
     {
-        $notes = $request->input('notes');
-        $regionManagerId = auth()->id();
-
-        $sermon = $this->sermonService->rejectSermon($id, $regionManagerId, $notes);
-
-        return ApiResponse::success(['message' => 'تم رفض الخطبة بنجاح', 'data' => $sermon]);
+        $this->sermonService->rejectAndDestroySermon($id);
+        return ApiResponse::success(null, 'Sermon has been rejected and deleted from the system.');
     }
 
-    public function checkCompleted()
-    {
-        $updatedCount = $this->sermonService->markPastSermonsAsCompleted();
-
-        return ApiResponse::success([
-            'message' => "تم التحقق بنجاح. تم تحديث حالة {$updatedCount} خطبة إلى مكتملة.",
-            'updated_count' => $updatedCount
-        ]);
+    public function index() {
+        $sermons = $this->sermonService->getAllSermons();
+        return ApiResponse::success($sermons, 'All sermons retrieved successfully.');
     }
+    public function pending() {
+        $sermons = $this->sermonService->getPendingSermons();
+        return ApiResponse::success($sermons, 'Pending sermons retrieved successfully.');
+    }
+
+    public function archived() {
+        $sermons = $this->sermonService->getArchivedSermons();
+        return ApiResponse::success($sermons, 'Archived sermons retrieved successfully.');
+    }
+
 
 }
