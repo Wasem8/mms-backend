@@ -123,7 +123,6 @@ class ComplaintService
         $path = $bucket . '/' . $fileName;
 
         $uploadUrl = $baseUrl . '/storage/v1/object/' . $path;
-
         $response = Http::withHeaders([
             'apikey' => $key,
             'Authorization' => 'Bearer ' . $key,
