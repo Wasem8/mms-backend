@@ -116,9 +116,9 @@ class ComplaintService
     {
         try {
             $fileName  = uniqid() . '.' . $image->getClientOriginalExtension();
-            $baseUrl   = config('services.supabase.url');
-            $bucket    = config('services.supabase.bucket');
-          //  $key       = config('services.supabase.key');
+            $baseUrl   = env('SUPABASE_URL');
+            $bucket    = env('SUPABASE_BUCKET');
+            $key       = env('SUPABASE_KEY');
             $uploadUrl = "{$baseUrl}/storage/v1/object/{$bucket}/{$fileName}";
 
             // ✅ اقرأ من الـ stream مباشرة — يشتغل حتى لو Vercel منعت الـ disk
@@ -129,8 +129,8 @@ class ComplaintService
             }
 
             $response = Http::withHeaders([
-                'apikey'        => config('services.supabase.key'),
-                'Authorization' => "Bearer " . config('services.supabase.key'),
+                'apikey'        => $key,
+                'Authorization' => "Bearer {$key}",
                 'Content-Type'  => $image->getMimeType(),
             ])->withBody($fileContent, $image->getMimeType())
                 ->post($uploadUrl);
