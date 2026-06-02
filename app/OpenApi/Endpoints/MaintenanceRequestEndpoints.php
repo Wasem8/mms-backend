@@ -241,6 +241,110 @@ class MaintenanceRequestEndpoints
     )]
     public function show() {}
 
+    #[OA\Get(
+        path: '/mosques/{mosqueId}/maintenance/stats',
+        operationId: 'getMaintenancePageStats',
+        tags: ['Maintenance Requests'],
+        summary: 'Maintenance page stat cards',
+        description: 'Returns the four stat cards shown at the top of the maintenance management page: open requests, in progress, completed this month, and critical failures.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'mosqueId', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 1),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status',  type: 'string', example: 'success'),
+                        new OA\Property(property: 'message', type: 'string', example: 'Maintenance page stats retrieved successfully.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'open_requests',
+                                    type: 'integer',
+                                    example: 14,
+                                    description: 'طلبات مفتوحة — requests with status = pending'
+                                ),
+                                new OA\Property(
+                                    property: 'in_progress',
+                                    type: 'integer',
+                                    example: 5,
+                                    description: 'جاري العمل — requests with status = in_progress'
+                                ),
+                                new OA\Property(
+                                    property: 'completed_this_month',
+                                    type: 'integer',
+                                    example: 42,
+                                    description: 'تم إنجازها (الشهر) — requests completed in the current month'
+                                ),
+                                new OA\Property(
+                                    property: 'critical',
+                                    type: 'integer',
+                                    example: 1,
+                                    description: 'أعطال حرجة — open or in-progress requests with priority = urgent'
+                                ),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+            new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
+            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+        ]
+    )]
+    public function pageStats() {}
+
+    #[OA\Get(
+        path: '/mosques/{mosqueId}/maintenance/recent',
+        operationId: 'getRecentMaintenanceRequests',
+        tags: ['Maintenance Requests'],
+        summary: 'Get recent maintenance requests for a mosque',
+        description: 'Returns the latest maintenance requests for a specific mosque. Restricted to mosque_manager.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(name: 'mosqueId', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 1),
+            new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 5, minimum: 1, maximum: 50), description: 'Number of requests to return'),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Recent maintenance requests retrieved successfully.',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string',  example: 'Success'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(
+                                type: 'object',
+                                properties: [
+                                    new OA\Property(property: 'id',                   type: 'integer', example: 7),
+                                    new OA\Property(property: 'maintenance_number',   type: 'string',  example: 'MR-2026-ABC123'),
+                                    new OA\Property(property: 'title',                type: 'string',  example: 'Fix broken window'),
+                                    new OA\Property(property: 'status',               type: 'string',  enum: ['pending', 'in_progress', 'completed', 'cancelled'], example: 'pending'),
+                                    new OA\Property(property: 'priority',             type: 'string',  enum: ['low', 'medium', 'high'], example: 'high'),
+                                    new OA\Property(property: 'category',             type: 'string',  example: 'electrical'),
+                                    new OA\Property(property: 'created_at',           type: 'string',  format: 'date-time', example: '2026-05-13T08:30:00Z'),
+                                ]
+                            )
+                        ),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — requires mosque_manager role'),
+            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+        ]
+    )]
+    public function recentRequests() {}
     // ─── PUT /maintenance/{id} ────────────────────────────────────────────────
 
     #[OA\Put(

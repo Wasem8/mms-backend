@@ -24,3 +24,5 @@ Route::middleware(['auth:api',])->prefix('complaints/member')->group(function ()
     Route::post('/', [ComplaintController::class, 'storeMember']);
 });
 
+Route::get('mosques/{mosqueId}/complaints/recent', [ComplaintController::class, 'recentComplaints'])->middleware(['auth:api', 'role:mosque_manager']);
+Route::get('mosques/{mosqueId}/complaints/stats', [ComplaintController::class, 'pageStats'])->middleware(['auth:api', 'role:mosque_manager']);

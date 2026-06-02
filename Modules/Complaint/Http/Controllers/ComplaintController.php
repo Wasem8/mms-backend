@@ -104,6 +104,17 @@ class ComplaintController extends Controller
             'status_history' => $fullHistory
         ], 'Complaint status retrieved successfully.');
     }
+
+    public function recentComplaints(int $mosqueId)
+    {
+        $data = $this->service->getRecentComplaints($mosqueId);
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Success',
+            'data'    => $data,
+        ]);
+    }
     // ==========================================
     // ADMIN & MANAGER METHODS
     // ==========================================
@@ -172,5 +183,16 @@ class ComplaintController extends Controller
         $stats = $this->service->getComplaintStatistics($filters);
 
         return ApiResponse::success($stats, 'تم استرجاع الإحصائيات بنجاح');
+    }
+
+    public function pageStats(int $mosqueId)
+    {
+        $data = $this->service->getComplaintPageStats($mosqueId);
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Success',
+            'data'    => $data,
+        ]);
     }
 }

@@ -93,6 +93,51 @@ class MaintenanceService
         $this->repository->delete($id);
     }
 
+    public function getPageStats(int $mosqueId): array
+    {
+        $now   = now();
+        $query = fn() => Maintenance::where('mosque_id', $mosqueId);
+
+        // طلبات مفتوحة
+        $open = $query()
+            ->where('status', 'pending')
+            ->count();
+
+        // جاري العمل
+        $inProgress = $query()
+            ->where('status', 'in_progress')
+            ->count();
+
+        $completedThisMonth = $query()
+            ->where('status', 'completed')
+            ->where(function ($q) use ($now) {
+                $q->whereYear('completed_at',  $now->year)
+                    ->whereMonth('completed_at', $now->month);
+            })
+            ->count();
+
+        $critical = $query()
+            ->where('priority', 'urgent')
+            ->whereIn('status', ['pending', 'in_progress'])
+            ->count();
+
+        return [
+            'open_requests'        => $open,
+            'in_progress'          => $inProgress,
+            'completed_this_month' => $completedThisMonth,
+            'critical'             => $critical,
+        ];
+    }
+
+    public function getRecentRequests(int $mosqueId, int $limit = 5): array
+    {
+        return Maintenance::where('mosque_id', $mosqueId)
+            ->with(['files'])
+            ->latest()
+            ->limit($limit)
+            ->get()
+            ->toArray();
+    }
 
     public function getForAdmin(array $filters = [])
     {

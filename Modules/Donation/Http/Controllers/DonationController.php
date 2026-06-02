@@ -36,7 +36,6 @@ class DonationController extends Controller
     }
 
 
-    // not work yet
     public function summary(int $mosqueId)
     {
         $summary = $this->donationService->getDailySummary($mosqueId);
@@ -48,8 +47,28 @@ class DonationController extends Controller
         ]);
     }
 
-    // not work yet
+    public function stats(int $mosqueId)
+    {
+        $data = $this->donationService->getPageStats($mosqueId);
 
+        return response()->json([
+            'status'  => true,
+            'message' => 'Success',
+            'data'    => $data,
+        ]);
+    }
+
+    public function recentDonations(int $mosqueId)
+    {
+        $limit = (int) request()->query('limit', 5);
+        $data  = $this->donationService->getRecentDonations($mosqueId, $limit);
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Success',
+            'data'    => $data,
+        ]);
+    }
     public function chart(int $mosqueId)
     {
         $data = $this->donationService->getMonthlyDistribution($mosqueId);

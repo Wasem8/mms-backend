@@ -18,10 +18,11 @@ Route::get('settings', [SettingController::class, 'index']);
 
 
 
-Route::prefix('mosques/{mosqueId}/donations')->group(function () {
+Route::prefix('mosques/{mosqueId}/donations')->middleware(['auth:api','role:mosque_manager'])->group(function () {
     Route::get('/',        [DonationController::class, 'index']);
     Route::get('/summary', [DonationController::class, 'summary']);
     Route::get('/chart',   [DonationController::class, 'chart']);
+    Route::get('/stats', [DonationController::class, 'stats']);
 });
 
 Route::prefix('donations')->group(function () {
@@ -72,3 +73,5 @@ Route::prefix('campaigns')->group(function () {
         Route::delete('/{id}', [CampaignController::class, 'destroy'])->name('campaign.destroy');
     });
 });
+
+Route::get('mosques/{mosqueId}/donations/recent', [DonationController::class, 'recentDonations'])->middleware(['auth:api','role:mosque_manager']);

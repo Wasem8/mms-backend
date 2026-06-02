@@ -16,7 +16,7 @@ class CreateMaintenanceRequest extends FormRequest
             'title'        => ['required', 'string', 'max:255'],
             'description'  => ['required', 'string', 'max:5000'],
             'category'     => ['required', 'string', 'in:electrical,plumbing,carpentry,cleaning, other'],
-            'priority'     => ['sometimes', 'string', 'in:low,medium,high, urgent'],
+            'priority'     => ['sometimes', 'string', 'in:low,medium,high,urgent'],
             'scheduled_at' => ['nullable', 'date', 'after:now'],
             'notes'        => ['nullable', 'string'],
             'files'        => ['nullable', 'array', 'max:10'],
