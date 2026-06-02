@@ -20,7 +20,11 @@ Route::put('/{id}', [MaintenanceRequestController::class, 'update']);
 Route::delete('/{id}', [MaintenanceRequestController::class, 'destroy']);
 });
 
+
+Route::get('mosques/{mosqueId}/maintenance/recent', [MaintenanceRequestController::class, 'recentRequests'])->middleware(['auth:api','role:mosque_manager']);
+Route::get('mosques/{mosqueId}/maintenance/stats', [MaintenanceRequestController::class, 'pageStats'])->middleware(['auth:api','role:mosque_manager']);
+
+
 // =========================================================================
 // SUPER ADMIN ROUTES
 // =========================================================================
-

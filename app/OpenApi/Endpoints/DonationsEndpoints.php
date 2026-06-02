@@ -166,6 +166,7 @@ class DonationsEndpoints
         tags: ['Donations'],
         summary: 'Daily summary',
         description: 'Returns today\'s total collected amount and number of operations — shown in the "ملخص اليوم" panel on the add donation screen.',
+        security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(name: 'mosqueId', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 5),
         ],
@@ -203,6 +204,124 @@ class DonationsEndpoints
     )]
     public function getDonationSummary() {}
 
+
+#[OA\Get(
+        path: '/mosques/{mosqueId}/donations/stats',
+        operationId: 'getDonationStats',
+        tags: ['Donations'],
+        summary: 'Page stat cards',
+        description: 'Returns the four stat cards shown at the top of the donations management page: total donations, this month\'s donations, active campaigns, and new donors this month.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(name: 'mosqueId', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 5),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string',  example: 'Success'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'total_donations',
+                                    type: 'number',
+                                    format: 'float',
+                                    example: 125400,
+                                    description: 'إجمالي التبرعات — all-time completed cash donations'
+                                ),
+                                new OA\Property(
+                                    property: 'monthly_donations',
+                                    type: 'number',
+                                    format: 'float',
+                                    example: 45200,
+                                    description: 'تبرعات هذا الشهر — completed cash donations this month'
+                                ),
+                                new OA\Property(
+                                    property: 'active_campaigns',
+                                    type: 'integer',
+                                    example: 12,
+                                    description: 'حملات نشطة — campaigns with status = active'
+                                ),
+                                new OA\Property(
+                                    property: 'new_donors',
+                                    type: 'integer',
+                                    example: 85,
+                                    description: 'متبرعون جدد — distinct donor_name values this month (فاعل خير counts as 1)'
+                                ),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function getDonationStats() {}
+
+
+
+#[OA\Get(
+    path: '/mosques/{mosqueId}/donations/recent',
+    operationId: 'getRecentDonations',
+    tags: ['Donations'],
+    summary: 'Recent donations',
+    description: 'Returns the latest donations for a mosque — shown in the "سجل التبرعات الأخير" table on the donations management page.',
+    security: [['bearerAuth' => []]],
+    parameters: [
+        new OA\Parameter(name: 'mosqueId', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 5),
+        new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 5, minimum: 1, maximum: 50), description: 'Number of records to return'),
+    ],
+    responses: [
+        new OA\Response(
+            response: 200,
+            description: 'Success',
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'status',  type: 'boolean', example: true),
+                    new OA\Property(property: 'message', type: 'string',  example: 'Success'),
+                    new OA\Property(
+                        property: 'data',
+                        type: 'array',
+                        items: new OA\Items(
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'id',           type: 'integer', example: 101),
+                                new OA\Property(property: 'reference',    type: 'string',  example: 'REC-4518'),
+                                new OA\Property(property: 'donor_name',   type: 'string',  example: 'أحمد محمد'),
+                                new OA\Property(property: 'amount',       type: 'number',  format: 'float', example: 500),
+                                new OA\Property(property: 'donation_type', type: 'string', enum: ['cash', 'in_kind'], example: 'cash'),
+                                new OA\Property(property: 'status',       type: 'string',  enum: ['pending', 'completed'], example: 'completed'),
+                                new OA\Property(
+                                    property: 'campaign',
+                                    type: 'object',
+                                    nullable: true,
+                                    properties: [
+                                        new OA\Property(property: 'id',    type: 'integer', example: 12),
+                                        new OA\Property(property: 'title', type: 'string',  example: 'حملة بناء التوسعة'),
+                                    ]
+                                ),
+                                new OA\Property(property: 'created_at',   type: 'string',  format: 'date-time', example: '2026-05-13T08:30:00Z'),
+                            ]
+                        )
+                    ),
+                    new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
+                ]
+            )
+        ),
+        new OA\Response(response: 401, description: 'Unauthenticated'),
+        new OA\Response(response: 403, description: 'Forbidden — requires mosque_manager role'),
+        new OA\Response(response: 404, description: 'Not found'),
+    ]
+)]
+public function getRecentDonations() {}
+
+
+
+
     // =========================================================================
     // GET /mosques/{mosqueId}/donations/chart
     // Screen 1 — monthly distribution bar chart
@@ -214,6 +333,7 @@ class DonationsEndpoints
         tags: ['Donations'],
         summary: 'Monthly distribution chart',
         description: 'Returns this month\'s donation totals grouped by type (cash / in_kind) for the bar chart.',
+        security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(name: 'mosqueId', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 5),
         ],

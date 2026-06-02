@@ -2,13 +2,12 @@
 
 namespace Modules\Complaint\Service;
 
-use Illuminate\Support\Facades\Log;
-use Modules\Complaint\Repositories\ComplaintRepositoryInterface;
-use Illuminate\Support\Str;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Modules\Complaint\Models\Complaint;
-use Modules\Mosque\Models\Mosque;
+use Modules\Complaint\Repositories\ComplaintRepositoryInterface;
 
 class ComplaintService
 {
@@ -16,15 +15,14 @@ class ComplaintService
         protected ComplaintRepositoryInterface $repository
     ) {}
 
-
     public function submitComplaint(array $data, array $files = [])
     {
-        $data['complaint_number'] = 'CMP-' . date('Y') . '-' . strtoupper(Str::random(6));
+        $data['complaint_number'] = 'CMP-'.date('Y').'-'.strtoupper(Str::random(6));
         $data['status'] = 'pending';
 
         $complaint = $this->repository->create($data);
 
-        if (!empty($files)) {
+        if (! empty($files)) {
             $fileRecords = [];
 
             foreach ($files as $file) {
@@ -38,25 +36,23 @@ class ComplaintService
                     ];
                 }
             }
-            if (!empty($fileRecords)) {
+            if (! empty($fileRecords)) {
                 $this->repository->attachFiles($complaint, $fileRecords);
             }
         }
+
         return $complaint;
     }
-
 
     public function trackComplaint(string $complaintNumber)
     {
         return $this->repository->findByComplaintNumber($complaintNumber);
     }
 
-
     public function getComplaintsForAdmin(array $filters = [])
     {
         return $this->repository->getFiltered($filters);
     }
-
 
     public function updateStatus(int $complaintId, string $newStatus, int $adminId, ?string $note = null)
     {
@@ -65,7 +61,7 @@ class ComplaintService
 
         $this->repository->update($complaintId, [
             'status' => $newStatus,
-            'admin_notes' => $note
+            'admin_notes' => $note,
         ]);
 
         $this->repository->logStatusChange($complaint, [
@@ -75,7 +71,6 @@ class ComplaintService
             'changed_at' => now(),
             'changed_by' => $adminId,
         ]);
-
 
         return $this->repository->find($complaintId);
     }
@@ -98,6 +93,7 @@ class ComplaintService
         if (isset($filters['mosque_id'])) {
             $query->where('mosque_id', $filters['mosque_id']);
         }
+
         return [
             'total_complaints' => $query->count(),
             'by_status' => [
@@ -112,31 +108,93 @@ class ComplaintService
         ];
     }
 
-     private function uploadImage($image): string
+    public function getComplaintPageStats(int $mosqueId): array
     {
-        $fileName = uniqid() . '.' . $image->getClientOriginalExtension();
+        $now = now();
+        $query = fn () => Complaint::where('mosque_id', $mosqueId);
+
+        // إجمالي الشكاوى
+        $total = $query()->count();
+
+        // شكاوى مفتوحة (pending + in_progress)
+        $open = $query()
+            ->whereIn('status', ['pending', 'in_progress'])
+            ->count();
+
+        // شكاوى عاجلة (priority = high فقط حسب الـ migration)
+        $urgent = $query()
+            ->where('priority', 'high')
+            ->whereIn('status', ['pending', 'in_progress'])
+            ->count();
+
+        // تم الحل هذا الشهر
+        $resolvedThisMonth = $query()
+            ->where('status', 'resolved')
+            ->whereYear('updated_at', $now->year)
+            ->whereMonth('updated_at', $now->month)
+            ->count();
+
+        // متوسط الاستجابة بالساعات
+        // من created_at للشكوى إلى changed_at لأول log بعد pending
+        $avgResponseHours = Complaint::where('mosque_id', $mosqueId)
+            ->where('status', '!=', 'pending')
+            ->join('complaint_status_logs as csl', function ($join) {
+                $join->on('csl.complaint_id', '=', 'complaints.id')
+                    ->where('csl.new_status', '!=', 'pending')
+                    ->whereRaw("csl.id = (
+                SELECT MIN(id)
+                FROM complaint_status_logs
+                WHERE complaint_id = complaints.id
+                    AND new_status != 'pending'
+             )");
+            })
+            ->selectRaw('AVG(EXTRACT(EPOCH FROM (csl.changed_at - complaints.created_at)) / 3600) as avg_hours')
+            ->value('avg_hours');
+
+        return [
+            'total_complaints' => $total,
+            'open_complaints' => $open,
+            'urgent_complaints' => $urgent,
+            'resolved_this_month' => $resolvedThisMonth,
+            'avg_response_hours' => (int) round($avgResponseHours ?? 0),
+        ];
+    }
+
+    public function getRecentComplaints(int $mosqueId, int $limit = 5): array
+    {
+        return Complaint::where('mosque_id', $mosqueId)
+            ->with(['files'])
+            ->latest()
+            ->limit($limit)
+            ->get()
+            ->toArray();
+    }
+
+    private function uploadImage($image): string
+    {
+        $fileName = uniqid().'.'.$image->getClientOriginalExtension();
 
         $baseUrl = config('services.supabase.url');
         $bucket = config('services.supabase.bucket');
         $key = config('services.supabase.key');
 
-        $path = $bucket . '/' . $fileName;
+        $path = $bucket.'/'.$fileName;
 
-        $uploadUrl = $baseUrl . '/storage/v1/object/' . $path;
+        $uploadUrl = $baseUrl.'/storage/v1/object/'.$path;
         $response = Http::withHeaders([
             'apikey' => $key,
-            'Authorization' => 'Bearer ' . $key,
+            'Authorization' => 'Bearer '.$key,
         ])->attach(
             'file',
             file_get_contents($image),
             $fileName
         )->post($uploadUrl);
 
-        if (!$response->successful()) {
-            throw new \Exception('Upload failed: ' . $response->body());
+        if (! $response->successful()) {
+            throw new \Exception('Upload failed: '.$response->body());
         }
 
-        return $baseUrl . '/storage/v1/object/public/' . $path;
+        return $baseUrl.'/storage/v1/object/public/'.$path;
     }
 
     private function deleteImage(string $url): void
@@ -145,13 +203,13 @@ class ComplaintService
 
         $fileName = basename($url);
 
-        $path = $bucket . '/' . $fileName;
+        $path = $bucket.'/'.$fileName;
 
-        $deleteUrl = env('SUPABASE_URL') . '/storage/v1/object/' . $path;
+        $deleteUrl = env('SUPABASE_URL').'/storage/v1/object/'.$path;
 
         Http::withHeaders([
             'apikey' => env('SUPABASE_KEY'),
-            'Authorization' => 'Bearer ' . env('SUPABASE_KEY'),
+            'Authorization' => 'Bearer '.env('SUPABASE_KEY'),
         ])->delete($deleteUrl);
     }
 }

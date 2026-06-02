@@ -125,6 +125,29 @@ class MaintenanceRequestController extends Controller
         ]);
     }
 
+    public function pageStats(int $mosqueId)
+    {
+        $data = $this->service->getPageStats($mosqueId);
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Success',
+            'data'    => $data,
+        ]);
+    }
+
+    public function recentRequests(int $mosqueId)
+    {
+        $limit = (int) request()->query('limit', 5);
+        $data  = $this->service->getRecentRequests($mosqueId, $limit);
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Success',
+            'data'    => $data,
+        ]);
+    }
+
     /**
      * PUT /maintenance/admin/{id}
      * @param ProcessMaintenanceRequest $request

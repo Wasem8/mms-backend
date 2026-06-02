@@ -42,6 +42,15 @@ class DonationService
             ->paginate(10);
     }
 
+    public function getRecentDonations(int $mosqueId, int $limit = 5): \Illuminate\Database\Eloquent\Collection
+    {
+        return Donation::where('mosque_id', $mosqueId)
+            ->with(['campaign:id,title'])
+            ->latest()
+            ->limit($limit)
+            ->get();
+    }
+
     public function getByUser(int $userId, array $filters = [])
     {
         return Donation::where('user_id', $userId)
@@ -62,30 +71,120 @@ class DonationService
     {
         return Donation::findOrFail($id);
     }
-    // DonationService.php
 
+    public function getPageStats(int $mosqueId): array
+    {
+        $now = now();
+
+        // إجمالي التبرعات - Total all-time cash donations
+        $totalDonations = Donation::where('mosque_id', $mosqueId)
+            ->where('status', 'completed')
+            ->where('donation_type', 'cash')
+            ->sum('base_amount');
+
+        // تبرعات هذا الشهر - This month cash donations
+        $monthlyDonations = Donation::where('mosque_id', $mosqueId)
+            ->where('status', 'completed')
+            ->where('donation_type', 'cash')
+            ->where(function ($q) use ($now) {
+                $q->where(
+                    fn($q1) => $q1
+                        ->whereYear('completed_at',  $now->year)
+                        ->whereMonth('completed_at', $now->month)
+                )
+                    ->orWhere(
+                        fn($q2) => $q2
+                            ->whereNull('completed_at')
+                            ->whereYear('created_at',  $now->year)
+                            ->whereMonth('created_at', $now->month)
+                    );
+            })
+            ->sum('base_amount');
+
+        $newDonors = Donation::where('mosque_id', $mosqueId)
+            ->where('status', 'completed')
+            ->where(function ($q) use ($now) {
+                $q->where(
+                    fn($q1) => $q1
+                        ->whereYear('completed_at',  $now->year)
+                        ->whereMonth('completed_at', $now->month)
+                )
+                    ->orWhere(
+                        fn($q2) => $q2
+                            ->whereNull('completed_at')
+                            ->whereYear('created_at',  $now->year)
+                            ->whereMonth('created_at', $now->month)
+                    );
+            })
+            ->distinct('donor_name')
+            ->count('donor_name');
+        // حملات نشطة - Active campaigns
+        $activeCampaigns = Campaign::where('mosque_id', $mosqueId)
+            ->where('status', 'active')
+            ->count();
+
+        return [
+            'total_donations'  => (float) $totalDonations,
+            'monthly_donations' => (float) $monthlyDonations,
+            'new_donors'       => (int) $newDonors,
+            'active_campaigns' => (int) $activeCampaigns,
+        ];
+    }
     public function getDailySummary(int $mosqueId): array
     {
-        $query = Donation::where('mosque_id', $mosqueId)
+        // ── Today ────────────────────────────────────────────────────────────
+        $baseQuery = fn() => Donation::where('mosque_id', $mosqueId)
             ->where('donation_type', 'cash')
             ->where('status', 'completed');
 
-
-        $query->where(function ($q) {
-            $q->whereDate('completed_at', today())
-                ->orWhere(function ($q2) {
-                    $q2->whereNull('completed_at')
-                        ->whereDate('created_at', today());
-                });
-        });
-
-        $row = $query
-            ->selectRaw('COALESCE(SUM(base_amount), 0) as total, COUNT(*) as operations')
+        $todayRow = $baseQuery()
+            ->where(function ($q) {
+                $q->whereDate('completed_at', today())
+                    ->orWhere(function ($q2) {
+                        $q2->whereNull('completed_at')
+                            ->whereDate('created_at', today());
+                    });
+            })
+            ->selectRaw('
+            COALESCE(SUM(base_amount), 0) AS total,
+            COUNT(*)                      AS operations,
+            CASE WHEN COUNT(*) > 0
+                 THEN ROUND(COALESCE(SUM(base_amount), 0) / COUNT(*), 2)
+                 ELSE 0
+            END                           AS average
+        ')
             ->first();
 
+        // ── Yesterday ────────────────────────────────────────────────────────
+        $yesterdayTotal = $baseQuery()
+            ->where(function ($q) {
+                $q->whereDate('completed_at', today()->subDay())
+                    ->orWhere(function ($q2) {
+                        $q2->whereNull('completed_at')
+                            ->whereDate('created_at', today()->subDay());
+                    });
+            })
+            ->sum('base_amount');
+
+        // ── Percentage change ─────────────────────────────────────────────────
+        $todayTotal = (float) ($todayRow->total ?? 0);
+
+        $percentage = match (true) {
+            $yesterdayTotal > 0 => round((($todayTotal - $yesterdayTotal) / $yesterdayTotal) * 100, 1),
+            $todayTotal   > 0   => 100.0,  
+            default             => 0.0,
+        };
+
         return [
-            'total_today'      => (float) ($row->total      ?? 0),
-            'operations_count' => (int)   ($row->operations ?? 0),
+            'total_today'      => $todayTotal,
+            'operations_count' => (int)   ($todayRow->operations ?? 0),
+            'average_donation' => (float) ($todayRow->average    ?? 0),
+            'change_percentage' => $percentage,
+            'change_direction'  => match (true) {
+                $percentage > 0 => 'up',
+                $percentage < 0 => 'down',
+                default         => 'neutral',
+            },
         ];
     }
 
@@ -93,6 +192,7 @@ class DonationService
     {
         $rows = Donation::where('mosque_id', $mosqueId)
             ->where('status', 'completed')
+            ->where('donation_type', 'cash')          // ← add this
             ->where(function ($q) {
                 $q->where(
                     fn($q1) => $q1
@@ -110,9 +210,11 @@ class DonationService
             ->groupBy('donation_type')
             ->pluck('total', 'donation_type');
 
+        $cash = (float) ($rows['cash'] ?? 0);
+
         return [
-            'cash'    => (float) ($rows['cash']    ?? 0),
-            'in_kind' => (float) ($rows['in_kind'] ?? 0),
+            'cash'          => $cash,
+         //   'monthly_total' => $cash,   // same value now, kept for consistency
         ];
     }
     public function create(array $data): array
