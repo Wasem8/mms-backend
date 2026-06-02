@@ -12958,9 +12958,9 @@
                 "tags": [
                     "Sermons"
                 ],
-                "summary": "List all sermons",
-                "description": "Returns all sermons regardless of status. Accessible to authenticated users.",
-                "operationId": "listSermons",
+                "summary": "Get all sermons",
+                "description": "Returns a list of all sermons.",
+                "operationId": "indexSermons",
                 "responses": {
                     "200": {
                         "description": "Success",
@@ -12970,7 +12970,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "تم جلب جميع الخطب بنجاح"
+                                            "example": "تم جلب الخطب بنجاح"
                                         },
                                         "data": {
                                             "type": "array",
@@ -12998,8 +12998,8 @@
                 "tags": [
                     "Sermons"
                 ],
-                "summary": "Upload a sermon",
-                "description": "Mosque manager uploads a new sermon. Status is set to `pending` until approved by a region manager.\n- Attachments are optional (PDF, audio, etc.) — max 10MB each.\n- `mosque_manager_id` is taken from the auth token automatically.",
+                "summary": "Submit a sermon",
+                "description": "Allows mosque managers to submit a sermon for approval. Multiple attachments are supported. Allowed file types: PDF, DOC, DOCX, JPG, JPEG and PNG. Maximum size: 5MB per file.",
                 "operationId": "storeSermon",
                 "requestBody": {
                     "required": true,
@@ -13008,28 +13008,30 @@
                             "schema": {
                                 "required": [
                                     "title",
-                                    "content"
+                                    "content",
+                                    "speaker_name",
+                                    "sermon_date"
                                 ],
                                 "properties": {
                                     "title": {
                                         "type": "string",
-                                        "example": "خطبة الجمعة - الصبر"
+                                        "example": "خطبة الجمعة - التوبة والإنابة"
                                     },
                                     "content": {
                                         "type": "string",
-                                        "example": "الحمد لله..."
+                                        "example": "الحمد لله رب العالمين..."
                                     },
                                     "speaker_name": {
                                         "type": "string",
-                                        "example": "الشيخ محمد"
+                                        "example": "الشيخ أحمد"
                                     },
                                     "sermon_date": {
                                         "type": "string",
                                         "format": "date",
-                                        "example": "2024-06-28"
+                                        "example": "2026-07-15"
                                     },
                                     "attachments[]": {
-                                        "description": "Optional files — max 10MB each",
+                                        "description": "Optional sermon attachments. Allowed: PDF, DOC, DOCX, JPG, JPEG and PNG. Max 5MB per file.",
                                         "type": "array",
                                         "items": {
                                             "type": "string",
@@ -13044,14 +13046,14 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Sermon uploaded — awaiting approval",
+                        "description": "Sermon submitted successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "تم رفع الخطبة بنجاح وبانتظار الاعتماد"
+                                            "example": "تم تقديم الخطبة بنجاح"
                                         },
                                         "data": {
                                             "$ref": "#/components/schemas/Sermon"
@@ -13065,8 +13067,94 @@
                     "401": {
                         "description": "Unauthenticated"
                     },
+                    "403": {
+                        "description": "Only mosque managers can submit sermons"
+                    },
                     "422": {
-                        "description": "Validation error"
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "خطأ في التحقق من البيانات"
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/sermons/{id}": {
+            "get": {
+                "tags": [
+                    "Sermons"
+                ],
+                "summary": "Get sermon by ID",
+                "description": "Returns the details of a specific sermon.",
+                "operationId": "getSermonById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Sermon ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Sermon retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم جلب الخطبة بنجاح"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Sermon"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Sermon not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "الخطبة غير موجودة"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -13081,9 +13169,9 @@
                 "tags": [
                     "Sermons"
                 ],
-                "summary": "List pending sermons",
-                "description": "Returns sermons awaiting approval by a region manager.",
-                "operationId": "listPendingSermons",
+                "summary": "Get pending sermons",
+                "description": "Returns all sermons awaiting approval.",
+                "operationId": "pendingSermons",
                 "responses": {
                     "200": {
                         "description": "Success",
@@ -13118,13 +13206,55 @@
                 ]
             }
         },
+        "/sermons/archived": {
+            "get": {
+                "tags": [
+                    "Sermons"
+                ],
+                "summary": "Get archived sermons",
+                "description": "Returns approved, rejected, or completed sermons.",
+                "operationId": "archivedSermons",
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم جلب أرشيف الخطب بنجاح"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Sermon"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/sermons/{id}/approve": {
             "put": {
                 "tags": [
                     "Sermons"
                 ],
                 "summary": "Approve a sermon",
-                "description": "Region manager approves a pending sermon. Optional notes can be attached.",
+                "description": "Allows a super admin to approve a pending sermon.",
                 "operationId": "approveSermon",
                 "parameters": [
                     {
@@ -13137,23 +13267,6 @@
                         "example": 1
                     }
                 ],
-                "requestBody": {
-                    "required": false,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "properties": {
-                                    "notes": {
-                                        "type": "string",
-                                        "example": "خطبة ممتازة، جزاك الله خيراً",
-                                        "nullable": true
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
                 "responses": {
                     "200": {
                         "description": "Sermon approved",
@@ -13163,7 +13276,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "تم اعتماد الخطبة بنجاح"
+                                            "example": "تمت الموافقة على الخطبة بنجاح"
                                         },
                                         "data": {
                                             "$ref": "#/components/schemas/Sermon"
@@ -13176,6 +13289,9 @@
                     },
                     "401": {
                         "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
                     },
                     "404": {
                         "description": "Sermon not found"
@@ -13194,7 +13310,7 @@
                     "Sermons"
                 ],
                 "summary": "Reject a sermon",
-                "description": "Region manager rejects a pending sermon. Notes should explain the reason.",
+                "description": "Allows a super admin to reject a sermon and provide notes.",
                 "operationId": "rejectSermon",
                 "parameters": [
                     {
@@ -13208,15 +13324,17 @@
                     }
                 ],
                 "requestBody": {
-                    "required": false,
+                    "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
+                                "required": [
+                                    "notes"
+                                ],
                                 "properties": {
                                     "notes": {
                                         "type": "string",
-                                        "example": "يرجى مراجعة المحتوى وإعادة الرفع",
-                                        "nullable": true
+                                        "example": "يرجى تعديل محتوى الخطبة وإعادة الإرسال."
                                     }
                                 },
                                 "type": "object"
@@ -13247,8 +13365,14 @@
                     "401": {
                         "description": "Unauthenticated"
                     },
+                    "403": {
+                        "description": "Forbidden"
+                    },
                     "404": {
                         "description": "Sermon not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
                     }
                 },
                 "security": [

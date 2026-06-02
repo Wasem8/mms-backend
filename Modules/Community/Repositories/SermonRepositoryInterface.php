@@ -2,12 +2,13 @@
 
 namespace Modules\Community\Repositories;
 
+use Modules\Community\Models\Sermon;
+
 interface SermonRepositoryInterface
 {
-    public function getAll(); // إضافة جديدة
-    public function getAllPending();
-    public function findById($id);
-    public function create(array $data);
-    public function attachAttachments($sermon, array $attachments);
-    public function updateStatus($id, $status, $notes = null, $regionManagerId = null);
+    public function create(array $data): Sermon;
+    public function findById(int $id): ?Sermon;
+    public function updateStatus(Sermon $sermon, string $status): bool;
+    public function delete(Sermon $sermon): bool;
+    public function getExpiredPendingSermons(string $currentDate);
 }

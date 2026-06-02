@@ -73,176 +73,330 @@ class SermonTameemEndpoints
     // =========================================================================
     // GET /sermons
     // =========================================================================
-
-    #[OA\Get(
-        path: '/sermons',
-        operationId: 'listSermons',
-        tags: ['Sermons'],
-        summary: 'List all sermons',
-        description: 'Returns all sermons regardless of status. Accessible to authenticated users.',
-        security: [['bearerAuth' => []]],
-        responses: [
-            new OA\Response(
-                response: 200,
-                description: 'Success',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'message', type: 'string', example: 'تم جلب جميع الخطب بنجاح'),
-                        new OA\Property(
-                            property: 'data',
-                            type: 'array',
-                            items: new OA\Items(ref: '#/components/schemas/Sermon')
-                        ),
-                    ]
-                )
-            ),
-            new OA\Response(response: 401, description: 'Unauthenticated'),
-        ]
-    )]
-    public function listSermons() {}
-
-    // =========================================================================
-    // GET /sermons/pending
-    // =========================================================================
-
-    #[OA\Get(
-        path: '/sermons/pending',
-        operationId: 'listPendingSermons',
-        tags: ['Sermons'],
-        summary: 'List pending sermons',
-        description: 'Returns sermons awaiting approval by a region manager.',
-        security: [['bearerAuth' => []]],
-        responses: [
-            new OA\Response(
-                response: 200,
-                description: 'Success',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'message', type: 'string', example: 'تم جلب الخطب المعلقة بنجاح'),
-                        new OA\Property(
-                            property: 'data',
-                            type: 'array',
-                            items: new OA\Items(ref: '#/components/schemas/Sermon')
-                        ),
-                    ]
-                )
-            ),
-            new OA\Response(response: 401, description: 'Unauthenticated'),
-        ]
-    )]
-    public function listPendingSermons() {}
-
-    // =========================================================================
-    // POST /sermons
-    // =========================================================================
-
     #[OA\Post(
         path: '/sermons',
         operationId: 'storeSermon',
         tags: ['Sermons'],
-        summary: 'Upload a sermon',
-        description: <<<DESC
-        Mosque manager uploads a new sermon. Status is set to `pending` until approved by a region manager.
-        - Attachments are optional (PDF, audio, etc.) — max 10MB each.
-        - `mosque_manager_id` is taken from the auth token automatically.
-        DESC,
+        summary: 'Submit a sermon',
+        description: 'Allows mosque managers to submit a sermon for approval. Multiple attachments are supported. Allowed file types: PDF, DOC, DOCX, JPG, JPEG and PNG. Maximum size: 5MB per file.',
         security: [['bearerAuth' => []]],
+
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\MediaType(
                 mediaType: 'multipart/form-data',
                 schema: new OA\Schema(
-                    required: ['title', 'content'],
+                    required: ['title', 'content', 'speaker_name', 'sermon_date'],
                     properties: [
-                        new OA\Property(property: 'title',   type: 'string', example: 'خطبة الجمعة - الصبر'),
-                        new OA\Property(property: 'content', type: 'string', example: 'الحمد لله...'),
-                        new OA\Property('speaker_name', type: 'string', example: 'الشيخ محمد'),
-                        new OA\Property('sermon_date', type: 'string', format: 'date', example: '2024-06-28'),
+                        new OA\Property(
+                            property: 'title',
+                            type: 'string',
+                            example: 'خطبة الجمعة - التوبة والإنابة'
+                        ),
+
+                        new OA\Property(
+                            property: 'content',
+                            type: 'string',
+                            example: 'الحمد لله رب العالمين...'
+                        ),
+
+                        new OA\Property(
+                            property: 'speaker_name',
+                            type: 'string',
+                            example: 'الشيخ أحمد'
+                        ),
+
+                        new OA\Property(
+                            property: 'sermon_date',
+                            type: 'string',
+                            format: 'date',
+                            example: '2026-07-15'
+                        ),
+
                         new OA\Property(
                             property: 'attachments[]',
+                            description: 'Optional sermon attachments. Allowed: PDF, DOC, DOCX, JPG, JPEG and PNG. Max 5MB per file.',
                             type: 'array',
-                            items: new OA\Items(type: 'string', format: 'binary'),
-                            description: 'Optional files — max 10MB each'
+                            items: new OA\Items(
+                                type: 'string',
+                                format: 'binary'
+                            )
                         ),
                     ]
                 )
             )
         ),
+
         responses: [
             new OA\Response(
                 response: 201,
-                description: 'Sermon uploaded — awaiting approval',
+                description: 'Sermon submitted successfully',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'message', type: 'string', example: 'تم رفع الخطبة بنجاح وبانتظار الاعتماد'),
-                        new OA\Property(property: 'data',    ref: '#/components/schemas/Sermon'),
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'تم تقديم الخطبة بنجاح'
+                        ),
+                        new OA\Property(
+                            property: 'data',
+                            ref: '#/components/schemas/Sermon'
+                        ),
                     ]
                 )
             ),
-            new OA\Response(response: 401, description: 'Unauthenticated'),
-            new OA\Response(response: 422, description: 'Validation error'),
+
+            new OA\Response(
+                response: 401,
+                description: 'Unauthenticated'
+            ),
+
+            new OA\Response(
+                response: 403,
+                description: 'Only mosque managers can submit sermons'
+            ),
+
+            new OA\Response(
+                response: 422,
+                description: 'Validation error',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'خطأ في التحقق من البيانات'
+                        ),
+                        new OA\Property(
+                            property: 'errors',
+                            type: 'object'
+                        ),
+                    ]
+                )
+            ),
         ]
     )]
     public function storeSermon() {}
 
-    // =========================================================================
-    // PUT /sermons/{id}/approve
-    // =========================================================================
+    #[OA\Get(
+        path: '/sermons/{id}',
+        operationId: 'getSermonById',
+        tags: ['Sermons'],
+        summary: 'Get sermon by ID',
+        description: 'Returns the details of a specific sermon.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'Sermon ID',
+                schema: new OA\Schema(
+                    type: 'integer',
+                    example: 1
+                )
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Sermon retrieved successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'تم جلب الخطبة بنجاح'
+                        ),
+                        new OA\Property(
+                            property: 'data',
+                            ref: '#/components/schemas/Sermon'
+                        ),
+                    ]
+                )
+            ),
 
+            new OA\Response(
+                response: 401,
+                description: 'Unauthenticated'
+            ),
+
+            new OA\Response(
+                response: 404,
+                description: 'Sermon not found',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'الخطبة غير موجودة'
+                        ),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function getSermonById() {}
+    #[OA\Get(
+        path: '/sermons/pending',
+        operationId: 'pendingSermons',
+        tags: ['Sermons'],
+        summary: 'Get pending sermons',
+        description: 'Returns all sermons awaiting approval.',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'تم جلب الخطب المعلقة بنجاح'
+                        ),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/Sermon')
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+        ]
+    )]
+    public function pendingSermons() {}
+
+    #[OA\Get(
+        path: '/sermons/archived',
+        operationId: 'archivedSermons',
+        tags: ['Sermons'],
+        summary: 'Get archived sermons',
+        description: 'Returns approved, rejected, or completed sermons.',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'تم جلب أرشيف الخطب بنجاح'
+                        ),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/Sermon')
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+        ]
+    )]
+    public function archivedSermons() {}
+
+
+    #[OA\Get(
+        path: '/sermons',
+        operationId: 'indexSermons',
+        tags: ['Sermons'],
+        summary: 'Get all sermons',
+        description: 'Returns a list of all sermons.',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'تم جلب الخطب بنجاح'
+                        ),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/Sermon')
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+        ]
+    )]
+    public function indexSermons() {}
+    
     #[OA\Put(
         path: '/sermons/{id}/approve',
         operationId: 'approveSermon',
         tags: ['Sermons'],
         summary: 'Approve a sermon',
-        description: 'Region manager approves a pending sermon. Optional notes can be attached.',
+        description: 'Allows a super admin to approve a pending sermon.',
         security: [['bearerAuth' => []]],
         parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 1),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                example: 1
+            ),
         ],
-        requestBody: new OA\RequestBody(
-            required: false,
-            content: new OA\JsonContent(
-                properties: [
-                    new OA\Property(property: 'notes', type: 'string', nullable: true, example: 'خطبة ممتازة، جزاك الله خيراً'),
-                ]
-            )
-        ),
         responses: [
             new OA\Response(
                 response: 200,
                 description: 'Sermon approved',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'message', type: 'string', example: 'تم اعتماد الخطبة بنجاح'),
-                        new OA\Property(property: 'data',    ref: '#/components/schemas/Sermon'),
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'تمت الموافقة على الخطبة بنجاح'
+                        ),
+                        new OA\Property(
+                            property: 'data',
+                            ref: '#/components/schemas/Sermon'
+                        ),
                     ]
                 )
             ),
             new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden'),
             new OA\Response(response: 404, description: 'Sermon not found'),
         ]
     )]
     public function approveSermon() {}
-
-    // =========================================================================
-    // PUT /sermons/{id}/reject  — route commented out but documented
-    // =========================================================================
 
     #[OA\Put(
         path: '/sermons/{id}/reject',
         operationId: 'rejectSermon',
         tags: ['Sermons'],
         summary: 'Reject a sermon',
-        description: 'Region manager rejects a pending sermon. Notes should explain the reason.',
+        description: 'Allows a super admin to reject a sermon and provide notes.',
         security: [['bearerAuth' => []]],
         parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 1),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                example: 1
+            ),
         ],
         requestBody: new OA\RequestBody(
-            required: false,
+            required: true,
             content: new OA\JsonContent(
+                required: ['notes'],
                 properties: [
-                    new OA\Property(property: 'notes', type: 'string', nullable: true, example: 'يرجى مراجعة المحتوى وإعادة الرفع'),
+                    new OA\Property(
+                        property: 'notes',
+                        type: 'string',
+                        example: 'يرجى تعديل محتوى الخطبة وإعادة الإرسال.'
+                    ),
                 ]
             )
         ),
@@ -252,13 +406,22 @@ class SermonTameemEndpoints
                 description: 'Sermon rejected',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'message', type: 'string', example: 'تم رفض الخطبة بنجاح'),
-                        new OA\Property(property: 'data',    ref: '#/components/schemas/Sermon'),
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'تم رفض الخطبة بنجاح'
+                        ),
+                        new OA\Property(
+                            property: 'data',
+                            ref: '#/components/schemas/Sermon'
+                        ),
                     ]
                 )
             ),
             new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden'),
             new OA\Response(response: 404, description: 'Sermon not found'),
+            new OA\Response(response: 422, description: 'Validation error'),
         ]
     )]
     public function rejectSermon() {}
