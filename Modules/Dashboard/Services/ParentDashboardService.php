@@ -3,6 +3,9 @@
 namespace Modules\Dashboard\Services;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Modules\Dashboard\Models\Report;
 use Modules\Education\Models\Student;
 use Modules\Education\Models\Attendance;
 use Modules\Education\Models\Evaluation;
@@ -10,9 +13,7 @@ use Spatie\Browsershot\Browsershot;
 
 class ParentDashboardService
 {
-    /**
-     * جلب قائمة الأبناء المرتبطين بولي الأمر مع ملخص سريع لكل ابن
-     */
+
     public function getParentDashboardStats($parentId)
     {
 
@@ -64,20 +65,74 @@ class ParentDashboardService
         ];
     }
 
-    public function generateParentReportPdf(int $parentId): string
+    public function generateParentReportPdf(int $parentId): array
     {
+        $lastReport = Report::where('user_id', $parentId)
+            ->where('type', 'parent_dashboard')
+            ->latest()
+            ->first();
+
+        if (
+            $lastReport &&
+            $lastReport->created_at->gt(
+                now()->subDay()
+            )
+        ) {
+
+            try {
+
+                $signedUrl = $this->createSignedUrl(
+                    $lastReport->storage_path
+                );
+
+                return [
+                    'url' => $signedUrl,
+                    'cached' => true
+                ];
+
+            } catch (\Throwable $e) {
+
+                $lastReport->delete();
+            }
+        }
+
         $data = $this->getParentReportData($parentId);
 
-        $html = view('dashboard::reports.parent', $data)->render();
+        $html = view(
+            'dashboard::reports.parent',
+            $data
+        )->render();
 
-        return Browsershot::html($html)
-            ->setChromePath('C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe')
+        $pdfContent = Browsershot::html($html)
             ->format('A4')
-            ->margins(5,5,5,5)
+            ->margins(5, 5, 5, 5)
             ->showBackground()
             ->waitUntilNetworkIdle()
             ->setDelay(3000)
             ->pdf();
+
+        $fileName =
+            'parent-reports/' .
+            $parentId . '/' .
+            time() . '.pdf';
+
+        $this->uploadPdfToSupabase(
+            $pdfContent,
+            $fileName
+        );
+
+        Report::create([
+            'user_id'      => $parentId,
+            'type'         => 'parent_dashboard',
+            'storage_path' => $fileName,
+        ]);
+
+        return [
+            'url' => $this->createSignedUrl(
+                $fileName
+            ),
+            'cached' => false,
+        ];
     }
 
     private function getParentReportData($parentId): array
@@ -206,5 +261,70 @@ class ParentDashboardService
             'children' => $childrenData,
 
         ];
+    }
+
+    private function uploadPdfToSupabase(
+        string $pdfContent,
+        string $fileName
+    ): void {
+
+        $baseUrl = config('services.supabase.url');
+        $bucket  = config('services.supabase.reports_bucket');
+        $key     = config('services.supabase.key');
+
+        $uploadUrl =
+            $baseUrl .
+            '/storage/v1/object/' .
+            $bucket .
+            '/' .
+            $fileName;
+
+        $response = Http::withHeaders([
+            'apikey'       => $key,
+            'Authorization'=> 'Bearer ' . $key,
+            'Content-Type' => 'application/pdf',
+        ])->withBody(
+            $pdfContent,
+            'application/pdf'
+        )->post($uploadUrl);
+
+        if (! $response->successful()) {
+            throw new \Exception(
+                'Supabase PDF Upload Failed: ' .
+                $response->body()
+            );
+        }
+    }
+
+    private function createSignedUrl(string $fileName): string
+    {
+        $baseUrl = config('services.supabase.url');
+        $bucket  = config('services.supabase.reports_bucket');
+        $key     = config('services.supabase.key');
+
+        $response = Http::withHeaders([
+            'apikey'       => $key,
+            'Authorization'=> 'Bearer ' . $key,
+        ])->post(
+            $baseUrl .
+            '/storage/v1/object/sign/' .
+            $bucket .
+            '/' .
+            $fileName,
+            [
+                'expiresIn' => 3600 // ساعة
+            ]
+        );
+
+        if (! $response->successful()) {
+            throw new \Exception(
+                'Failed to create signed URL: ' .
+                $response->body()
+            );
+        }
+
+        return $baseUrl .
+            '/storage/v1' .
+            $response->json('signedURL');
     }
 }

@@ -17,6 +17,7 @@ return [
         'url' => env('SUPABASE_URL'),
         'key' => env('SUPABASE_KEY'),
         'bucket' => env('SUPABASE_BUCKET'),
+        'reports_bucket' => env('SUPABASE_REPORTS_BUCKET'),
     ],
 
     'postmark' => [
