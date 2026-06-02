@@ -32,6 +32,11 @@ class Maintenance extends Model
             ->latest();
     }
 
+    public function mosque()
+    {
+        return $this->belongsTo(\Modules\Mosque\Models\Mosque::class, 'mosque_id');
+    }
+
     // protected static function newFactory(): MaintenanceFactory
     // {
     //     // return MaintenanceFactory::new();
