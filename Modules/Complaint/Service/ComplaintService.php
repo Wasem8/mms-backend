@@ -112,37 +112,32 @@ class ComplaintService
         ];
     }
 
-    private function uploadImage(UploadedFile $image): string
+    private function uploadImage($image): string
     {
-        try {
-            $fileName  = uniqid() . '.' . $image->getClientOriginalExtension();
-            $baseUrl   = env('SUPABASE_URL');
-            $bucket    = env('SUPABASE_BUCKET');
-            $key       = env('SUPABASE_KEY');
-            $uploadUrl = "{$baseUrl}/storage/v1/object/{$bucket}/{$fileName}";
+        $fileName = uniqid() . '.' . $image->getClientOriginalExtension();
 
-            // ✅ اقرأ من الـ stream مباشرة — يشتغل حتى لو Vercel منعت الـ disk
-            $fileContent = $image->get();
+        $baseUrl = config('services.supabase.url');
+        $bucket = config('services.supabase.bucket');
+        $key = config('services.supabase.key');
 
-            if (empty($fileContent)) {
-                throw new \Exception('محتوى الملف فارغ');
-            }
+        $path = $bucket . '/' . $fileName;
 
-            $response = Http::withHeaders([
-                'apikey'        => $key,
-                'Authorization' => "Bearer {$key}",
-                'Content-Type'  => $image->getMimeType(),
-            ])->withBody($fileContent, $image->getMimeType())
-                ->post($uploadUrl);
+        $uploadUrl = $baseUrl . '/storage/v1/object/' . $path;
 
-            if (!$response->successful()) {
-                throw new \Exception('رفض من Supabase: ' . $response->body());
-            }
+        $response = Http::withHeaders([
+            'apikey' => $key,
+            'Authorization' => 'Bearer ' . $key,
+        ])->attach(
+            'file',
+            file_get_contents($image),
+            $fileName
+        )->post($uploadUrl);
 
-            return "{$baseUrl}/storage/v1/object/public/{$bucket}/{$fileName}";
-        } catch (\Throwable $e) {
-            abort(500, 'فشل الرفع: ' . $e->getMessage());
+        if (!$response->successful()) {
+            throw new \Exception('Upload failed: ' . $response->body());
         }
+
+        return $baseUrl . '/storage/v1/object/public/' . $path;
     }
 
     private function deleteImage(string $url): void
