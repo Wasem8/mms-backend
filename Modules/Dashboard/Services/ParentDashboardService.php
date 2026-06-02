@@ -103,13 +103,25 @@ class ParentDashboardService
             $data
         )->render();
 
-        $pdfContent = Browsershot::html($html)
-            ->format('A4')
-            ->margins(5, 5, 5, 5)
-            ->showBackground()
-            ->waitUntilNetworkIdle()
-            ->setDelay(3000)
-            ->pdf();
+        try {
+
+            $pdfContent = Browsershot::html($html)
+                ->format('A4')
+                ->margins(5,5,5,5)
+                ->showBackground()
+                ->waitUntilNetworkIdle()
+                ->setDelay(3000)
+                ->pdf();
+
+        } catch (\Throwable $e) {
+
+            Log::error('PDF ERROR', [
+                'message' => $e->getMessage(),
+                'trace'   => $e->getTraceAsString(),
+            ]);
+
+            throw $e;
+        }
 
         $fileName =
             'parent-reports/' .
