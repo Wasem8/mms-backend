@@ -124,7 +124,6 @@ class ComplaintService
 
         $uploadUrl = $baseUrl . '/storage/v1/object/' . $path;
 
-        dd($uploadUrl);
         $response = Http::withHeaders([
             'apikey' => $key,
             'Authorization' => 'Bearer ' . $key,
