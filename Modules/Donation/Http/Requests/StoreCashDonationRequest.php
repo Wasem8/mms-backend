@@ -12,7 +12,7 @@ class StoreCashDonationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'mosque_id'        => ['required', 'integer'],
+            'mosque_id' => ['required', 'integer', 'exists:mosques,id'],
             'user_id'          => ['nullable', 'integer', 'exists:users,id'], // مسموح هنا للمدير
             'donor_name'       => ['nullable', 'string', 'max:255'],
             'donation_type'    => ['required', 'in:cash,in_kind'], // نقدي للصندوق، أو عيني للمسجد
