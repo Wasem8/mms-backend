@@ -21,13 +21,13 @@ Route::get('/allNeeds', [MosqueNeedController::class, 'AllNeeds']);
 Route::prefix('mosques')->group(function () {
 
     Route::get('/',              [MosqueController::class, 'index']);
+    Route::get('/nearby', [MosqueController::class, 'nearby']);
     Route::get('/search',        [MosqueController::class, 'search']);
     Route::get('/featured',      [MosqueController::class, 'featured']);
     Route::get('/city/{city}',   [MosqueController::class, 'byCity']);
     Route::get('/{mosque}',      [MosqueController::class, 'show']);
     Route::get('/{mosque}/needs', [MosqueNeedController::class, 'index']);
     Route::get('/{mosque}/needs/{need}', [MosqueNeedController::class, 'show']);
-    Route::get('/nearby',[MosqueController::class ,'nearby']);
 
     Route::get('/{mosque}/facilities', [FacilitiesController::class, 'byMosque']);
 
