@@ -18,6 +18,7 @@ class CampaignRepository implements CampaignRepositoryInterface
 
     public function findByMosque($mosqueId)
     {
+
         return Campaign::where('mosque_id', $mosqueId)->get();
     }
 

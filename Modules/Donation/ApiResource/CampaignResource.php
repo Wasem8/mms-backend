@@ -13,6 +13,7 @@ class CampaignResource extends JsonResource
 
         return [
             'id'               => $this->id,
+            'mosque_id'        => $this->mosque_id,
             'title'            => $this->title,
             'target_amount'    => $target,
             'collected_amount' => $collected,

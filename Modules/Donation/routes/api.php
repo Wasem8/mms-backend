@@ -40,7 +40,7 @@ Route::prefix('donations')->group(function () {
 
 
 Route::prefix('mosques/{mosqueId}/campaigns')->group(function () {
-    Route::get('/',      [CampaignController::class, 'index']);
+    Route::get('/',      [CampaignController::class, 'showByMosque']);
     Route::get('/stats', [CampaignController::class, 'stats']);
 });
 
@@ -57,15 +57,9 @@ Route::prefix('campaigns')->group(function () {
 
 
 
-Route::prefix('mosques/{mosqueId}/campaigns')->group(function () {
-    Route::get('/',       [CampaignController::class, 'index'])->name('campaign.index');
-    Route::get('/stats',  [CampaignController::class, 'stats'])->name('campaign.stats');
-});
-
 Route::prefix('campaigns')->group(function () {
 
     Route::get('/{id}',            [CampaignController::class, 'show'])->name('campaign.show');
-
     Route::middleware(['auth:api', 'role:mosque_manager'])->group(function () {
         Route::get('/{id}/analytics',  [CampaignController::class, 'analytics'])->name('campaign.analytics');
         Route::post('/',       [CampaignController::class, 'store'])->name('campaign.store');

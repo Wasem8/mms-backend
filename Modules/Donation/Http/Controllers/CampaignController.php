@@ -30,12 +30,14 @@ class CampaignController extends Controller
 
     public function show($id)
     {
+
         $campaign = $this->campaignService->getCampaignById($id);
         return ApiResponse::success(new CampaignResource($campaign), 'Campaign retrieved successfully');
     }
 
     public function showByMosque($mosqueId)
     {
+       // dd('أنا داخل الكنترولر، ورقم المسجد الممرر هو: ' . $mosqueId);
         $campaigns = $this->campaignService->getCampaignsByMosque($mosqueId);
         return ApiResponse::success(CampaignResource::collection($campaigns), 'Campaigns retrieved successfully');
     }

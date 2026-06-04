@@ -9,5 +9,6 @@
     "Common": true,
     "Complaint": true,
     "Donation": true,
-    "MaintenanceRequest": true
+    "MaintenanceRequest": true,
+    "Volunteer": true
 }
