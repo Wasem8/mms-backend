@@ -19,9 +19,9 @@ class DawahProgramService
         $this->dawahProgramRepository = $dawahProgramRepository;
     }
 
-    public function getAllPrograms(int $perPage = 10)
+    public function getAllPrograms(int $perPage = 10, array $filters = [])
     {
-        return $this->dawahProgramRepository->paginate($perPage);
+        return $this->dawahProgramRepository->paginate($perPage, $filters);
     }
 
     public function getProgramById(int $id): ?DawahProgram
