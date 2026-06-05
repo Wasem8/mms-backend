@@ -3712,6 +3712,31 @@
                             "type": "integer",
                             "example": 1
                         }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "Filter by program type",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "lecture",
+                                "course",
+                                "competition",
+                                "other"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "description": "Search by program name (partial match)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "درس القرآن"
+                        }
                     }
                 ],
                 "responses": {
@@ -9729,6 +9754,93 @@
                             "type": "integer",
                             "example": 15
                         }
+                    },
+                    {
+                        "name": "city",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Cairo"
+                        }
+                    },
+                    {
+                        "name": "district",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Downtown"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "active",
+                                "maintenance",
+                                "closed"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "is_featured",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "min_rating",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "number",
+                            "format": "float",
+                            "example": 4
+                        }
+                    },
+                    {
+                        "name": "sort_by",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "name",
+                                "city",
+                                "district",
+                                "average_rating",
+                                "reviews_count",
+                                "created_at"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sort_order",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "facility_id",
+                        "in": "query",
+                        "description": "Filter mosques by facility ID.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
                     }
                 ],
                 "responses": {
@@ -10196,6 +10308,16 @@
                             "type": "integer",
                             "example": 15
                         }
+                    },
+                    {
+                        "name": "facility_id",
+                        "in": "query",
+                        "description": "Filter mosques by facility ID.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
                     }
                 ],
                 "responses": {
@@ -10308,7 +10430,7 @@
                 "tags": [
                     "Mosques"
                 ],
-                "summary": "Search mosques by  name, city, or district",
+                "summary": "Search mosques by name, city, or district",
                 "description": "Search mosques by name, city, or district.",
                 "operationId": "searchMosques",
                 "parameters": [
@@ -10337,6 +10459,16 @@
                         "schema": {
                             "type": "integer",
                             "example": 15
+                        }
+                    },
+                    {
+                        "name": "facility_id",
+                        "in": "query",
+                        "description": "Filter mosques by facility ID.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
                         }
                     }
                 ],

@@ -138,9 +138,10 @@ class MosqueRepository implements MosqueRepositoryInterface
             ])
             ->latest();
     }
-    public function getNearbyMosques(float $lat, float $lng, int $perPage = 15)
+    public function getNearbyMosques(float $lat, float $lng, int $perPage = 15, array $filters = []): LengthAwarePaginator
     {
-        return Mosque::scopeNearby($lat, $lng)
-            ->paginate($perPage);
+        $query = Mosque::scopeNearby($lat, $lng);
+        $query = $this->filters->apply($query, $filters);
+        return $query->paginate($perPage);
     }
 }

@@ -147,21 +147,17 @@ class MosqueService
     }
 
     public function getNearbyMosques(array $params)
-    {
-        $lat = (float) $params['latitude'];
-        $lng = (float) $params['longitude'];
-        $perPage = (int) ($params['limit'] ?? $params['per_page'] ?? 15);
 
-        return $this->mosqueRepository->getNearbyMosques($lat, $lng, $perPage);
-    }
+        {
+            $lat = (float) $params['latitude'];
+            $lng = (float) $params['longitude'];
+            $perPage = (int) ($params['limit'] ?? $params['per_page'] ?? 15);
 
+            $filters = $params;
+            unset($filters['latitude'], $filters['longitude'], $filters['limit'], $filters['per_page']);
 
-
-
-
-
-
-
+            return $this->mosqueRepository->getNearbyMosques($lat, $lng, $perPage, $filters);
+        }
 
 
     private function uploadImage($image): string

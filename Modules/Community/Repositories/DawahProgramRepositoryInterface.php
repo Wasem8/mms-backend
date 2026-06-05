@@ -6,7 +6,7 @@ use Modules\Community\Models\DawahProgram;
 
 interface DawahProgramRepositoryInterface
 {
-    public function paginate(int $perPage = 10);
+    public function paginate(int $perPage = 10, array $filters = []);
 
     public function find(int $id): ?DawahProgram;
 

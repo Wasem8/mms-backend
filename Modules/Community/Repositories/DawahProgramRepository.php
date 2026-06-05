@@ -8,10 +8,20 @@ use Illuminate\Support\Facades\DB;
 
 class DawahProgramRepository implements DawahProgramRepositoryInterface
 {
-public function paginate(int $perPage = 10)
-{
-return DawahProgram::with(['mosque', 'space'])->paginate($perPage);
-}
+    public function paginate(int $perPage = 10, array $filters = [])
+    {
+        $query = DawahProgram::with(['mosque', 'space']);
+
+        if (!empty($filters['type'])) {
+            $query->where('type', $filters['type']);
+        }
+
+        if (!empty($filters['q'])) {
+            $query->where('name', 'LIKE', "%{$filters['q']}%");
+        }
+
+        return $query->paginate($perPage);
+    }
 
 public function find(int $id): ?DawahProgram
 {

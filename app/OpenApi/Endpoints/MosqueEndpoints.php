@@ -17,6 +17,20 @@ class MosqueEndpoints
         parameters: [
             new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 1)),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 15)),
+            new OA\Parameter(name: 'city', in: 'query', required: false, schema: new OA\Schema(type: 'string', example: 'Cairo')),
+            new OA\Parameter(name: 'district', in: 'query', required: false, schema: new OA\Schema(type: 'string', example: 'Downtown')),
+            new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['active', 'maintenance', 'closed'])),
+            new OA\Parameter(name: 'is_featured', in: 'query', required: false, schema: new OA\Schema(type: 'boolean')),
+            new OA\Parameter(name: 'min_rating', in: 'query', required: false, schema: new OA\Schema(type: 'number', format: 'float', example: 4.0)),
+            new OA\Parameter(name: 'sort_by', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['name', 'city', 'district', 'average_rating', 'reviews_count', 'created_at'])),
+            new OA\Parameter(name: 'sort_order', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])),
+            new OA\Parameter(
+                name: 'facility_id',
+                in: 'query',
+                required: false,
+                description: 'Filter mosques by facility ID.',
+                schema: new OA\Schema(type: 'integer', example: 1)
+            ),
         ],
         responses: [
             new OA\Response(
@@ -86,6 +100,13 @@ class MosqueEndpoints
             new OA\Parameter(name: 'longitude', in: 'query', required: true, schema: new OA\Schema(type: 'number', format: 'float', example: 31.2357)),
             new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 1)),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 15)),
+            new OA\Parameter(
+                name: 'facility_id',
+                in: 'query',
+                required: false,
+                description: 'Filter mosques by facility ID.',
+                schema: new OA\Schema(type: 'integer', example: 1)
+            ),
         ],
         responses: [
             new OA\Response(
@@ -135,12 +156,19 @@ class MosqueEndpoints
         path: '/mosques/search',
         operationId: 'searchMosques',
         tags: ['Mosques'],
-        summary: 'Search mosques by  name, city, or district',
+        summary: 'Search mosques by name, city, or district',
         description: 'Search mosques by name, city, or district.',
         parameters: [
             new OA\Parameter(name: 'q', in: 'query', required: true, schema: new OA\Schema(type: 'string', example: 'Al-Rahma')),
             new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 1)),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 15)),
+            new OA\Parameter(
+                name: 'facility_id',
+                in: 'query',
+                required: false,
+                description: 'Filter mosques by facility ID.',
+                schema: new OA\Schema(type: 'integer', example: 1)
+            ),
         ],
         responses: [
             new OA\Response(
