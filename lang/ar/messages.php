@@ -40,6 +40,7 @@ return [
 
     // --- قسم التقييمات ---
     'evaluation_stored' => 'تم تقييم الطالب بنجاح.',
+    'evaluation_already_exists' => 'التقييم موجود بالفعل',
     'evaluation_retrieved' => 'تم جلب التقييمات بنجاح.',
     'evaluation_updated' => 'تم تحديث التقييم بنجاح.',
     'evaluation_deleted' => 'تم حذف التقييم بنجاح.',

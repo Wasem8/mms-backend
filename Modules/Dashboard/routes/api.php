@@ -15,6 +15,10 @@ Route::prefix('dashboard')->group(function () {
     Route::middleware(['auth:api', 'role:teacher'])->group(function () {
     Route::get('/teacher/dashboard', [TeacherDashboardController::class, 'index']);
             Route::get('/teacher/export-pdf', [TeacherDashboardController::class, 'exportPdf']);
+        Route::get(
+            '/teacher/bootstrap',
+            [TeacherDashboardController::class, 'bootstrap']
+        );
     });
 
     Route::middleware(['auth:api', 'role:parent'])->group(function () {

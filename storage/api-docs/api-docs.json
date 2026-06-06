@@ -172,7 +172,7 @@
                     "Attendance"
                 ],
                 "summary": "تسجيل الحضور والغياب (جماعي)",
-                "description": "يستخدم من قبل المعلم فقط لتسجيل حضور طلاب حلقته في يوم محدد. يدعم التحديث التلقائي في حال تكرار الإرسال.",
+                "description": "يسجل حضور الطلاب بشكل جماعي. إذا احتوى الطلب على طلاب غير موجودين أو لم يعودوا تابعين للحلقة فسيتم تجاهلهم وإرجاع معرفاتهم داخل skipped_student_ids دون فشل العملية بالكامل.",
                 "operationId": "storeBulkAttendance",
                 "requestBody": {
                     "required": true,
@@ -233,7 +233,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "تم التسجيل بنجاح",
+                        "description": "تم تسجيل الحضور بنجاح مع إمكانية تخطي بعض الطلاب غير الصالحين",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -247,9 +247,25 @@
                                             "example": "تم تسجيل الحضور بنجاح"
                                         },
                                         "data": {
-                                            "type": "array",
-                                            "items": {},
-                                            "example": []
+                                            "properties": {
+                                                "saved_count": {
+                                                    "description": "عدد سجلات الحضور التي تم حفظها",
+                                                    "type": "integer",
+                                                    "example": 25
+                                                },
+                                                "skipped_student_ids": {
+                                                    "description": "الطلاب الذين تم تجاهلهم لأنهم لم يعودوا ضمن الحلقة أو غير موجودين",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "integer"
+                                                    },
+                                                    "example": [
+                                                        18,
+                                                        22
+                                                    ]
+                                                }
+                                            },
+                                            "type": "object"
                                         },
                                         "pagination": {
                                             "type": "object",
@@ -262,8 +278,14 @@
                             }
                         }
                     },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
                     "422": {
-                        "description": "خطأ في التحقق (مثلاً: طلاب لا ينتمون للحلقة)",
+                        "description": "خطأ في البيانات المرسلة",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -274,12 +296,15 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "بعض الطلاب غير تابعين لهذه الحلقة"
+                                            "example": "Validation error."
                                         },
                                         "data": {
                                             "type": "object",
-                                            "example": null,
-                                            "nullable": true
+                                            "example": {
+                                                "date": [
+                                                    "The date field is required."
+                                                ]
+                                            }
                                         },
                                         "pagination": {
                                             "type": "object",
@@ -3128,6 +3153,130 @@
                     },
                     "500": {
                         "description": "Server error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/dashboard/teacher/bootstrap": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "تحميل جميع بيانات المعلم اللازمة للعمل Offline",
+                "description": "يعيد بيانات الحلقة، الطلاب، الأعذار المعلقة، وإحصائيات الداشبورد في طلب واحد لتقليل عدد الاتصالات ودعم Offline First.",
+                "operationId": "getTeacherBootstrap",
+                "responses": {
+                    "200": {
+                        "description": "تم تحميل بيانات التهيئة بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم تحميل بيانات التهيئة بنجاح"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "halaqat": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "حلقة التميز"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "rosters": {
+                                                    "type": "object",
+                                                    "example": {
+                                                        "1": [
+                                                            {
+                                                                "id": 10,
+                                                                "name": "أحمد الحارثي"
+                                                            },
+                                                            {
+                                                                "id": 11,
+                                                                "name": "محمد الكندي"
+                                                            }
+                                                        ]
+                                                    }
+                                                },
+                                                "pending_excuses": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "dashboard": {
+                                                    "properties": {
+                                                        "has_halaqa": {
+                                                            "type": "boolean",
+                                                            "example": true
+                                                        },
+                                                        "halaqa_name": {
+                                                            "type": "string",
+                                                            "example": "حلقة التميز"
+                                                        },
+                                                        "cards": {
+                                                            "properties": {
+                                                                "total_students": {
+                                                                    "type": "integer",
+                                                                    "example": 15
+                                                                },
+                                                                "evaluated_today": {
+                                                                    "type": "string",
+                                                                    "example": "3 / 15"
+                                                                },
+                                                                "attendance_percentage": {
+                                                                    "type": "string",
+                                                                    "example": "87%"
+                                                                },
+                                                                "month_ayahs_progress": {
+                                                                    "type": "string",
+                                                                    "example": "250 آية تم تسميعها"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
                     }
                 },
                 "security": [
@@ -6898,13 +7047,174 @@
                 ]
             }
         },
+        "/education/sync": {
+            "post": {
+                "tags": [
+                    "Education",
+                    "Offline Sync"
+                ],
+                "summary": "Offline batch synchronization",
+                "description": "Synchronize offline teacher operations (attendance, evaluation, excuse decision). Each operation is processed independently and returns its own result.",
+                "operationId": "syncOfflineOperations",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "ops"
+                                ],
+                                "properties": {
+                                    "ops": {
+                                        "description": "List of offline operations queued on the device",
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "type",
+                                                "client_uuid",
+                                                "data"
+                                            ],
+                                            "properties": {
+                                                "type": {
+                                                    "type": "string",
+                                                    "example": "evaluation",
+                                                    "enum": [
+                                                        "attendance",
+                                                        "evaluation",
+                                                        "excuse_decision"
+                                                    ]
+                                                },
+                                                "client_uuid": {
+                                                    "description": "Idempotency key generated by the client",
+                                                    "type": "string",
+                                                    "format": "uuid",
+                                                    "example": "6b2d1c44-9c2f-4f3a-8a0b-123456789abc"
+                                                },
+                                                "data": {
+                                                    "description": "Payload depends on operation type",
+                                                    "type": "object",
+                                                    "additionalProperties": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "example": [
+                                            {
+                                                "type": "attendance",
+                                                "client_uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                                                "data": {
+                                                    "halaqa_id": 1,
+                                                    "date": "2026-06-05",
+                                                    "attendances": [
+                                                        {
+                                                            "student_id": 12,
+                                                            "status": "present"
+                                                        },
+                                                        {
+                                                            "student_id": 13,
+                                                            "status": "absent"
+                                                        }
+                                                    ]
+                                                }
+                                            },
+                                            {
+                                                "type": "evaluation",
+                                                "client_uuid": "6b2d1c44-9c2f-4f3a-8a0b-123456789abc",
+                                                "data": {
+                                                    "halaqa_id": 1,
+                                                    "student_id": 12,
+                                                    "surah_name": "الفاتحة",
+                                                    "from_ayah": 1,
+                                                    "to_ayah": 7,
+                                                    "score": 95,
+                                                    "evaluated_at": "2026-06-05T15:30:00Z"
+                                                }
+                                            },
+                                            {
+                                                "type": "excuse_decision",
+                                                "client_uuid": "9a7d2f11-2222-4aaa-bbbb-ccccdddd1111",
+                                                "data": {
+                                                    "excuse_id": 10,
+                                                    "status": "accepted",
+                                                    "admin_comment": "مقبول"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Synchronization completed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تمت مزامنة العمليات بنجاح"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "client_uuid": {
+                                                        "type": "string",
+                                                        "example": "6b2d1c44-9c2f-4f3a-8a0b-123456789abc"
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "ok",
+                                                        "enum": [
+                                                            "ok",
+                                                            "error",
+                                                            "conflict"
+                                                        ]
+                                                    },
+                                                    "message": {
+                                                        "type": "string",
+                                                        "example": "evaluation saved"
+                                                    },
+                                                    "data": {
+                                                        "type": "object",
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/education/evaluations": {
             "post": {
                 "tags": [
                     "Evaluations"
                 ],
-                "summary": "تقييم طالب",
-                "description": "يقوم المعلم بتقييم طالب في الحلقة",
+                "summary": "تقييم طالب (يدعم الحفظ الأوفلاين والـ Deduplication)",
+                "description": "يقوم المعلم بتقييم طالب في الحلقة. يدعم معرّف العميل لمنع تكرار السجلات عند مشاكل الشبكة.",
                 "operationId": "storeEvaluation",
                 "parameters": [
                     {
@@ -6918,9 +7228,16 @@
                             "schema": {
                                 "required": [
                                     "halaqa_id",
-                                    "student_id"
+                                    "student_id",
+                                    "score"
                                 ],
                                 "properties": {
+                                    "client_uuid": {
+                                        "description": "معرف فريد يرسله الموبايل لمنع تكرار التقييم عند إعادة المحاولة",
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "example": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
+                                    },
                                     "halaqa_id": {
                                         "type": "integer",
                                         "example": 1
@@ -6943,8 +7260,7 @@
                                     },
                                     "score": {
                                         "type": "integer",
-                                        "example": 90,
-                                        "nullable": true
+                                        "example": 90
                                     },
                                     "notes": {
                                         "type": "string",
@@ -6952,9 +7268,10 @@
                                         "nullable": true
                                     },
                                     "evaluated_at": {
+                                        "description": "تاريخ التقييم الفعلي من جهاز المعلم",
                                         "type": "string",
-                                        "format": "date-time",
-                                        "example": "2026-05-04 10:00:00"
+                                        "format": "date",
+                                        "example": "2026-06-05"
                                     }
                                 },
                                 "type": "object"
@@ -6964,7 +7281,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "تم التقييم بنجاح",
+                        "description": "تم التقييم بنجاح، أو تمت إعادة السجل القديم لتطابق الـ client_uuid",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -16158,6 +16475,11 @@
                         "type": "integer",
                         "example": 2
                     },
+                    "client_uuid": {
+                        "type": "integer",
+                        "example": "550e8400-e29b-41d4-a716-446655440000",
+                        "nullable": true
+                    },
                     "score": {
                         "type": "integer",
                         "example": 98,
@@ -16658,6 +16980,10 @@
         {
             "name": "Education",
             "description": "Education"
+        },
+        {
+            "name": "Offline Sync",
+            "description": "Offline Sync"
         },
         {
             "name": "Evaluations",

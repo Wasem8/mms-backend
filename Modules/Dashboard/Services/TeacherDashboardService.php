@@ -5,6 +5,7 @@ namespace Modules\Dashboard\Services;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Modules\Education\Models\Attendance;
+use Modules\Education\Models\AttendanceExcuse;
 use Modules\Education\Models\Evaluation;
 use Modules\Education\Models\Halaqa;
 use Modules\Education\Models\Student;
@@ -12,6 +13,58 @@ use Spatie\Browsershot\Browsershot;
 
 class TeacherDashboardService
 {
+
+    public function getTeacherBootstrap($teacherId)
+    {
+        $halaqat = Halaqa::where('teacher_id', $teacherId)
+            ->select('id', 'name')
+            ->get();
+
+        $rosters = [];
+
+        foreach ($halaqat as $halaqa) {
+            $rosters[$halaqa->id] = $halaqa->students()
+                ->select(
+                    'students.id',
+                    'students.first_name',
+                    'students.last_name'
+                )
+                ->get()
+                ->map(fn ($student) => [
+                    'id' => $student->id,
+                    'name' => $student->first_name . ' ' . $student->last_name,
+                ]);
+        }
+
+        $pendingExcuses = AttendanceExcuse::with([
+            'student:id,first_name,last_name',
+            'parent:id,name',
+            'halaqa:id,name',
+        ])
+            ->whereHas('halaqa', fn($q) => $q->where('teacher_id', $teacherId))
+            ->where('status', 'pending')
+            ->get()
+            ->map(function ($excuse) {
+                return [
+                    'id' => $excuse->id,
+                    'student_name' => $excuse->student
+                        ? $excuse->student->first_name . ' ' . $excuse->student->last_name
+                        : null,
+                    'parent_name' => $excuse->parent?->name,
+                    'halaqa_name' => $excuse->halaqa?->name,
+                    'absence_date' => $excuse->absence_date,
+                    'reason' => $excuse->reason,
+                    'status' => $excuse->status,
+                ];
+            });
+
+        return [
+            'halaqat' => $halaqat,
+            'rosters' => $rosters,
+            'pending_excuses' => $pendingExcuses,
+            'dashboard' => $this->getTeacherStats($teacherId),
+        ];
+    }
 
     /**
      * الحصول على إحصائيات داشبورد المعلم الخاص بحلقة معينة

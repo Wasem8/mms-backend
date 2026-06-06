@@ -14,9 +14,10 @@ class StoreEvaluationRequest extends FormRequest
         return [
             'halaqa_id' => 'required|exists:halaqats,id',
             'student_id' => 'required|exists:students,id',
+            'client_uuid'  => 'required|uuid',
             'score' => 'nullable|integer|min:0|max:100',
             'notes' => 'nullable|string',
-            'evaluated_at' => 'nullable|date',
+            'evaluated_at' => 'nullable|date|date_format:Y-m-d',
             'surah_name'   => 'required|string|max:100',
             'from_ayah'    => 'required|integer|min:1',
             'to_ayah'      => 'required|integer|min:1|gte:from_ayah',

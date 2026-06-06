@@ -19,6 +19,7 @@ class AttendanceExcuse extends Model
         'student_id',
         'halaqa_id',
         'parent_id',
+        'client_uuid',
         'absence_date',
         'reason',
         'status',
