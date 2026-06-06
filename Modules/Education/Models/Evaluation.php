@@ -11,6 +11,7 @@ class Evaluation extends Model
         'student_id',
         'score',
         'notes',
+        'client_uuid',
         'surah_name',
         'from_ayah',
         'to_ayah',

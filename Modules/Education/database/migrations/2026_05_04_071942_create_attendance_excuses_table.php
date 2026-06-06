@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('student_id')->constrained('students')->onDelete('cascade');
             $table->foreignId('halaqa_id')->constrained('halaqats')->onDelete('cascade');
             $table->foreignId('parent_id')->constrained('users')->onDelete('cascade');
+            $table->uuid('client_uuid')->nullable()->index();
             $table->date('absence_date');
             $table->text('reason');
             $table->enum('status', ['pending', 'accepted', 'rejected'])->default('pending');

@@ -16,6 +16,18 @@ class TeacherDashboardController extends Controller
         $this->dashboardService = $dashboardService;
     }
 
+    public function bootstrap(Request $request)
+    {
+        $teacherId = auth()->id();
+
+        $data = $this->dashboardService->getTeacherBootstrap($teacherId);
+
+        return ApiResponse::success(
+            $data,
+            'تم تحميل بيانات التهيئة بنجاح'
+        );
+    }
+
     /**
      * عرض بيانات داشبورد المعلم
      */

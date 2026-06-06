@@ -56,14 +56,13 @@ class AttendanceService
         return $query->latest()->paginate(15);
     }
 
-    public function storeBulk(array $data)
+    public function storeBulk(array $data): array
     {
         $user = auth()->user();
 
         $halaqa = Halaqa::findOrFail($data['halaqa_id']);
 
         if ($halaqa->teacher_id !== $user->id) {
-
             throw ValidationException::withMessages([
                 'students' => ['غير مصرح لك بتسجيل الحضور لهذه الحلقة']
             ]);
@@ -71,38 +70,54 @@ class AttendanceService
 
         $date = $data['date'];
 
-        $records = collect($data['attendances'])->map(function ($item) use ($data, $date) {
-            return [
-                'halaqa_id' => $data['halaqa_id'],
-                'student_id' => $item['student_id'],
-                'date' => $date,
-                'status' => $item['status'],
-                'notes' => $item['notes'] ?? null,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
-        })->toArray();
-
-        $incomingIds = collect($data['attendances'])->pluck('student_id')->unique();
+        $incomingIds = collect($data['attendances'])
+            ->pluck('student_id')
+            ->unique();
 
         $validIds = $halaqa->students()
             ->whereIn('students.id', $incomingIds)
             ->pluck('students.id');
 
-        $invalidIds = $incomingIds->diff($validIds);
+        $invalidIds = $incomingIds
+            ->diff($validIds)
+            ->values()
+            ->all();
 
-        if ($invalidIds->isNotEmpty()) {
-            throw ValidationException::withMessages([
-                'students' => ['بعض الطلاب غير تابعين لهذه الحلقة', 'invalid_ids' => $invalidIds->values()]
-            ]);
+        $records = collect($data['attendances'])
+            ->filter(function ($item) use ($validIds) {
+                return $validIds->contains($item['student_id']);
+            })
+            ->map(function ($item) use ($data, $date) {
+                return [
+                    'halaqa_id' => $data['halaqa_id'],
+                    'student_id' => $item['student_id'],
+                    'date' => $date,
+                    'status' => $item['status'],
+                    'notes' => $item['notes'] ?? null,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            })
+            ->values()
+            ->toArray();
+
+        if (!empty($records)) {
+            Attendance::upsert(
+                $records,
+                ['halaqa_id', 'student_id', 'date'],
+                ['status', 'notes', 'updated_at']
+            );
+
+            event(new AttendanceRecorded(
+                $records,
+                $data['halaqa_id'],
+                $data['date']
+            ));
         }
 
-        Attendance::upsert(
-            $records,
-            ['halaqa_id', 'student_id', 'date'], // unique keys
-            ['status', 'notes', 'updated_at']
-        );
-
-        event(new AttendanceRecorded($records, $data['halaqa_id'], $data['date']));
+        return [
+            'saved_count' => count($records),
+            'skipped' => $invalidIds,
+        ];
     }
 }

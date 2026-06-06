@@ -6,6 +6,7 @@ use Modules\Education\Http\Controllers\EvaluationController;
 use Modules\Education\Http\Controllers\HalaqaController;
 use Modules\Education\Http\Controllers\StudentController;
 use Modules\Education\Http\Controllers\AttendanceController;
+use Modules\Education\Http\Controllers\SyncController;
 use Modules\Education\Http\Controllers\TeacherController;
 
 Route::prefix('education')->group(function () {
@@ -44,6 +45,7 @@ Route::prefix('education')->group(function () {
 
     Route::middleware(['auth:api', 'role:teacher'])->group(function () {
         Route::post('attendance', [AttendanceController::class, 'storeBulk']);
+        Route::post('/sync', [SyncController::class, 'sync']);
     });
 
 

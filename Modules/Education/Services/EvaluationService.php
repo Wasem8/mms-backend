@@ -15,6 +15,20 @@ class EvaluationService
     {
         $user = auth()->user();
 
+        // 🎯 التعديل هنا: منع التكرار مع تحميل العلاقات لضمان سلامة الـ Resource
+        if (!empty($data['client_uuid'])) {
+            $existingEvaluation = Evaluation::with(['student', 'halaqa'])
+                ->where('client_uuid', $data['client_uuid'])
+                ->first();
+
+            if ($existingEvaluation) {
+                return [
+                    'evaluation' => $existingEvaluation,
+                    'is_duplicate' => true,
+                ];
+            }
+        }
+
         $halaqa = Halaqa::with('students')->findOrFail($data['halaqa_id']);
 
         if ($user->isTeacher() && $halaqa->teacher_id !== $user->id) {
@@ -29,24 +43,45 @@ class EvaluationService
             ]);
         }
 
-        $evaluation = Evaluation::updateOrCreate(
-            [
+        // نعتمد دائماً على الـ client_uuid كمعيار وحيد وفريد للبحث إن وجد
+        $searchCriteria = !empty($data['client_uuid'])
+            ? ['client_uuid' => $data['client_uuid']]
+            : [
                 'halaqa_id' => $data['halaqa_id'],
                 'student_id' => $data['student_id'],
                 'evaluated_at' => $data['evaluated_at'] ?? now()->toDateString(),
-            ],
-            [
-                'score' => $data['score'],
-                'notes' => $data['notes'] ?? null,
-                'surah_name' => $data['surah_name'] ?? null,
-                'from_ayah' => $data['from_ayah'] ?? null,
-                'to_ayah' => $data['to_ayah'] ?? null,
-            ]
-        );
+            ];
+
+        $existing = Evaluation::where(
+            'client_uuid',
+            $data['client_uuid']
+        )->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
+        $evaluation = Evaluation::create([
+            'client_uuid' => $data['client_uuid'],
+            'halaqa_id' => $data['halaqa_id'],
+            'student_id' => $data['student_id'],
+            'evaluated_at' => $data['evaluated_at'],
+            'score' => $data['score'],
+            'notes' => $data['notes'] ?? null,
+            'surah_name' => $data['surah_name'],
+            'from_ayah' => $data['from_ayah'],
+            'to_ayah' => $data['to_ayah'],
+        ]);
+
+        // تحميل العلاقات للسجل الجديد لكي يقرأها الـ Resource بدون مشاكل
+        $evaluation->load(['student', 'halaqa']);
 
         event(new StudentEvaluated($evaluation));
 
-        return $evaluation;
+        return [
+            'evaluation' => $evaluation,
+            'is_duplicate' => false,
+        ];
     }
 
     public function getMosqueEvaluations($mosqueId, $filters = [])

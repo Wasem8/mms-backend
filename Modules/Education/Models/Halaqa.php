@@ -16,7 +16,6 @@ class Halaqa extends Model
         'teacher_id',
         'capacity',
         'mosque_id',
-        'level',
         'schedule_days',
         'start_time',
         'end_time',
