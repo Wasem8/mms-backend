@@ -23,7 +23,8 @@ class AttendanceExcuse extends Model
         'absence_date',
         'reason',
         'status',
-        'admin_comment'
+        'admin_comment',
+        'processed_at'
     ];
 
     public function student() {

@@ -7136,7 +7136,8 @@
                                                 "data": {
                                                     "excuse_id": 10,
                                                     "status": "accepted",
-                                                    "admin_comment": "مقبول"
+                                                    "admin_comment": "مقبول",
+                                                    "processed_at": "2026-06-05T16:05:00Z"
                                                 }
                                             }
                                         ]

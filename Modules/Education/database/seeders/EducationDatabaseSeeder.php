@@ -54,7 +54,7 @@ class EducationDatabaseSeeder extends Seeder
 
     public function run(): void
     {
-        DB::beginTransaction(); // ✅ بدء transaction
+        DB::beginTransaction();
 
         try {
             $this->command->info('🔄🔄🔄 بدء ملء بيانات Education الشاملة والمحصنة... 🔄🔄🔄');
@@ -103,7 +103,6 @@ class EducationDatabaseSeeder extends Seeder
             $this->command->info('✅ تم إنشاء المعلمين وأولياء الأمور.');
 
             // ============ 4. HALAQAT CREATION ============
-            // 🎯 إنشاء حلقة خاصة ومثبتة للمعلم الرئيسي أولاً
             $mainHalaqa = Halaqa::create([
                 'name' => 'حلقة التميز - ' . $mainTeacher->name,
                 'teacher_id' => $mainTeacher->id,
@@ -117,7 +116,6 @@ class EducationDatabaseSeeder extends Seeder
 
             $counter = 1;
             foreach ($teachers as $teacher) {
-                // تخطي المعلم الرئيسي هنا لأننا أنشأنا حلقته المخصصة بالأعلى
                 if ($teacher->email === 'teacher@test.com') {
                     continue;
                 }
@@ -146,7 +144,6 @@ class EducationDatabaseSeeder extends Seeder
             $studentHalaqaMap = [];
             $studentCount = 0;
 
-            // 🎯 أ) ربط 15 طالباً بشكل مؤكد ومباشر في حلقة المعلم الرئيسي (teacher@test.com)
             for ($k = 1; $k <= 15; $k++) {
                 $student = Student::create([
                     'first_name' => collect($this->firstNames)->random(),
@@ -187,10 +184,8 @@ class EducationDatabaseSeeder extends Seeder
                 ]);
             }
 
-            // ب) إنشاء باقي الطلاب وتوزيعهم عشوائياً على بقية الحلقات
             for ($i = 1; $i <= 185; $i++) {
                 $assignedMosqueId = $mosqueIds[$i % 4];
-                // نجلب الحلقات المتاحة مع استثناء حلقة المعلم الرئيسي لعدم خلط الأوراق
                 $appropriateHalaqat = $halaqat->where('mosque_id', $assignedMosqueId)->where('id', '!=', $mainHalaqa->id);
 
                 if ($appropriateHalaqat->isEmpty()) {
@@ -232,62 +227,74 @@ class EducationDatabaseSeeder extends Seeder
                 throw new \Exception('❌ لا يزال جدول الطلاب فارغاً!');
             }
 
-            // ============ 6. ATTENDANCE & EVALUATIONS ============
-            $this->command->info('🔄 جاري حقن سجلات الحضور والتقييمات للطلاب...');
-            $attendanceCount = 0;
-            $evaluationCount = 0;
+            // ============ 6. OPTIMIZED ATTENDANCE & EVALUATIONS (BULK INSERT) ============
+            $this->command->info('🔄 جاري حقن سجلات الحضور والتقييمات بسرعة فائقة (Bulk)...');
+
+            $attendancesData = [];
+            $evaluationsData = [];
+            $nowStr = Carbon::now()->toDateTimeString();
 
             foreach ($studentHalaqaMap as $studentId => $halaqaId) {
                 $halaqa = $halaqat->find($halaqaId);
                 if (!$halaqa) continue;
 
-                // حضور لـ 30 يوم
+                // 1. تجميع بيانات الحضور
                 for ($day = 30; $day >= 0; $day--) {
                     $date = Carbon::today()->subDays($day);
                     $dayName = strtolower($date->format('l'));
 
-                    // تخطي الأيام غير المجدولة
                     if (!in_array($dayName, $halaqa->schedule_days ?? [])) {
                         continue;
                     }
 
-                    Attendance::create([
-                        'halaqa_id' => $halaqaId,
+                    $attendancesData[] = [
+                        'halaqa_id'  => $halaqaId,
                         'student_id' => $studentId,
-                        'date' => $date,
-                        'status' => collect(['present', 'present', 'present', 'late', 'absent'])->random(),
-                        'notes' => null,
-                    ]);
-                    $attendanceCount++;
+                        'date'       => $date->toDateString(),
+                        'status'     => collect(['present', 'present', 'present', 'late', 'absent'])->random(),
+                        'notes'      => null,
+                        'created_at' => $nowStr,
+                        'updated_at' => $nowStr
+                    ];
                 }
 
-                // من 5 إلى 15 تقييم لكل طالب
-                for ($i = 0; $i < rand(5, 15); $i++) {
+                // 2. تجميع بيانات التقييمات
+                $evalCountForStudent = rand(5, 15);
+                for ($i = 0; $i < $evalCountForStudent; $i++) {
                     $from = rand(1, 100);
-                    Evaluation::create([
-                        'client_uuid' => Str::uuid()->toString(),
-                        'halaqa_id' => $halaqaId,
-                        'student_id' => $studentId,
-                        'surah_name' => collect($this->surahs)->random(),
-                        'from_ayah' => $from,
-                        'to_ayah' => $from + rand(2, 15),
-                        'score' => collect([75, 80, 85, 90, 95, 100])->random(),
-                        'notes' => collect($this->evaluationNotes)->random(),
+                    $evaluationsData[] = [
+                        'client_uuid'  => Str::uuid()->toString(),
+                        'halaqa_id'    => $halaqaId,
+                        'student_id'   => $studentId,
+                        'surah_name'   => collect($this->surahs)->random(),
+                        'from_ayah'    => $from,
+                        'to_ayah'      => $from + rand(2, 15),
+                        'score'        => collect([75, 80, 85, 90, 95, 100])->random(),
+                        'notes'        => collect($this->evaluationNotes)->random(),
                         'evaluated_at' => now()->subDays(rand(1, 30))->toDateString(),
-                    ]);
-                    $evaluationCount++;
+                        'created_at'   => $nowStr,
+                        'updated_at'   => $nowStr
+                    ];
                 }
             }
 
-            $this->command->info('✅ تم إنشاء ' . $attendanceCount . ' سجل حضور');
-            $this->command->info('✅ تم إنشاء ' . $evaluationCount . ' تقييم');
+            // 🎯 حقن البيانات على دفعات (Chunks) لضمان أداء خارق دون استهلاك ذاكرة السيرفر
+            $this->command->info('⚡ جاري تنفيذ الإدخال الجماعي لـ ' . count($attendancesData) . ' سجل حضور...');
+            foreach (array_chunk($attendancesData, 500) as $chunk) {
+                Attendance::insert($chunk);
+            }
 
-            DB::commit(); // ✅ تأكيد العملية
+            $this->command->info('⚡ جاري تنفيذ الإدخال الجماعي لـ ' . count($evaluationsData) . ' سجل تقييم...');
+            foreach (array_chunk($evaluationsData, 500) as $chunk) {
+                Evaluation::insert($chunk);
+            }
+
+            DB::commit();
             $this->command->info('✅✅✅ اكتمل السيردر بنجاح وتم حفظ كافة البيانات! ✅✅✅');
-            $this->printSummary($totalStudentsInDB, $halaqat->count(), $attendanceCount, $evaluationCount);
+            $this->printSummary($totalStudentsInDB, $halaqat->count(), count($attendancesData), count($evaluationsData));
 
         } catch (\Throwable $e) {
-            DB::rollBack(); // ✅ استرجاع العملية عند الفشل
+            DB::rollBack();
             $this->command->error('❌ حدث خطأ غير متوقع: ' . $e->getMessage());
             $this->command->error('في السطر: ' . $e->getLine());
             throw $e;
