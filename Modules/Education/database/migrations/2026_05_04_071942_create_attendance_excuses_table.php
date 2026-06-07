@@ -20,7 +20,8 @@ return new class extends Migration
             $table->date('absence_date');
             $table->text('reason');
             $table->enum('status', ['pending', 'accepted', 'rejected'])->default('pending');
-            $table->text('admin_comment')->nullable(); // تعليق المعلم أو الإدارة
+            $table->text('admin_comment')->nullable();
+            $table->timestamp('processed_at')->nullable();
             $table->timestamps();
         });
     }

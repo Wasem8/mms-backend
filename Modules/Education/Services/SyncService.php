@@ -206,7 +206,7 @@ class SyncService
                 'data' => [
                     'code' => 'EXCUSE_ALREADY_PROCESSED',
                     'status' => $excuse->status,
-                    'processed_at' => $excuse->updated_at,
+                    'processed_at' => $excuse->processed_at,
                     'final' => true,
                 ],
                 'message' => 'already processed',
@@ -218,6 +218,7 @@ class SyncService
             [
                 'status' => $data['status'],
                 'admin_comment' => $data['admin_comment'] ?? null,
+                'processed_at' => $data['processed_at'] ?? now(),
             ]
         );
 

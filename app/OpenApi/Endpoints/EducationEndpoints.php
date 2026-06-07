@@ -432,6 +432,8 @@ requestBody: new OA\RequestBody(
                                     'from_ayah' => 1,
                                     'to_ayah' => 7,
                                     'score' => 95,
+
+                                    // authoritative client timestamp
                                     'evaluated_at' => '2026-06-05T15:30:00Z'
                                 ]
                             ],
@@ -442,7 +444,10 @@ requestBody: new OA\RequestBody(
                                 'data' => [
                                     'excuse_id' => 10,
                                     'status' => 'accepted',
-                                    'admin_comment' => 'مقبول'
+                                    'admin_comment' => 'مقبول',
+
+                                    // authoritative client timestamp
+                                    'processed_at' => '2026-06-05T16:05:00Z'
                                 ]
                             ]
                         ]
