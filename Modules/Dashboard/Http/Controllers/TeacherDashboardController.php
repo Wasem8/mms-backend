@@ -45,6 +45,7 @@ class TeacherDashboardController extends Controller
     {
         $teacherId = auth()->id();
 
+        // السيرفس ستعود الآن بـ String يحتوي على بيانات ملف الـ PDF مباشرة
         $pdfContent = $this->dashboardService->generateTeacherReportPdf($teacherId);
 
         return response()->stream(

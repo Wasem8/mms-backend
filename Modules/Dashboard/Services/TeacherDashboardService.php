@@ -165,30 +165,49 @@ class TeacherDashboardService
     }
 
 
-    public function generateTeacherReportPdf(
-        int $teacherId
-    ): string {
-
+    public function generateTeacherReportPdf(int $teacherId): string
+    {
+        // 1. جلب البيانات من الميثود الخاصة بها داخل نفس السيرفس
         $data = $this->getData($teacherId);
 
-        $html = view(
-            'dashboard::reports.teacher',
-            $data
-        )->render();
+        // 2. تحويل ملف الـ Blade إلى كود HTML نظيف وقابل للقراءة
+        $html = view('dashboard::reports.teacher', $data)->render();
 
-        return Browsershot::html($html)
-            ->setChromePath(
-                'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
-            )
-            ->noSandbox()
-            ->timeout(120)
-            ->format('A4')
-            ->margins(5, 5, 5, 5)
-            ->showBackground()
-            ->waitUntilNetworkIdle()
-            ->pdf();
+        // 3. جلب مسارات الخطوط الافتراضية الخاصة بـ mPDF لدمجها لضمان الاستقرار
+        $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+        $fontDirs = $defaultConfig['fontDir'];
+
+        $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
+        $fontData = $defaultFontConfig['fontdata'];
+
+        // 4. إضافة مجلد الخطوط الخاص بمشروعك (الذي يحتوي على خط أميري)
+        $fontDirs[] = storage_path('fonts');
+
+        // 5. بناء وإعداد كائن الـ mPDF
+        $mpdf = new \Mpdf\Mpdf([
+            'mode'          => 'utf-8',
+            'format'        => 'A4',
+            'margin_left'   => 8,
+            'margin_right'  => 8,
+            'margin_top'    => 8,
+            'margin_bottom' => 8,
+            'fontDir'       => $fontDirs, // المسارات المدمجة
+            'fontdata' => array_merge($fontData, [
+                'cairo' => [
+                    'R'      => 'Cairo-Regular.ttf',
+                    'B'      => 'Cairo-Bold.ttf',
+                    'useOTL' => 0xFF, // تشبيك الحروف العربية تلقائياً
+                ]
+            ]),
+            'default_font' => 'cairo'
+        ]);
+
+        // 6. كتابة محتوى الـ HTML داخل ملف الـ PDF
+        $mpdf->WriteHTML($html);
+
+        // 7. تصدير الملف كـ Binary String ليمر عبر الـ Stream في الـ Controller بأمان
+        return $mpdf->Output('', 'S');
     }
-
     private function getData($teacherId)
     {
         $teacher = auth()->user();

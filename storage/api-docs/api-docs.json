@@ -3661,7 +3661,12 @@
                             }
                         },
                         "content": {
-                            "application/pdf": {}
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
                         }
                     },
                     "401": {
@@ -3788,42 +3793,60 @@
                 "tags": [
                     "Dashboard"
                 ],
-                "summary": "تحميل تقرير ولي الأمر PDF",
-                "description": "يقوم بإنشاء وتنزيل تقرير PDF متعدد الصفحات يحتوي على متابعة الأبناء، الحضور، التقييمات، والتقدم الشهري.",
+                "summary": "إنشاء رابط تحميل تقرير ولي الأمر PDF",
+                "description": "يقوم بإنشاء تقرير PDF متعدد الصفحات يحتوي على متابعة الأبناء، ثم يرفعه إلى Supabase ويعود برابط موقّع مؤقت للتحميل.",
                 "operationId": "exportParentDashboardPdf",
                 "responses": {
                     "200": {
-                        "description": "تم إنشاء ملف PDF بنجاح",
-                        "headers": {
-                            "Content-Disposition": {
-                                "description": "attachment; filename=\"parent-report.pdf\"",
+                        "description": "تم إنشاء التقرير بنجاح وعاد بالرابط الموقّع",
+                        "content": {
+                            "application/json": {
                                 "schema": {
-                                    "type": "string"
-                                }
-                            },
-                            "Content-Type": {
-                                "description": "application/pdf",
-                                "schema": {
-                                    "type": "string",
-                                    "example": "application/pdf"
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم إنشاء التقرير بنجاح"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "url": {
+                                                    "type": "string",
+                                                    "format": "uri",
+                                                    "example": "https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/sign/reports/parent-reports/5/1780904552.pdf?token=..."
+                                                },
+                                                "cached": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
-                        },
-                        "content": {
-                            "application/pdf": {}
                         }
                     },
                     "401": {
                         "description": "غير مصرح - يجب تسجيل الدخول"
                     },
                     "403": {
-                        "description": "ليس لديك صلاحية للوصول"
+                        "description": "ليس لديك صلاحية للوصول (يجب أن تكون ولي أمر)"
                     },
                     "404": {
-                        "description": "لا يوجد أبناء مرتبطون بالحساب"
+                        "description": "لا يوجد أبناء مرتبطون بهذا الحساب حالياً"
                     },
                     "500": {
-                        "description": "حدث خطأ أثناء إنشاء التقرير"
+                        "description": "حدث خطأ في الخادم أو أثناء توليد ورفع ملف PDF"
                     }
                 },
                 "security": [

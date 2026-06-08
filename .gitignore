@@ -24,3 +24,5 @@ Homestead.yaml
 Thumbs.db
 
 !storage/api-docs/api-docs.json
+!storage/fonts/Cairo-Regular.ttf
+!storage/fonts/Cairo-Bold.ttf
