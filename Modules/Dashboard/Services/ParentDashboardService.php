@@ -78,9 +78,7 @@ class ParentDashboardService
                 now()->subDay()
             )
         ) {
-
             try {
-
                 $signedUrl = $this->createSignedUrl(
                     $lastReport->storage_path
                 );
@@ -89,9 +87,7 @@ class ParentDashboardService
                     'url' => $signedUrl,
                     'cached' => true
                 ];
-
             } catch (\Throwable $e) {
-
                 $lastReport->delete();
             }
         }
@@ -104,22 +100,44 @@ class ParentDashboardService
         )->render();
 
         try {
+            // 🛠️ البدء في تهيئة mPDF وتجهيز مسارات خط القاهرة
+            $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+            $fontDirs = $defaultConfig['fontDir'];
 
-            $pdfContent = Browsershot::html($html)
-                ->format('A4')
-                ->margins(5,5,5,5)
-                ->showBackground()
-                ->waitUntilNetworkIdle()
-                ->setDelay(3000)
-                ->pdf();
+            $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
+            $fontData = $defaultFontConfig['fontdata'];
+
+            $fontDirs[] = storage_path('fonts');
+
+            $mpdf = new \Mpdf\Mpdf([
+                'mode'          => 'utf-8',
+                'format'        => 'A4',
+                'margin_left'   => 8,
+                'margin_right'  => 8,
+                'margin_top'    => 8,
+                'margin_bottom' => 8,
+                'fontDir'       => $fontDirs,
+                'fontdata'      => array_merge($fontData, [
+                    'cairo' => [
+                        'R'      => 'Cairo-Regular.ttf',
+                        'B'      => 'Cairo-Bold.ttf',
+                        'useOTL' => 0xFF, // 🎯 تشبيك الحروف العربية تلقائياً
+                    ]
+                ]),
+                'default_font' => 'cairo'
+            ]);
+
+            // كتابة الـ HTML
+            $mpdf->WriteHTML($html);
+
+            // 🎯 السحر هنا: استخراج المحتوى كـ String ثنائي (S) متوافق تماماً مع دالة الرفع لـ Supabase
+            $pdfContent = $mpdf->Output('', 'S');
 
         } catch (\Throwable $e) {
-
-            Log::error('PDF ERROR', [
+            Log::error('mPDF PARENT ERROR', [
                 'message' => $e->getMessage(),
                 'trace'   => $e->getTraceAsString(),
             ]);
-
             throw $e;
         }
 
@@ -291,14 +309,17 @@ class ParentDashboardService
             '/' .
             $fileName;
 
-        $response = Http::withHeaders([
-            'apikey'       => $key,
-            'Authorization'=> 'Bearer ' . $key,
-            'Content-Type' => 'application/pdf',
-        ])->withBody(
-            $pdfContent,
-            'application/pdf'
-        )->post($uploadUrl);
+        // 🎯 التعديل: محاولة الاتصال 3 مرات بين كل مرة ثانية واحدة، وزيادة وقت الانتظار لـ 30 ثانية
+        $response = Http::retry(3, 1000)
+            ->timeout(30)
+            ->withHeaders([
+                'apikey'       => $key,
+                'Authorization'=> 'Bearer ' . $key,
+                'Content-Type' => 'application/pdf',
+            ])->withBody(
+                $pdfContent,
+                'application/pdf'
+            )->post($uploadUrl);
 
         if (! $response->successful()) {
             throw new \Exception(
