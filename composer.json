@@ -80,6 +80,11 @@
         ],
         "pre-package-uninstall": [
             "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
+        ],
+        "vercel-build": [
+            "rm -rf vendor/mpdf/mpdf/ttfonts/*",
+            "rm -rf vendor/mpdf/mpdf/src/Language/*",
+            "rm -rf vendor/mpdf/mpdf/src/Hyphenation/*"
         ]
     },
     "extra": {
