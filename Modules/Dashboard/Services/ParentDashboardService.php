@@ -99,16 +99,38 @@ class ParentDashboardService
             $data
         )->render();
 
+        // 🎯 1. حل مشكلة الـ Read-only: توجيه كاش mPDF بالكامل إلى المجلد المؤقت للسيرفر /tmp
+        $tempDir = '/tmp/mpdf_cache';
+        if (!file_exists($tempDir)) {
+            mkdir($tempDir, 0777, true);
+        }
+
+        if (!defined('_MPDF_TEMP_DIR')) {
+            define('_MPDF_TEMP_DIR', $tempDir);
+        }
+
         try {
-            // 🛠️ البدء في تهيئة mPDF وتجهيز مسارات خط القاهرة
+            // 🎯 2. حل مشكلة الحجم والمسارات: تحميل الخطوط برمجياً من Supabase إلى /tmp عند أول طلب فقط
+            $remoteRegularUrl = 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/assets/Cairo-Regular.ttf';
+            $remoteBoldUrl = 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/assets/Cairo-Bold.ttf';
+
+            $localRegularPath = '/tmp/Cairo-Regular.ttf';
+            $localBoldPath = '/tmp/Cairo-Bold.ttf';
+
+            if (!file_exists($localRegularPath)) {
+                file_put_contents($localRegularPath, file_get_contents($remoteRegularUrl));
+            }
+            if (!file_exists($localBoldPath)) {
+                file_put_contents($localBoldPath, file_get_contents($remoteBoldUrl));
+            }
+
             $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
             $fontDirs = $defaultConfig['fontDir'];
 
             $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
             $fontData = $defaultFontConfig['fontdata'];
 
-            $fontDirs[] = storage_path('fonts');
-
+            // جعل mPDF يقرأ الخطوط من مجلد /tmp المستقر بالسيرفر
             $mpdf = new \Mpdf\Mpdf([
                 'mode'          => 'utf-8',
                 'format'        => 'A4',
@@ -116,25 +138,24 @@ class ParentDashboardService
                 'margin_right'  => 8,
                 'margin_top'    => 8,
                 'margin_bottom' => 8,
-                'fontDir'       => $fontDirs,
+                'tempDir'       => $tempDir,
+                'fontDir'       => array_merge($fontDirs, ['/tmp']),
                 'fontdata'      => array_merge($fontData, [
                     'cairo' => [
                         'R'      => 'Cairo-Regular.ttf',
                         'B'      => 'Cairo-Bold.ttf',
-                        'useOTL' => 0xFF, // 🎯 تشبيك الحروف العربية تلقائياً
+                        'useOTL' => 0xFF, // تشبيك الحروف العربية تلقائياً
                     ]
                 ]),
                 'default_font' => 'cairo'
             ]);
 
-            // كتابة الـ HTML
+            // كتابة الـ HTML وتوليد محتوى الـ PDF
             $mpdf->WriteHTML($html);
-
-            // 🎯 السحر هنا: استخراج المحتوى كـ String ثنائي (S) متوافق تماماً مع دالة الرفع لـ Supabase
             $pdfContent = $mpdf->Output('', 'S');
 
         } catch (\Throwable $e) {
-            Log::error('mPDF PARENT ERROR', [
+            Log::error('mPDF VERCEL ERROR', [
                 'message' => $e->getMessage(),
                 'trace'   => $e->getTraceAsString(),
             ]);
@@ -164,7 +185,6 @@ class ParentDashboardService
             'cached' => false,
         ];
     }
-
     private function getParentReportData($parentId): array
     {
         $children = Student::where('parent_id', $parentId)
