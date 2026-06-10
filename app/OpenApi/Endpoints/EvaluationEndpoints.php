@@ -31,7 +31,49 @@ class EvaluationEndpoints
                     new OA\Property(property: 'to_ayah', type: 'integer', example: 7),
                     new OA\Property(property: 'score', type: 'integer', example: 90),
                     new OA\Property(property: 'notes', type: 'string', example: 'جيد جداً', nullable: true),
-                    // 🎯 تعديل الفورمات ليكون date (Y-m-d) ليتطابق مع الـ Service
+                    new OA\Property(
+                        property: 'voice_note_id',
+                        type: 'integer',
+                        nullable: true,
+                        example: 15,
+                        description: 'Uploaded voice note id'
+                    ),
+
+                    new OA\Property(
+                        property: 'dimensions',
+                        type: 'object',
+                        nullable: true,
+                        properties: [
+
+                            new OA\Property(
+                                property: 'tajweed',
+                                type: 'string',
+                                enum: ['excellent', 'good', 'needs_work'],
+                                example: 'excellent'
+                            ),
+
+                            new OA\Property(
+                                property: 'hifz',
+                                type: 'string',
+                                enum: ['excellent', 'good', 'needs_work'],
+                                example: 'good'
+                            ),
+
+                            new OA\Property(
+                                property: 'fluency',
+                                type: 'string',
+                                enum: ['excellent', 'good', 'needs_work'],
+                                example: 'excellent'
+                            ),
+
+                            new OA\Property(
+                                property: 'makharij',
+                                type: 'string',
+                                enum: ['excellent', 'good', 'needs_work'],
+                                example: 'needs_work'
+                            ),
+                        ]
+                    ),
                     new OA\Property(property: 'evaluated_at', type: 'string', format: 'date', description: 'تاريخ التقييم الفعلي من جهاز المعلم', example: '2026-06-05'),
                 ]
             )
@@ -182,6 +224,44 @@ class EvaluationEndpoints
                     new OA\Property(property: 'surah_name', type: 'string', example: 'البقرة', nullable: true),
                     new OA\Property(property: 'from_ayah', type: 'integer', example: 1, nullable: true),
                     new OA\Property(property: 'to_ayah', type: 'integer', example: 20, nullable: true),
+                    new OA\Property(
+                        property: 'voice_note_id',
+                        type: 'integer',
+                        nullable: true,
+                        example: 15
+                    ),
+
+                    new OA\Property(
+                        property: 'dimensions',
+                        type: 'object',
+                        nullable: true,
+                        properties: [
+
+                            new OA\Property(
+                                property: 'tajweed',
+                                type: 'string',
+                                enum: ['excellent', 'good', 'needs_work']
+                            ),
+
+                            new OA\Property(
+                                property: 'hifz',
+                                type: 'string',
+                                enum: ['excellent', 'good', 'needs_work']
+                            ),
+
+                            new OA\Property(
+                                property: 'fluency',
+                                type: 'string',
+                                enum: ['excellent', 'good', 'needs_work']
+                            ),
+
+                            new OA\Property(
+                                property: 'makharij',
+                                type: 'string',
+                                enum: ['excellent', 'good', 'needs_work']
+                            ),
+                        ]
+                    ),
                     new OA\Property(property: 'evaluated_at', type: 'string', format: 'date', example: '2026-05-09', nullable: true),
                 ]
             )
@@ -261,4 +341,100 @@ class EvaluationEndpoints
         ]
     )]
     public function destroy() {}
+    #[OA\Post(
+        path: '/education/uploads/audio',
+        operationId: 'uploadVoiceNote',
+        tags: ['Evaluations'],
+        summary: 'Upload evaluation voice note',
+        description: 'Uploads an audio file and returns voice_note_id to be attached later when creating or updating an evaluation.',
+        security: [['bearerAuth' => []]],
+
+        parameters: [
+            new OA\Parameter(
+                ref: '#/components/parameters/AcceptLanguageHeader'
+            ),
+        ],
+
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    required: ['file'],
+                    properties: [
+
+                        new OA\Property(
+                            property: 'file',
+                            type: 'string',
+                            format: 'binary',
+                            description: 'Audio file (mp3, wav, m4a, ogg)'
+                        ),
+                    ]
+                )
+            )
+        ),
+
+        responses: [
+
+            new OA\Response(
+                response: 200,
+                description: 'Voice uploaded successfully',
+                content: new OA\JsonContent(
+                    properties: [
+
+                        new OA\Property(
+                            property: 'status',
+                            type: 'boolean',
+                            example: true
+                        ),
+
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'Voice uploaded successfully'
+                        ),
+
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+
+                                new OA\Property(
+                                    property: 'id',
+                                    type: 'integer',
+                                    example: 15
+                                ),
+
+                                new OA\Property(
+                                    property: 'url',
+                                    type: 'string',
+                                    example: 'https://example.com/storage/voice-notes/abc123.m4a'
+                                ),
+                            ]
+                        ),
+
+                        new OA\Property(
+                            property: 'pagination',
+                            type: 'object',
+                            nullable: true,
+                            example: null
+                        ),
+                    ]
+                )
+            ),
+
+            new OA\Response(
+                response: 422,
+                description: 'Invalid file'
+            ),
+
+            new OA\Response(
+                response: 401,
+                ref: '#/components/responses/Unauthenticated'
+            ),
+        ]
+    )]
+    public function uploadVoice() {}
+
+
 }

@@ -18,6 +18,7 @@ return [
         'key' => env('SUPABASE_KEY'),
         'bucket' => env('SUPABASE_BUCKET'),
         'reports_bucket' => env('SUPABASE_REPORTS_BUCKET'),
+        'voices' => env('SUPABASE_EVALUATION_VOICE_BUCKET'),
     ],
 
     'postmark' => [

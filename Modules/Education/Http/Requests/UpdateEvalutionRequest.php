@@ -14,6 +14,10 @@ class UpdateEvalutionRequest extends FormRequest
         return [
             'score' => 'sometimes|integer|min:0|max:100',
             'notes' => 'nullable|string',
+            'dimensions.tajweed' => 'nullable|in:excellent,good,needs_work',
+            'dimensions.hifz' => 'nullable|in:excellent,good,needs_work',
+            'dimensions.fluency' => 'nullable|in:excellent,good,needs_work',
+            'dimensions.makharij' => 'nullable|in:excellent,good,needs_work',
             'evaluated_at' => 'sometimes|date',
             'surah_name'   => 'sometimes|string|max:100',
             'from_ayah'    => 'sometimes|integer|min:1',
