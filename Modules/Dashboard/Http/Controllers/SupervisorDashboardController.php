@@ -3,52 +3,57 @@
 namespace Modules\Dashboard\Http\Controllers;
 
 use App\Support\ApiResponse;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Modules\Dashboard\Services\DashboardService;
+use Modules\Dashboard\Services\SupervisorDashboardService; // 🎯 تعديل مسار السيرفيس الصحيح
 
 class SupervisorDashboardController
 {
-    public function __construct(private DashboardService $service) {}
+    // 🎯 حقن السيرفيس الصحيح للمشرف هنا
+    public function __construct(private SupervisorDashboardService $service) {}
 
+    /**
+     * جلب إحصائيات لوحة التحكم الرئيسية للمشرف العام (الـ الويب / التطبيق)
+     */
     public function index(Request $request)
     {
         $mosqueId = auth()->user()->mosque_id;
 
-        $filters = $request->only(['halaqa_id']);
-
-        $stats = $this->service->getSupervisorStats($mosqueId, $filters);
+        // 🎯 استدعاء الدالة الصحيحة من السيرفيس getDashboard
+        $stats = $this->service->getDashboard($mosqueId);
 
         return ApiResponse::success($stats, 'تم جلب إحصائيات لوحة التحكم بنجاح');
     }
 
+    /**
+     * توليد تقرير الـ PDF للمشرف وإرجاع رابط سحابي موقّع ومكّش
+     */
     public function exportPdf(Request $request)
     {
         $mosqueId = auth()->user()->mosque_id;
         $filters = $request->only(['halaqa_id']);
 
-        // جلب محتوى الـ PDF كـ Binary String من السيرفس
-        $pdfContent = $this->service->generateSupervisorReportPdf(
-            $mosqueId,
-            $filters
-        );
+        try {
+            // جلب رابط التقرير الموقّع من السيرفيس باستخدام mPDF
+            $result = $this->service->generateSupervisorPdfResponse(
+                $mosqueId,
+                $filters
+            );
 
-        // 🎯 الحل: استخدام الـ Stream Response لفرض نوع المحتوى بشكل صارم على المتصفح والسواجر
-        return response()->stream(
-            function () use ($pdfContent) {
-                echo $pdfContent;
-            },
-            200,
-            [
-                'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="supervisor-report.pdf"',
-                'Content-Transfer-Encoding' => 'binary',
-                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
-                'Pragma' => 'no-cache',
-                'Expires' => '0',
-            ]
-        );
+            // إرجاع الرابط كـ JSON للاستخدام الفوري في الفرونت إند
+            return response()->json([
+                'success' => true,
+                'url'     => $result['url'],
+                'cached'  => $result['cached']
+            ]);
+
+        } catch (\Throwable $e) {
+            Log::error('Supervisor Export PDF Controller Error: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ أثناء توليد التقرير، يرجى المحاولة لاحقاً.'
+            ], 500);
+        }
     }
-
 }

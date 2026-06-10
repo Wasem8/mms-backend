@@ -7547,7 +7547,7 @@
                     "Offline Sync"
                 ],
                 "summary": "Offline batch synchronization",
-                "description": "Synchronize offline teacher operations (attendance, evaluation, excuse decision). Each operation is processed independently and returns its own result.",
+                "description": "\n            Supported operation types:\n\n            - attendance\n            - evaluation\n            - evaluation_update\n            - evaluation_delete\n            - excuse_decision\n\n            Evaluation operations support an optional dimensions object:\n\n            {\n              \"tajweed\": \"excellent|good|needs_work\",\n              \"hifz\": \"excellent|good|needs_work\",\n              \"fluency\": \"excellent|good|needs_work\",\n              \"makharij\": \"excellent|good|needs_work\"\n            }\n\n            Each operation is processed independently and returns its own status.\n        ",
                 "operationId": "syncOfflineOperations",
                 "requestBody": {
                     "required": true,
@@ -7570,10 +7570,12 @@
                                             "properties": {
                                                 "type": {
                                                     "type": "string",
-                                                    "example": "evaluation",
+                                                    "example": "evaluation_update",
                                                     "enum": [
                                                         "attendance",
                                                         "evaluation",
+                                                        "evaluation_update",
+                                                        "evaluation_delete",
                                                         "excuse_decision"
                                                     ]
                                                 },
@@ -7620,7 +7622,42 @@
                                                     "from_ayah": 1,
                                                     "to_ayah": 7,
                                                     "score": 95,
+                                                    "voice_note_id": 2,
+                                                    "notes": "Good recitation, but work on makharij",
+                                                    "dimensions": {
+                                                        "tajweed": "excellent",
+                                                        "hifz": "good",
+                                                        "fluency": "excellent",
+                                                        "makharij": "needs_work"
+                                                    },
                                                     "evaluated_at": "2026-06-05T15:30:00Z"
+                                                }
+                                            },
+                                            {
+                                                "type": "evaluation_update",
+                                                "client_uuid": "11111111-2222-3333-4444-555555555555",
+                                                "data": {
+                                                    "id": 25,
+                                                    "score": 98,
+                                                    "notes": "Excellent progress",
+                                                    "surah_name": "البقرة",
+                                                    "from_ayah": 10,
+                                                    "to_ayah": 20,
+                                                    "voice_note_id": 3,
+                                                    "dimensions": {
+                                                        "tajweed": "excellent",
+                                                        "hifz": "excellent",
+                                                        "fluency": "good",
+                                                        "makharij": "good"
+                                                    },
+                                                    "evaluated_at": "2026-06-05T18:00:00Z"
+                                                }
+                                            },
+                                            {
+                                                "type": "evaluation_delete",
+                                                "client_uuid": "66666666-7777-8888-9999-000000000000",
+                                                "data": {
+                                                    "id": 25
                                                 }
                                             },
                                             {
@@ -7759,6 +7796,54 @@
                                     "notes": {
                                         "type": "string",
                                         "example": "جيد جداً",
+                                        "nullable": true
+                                    },
+                                    "voice_note_id": {
+                                        "description": "Uploaded voice note id",
+                                        "type": "integer",
+                                        "example": 15,
+                                        "nullable": true
+                                    },
+                                    "dimensions": {
+                                        "properties": {
+                                            "tajweed": {
+                                                "type": "string",
+                                                "example": "excellent",
+                                                "enum": [
+                                                    "excellent",
+                                                    "good",
+                                                    "needs_work"
+                                                ]
+                                            },
+                                            "hifz": {
+                                                "type": "string",
+                                                "example": "good",
+                                                "enum": [
+                                                    "excellent",
+                                                    "good",
+                                                    "needs_work"
+                                                ]
+                                            },
+                                            "fluency": {
+                                                "type": "string",
+                                                "example": "excellent",
+                                                "enum": [
+                                                    "excellent",
+                                                    "good",
+                                                    "needs_work"
+                                                ]
+                                            },
+                                            "makharij": {
+                                                "type": "string",
+                                                "example": "needs_work",
+                                                "enum": [
+                                                    "excellent",
+                                                    "good",
+                                                    "needs_work"
+                                                ]
+                                            }
+                                        },
+                                        "type": "object",
                                         "nullable": true
                                     },
                                     "evaluated_at": {
@@ -8080,6 +8165,49 @@
                                         "example": 20,
                                         "nullable": true
                                     },
+                                    "voice_note_id": {
+                                        "type": "integer",
+                                        "example": 15,
+                                        "nullable": true
+                                    },
+                                    "dimensions": {
+                                        "properties": {
+                                            "tajweed": {
+                                                "type": "string",
+                                                "enum": [
+                                                    "excellent",
+                                                    "good",
+                                                    "needs_work"
+                                                ]
+                                            },
+                                            "hifz": {
+                                                "type": "string",
+                                                "enum": [
+                                                    "excellent",
+                                                    "good",
+                                                    "needs_work"
+                                                ]
+                                            },
+                                            "fluency": {
+                                                "type": "string",
+                                                "enum": [
+                                                    "excellent",
+                                                    "good",
+                                                    "needs_work"
+                                                ]
+                                            },
+                                            "makharij": {
+                                                "type": "string",
+                                                "enum": [
+                                                    "excellent",
+                                                    "good",
+                                                    "needs_work"
+                                                ]
+                                            }
+                                        },
+                                        "type": "object",
+                                        "nullable": true
+                                    },
                                     "evaluated_at": {
                                         "type": "string",
                                         "format": "date",
@@ -8236,6 +8364,92 @@
                                 }
                             }
                         }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/education/uploads/audio": {
+            "post": {
+                "tags": [
+                    "Evaluations"
+                ],
+                "summary": "Upload evaluation voice note",
+                "description": "Uploads an audio file and returns voice_note_id to be attached later when creating or updating an evaluation.",
+                "operationId": "uploadVoiceNote",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "file"
+                                ],
+                                "properties": {
+                                    "file": {
+                                        "description": "Audio file (mp3, wav, m4a, ogg)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Voice uploaded successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Voice uploaded successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "url": {
+                                                    "type": "string",
+                                                    "example": "https://example.com/storage/voice-notes/abc123.m4a"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid file"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
                     }
                 },
                 "security": [
@@ -17296,6 +17510,34 @@
                     "notes": {
                         "type": "string",
                         "example": "مستوى ممتاز ومشاركة فعالة",
+                        "nullable": true
+                    },
+                    "dimensions": {
+                        "properties": {
+                            "tajweed": {
+                                "type": "string"
+                            },
+                            "hifz": {
+                                "type": "string"
+                            },
+                            "fluency": {
+                                "type": "string"
+                            },
+                            "makharij": {
+                                "type": "string"
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "voice_note_id": {
+                        "type": "integer",
+                        "example": 15,
+                        "nullable": true
+                    },
+                    "voice_note_url": {
+                        "type": "string",
+                        "example": "https://cdn.example.com/audio/15.m4a",
                         "nullable": true
                     },
                     "surah_name": {

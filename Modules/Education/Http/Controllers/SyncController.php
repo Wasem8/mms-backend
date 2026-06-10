@@ -5,7 +5,7 @@ namespace Modules\Education\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Support\ApiResponse;
 use Illuminate\Http\Request;
-use Modules\Education\Services\SyncService;
+use Modules\Education\Services\Sync\SyncService;
 
 class SyncController extends Controller
 {
@@ -17,7 +17,7 @@ class SyncController extends Controller
     {
         $request->validate([
             'ops' => 'required|array',
-            'ops.*.type' => 'required|string|in:attendance,evaluation,excuse_decision',
+            'ops.*.type' => 'required|string|in:attendance,evaluation,excuse_decision,evaluation_update,evaluation_delete',
             'ops.*.client_uuid' => 'required|uuid',
             'ops.*.data' => 'required|array',
         ]);

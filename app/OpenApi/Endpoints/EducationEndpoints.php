@@ -360,7 +360,26 @@ requestBody: new OA\RequestBody(
         operationId: 'syncOfflineOperations',
         tags: ['Education', 'Offline Sync'],
         summary: 'Offline batch synchronization',
-        description: 'Synchronize offline teacher operations (attendance, evaluation, excuse decision). Each operation is processed independently and returns its own result.',
+        description: '
+            Supported operation types:
+
+            - attendance
+            - evaluation
+            - evaluation_update
+            - evaluation_delete
+            - excuse_decision
+
+            Evaluation operations support an optional dimensions object:
+
+            {
+              "tajweed": "excellent|good|needs_work",
+              "hifz": "excellent|good|needs_work",
+              "fluency": "excellent|good|needs_work",
+              "makharij": "excellent|good|needs_work"
+            }
+
+            Each operation is processed independently and returns its own status.
+        ',
         security: [['bearerAuth' => []]],
 
         requestBody: new OA\RequestBody(
@@ -381,8 +400,14 @@ requestBody: new OA\RequestBody(
                                 new OA\Property(
                                     property: 'type',
                                     type: 'string',
-                                    enum: ['attendance', 'evaluation', 'excuse_decision'],
-                                    example: 'evaluation'
+                                    enum: [
+                                        'attendance',
+                                        'evaluation',
+                                        'evaluation_update',
+                                        'evaluation_delete',
+                                        'excuse_decision'
+                                    ],
+                                    example: 'evaluation_update'
                                 ),
 
                                 new OA\Property(
@@ -433,8 +458,47 @@ requestBody: new OA\RequestBody(
                                     'to_ayah' => 7,
                                     'score' => 95,
 
-                                    // authoritative client timestamp
+                                    'voice_note_id' => 2,
+                                    'notes' => 'Good recitation, but work on makharij',
+                                    'dimensions' => [
+                                        'tajweed' => 'excellent',
+                                        'hifz' => 'good',
+                                        'fluency' => 'excellent',
+                                        'makharij' => 'needs_work'
+                                    ],
+
                                     'evaluated_at' => '2026-06-05T15:30:00Z'
+                                ]
+                            ],
+
+                            [
+                                'type' => 'evaluation_update',
+                                'client_uuid' => '11111111-2222-3333-4444-555555555555',
+                                'data' => [
+                                    'id' => 25,
+                                    'score' => 98,
+                                    'notes' => 'Excellent progress',
+                                    'surah_name' => 'البقرة',
+                                    'from_ayah' => 10,
+                                    'to_ayah' => 20,
+                                    'voice_note_id' => 3,
+
+                                    'dimensions' => [
+                                        'tajweed' => 'excellent',
+                                        'hifz' => 'excellent',
+                                        'fluency' => 'good',
+                                        'makharij' => 'good'
+                                    ],
+
+                                    'evaluated_at' => '2026-06-05T18:00:00Z'
+                                ]
+                            ],
+
+                            [
+                                'type' => 'evaluation_delete',
+                                'client_uuid' => '66666666-7777-8888-9999-000000000000',
+                                'data' => [
+                                    'id' => 25
                                 ]
                             ],
 
