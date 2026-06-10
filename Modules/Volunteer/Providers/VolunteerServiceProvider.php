@@ -45,6 +45,9 @@ class VolunteerServiceProvider extends ModuleServiceProvider
 
     public function register(): void
     {
+
+        $this->app->register(RouteServiceProvider::class);
+
         $this->app->bind(
             VolunteerOpportunityRepositoryInterface::class,
             EloquentVolunteerOpportunityRepository::class,
