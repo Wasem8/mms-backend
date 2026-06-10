@@ -89,7 +89,16 @@ class AttendanceExcuseController extends Controller
         }
 
         if ($excuse->status !== 'pending') {
-            return ApiResponse::error('هذا العذر تم معالجته مسبقاً', 422);
+
+            return ApiResponse::success(
+                [
+                    'code' => 'EXCUSE_ALREADY_PROCESSED',
+                    'status' => $excuse->status,
+                    'processed_at' => $excuse->updated_at,
+                    'final' => true
+                ],
+                'already processed'
+            );
         }
 
         $action->execute($excuse, $request->only(['status', 'admin_comment']));

@@ -3,7 +3,7 @@
     "functions": {
         "api/index.php": {
             "runtime": "vercel-php@0.9.0",
-            "memory": 1024,
+            "excludeFiles": "{node_modules/**,tests/**,.git/**,storage/fonts/**,vendor/mpdf/mpdf/ttfonts/**,vendor/mpdf/mpdf/src/Hyphenation/**}",
             "maxDuration": 60
         }
     },
@@ -21,7 +21,7 @@
     ],
     "env": {
         "APP_ENV": "production",
-        "APP_DEBUG": "false",
+        "APP_DEBUG": "true",
         "LOG_CHANNEL": "stderr",
         "CACHE_DRIVER": "array"
     }

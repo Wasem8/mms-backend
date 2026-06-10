@@ -70,7 +70,7 @@ class AttendanceEndpoints
         operationId: 'storeBulkAttendance',
         tags: ['Attendance'],
         summary: 'تسجيل الحضور والغياب (جماعي)',
-        description: 'يستخدم من قبل المعلم فقط لتسجيل حضور طلاب حلقته في يوم محدد. يدعم التحديث التلقائي في حال تكرار الإرسال.',
+        description: 'يسجل حضور الطلاب بشكل جماعي. إذا احتوى الطلب على طلاب غير موجودين أو لم يعودوا تابعين للحلقة فسيتم تجاهلهم وإرجاع معرفاتهم داخل skipped_student_ids دون فشل العملية بالكامل.',
         security: [['bearerAuth' => []]],
         requestBody: new OA\RequestBody(
             required: true,
@@ -102,35 +102,88 @@ class AttendanceEndpoints
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'تم التسجيل بنجاح',
+                description: 'تم تسجيل الحضور بنجاح مع إمكانية تخطي بعض الطلاب غير الصالحين',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'status', type: 'boolean', example: true),
-                        new OA\Property(property: 'message', type: 'string', example: 'تم تسجيل الحضور بنجاح'),
+                        new OA\Property(
+                            property: 'status',
+                            type: 'boolean',
+                            example: true
+                        ),
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'تم تسجيل الحضور بنجاح'
+                        ),
                         new OA\Property(
                             property: 'data',
-                            type: 'array',
-                            items: new OA\Items(),
-                            example: []
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'saved_count',
+                                    type: 'integer',
+                                    example: 25,
+                                    description: 'عدد سجلات الحضور التي تم حفظها'
+                                ),
+                                new OA\Property(
+                                    property: 'skipped_student_ids',
+                                    type: 'array',
+                                    description: 'الطلاب الذين تم تجاهلهم لأنهم لم يعودوا ضمن الحلقة أو غير موجودين',
+                                    items: new OA\Items(type: 'integer'),
+                                    example: [18, 22]
+                                )
+                            ]
                         ),
                         new OA\Property(
                             property: 'pagination',
                             type: 'object',
                             nullable: true,
                             example: null
-                        ),
+                        )
                     ]
                 )
             ),
+
+            new OA\Response(
+                response: 401,
+                ref: '#/components/responses/Unauthenticated'
+            ),
+
+            new OA\Response(
+                response: 403,
+                ref: '#/components/responses/Forbidden'
+            ),
+
             new OA\Response(
                 response: 422,
-                description: 'خطأ في التحقق (مثلاً: طلاب لا ينتمون للحلقة)',
+                description: 'خطأ في البيانات المرسلة',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'status', type: 'boolean', example: false),
-                        new OA\Property(property: 'message', type: 'string', example: 'بعض الطلاب غير تابعين لهذه الحلقة'),
-                        new OA\Property(property: 'data', type: 'object', nullable: true, example: null),
-                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                        new OA\Property(
+                            property: 'status',
+                            type: 'boolean',
+                            example: false
+                        ),
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'Validation error.'
+                        ),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            example: [
+                                'date' => [
+                                    'The date field is required.'
+                                ]
+                            ]
+                        ),
+                        new OA\Property(
+                            property: 'pagination',
+                            type: 'object',
+                            nullable: true,
+                            example: null
+                        )
                     ]
                 )
             )

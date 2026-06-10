@@ -41,6 +41,7 @@ return [
 
     // --- Evaluations Section ---
     'evaluation_stored' => 'Student evaluated successfully.',
+    'evaluation_already_exists' => 'Evaluation already exists',
     'evaluation_retrieved' => 'Evaluations retrieved successfully.',
     'evaluation_updated' => 'Evaluation updated successfully.',
     'evaluation_deleted' => 'Evaluation deleted successfully.',

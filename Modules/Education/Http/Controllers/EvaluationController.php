@@ -17,11 +17,16 @@ class EvaluationController
     {
         $data = $request->validated([]);
 
-        $evaluation = $service->store($data);
+        $result = $service->store($data);
 
         return ApiResponse::success(
-            new EvaluationResource($evaluation),
-            __('messages.evaluation_stored'),
+            [
+                'evaluation' => new EvaluationResource($result['evaluation']),
+                'is_duplicate' => $result['is_duplicate'],
+            ],
+            $result['is_duplicate']
+                ? __('messages.evaluation_already_exists')
+                : __('messages.evaluation_stored')
         );
     }
 

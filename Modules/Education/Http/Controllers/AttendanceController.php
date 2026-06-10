@@ -25,9 +25,14 @@ class AttendanceController
 
     public function storeBulk(StoreAttendanceRequest $request)
     {
-        $this->service->storeBulk($request->validated());
+        $result = $this->service->storeBulk(
+            $request->validated()
+        );
 
-        return ApiResponse::success([], 'تم تسجيل الحضور بنجاح');
+        return ApiResponse::success(
+            $result,
+            'تم تسجيل الحضور بنجاح'
+        );
     }
 
 

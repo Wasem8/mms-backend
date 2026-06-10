@@ -10,8 +10,8 @@ class EvaluationEndpoints
         path: '/education/evaluations',
         operationId: 'storeEvaluation',
         tags: ['Evaluations'],
-        summary: 'تقييم طالب',
-        description: 'يقوم المعلم بتقييم طالب في الحلقة',
+        summary: 'تقييم طالب (يدعم الحفظ الأوفلاين والـ Deduplication)',
+        description: 'يقوم المعلم بتقييم طالب في الحلقة. يدعم معرّف العميل لمنع تكرار السجلات عند مشاكل الشبكة.',
         security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
@@ -19,23 +19,27 @@ class EvaluationEndpoints
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['halaqa_id', 'student_id'],
+            // 🎯 أضفنا الـ score هنا لأنه إجباري في الباك إند
+                required: ['halaqa_id', 'student_id', 'score'],
                 properties: [
+                    // 🎯 الحقل الحاسم والجديد لنظام الـ Offline
+                    new OA\Property(property: 'client_uuid', type: 'string', format: 'uuid', description: 'معرف فريد يرسله الموبايل لمنع تكرار التقييم عند إعادة المحاولة', example: '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d'),
                     new OA\Property(property: 'halaqa_id', type: 'integer', example: 1),
                     new OA\Property(property: 'student_id', type: 'integer', example: 10),
                     new OA\Property(property: 'surah_name', type: 'string', example: 'الفاتحة'),
                     new OA\Property(property: 'from_ayah', type: 'integer', example: 1),
                     new OA\Property(property: 'to_ayah', type: 'integer', example: 7),
-                    new OA\Property(property: 'score', type: 'integer', example: 90, nullable: true),
+                    new OA\Property(property: 'score', type: 'integer', example: 90),
                     new OA\Property(property: 'notes', type: 'string', example: 'جيد جداً', nullable: true),
-                    new OA\Property(property: 'evaluated_at', type: 'string', format: 'date-time', example: '2026-05-04 10:00:00'),
+                    // 🎯 تعديل الفورمات ليكون date (Y-m-d) ليتطابق مع الـ Service
+                    new OA\Property(property: 'evaluated_at', type: 'string', format: 'date', description: 'تاريخ التقييم الفعلي من جهاز المعلم', example: '2026-06-05'),
                 ]
             )
         ),
         responses: [
             new OA\Response(
-                response: 200,
-                description: 'تم التقييم بنجاح',
+                response: 200, // أو 201
+                description: 'تم التقييم بنجاح، أو تمت إعادة السجل القديم لتطابق الـ client_uuid',
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'status', type: 'boolean', example: true),
@@ -50,7 +54,6 @@ class EvaluationEndpoints
         ]
     )]
     public function store() {}
-
 
     #[OA\Get(
         path: '/education/supervisor/evaluations',

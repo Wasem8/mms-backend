@@ -178,6 +178,7 @@ use OpenApi\Attributes as OA;
     type: 'object',
     properties: [
         new OA\Property(property: 'id', type: 'integer', example: 2),
+        new OA\Property(property: 'client_uuid', type: 'integer', example: '550e8400-e29b-41d4-a716-446655440000', nullable: true),
         new OA\Property(property: 'score', type: 'integer', example: 98, nullable: true),
         new OA\Property(property: 'notes', type: 'string', example: 'مستوى ممتاز ومشاركة فعالة', nullable: true),
 

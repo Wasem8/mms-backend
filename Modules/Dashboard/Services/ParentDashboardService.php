@@ -78,9 +78,7 @@ class ParentDashboardService
                 now()->subDay()
             )
         ) {
-
             try {
-
                 $signedUrl = $this->createSignedUrl(
                     $lastReport->storage_path
                 );
@@ -89,9 +87,7 @@ class ParentDashboardService
                     'url' => $signedUrl,
                     'cached' => true
                 ];
-
             } catch (\Throwable $e) {
-
                 $lastReport->delete();
             }
         }
@@ -103,23 +99,66 @@ class ParentDashboardService
             $data
         )->render();
 
-        try {
+        // 🎯 1. حل مشكلة الـ Read-only: توجيه كاش mPDF بالكامل إلى المجلد المؤقت للسيرفر /tmp
+        $tempDir = '/tmp/mpdf_cache';
+        if (!file_exists($tempDir)) {
+            mkdir($tempDir, 0777, true);
+        }
 
-            $pdfContent = Browsershot::html($html)
-                ->format('A4')
-                ->margins(5,5,5,5)
-                ->showBackground()
-                ->waitUntilNetworkIdle()
-                ->setDelay(3000)
-                ->pdf();
+        if (!defined('_MPDF_TEMP_DIR')) {
+            define('_MPDF_TEMP_DIR', $tempDir);
+        }
+
+        try {
+            // 🎯 2. حل مشكلة الحجم والمسارات: تحميل الخطوط برمجياً من Supabase إلى /tmp عند أول طلب فقط
+            $remoteRegularUrl = 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/assets/Cairo-Regular.ttf';
+            $remoteBoldUrl = 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/assets/Cairo-Bold.ttf';
+
+            $localRegularPath = '/tmp/Cairo-Regular.ttf';
+            $localBoldPath = '/tmp/Cairo-Bold.ttf';
+
+            if (!file_exists($localRegularPath)) {
+                file_put_contents($localRegularPath, file_get_contents($remoteRegularUrl));
+            }
+            if (!file_exists($localBoldPath)) {
+                file_put_contents($localBoldPath, file_get_contents($remoteBoldUrl));
+            }
+
+            $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+            $fontDirs = $defaultConfig['fontDir'];
+
+            $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
+            $fontData = $defaultFontConfig['fontdata'];
+
+            // جعل mPDF يقرأ الخطوط من مجلد /tmp المستقر بالسيرفر
+            $mpdf = new \Mpdf\Mpdf([
+                'mode'          => 'utf-8',
+                'format'        => 'A4',
+                'margin_left'   => 8,
+                'margin_right'  => 8,
+                'margin_top'    => 8,
+                'margin_bottom' => 8,
+                'tempDir'       => $tempDir,
+                'fontDir'       => array_merge($fontDirs, ['/tmp']),
+                'fontdata'      => array_merge($fontData, [
+                    'cairo' => [
+                        'R'      => 'Cairo-Regular.ttf',
+                        'B'      => 'Cairo-Bold.ttf',
+                        'useOTL' => 0xFF, // تشبيك الحروف العربية تلقائياً
+                    ]
+                ]),
+                'default_font' => 'cairo'
+            ]);
+
+            // كتابة الـ HTML وتوليد محتوى الـ PDF
+            $mpdf->WriteHTML($html);
+            $pdfContent = $mpdf->Output('', 'S');
 
         } catch (\Throwable $e) {
-
-            Log::error('PDF ERROR', [
+            Log::error('mPDF VERCEL ERROR', [
                 'message' => $e->getMessage(),
                 'trace'   => $e->getTraceAsString(),
             ]);
-
             throw $e;
         }
 
@@ -146,7 +185,6 @@ class ParentDashboardService
             'cached' => false,
         ];
     }
-
     private function getParentReportData($parentId): array
     {
         $children = Student::where('parent_id', $parentId)
@@ -291,14 +329,17 @@ class ParentDashboardService
             '/' .
             $fileName;
 
-        $response = Http::withHeaders([
-            'apikey'       => $key,
-            'Authorization'=> 'Bearer ' . $key,
-            'Content-Type' => 'application/pdf',
-        ])->withBody(
-            $pdfContent,
-            'application/pdf'
-        )->post($uploadUrl);
+        // 🎯 التعديل: محاولة الاتصال 3 مرات بين كل مرة ثانية واحدة، وزيادة وقت الانتظار لـ 30 ثانية
+        $response = Http::retry(3, 1000)
+            ->timeout(30)
+            ->withHeaders([
+                'apikey'       => $key,
+                'Authorization'=> 'Bearer ' . $key,
+                'Content-Type' => 'application/pdf',
+            ])->withBody(
+                $pdfContent,
+                'application/pdf'
+            )->post($uploadUrl);
 
         if (! $response->successful()) {
             throw new \Exception(
