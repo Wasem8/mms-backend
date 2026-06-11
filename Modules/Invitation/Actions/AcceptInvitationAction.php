@@ -30,6 +30,7 @@ class AcceptInvitationAction
                 'email' => $invitation->email,
                 'password' => Hash::make($data['password']),
                 'status' => 'active',
+                'email_verified_at' => now(),
             ]);
 
             $isNewUser = true;

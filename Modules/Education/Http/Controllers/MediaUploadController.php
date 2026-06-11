@@ -22,8 +22,8 @@ class MediaUploadController extends Controller
             'file' => [
                 'required',
                 'file',
-                'mimes:mp3,wav,m4a,ogg'
-            ]
+                'mimetypes:audio/mpeg,audio/wav,audio/x-wav,audio/ogg,audio/mp4,audio/x-m4a,audio/aac',
+            ],
         ]);
 
         $upload = $this->service
