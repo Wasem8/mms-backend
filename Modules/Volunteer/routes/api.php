@@ -44,7 +44,7 @@ Route::middleware('auth:api')->group(function () {
 
     // ─── Volunteer routes ───────────────────────────────────────────────────────
 
-    Route::group(function () {
+    Route::middleware('role:volunteer')->group(function () {
         // Browse open opportunities
         Route::get('volunteer/opportunities',                  [VolunteerOpportunityController::class, 'index']);
         Route::get('volunteer/opportunities/{id}',             [VolunteerOpportunityController::class, 'show']);

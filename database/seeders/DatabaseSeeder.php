@@ -31,6 +31,9 @@ class DatabaseSeeder extends Seeder
             FacilitiesSeeder::class,
             MosqueSpaceSeedSeeder::class,
             SettingSeeder::class,
+            \Modules\Donation\Database\Seeders\DonationDatabaseSeeder::class,
+            \Modules\Complaint\Database\Seeders\ComplaintDatabaseSeeder::class,
+            \Modules\MaintenanceRequest\Database\Seeders\MaintenanceRequestDatabaseSeeder::class,
 
         ]);
 

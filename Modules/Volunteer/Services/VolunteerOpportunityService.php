@@ -99,6 +99,12 @@ class VolunteerOpportunityService
 
         return DB::transaction(function () use ($application): VolunteerApplication {
             $updated = $this->applicationRepo->approve($application);
+
+            $opportunity = $this->opportunityRepo->findById($application->opportunity_id);
+            if ($opportunity && $opportunity->available_slots <= 0) {
+                $this->opportunityRepo->close($opportunity);
+            }
+
             event(new ApplicationStatusChanged($updated));
             return $updated;
         });

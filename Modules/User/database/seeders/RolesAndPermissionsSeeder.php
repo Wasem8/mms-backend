@@ -28,14 +28,15 @@ class RolesAndPermissionsSeeder extends Seeder
             'halaqa_supervisor',
             'teacher',
             'parent',
+            'volunteer',
             'guest'
         ];
 
         foreach ($roles as $role) {
-            Role::create([
-                'name' => $role,
-                'display_name' => ucfirst(str_replace('_', ' ', $role))
-            ]);
+            Role::firstOrCreate(
+                ['name' => $role],
+                ['display_name' => ucfirst(str_replace('_', ' ', $role))]
+            );
         }
 
         /*
@@ -76,10 +77,10 @@ class RolesAndPermissionsSeeder extends Seeder
         ];
 
         foreach ($permissions as $permission) {
-            Permission::create([
-                'name' => $permission,
-                'display_name' => ucfirst(str_replace('_', ' ', $permission))
-            ]);
+            Permission::firstOrCreate(
+                ['name' => $permission],
+                ['display_name' => ucfirst(str_replace('_', ' ', $permission))]
+            );
         }
 
         /*
@@ -93,6 +94,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $supervisor = Role::where('name', 'halaqa_supervisor')->first();
         $teacher = Role::where('name', 'teacher')->first();
         $parent = Role::where('name', 'parent')->first();
+        $volunteer = Role::where('name', 'volunteer')->first();
 
         $superAdmin->permissions()->sync(Permission::all());
 
@@ -125,6 +127,15 @@ class RolesAndPermissionsSeeder extends Seeder
             Permission::whereIn('name', [
                 'view_notifications',
                 'send_complaints'
+            ])->pluck('id')
+        );
+
+        $volunteer->permissions()->sync(
+            Permission::whereIn('name', [
+                'view_mosques',
+                'manage_maintenance',
+                'send_complaints',
+                'view_notifications',
             ])->pluck('id')
         );
 
@@ -171,13 +182,19 @@ class RolesAndPermissionsSeeder extends Seeder
                 'role' => 'parent',
                 'mosque_id' => null,
             ],
+            [
+                'name' => 'Volunteer',
+                'email' => 'volunteer@test.com',
+                'password' => 'password',
+                'role' => 'volunteer',
+                'mosque_id' => $mosque?->id,
+            ],
         ];
 
         foreach ($users as $data) {
 
-            $user = User::create([
+            $user = User::firstOrCreate(['email' => $data['email']], [
                 'name' => $data['name'],
-                'email' => $data['email'],
                 'password' => Hash::make($data['password']),
                 'email_verified_at' => now(),
                 'status' => 'active',
@@ -186,8 +203,9 @@ class RolesAndPermissionsSeeder extends Seeder
 
             $role = Role::where('name', $data['role'])->first();
 
-            // attach role (pivot role_user)
-            $user->roles()->attach($role->id);
+            if (!$user->roles()->where('role_id', $role->id)->exists()) {
+                $user->roles()->attach($role->id);
+            }
         }
     }
 }

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\Volunteer\Enums\OpportunityStatus;
 
 // use Modules\Volunteer\Database\Factories\VolunteerOpportunityFactory;
 
@@ -24,6 +25,18 @@ class VolunteerOpportunity extends Model
         'end_date',
         'status',
     ];
+
+    protected $casts = [
+        'status' => OpportunityStatus::class,
+    ];
+
+    protected $appends = ['available_slots'];
+
+    public function getAvailableSlotsAttribute(): int
+    {
+        $approved = $this->attributes['applications_count'] ?? $this->applications()->where('status', 'approved')->count();
+        return $this->required_volunteers - (int) $approved;
+    }
 
     public function applications(): HasMany
     {
