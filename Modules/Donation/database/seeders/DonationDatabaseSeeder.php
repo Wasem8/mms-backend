@@ -11,6 +11,9 @@ class DonationDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // $this->call([]);
+        $this->call([
+            CampaignSeeder::class,
+            DonationSeeder::class,
+        ]);
     }
 }

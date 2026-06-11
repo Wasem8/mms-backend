@@ -18,13 +18,14 @@ class EloquentVolunteerOpportunityRepository implements VolunteerOpportunityRepo
     #[\Override]
     public function findById(int $id): ?VolunteerOpportunity
     {
-        return $this->model->find($id);
+        return $this->model->withCount(['applications' => fn($q) => $q->where('status', 'approved')])->find($id);
     }
 
     #[\Override]
     public function findAllOpen(int $mosqueId, int $perPage = 15): LengthAwarePaginator
     {
         return $this->model
+            ->withCount(['applications' => fn($q) => $q->where('status', 'approved')])
             ->where('mosque_id', $mosqueId)
             ->where('status', OpportunityStatus::Open)
             ->where('end_date', '>=', now()->toDateString())
@@ -36,6 +37,7 @@ class EloquentVolunteerOpportunityRepository implements VolunteerOpportunityRepo
     public function findAllForManager(int $mosqueId, int $perPage = 15): LengthAwarePaginator
     {
         return $this->model
+            ->withCount(['applications' => fn($q) => $q->where('status', 'approved')])
             ->where('mosque_id', $mosqueId)
             ->latest()
             ->paginate($perPage);

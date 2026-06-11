@@ -30,6 +30,14 @@ class VolunteerOpportunity extends Model
         'status' => OpportunityStatus::class,
     ];
 
+    protected $appends = ['available_slots'];
+
+    public function getAvailableSlotsAttribute(): int
+    {
+        $approved = $this->attributes['applications_count'] ?? $this->applications()->where('status', 'approved')->count();
+        return $this->required_volunteers - (int) $approved;
+    }
+
     public function applications(): HasMany
     {
         return $this->hasMany(VolunteerApplication::class, 'opportunity_id');
