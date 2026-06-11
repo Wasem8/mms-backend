@@ -17,10 +17,16 @@ class StoreEvaluationRequest extends FormRequest
             'client_uuid'  => 'required|uuid',
             'score' => 'nullable|integer|min:0|max:100',
             'notes' => 'nullable|string',
+            'dimensions' => 'nullable|array',
+            'dimensions.tajweed' => 'nullable|in:excellent,good,needs_work',
+            'dimensions.hifz' => 'nullable|in:excellent,good,needs_work',
+            'dimensions.fluency' => 'nullable|in:excellent,good,needs_work',
+            'dimensions.makharij' => 'nullable|in:excellent,good,needs_work',
             'evaluated_at' => 'nullable|date|date_format:Y-m-d',
             'surah_name'   => 'required|string|max:100',
             'from_ayah'    => 'required|integer|min:1',
             'to_ayah'      => 'required|integer|min:1|gte:from_ayah',
+            'voice_note_id' => 'nullable|integer|exists:media_uploads,id',
         ];
     }
 

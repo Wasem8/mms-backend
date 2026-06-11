@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\Education\Http\Controllers\AttendanceExcuseController;
 use Modules\Education\Http\Controllers\EvaluationController;
 use Modules\Education\Http\Controllers\HalaqaController;
+use Modules\Education\Http\Controllers\MediaUploadController;
 use Modules\Education\Http\Controllers\StudentController;
 use Modules\Education\Http\Controllers\AttendanceController;
 use Modules\Education\Http\Controllers\SyncController;
@@ -46,6 +47,7 @@ Route::prefix('education')->group(function () {
     Route::middleware(['auth:api', 'role:teacher'])->group(function () {
         Route::post('attendance', [AttendanceController::class, 'storeBulk']);
         Route::post('/sync', [SyncController::class, 'sync']);
+        Route::post('uploads/audio', [MediaUploadController::class, 'uploadVoice']);
     });
 
 

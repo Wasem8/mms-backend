@@ -22,6 +22,8 @@ return new class extends Migration
             $table->integer('score')->nullable();
             $table->text('notes')->nullable();
             $table->timestamp('evaluated_at')->nullable();
+            $table->json('dimensions')->nullable();
+            $table->foreignId('voice_note_id')->nullable()->constrained('media_uploads')->nullOnDelete();
             $table->timestamps();
         });
     }

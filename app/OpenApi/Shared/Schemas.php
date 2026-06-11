@@ -181,6 +181,32 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'client_uuid', type: 'integer', example: '550e8400-e29b-41d4-a716-446655440000', nullable: true),
         new OA\Property(property: 'score', type: 'integer', example: 98, nullable: true),
         new OA\Property(property: 'notes', type: 'string', example: 'مستوى ممتاز ومشاركة فعالة', nullable: true),
+        new OA\Property(
+            property: 'dimensions',
+            type: 'object',
+            nullable: true,
+            properties: [
+
+                new OA\Property(property: 'tajweed', type: 'string'),
+                new OA\Property(property: 'hifz', type: 'string'),
+                new OA\Property(property: 'fluency', type: 'string'),
+                new OA\Property(property: 'makharij', type: 'string'),
+            ]
+        ),
+
+        new OA\Property(
+            property: 'voice_note_id',
+            type: 'integer',
+            nullable: true,
+            example: 15
+        ),
+
+        new OA\Property(
+            property: 'voice_note_url',
+            type: 'string',
+            nullable: true,
+            example: 'https://cdn.example.com/audio/15.m4a'
+        ),
 
         new OA\Property(property: 'surah_name', type: 'string', example: 'البقرة', nullable: true),
         new OA\Property(property: 'from_ayah', type: 'integer', example: 1, nullable: true),

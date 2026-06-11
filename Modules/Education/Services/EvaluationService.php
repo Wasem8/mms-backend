@@ -8,6 +8,7 @@ use Modules\Education\Events\EvaluationUpdated;
 use Modules\Education\Events\StudentEvaluated;
 use Modules\Education\Models\Evaluation;
 use Modules\Education\Models\Halaqa;
+use Modules\Education\Models\MediaUpload;
 
 class EvaluationService
 {
@@ -15,7 +16,6 @@ class EvaluationService
     {
         $user = auth()->user();
 
-        // 🎯 التعديل هنا: منع التكرار مع تحميل العلاقات لضمان سلامة الـ Resource
         if (!empty($data['client_uuid'])) {
             $existingEvaluation = Evaluation::with(['student', 'halaqa'])
                 ->where('client_uuid', $data['client_uuid'])
@@ -37,28 +37,36 @@ class EvaluationService
             ]);
         }
 
-        if (! $halaqa->students->pluck('id')->contains($data['student_id'])) {
+        if (! $halaqa->students->contains('id', $data['student_id'])) {
             throw ValidationException::withMessages([
                 'student_id' => [__('messages.student_not_in_halaqa')]
             ]);
         }
 
-        // نعتمد دائماً على الـ client_uuid كمعيار وحيد وفريد للبحث إن وجد
-        $searchCriteria = !empty($data['client_uuid'])
-            ? ['client_uuid' => $data['client_uuid']]
-            : [
-                'halaqa_id' => $data['halaqa_id'],
-                'student_id' => $data['student_id'],
-                'evaluated_at' => $data['evaluated_at'] ?? now()->toDateString(),
-            ];
-
-        $existing = Evaluation::where(
-            'client_uuid',
-            $data['client_uuid']
-        )->first();
+        $existing = Evaluation::with([
+            'student',
+            'halaqa',
+            'voiceNote'
+        ])->where('client_uuid', $data['client_uuid'])
+            ->first();
 
         if ($existing) {
-            return $existing;
+            return [
+                'evaluation' => $existing,
+                'is_duplicate' => true,
+            ];
+        }
+        if (!empty($data['voice_note_id'])) {
+
+            MediaUpload::where(
+                'id',
+                $data['voice_note_id']
+            )
+                ->where(
+                    'user_id',
+                    auth()->id()
+                )
+                ->firstOrFail();
         }
 
         $evaluation = Evaluation::create([
@@ -68,13 +76,17 @@ class EvaluationService
             'evaluated_at' => $data['evaluated_at'],
             'score' => $data['score'],
             'notes' => $data['notes'] ?? null,
-            'surah_name' => $data['surah_name'],
-            'from_ayah' => $data['from_ayah'],
-            'to_ayah' => $data['to_ayah'],
+
+            'surah_name' => $data['surah_name'] ?? null,
+            'from_ayah' => $data['from_ayah'] ?? null,
+            'to_ayah' => $data['to_ayah'] ?? null,
+
+            // ✳️ NEW FIELD
+            'dimensions' => $data['dimensions'] ?? null,
+            'voice_note_id' => $data['voice_note_id'] ?? null,
         ]);
 
-        // تحميل العلاقات للسجل الجديد لكي يقرأها الـ Resource بدون مشاكل
-        $evaluation->load(['student', 'halaqa']);
+        $evaluation->load(['student', 'halaqa', 'voiceNote']);
 
         event(new StudentEvaluated($evaluation));
 
@@ -97,7 +109,7 @@ class EvaluationService
 
     public function getTeacherEvaluations($teacherId, $filters = [])
     {
-        return Evaluation::with(['student', 'halaqa'])
+        return Evaluation::with(['student', 'halaqa', 'voiceNote'])
             ->whereHas('halaqa', fn($q) => $q->where('teacher_id', $teacherId))
             ->when(!empty($filters['date']), fn($q) => $q->whereDate('evaluated_at', $filters['date']))
             ->latest('evaluated_at')
@@ -145,13 +157,31 @@ class EvaluationService
             ]);
         }
 
+        if (!empty($data['voice_note_id'])) {
+
+            MediaUpload::where(
+                'id',
+                $data['voice_note_id']
+            )
+                ->where(
+                    'user_id',
+                    auth()->id()
+                )
+                ->firstOrFail();
+        }
+
         $evaluation->update([
             'score' => $data['score'] ?? $evaluation->score,
             'notes' => $data['notes'] ?? $evaluation->notes,
+
             'evaluated_at' => $data['evaluated_at'] ?? $evaluation->evaluated_at,
             'surah_name' => $data['surah_name'] ?? $evaluation->surah_name,
             'from_ayah' => $data['from_ayah'] ?? $evaluation->from_ayah,
             'to_ayah' => $data['to_ayah'] ?? $evaluation->to_ayah,
+
+            // ✳️ NEW FIELD
+            'dimensions' => $data['dimensions'] ?? $evaluation->dimensions,
+            'voice_note_id' => $data['voice_note_id'] ?? $evaluation->voice_note_id,
         ]);
 
         event(new EvaluationUpdated($evaluation));
@@ -162,7 +192,11 @@ class EvaluationService
     public function delete($id)
     {
         $user = auth()->user();
-        $evaluation = Evaluation::findOrFail($id);
+        $evaluation = Evaluation::find($id);
+
+        if (!$evaluation) {
+            return false;
+        }
 
         if ($user->isTeacher() && $evaluation->halaqa->teacher_id !== $user->id) {
             throw new \Exception(__('messages.unauthorized_delete_evaluation'));
