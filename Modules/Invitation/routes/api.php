@@ -6,9 +6,12 @@ use Modules\Invitation\Http\Controllers\InvitationController;
 
 Route::prefix('invitations')->group(function () {
 
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware('auth:api')->group(function () {
         Route::post('/send', [InvitationController::class, 'send']);
     });
 
-    Route::post('/accept', [InvitationController::class, 'accept']);
+    Route::middleware('web')->group(function () {
+        Route::get('/accept', [InvitationController::class, 'showAcceptForm'])->name('invitations.accept_form');
+        Route::post('/accept', [InvitationController::class, 'accept'])->name('invitations.accept_process');
+    });
 });
