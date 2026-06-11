@@ -35,6 +35,10 @@ class InvitationNotification extends Notification
         // رابط الشعار المعتمد الخاص بمنصتكم
         $logoUrl = 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/images/logo.png';
 
+        // تحميل علاقة المسجد للتأكد من توفر البيانات في الـ view
+        // ملاحظة: تأكد من وجود علاقة باسم mosque() داخل موديل Invitation
+        $this->invitation->loadMissing('mosque');
+
         // استخدام view مخصص بداخل MailMessage يمنحنا تحكماً كاملاً بالألوان الخضراء والشعار المخصص
         return (new MailMessage)
             ->subject('دعوة للانضمام إلى منصة وَصْل التعليمية 🌟')
