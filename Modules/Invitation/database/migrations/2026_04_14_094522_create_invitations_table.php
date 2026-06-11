@@ -12,10 +12,12 @@ return new class extends Migration {
 
             $table->string('email');
             $table->string('role');
+            $table->foreignId('mosque_id')->constrained('mosques')->onDelete('cascade');
 
             $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
 
             $table->string('token')->unique();
+
 
             $table->timestamp('expires_at')->nullable();
             $table->timestamp('accepted_at')->nullable();

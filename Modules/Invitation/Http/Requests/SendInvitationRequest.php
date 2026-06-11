@@ -11,9 +11,11 @@ class SendInvitationRequest extends FormRequest
      */
     public function rules(): array
     {
+        $user = $this->user();
         return [
             'email' => 'required|email',
             'role' => 'required|string|exists:roles,name',
+            'mosque_id' => ($user && $user->mosque_id) ? 'nullable|exists:mosques,id' : 'required|exists:mosques,id',
         ];
     }
 
@@ -23,5 +25,13 @@ class SendInvitationRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    public function messages(): array
+    {
+        return [
+            'mosque_id.required' => 'يرجى تحديد المسجد المراد إرسال الدعوة إليه.',
+            'mosque_id.exists'   => 'المسجد المحدد غير موجود في النظام.',
+        ];
     }
 }

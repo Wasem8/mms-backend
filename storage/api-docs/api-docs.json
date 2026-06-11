@@ -8492,7 +8492,7 @@
                     "Invitations"
                 ],
                 "summary": "Send invitation to user",
-                "description": "Send invitation email. Prevents duplicate active invitations for same email.",
+                "description": "Send invitation email based on a strict hierarchy:\n\n1. **Super Admin** (Zone Manager): Can ONLY invite a `mosque_manager`. (Requires `mosque_id` in request)\n2. **Mosque Manager**: Can invite a `halaqa_supervisor` or `teacher`.\n3. **Halaqa Supervisor**: Can ONLY invite a `teacher`.\n\n**Business Rules:** Each mosque is strictly limited to ONE active/pending Mosque Manager and ONE active/pending Halaqa Supervisor.",
                 "operationId": "sendInvitation",
                 "requestBody": {
                     "required": true,
@@ -8510,16 +8510,20 @@
                                         "example": "user@test.com"
                                     },
                                     "role": {
-                                        "description": "User role to assign",
+                                        "description": "The role assigned to the invited user. Allowed values: mosque_manager, halaqa_supervisor, teacher.",
                                         "type": "string",
-                                        "example": "teacher",
+                                        "example": "mosque_manager",
                                         "enum": [
-                                            "super_admin",
                                             "mosque_manager",
                                             "halaqa_supervisor",
-                                            "teacher",
-                                            "parent"
+                                            "teacher"
                                         ]
+                                    },
+                                    "mosque_id": {
+                                        "description": "Required ONLY if the sender is a Super Admin (Zone Manager). For other roles, it is handled automatically from their profile.",
+                                        "type": "integer",
+                                        "example": 5,
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -8554,19 +8558,11 @@
                                                 },
                                                 "role": {
                                                     "type": "string",
-                                                    "example": "teacher"
+                                                    "example": "mosque_manager"
                                                 },
-                                                "token": {
-                                                    "type": "string",
-                                                    "example": "abc123token"
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "enum": [
-                                                        "pending",
-                                                        "accepted",
-                                                        "rejected"
-                                                    ]
+                                                "mosque_id": {
+                                                    "type": "integer",
+                                                    "example": 5
                                                 },
                                                 "created_at": {
                                                     "type": "string",
@@ -8616,7 +8612,7 @@
                         }
                     },
                     "422": {
-                        "description": "Validation error - Request validation failed",
+                        "description": "Validation error - Request validation failed or hierarchy/limit violation",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -8632,8 +8628,8 @@
                                         "data": {
                                             "type": "object",
                                             "example": {
-                                                "field_name": [
-                                                    "Error message"
+                                                "role": [
+                                                    "لا يمكن إرسال الدعوة. هذا المسجد يمتلك (مدير مسجد) نشط بالفعل."
                                                 ]
                                             }
                                         },
