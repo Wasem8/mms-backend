@@ -15,9 +15,8 @@ class StoreCashDonationRequest extends FormRequest
             'mosque_id' => ['required', 'integer', 'exists:mosques,id'],
             'user_id'          => ['nullable', 'integer', 'exists:users,id'], // مسموح هنا للمدير
             'donor_name'       => ['nullable', 'string', 'max:255'],
-            'donation_type'    => ['required', 'in:cash,in_kind'], // نقدي للصندوق، أو عيني للمسجد
+            'donation_type'    => ['required', 'in:cash,in_kind'],  
 
-            // المبلغ مطلوب فقط إذا كان التبرع نقدياً
             'amount'           => ['required_if:donation_type,cash', 'numeric', 'min:0.01'],
 
             // وصف البند مطلوب فقط إذا كان التبرع عينياً

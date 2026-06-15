@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\User\Models\User;
+use Modules\Volunteer\Enums\ApplicationStatus;
 
 // use Modules\Volunteer\Database\Factories\VolunteerApplicationFactory;
 
@@ -24,6 +25,10 @@ class VolunteerApplication extends Model
         'opportunity_id',
         'volunteer_id',
         'status',
+    ];
+
+    protected $casts = [
+        'status' => ApplicationStatus::class,
     ];
 
     public function opportunity(): BelongsTo

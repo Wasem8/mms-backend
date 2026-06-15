@@ -16486,6 +16486,9 @@
                 "operationId": "getVolunteerOpportunities",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "required": false,
@@ -16621,6 +16624,11 @@
                 "summary": "Create a new volunteer opportunity",
                 "description": "Requires `mosque_manager` role.",
                 "operationId": "createVolunteerOpportunity",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -16719,6 +16727,9 @@
                 "summary": "Get a single volunteer opportunity",
                 "operationId": "getVolunteerOpportunity",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -16826,6 +16837,9 @@
                 "operationId": "updateVolunteerOpportunity",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "id",
                         "in": "path",
                         "required": true,
@@ -16925,6 +16939,9 @@
                 "operationId": "applyToVolunteerOpportunity",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "opportunityId",
                         "in": "path",
                         "required": true,
@@ -16987,6 +17004,9 @@
                 "summary": "List my volunteer applications",
                 "operationId": "getMyVolunteerApplications",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "page",
                         "in": "query",
@@ -17083,6 +17103,9 @@
                 "description": "Requires `mosque_manager` role.",
                 "operationId": "getManagerVolunteerOpportunities",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "page",
                         "in": "query",
@@ -17204,6 +17227,9 @@
                 "operationId": "closeVolunteerOpportunity",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "id",
                         "in": "path",
                         "required": true,
@@ -17267,6 +17293,9 @@
                 "description": "Requires `mosque_manager` role.",
                 "operationId": "getOpportunityApplications",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "opportunityId",
                         "in": "path",
@@ -17379,6 +17408,9 @@
                 "operationId": "approveVolunteerApplication",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "applicationId",
                         "in": "path",
                         "required": true,
@@ -17443,6 +17475,9 @@
                 "operationId": "rejectVolunteerApplication",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "applicationId",
                         "in": "path",
                         "required": true,
@@ -17505,6 +17540,9 @@
                 "summary": "List tasks for an approved application",
                 "operationId": "getVolunteerTasks",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "applicationId",
                         "in": "path",
@@ -17593,6 +17631,11 @@
                 "summary": "Assign a task to a volunteer",
                 "description": "Requires `mosque_manager` role.",
                 "operationId": "createVolunteerTask",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -17692,6 +17735,9 @@
                 "operationId": "completeVolunteerTask",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "taskId",
                         "in": "path",
                         "required": true,
@@ -17751,6 +17797,11 @@
                 "summary": "Log volunteer hours",
                 "description": "Requires `mosque_manager` role.",
                 "operationId": "logVolunteerHours",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -17842,6 +17893,11 @@
                 ],
                 "summary": "Get my volunteer hour logs",
                 "operationId": "getMyVolunteerLogs",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Logs retrieved successfully",
@@ -17919,6 +17975,9 @@
                 "description": "Requires `mosque_manager` role.",
                 "operationId": "getTotalVolunteerHours",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "volunteerId",
                         "in": "path",
@@ -18006,6 +18065,9 @@
                 "description": "Requires `mosque_manager` role.",
                 "operationId": "issueVolunteerCertificate",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "volunteerId",
                         "in": "path",
@@ -18102,6 +18164,11 @@
                 ],
                 "summary": "Get my volunteer certificates",
                 "operationId": "getMyVolunteerCertificates",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Certificates retrieved successfully",

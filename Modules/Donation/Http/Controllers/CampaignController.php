@@ -37,7 +37,6 @@ class CampaignController extends Controller
 
     public function showByMosque($mosqueId)
     {
-       // dd('أنا داخل الكنترولر، ورقم المسجد الممرر هو: ' . $mosqueId);
         $campaigns = $this->campaignService->getCampaignsByMosque($mosqueId);
         return ApiResponse::success(CampaignResource::collection($campaigns), 'Campaigns retrieved successfully');
     }
@@ -52,6 +51,12 @@ class CampaignController extends Controller
     {
         $campaign = $this->campaignService->updateCampaign($id, $request->all());
         return ApiResponse::success(new CampaignResource($campaign), 'Campaign updated successfully');
+    }
+
+    public function stats(int $mosqueId)
+    {
+        $data = $this->campaignService->getStatsByMosque($mosqueId);
+        return ApiResponse::success($data, 'Success');
     }
 
     public function analytics(int $id)

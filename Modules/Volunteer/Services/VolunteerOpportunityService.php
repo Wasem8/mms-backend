@@ -78,7 +78,7 @@ class VolunteerOpportunityService
 
         if ($opportunity->status->value === 'closed') {
             throw ValidationException::withMessages([
-                'opportunity' => 'This opportunity is closed for applications.',
+                'opportunity' => __('messages.opportunity_closed_app'),
             ]);
         }
 
@@ -86,7 +86,7 @@ class VolunteerOpportunityService
 
         if ($existing !== null) {
             throw ValidationException::withMessages([
-                'application' => 'You already have a pending application for this opportunity.',
+                'application' => __('messages.pending_application_exists'),
             ]);
         }
 

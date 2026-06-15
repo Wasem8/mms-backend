@@ -4,8 +4,10 @@ namespace Modules\Volunteer\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\Mosque\Models\Mosque;
 use Modules\Volunteer\Enums\OpportunityStatus;
 
 // use Modules\Volunteer\Database\Factories\VolunteerOpportunityFactory;
@@ -36,6 +38,11 @@ class VolunteerOpportunity extends Model
     {
         $approved = $this->attributes['applications_count'] ?? $this->applications()->where('status', 'approved')->count();
         return $this->required_volunteers - (int) $approved;
+    }
+
+    public function mosque(): BelongsTo
+    {
+        return $this->belongsTo(Mosque::class, 'mosque_id');
     }
 
     public function applications(): HasMany
