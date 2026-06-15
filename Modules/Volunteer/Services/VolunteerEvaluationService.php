@@ -9,7 +9,7 @@ use Modules\Volunteer\Models\VolunteerLog;
 use Modules\Volunteer\Repositories\Contracts\VolunteerEvaluationRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
 
 class VolunteerEvaluationService
@@ -39,7 +39,7 @@ class VolunteerEvaluationService
 
         if ($existing !== null) {
             throw ValidationException::withMessages([
-                'certificate' => 'A certificate has already been issued for this volunteer and opportunity.',
+                'certificate' => __('messages.certificate_already_exists'),
             ]);
         }
 
@@ -47,7 +47,7 @@ class VolunteerEvaluationService
 
         if ($totalHours <= 0) {
             throw ValidationException::withMessages([
-                'hours' => 'No logged hours found. Cannot issue a certificate.',
+                'hours' => __('messages.no_hours_for_certificate'),
             ]);
         }
 
@@ -67,26 +67,59 @@ class VolunteerEvaluationService
         return $this->evaluationRepo->findCertificatesByVolunteer($volunteerId);
     }
 
-    /**
-     * Generate a PDF certificate and store it. Returns the public URL.
-     * Replace the body of this method with a real PDF library (e.g. Barryvdh\LaravelDompdf).
-     */
     private function generateCertificatePdf(int $volunteerId, int $opportunityId, float $totalHours): string
     {
-        // Example stub — swap for DomPDF / Snappy in production:
-        //
-        // $pdf = Pdf::loadView('volunteer::certificate', [
-        //     'volunteer_id'   => $volunteerId,
-        //     'opportunity_id' => $opportunityId,
-        //     'total_hours'    => $totalHours,
-        //     'issued_at'      => now()->format('Y-m-d'),
-        // ]);
-        //
-        // $filename = "certificates/volunteer_{$volunteerId}_opportunity_{$opportunityId}.pdf";
-        // Storage::disk('s3')->put($filename, $pdf->output());
-        // return Storage::disk('s3')->url($filename);
+        $volunteer = \Modules\User\Models\User::find($volunteerId);
+        $opportunity = \Modules\Volunteer\Models\VolunteerOpportunity::with('mosque')->find($opportunityId);
 
-        $filename = "certificates/volunteer_{$volunteerId}_opportunity_{$opportunityId}.pdf";
-        return Storage::url($filename);
+        if (!$volunteer || !$opportunity) {
+            throw new \RuntimeException(__('messages.volunteer_not_found'));
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('volunteer::certificate', [
+            'volunteerName'    => $volunteer->name,
+            'opportunityTitle' => $opportunity->title,
+            'mosqueName'       => $opportunity->mosque?->name ?? '—',
+            'totalHours'       => $totalHours,
+            'issuedAt'         => now()->format('Y/m/d'),
+        ]);
+
+        $pdfContent = $pdf->output();
+
+        $fileName = "certificates/volunteer_{$volunteerId}_opportunity_{$opportunityId}.pdf";
+
+        $this->uploadPdfToSupabase($pdfContent, $fileName);
+
+        return $this->createPublicUrl($fileName);
+    }
+
+    private function uploadPdfToSupabase(string $pdfContent, string $fileName): void
+    {
+        $baseUrl = config('services.supabase.url');
+        $bucket  = config('services.supabase.bucket');
+        $key     = config('services.supabase.key');
+
+        $uploadUrl = $baseUrl . '/storage/v1/object/' . $bucket . '/' . $fileName;
+
+        $response = Http::retry(3, 1000)
+            ->timeout(60)
+            ->withHeaders([
+                'apikey'       => $key,
+                'Authorization'=> 'Bearer ' . $key,
+                'Content-Type' => 'application/pdf',
+            ])->withBody($pdfContent, 'application/pdf')
+            ->post($uploadUrl);
+
+        if (!$response->successful()) {
+            throw new \RuntimeException(__('messages.upload_failed', ['error' => $response->body()]));
+        }
+    }
+
+    private function createPublicUrl(string $fileName): string
+    {
+        $baseUrl = config('services.supabase.url');
+        $bucket  = config('services.supabase.bucket');
+
+        return $baseUrl . '/storage/v1/object/public/' . $bucket . '/' . $fileName;
     }
 }

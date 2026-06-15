@@ -19,20 +19,20 @@ class VolunteerTaskController extends Controller
     public function index(string $applicationId)
     {
        $tasks = $this->service->listForApplication((int) $applicationId);
-       return ApiResponse::success($tasks, 'Tasks retrieved successfully.', 200);
+       return ApiResponse::success($tasks, __('messages.tasks_retrieved'), 200);
     }
 
     /** Manager: assign a new task */
     public function store(AssignTaskRequest $request)
     {
         $task = $this->service->assign($request->toDTO());
-        return ApiResponse::success($task, 'Task assigned successfully.', 201);
+        return ApiResponse::success($task, __('messages.task_assigned'), 201);
     }
 
     /** Volunteer: mark their own task as completed */
     public function complete(string $taskId)
     {
         $task = $this->service->markCompleted((int) $taskId);
-        return ApiResponse::success($task, 'Task marked as completed successfully.', 200);
+        return ApiResponse::success($task, __('messages.task_completed'), 200);
     }
 }

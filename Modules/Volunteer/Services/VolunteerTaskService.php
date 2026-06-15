@@ -31,7 +31,7 @@ class VolunteerTaskService
 
         if ($application->status !== ApplicationStatus::Approved) {
             throw ValidationException::withMessages([
-                'application' => 'Tasks can only be assigned to approved applications.',
+                'application' => __('messages.task_only_approved'),
             ]);
         }
 

@@ -18,6 +18,7 @@ class VolunteerEndpoints
         description: 'Returns a paginated list of all open volunteer opportunities. Requires authentication.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'page',     in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 1)),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 15)),
         ],
@@ -71,6 +72,7 @@ class VolunteerEndpoints
         summary: 'Get a single volunteer opportunity',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1)),
         ],
         responses: [
@@ -114,6 +116,7 @@ class VolunteerEndpoints
         summary: 'Apply to a volunteer opportunity',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'opportunityId', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1)),
         ],
         responses: [
@@ -143,6 +146,7 @@ class VolunteerEndpoints
         summary: 'List my volunteer applications',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'page',     in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 1)),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 15)),
         ],
@@ -184,6 +188,7 @@ class VolunteerEndpoints
         description: 'Requires `mosque_manager` role.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'page',     in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 1)),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 15)),
         ],
@@ -228,6 +233,9 @@ class VolunteerEndpoints
         summary: 'Create a new volunteer opportunity',
         description: 'Requires `mosque_manager` role.',
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -270,6 +278,7 @@ class VolunteerEndpoints
         description: 'Requires `mosque_manager` role.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1)),
         ],
         requestBody: new OA\RequestBody(
@@ -311,6 +320,7 @@ class VolunteerEndpoints
         description: 'Marks the opportunity as closed. No more applications will be accepted. Requires `mosque_manager` role.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1)),
         ],
         responses: [
@@ -343,6 +353,7 @@ class VolunteerEndpoints
         description: 'Requires `mosque_manager` role.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'opportunityId', in: 'path',  required: true,  schema: new OA\Schema(type: 'integer', example: 1)),
             new OA\Parameter(name: 'page',          in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 1)),
             new OA\Parameter(name: 'per_page',      in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 15)),
@@ -385,6 +396,7 @@ class VolunteerEndpoints
         description: 'Requires `mosque_manager` role.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'applicationId', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 5)),
         ],
         responses: [
@@ -415,6 +427,7 @@ class VolunteerEndpoints
         description: 'Requires `mosque_manager` role.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'applicationId', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 5)),
         ],
         responses: [
@@ -446,6 +459,7 @@ class VolunteerEndpoints
         summary: 'List tasks for an approved application',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'applicationId', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 5)),
         ],
         responses: [
@@ -484,6 +498,9 @@ class VolunteerEndpoints
         summary: 'Assign a task to a volunteer',
         description: 'Requires `mosque_manager` role.',
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -531,6 +548,7 @@ class VolunteerEndpoints
         summary: 'Mark a task as completed',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'taskId', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 3)),
         ],
         responses: [
@@ -561,6 +579,9 @@ class VolunteerEndpoints
         summary: 'Log volunteer hours',
         description: 'Requires `mosque_manager` role.',
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -600,6 +621,9 @@ class VolunteerEndpoints
         tags: ['Volunteer Evaluation'],
         summary: 'Get my volunteer hour logs',
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
         responses: [
             new OA\Response(
                 response: 200,
@@ -637,6 +661,7 @@ class VolunteerEndpoints
         description: 'Requires `mosque_manager` role.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'volunteerId',   in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 12)),
             new OA\Parameter(name: 'opportunityId', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1)),
         ],
@@ -676,6 +701,7 @@ class VolunteerEndpoints
         description: 'Requires `mosque_manager` role.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'volunteerId',   in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 12)),
             new OA\Parameter(name: 'opportunityId', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1)),
         ],
@@ -716,6 +742,9 @@ class VolunteerEndpoints
         tags: ['Volunteer Evaluation'],
         summary: 'Get my volunteer certificates',
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
         responses: [
             new OA\Response(
                 response: 200,

@@ -229,28 +229,38 @@ class DonationsEndpoints
                             properties: [
                                 new OA\Property(
                                     property: 'total_donations',
-                                    type: 'number',
-                                    format: 'float',
-                                    example: 125400,
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'value', type: 'number', format: 'float', example: 125400),
+                                        new OA\Property(property: 'growth_percent', type: 'number', format: 'float', example: 12.5),
+                                    ],
                                     description: 'إجمالي التبرعات — all-time completed cash donations'
                                 ),
                                 new OA\Property(
                                     property: 'monthly_donations',
-                                    type: 'number',
-                                    format: 'float',
-                                    example: 45200,
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'value', type: 'number', format: 'float', example: 45200),
+                                        new OA\Property(property: 'growth_percent', type: 'number', format: 'float', example: -3.2),
+                                    ],
                                     description: 'تبرعات هذا الشهر — completed cash donations this month'
                                 ),
                                 new OA\Property(
                                     property: 'active_campaigns',
-                                    type: 'integer',
-                                    example: 12,
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'value', type: 'integer', example: 12),
+                                        new OA\Property(property: 'change', type: 'integer', example: 2, description: 'عدد الحملات التي زادت/نقصت عن الشهر الماضي'),
+                                    ],
                                     description: 'حملات نشطة — campaigns with status = active'
                                 ),
                                 new OA\Property(
                                     property: 'new_donors',
-                                    type: 'integer',
-                                    example: 85,
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'value', type: 'integer', example: 85),
+                                        new OA\Property(property: 'growth_percent', type: 'number', format: 'float', example: 25.0),
+                                    ],
                                     description: 'متبرعون جدد — distinct donor_name values this month (فاعل خير counts as 1)'
                                 ),
                             ]

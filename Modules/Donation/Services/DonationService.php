@@ -75,59 +75,55 @@ class DonationService
     public function getPageStats(int $mosqueId): array
     {
         $now = now();
+        $prev = now()->subMonth();
 
-        // إجمالي التبرعات - Total all-time cash donations
-        $totalDonations = Donation::where('mosque_id', $mosqueId)
+        // ── Helper: monthly donations for a given year/month ─────────────────
+        $monthlyQuery = fn(int $year, int $month) => Donation::where('mosque_id', $mosqueId)
             ->where('status', 'completed')
             ->where('donation_type', 'cash')
+            ->where(fn($q) => $q
+                ->where(fn($q1) => $q1->whereYear('completed_at', $year)->whereMonth('completed_at', $month))
+                ->orWhere(fn($q2) => $q2->whereNull('completed_at')->whereYear('created_at', $year)->whereMonth('created_at', $month))
+            );
+
+        // ── Helper: new donors for a given year/month ────────────────────────
+        $donorsQuery = fn(int $year, int $month) => Donation::where('mosque_id', $mosqueId)
+            ->where('status', 'completed')
+            ->where(fn($q) => $q
+                ->where(fn($q1) => $q1->whereYear('completed_at', $year)->whereMonth('completed_at', $month))
+                ->orWhere(fn($q2) => $q2->whereNull('completed_at')->whereYear('created_at', $year)->whereMonth('created_at', $month))
+            )
+            ->distinct('donor_name');
+
+        // ── Total all-time ───────────────────────────────────────────────────
+        $totalDonations    = Donation::where('mosque_id', $mosqueId)->where('status', 'completed')->where('donation_type', 'cash')->sum('base_amount');
+        $prevTotalDonations = Donation::where('mosque_id', $mosqueId)->where('status', 'completed')->where('donation_type', 'cash')
+            ->where('completed_at', '<', $prev->startOfMonth()->toDateTimeString())
             ->sum('base_amount');
 
-        // تبرعات هذا الشهر - This month cash donations
-        $monthlyDonations = Donation::where('mosque_id', $mosqueId)
-            ->where('status', 'completed')
-            ->where('donation_type', 'cash')
-            ->where(function ($q) use ($now) {
-                $q->where(
-                    fn($q1) => $q1
-                        ->whereYear('completed_at',  $now->year)
-                        ->whereMonth('completed_at', $now->month)
-                )
-                    ->orWhere(
-                        fn($q2) => $q2
-                            ->whereNull('completed_at')
-                            ->whereYear('created_at',  $now->year)
-                            ->whereMonth('created_at', $now->month)
-                    );
-            })
-            ->sum('base_amount');
+        // ── This month / Last month donations ────────────────────────────────
+        $thisMonth  = (float) $monthlyQuery($now->year, $now->month)->sum('base_amount');
+        $lastMonth  = (float) $monthlyQuery($prev->year, $prev->month)->sum('base_amount');
 
-        $newDonors = Donation::where('mosque_id', $mosqueId)
-            ->where('status', 'completed')
-            ->where(function ($q) use ($now) {
-                $q->where(
-                    fn($q1) => $q1
-                        ->whereYear('completed_at',  $now->year)
-                        ->whereMonth('completed_at', $now->month)
-                )
-                    ->orWhere(
-                        fn($q2) => $q2
-                            ->whereNull('completed_at')
-                            ->whereYear('created_at',  $now->year)
-                            ->whereMonth('created_at', $now->month)
-                    );
-            })
-            ->distinct('donor_name')
-            ->count('donor_name');
-        // حملات نشطة - Active campaigns
-        $activeCampaigns = Campaign::where('mosque_id', $mosqueId)
+        // ── New donors ───────────────────────────────────────────────────────
+        $thisDonors = (int) $donorsQuery($now->year, $now->month)->count('donor_name');
+        $lastDonors = (int) $donorsQuery($prev->year, $prev->month)->count('donor_name');
+
+        // ── Active campaigns ─────────────────────────────────────────────────
+        $activeCampaigns  = (int) Campaign::where('mosque_id', $mosqueId)->where('status', 'active')->count();
+        $prevActive       = (int) Campaign::where('mosque_id', $mosqueId)
             ->where('status', 'active')
+            ->where('created_at', '<', $now->startOfMonth()->toDateTimeString())
             ->count();
 
+        // ── Growth helpers ───────────────────────────────────────────────────
+        $pct = fn($current, $previous) => $previous > 0 ? round((($current - $previous) / $previous) * 100, 1) : ($current > 0 ? 100.0 : 0.0);
+
         return [
-            'total_donations'  => (float) $totalDonations,
-            'monthly_donations' => (float) $monthlyDonations,
-            'new_donors'       => (int) $newDonors,
-            'active_campaigns' => (int) $activeCampaigns,
+            'total_donations'  => ['value' => (float) $totalDonations,  'growth_percent' => $pct($thisMonth, $lastMonth)],
+            'monthly_donations' => ['value' => $thisMonth,              'growth_percent' => $pct($thisMonth, $lastMonth)],
+            'new_donors'       => ['value' => $thisDonors,              'growth_percent' => $pct($thisDonors, $lastDonors)],
+            'active_campaigns' => ['value' => $activeCampaigns,         'change'         => $activeCampaigns - $prevActive],
         ];
     }
     public function getDailySummary(int $mosqueId): array
