@@ -11,6 +11,7 @@ use Modules\Invitation\Actions\AcceptInvitationAction;
 use Modules\Invitation\Http\Requests\SendInvitationRequest;
 use Modules\Invitation\Http\Requests\AcceptInvitationRequest;
 use Modules\Invitation\Models\Invitation;
+use Modules\Invitation\Transformers\InvitationResource;
 
 class InvitationController
 {
@@ -20,22 +21,20 @@ class InvitationController
         $user = $request->user();
 
         if (!$user) {
-            return response()->json([
-                'status' => false,
-                'message' => 'غير مصرح لك بالوصول، يرجى تسجيل الدخول أولاً.',
-                'data' => null,
-                'pagination' => null
-            ], 401);
+            return ApiResponse::error('غير مصرح لك بالوصول', 401);
         }
+
+        $mosqueId = $user->mosque_id ?? $request->input('mosque_id');
 
         // تنفيذ الأكشن بأمان بعد التأكد من وجود المستخدم
         $invitation = $action->execute(
             $user,
             $request->email,
-            $request->role
+            $request->role,
+            $mosqueId
         );
 
-        return ApiResponse::success($invitation, 'Invitation sent successfully.');
+        return ApiResponse::success(new InvitationResource($invitation), 'Invitation sent successfully.');
     }
 
 
