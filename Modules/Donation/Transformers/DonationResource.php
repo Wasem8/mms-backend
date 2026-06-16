@@ -25,7 +25,15 @@ class DonationResource extends JsonResource
 
             // ── Donor ─────────────────────────────────────────────────────
             'donor_name'       => $this->donor_name,
-           
+            'user_id'          => $this->user_id,
+
+            // ── User (when loaded) ────────────────────────────────────────
+            'user'             => $this->whenLoaded('user', fn() => [
+                'id'    => $this->user->id,
+                'name'  => $this->user->name,
+                'email' => $this->user->email,
+            ]),
+
             // ── Relations ─────────────────────────────────────────────────
             'campaign_id'      => $this->campaign_id,
             'campaign_title'   => $this->campaign?->title,

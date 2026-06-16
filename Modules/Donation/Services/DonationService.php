@@ -64,7 +64,7 @@ class DonationService
 
     public function findByReference(string $reference)
     {
-        return Donation::where('reference', $reference)->firstOrFail();
+        return Donation::with('user')->where('reference', $reference)->firstOrFail();
     }
 
     public function find(int $id): Donation
