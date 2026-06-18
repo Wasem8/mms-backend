@@ -9,7 +9,10 @@ use Modules\Dashboard\Http\Controllers\TeacherDashboardController;
 
 Route::prefix('dashboard')->group(function () {
     Route::middleware(['auth:api', 'role:halaqa_supervisor'])->group(function () {
-        Route::get('/supervisor/stats', [SupervisorDashboardController::class, 'index']);
+        Route::get('/supervisor/export-pdf', [SupervisorDashboardController::class, 'exportPdf']);
+    });
+
+    Route::middleware(['auth:api', 'role:halaqa_supervisor,mosque_manager'])->group(function () {
         Route::get('/supervisor/export-pdf', [SupervisorDashboardController::class, 'exportPdf']);
     });
     Route::middleware(['auth:api', 'role:teacher'])->group(function () {
