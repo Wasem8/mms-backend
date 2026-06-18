@@ -19,4 +19,6 @@ interface CampaignRepositoryInterface
     public function expirePastEndDateCampaigns();
 
     public function getStatsByMosque(int $mosqueId): array;
+
+    public function getFiltered(array $filters = []);
 }

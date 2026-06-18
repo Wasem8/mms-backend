@@ -60,20 +60,24 @@ class CampaignEndpoints
     // Replaces: GET /campaign  +  GET /campaign/mosque/{mosqueId}
     // =========================================================================
 
+    // =========================================================================
+    // GET /campaigns  (global with filters)
+    // =========================================================================
+
     #[OA\Get(
-        path: '/mosques/{mosqueId}/campaigns',
-        operationId: 'listCampaigns',
+        path: '/campaigns',
+        operationId: 'listAllCampaigns',
         tags: ['Campaigns'],
-        summary: 'List campaigns for a mosque',
-        description: 'Returns all campaigns belonging to the given mosque, ordered newest first.',
+        summary: 'List all campaigns with search & filters',
+        description: 'Returns a paginated list of all campaigns with optional search, status, priority, and sorting filters.',
         parameters: [
-            new OA\Parameter(
-                name: 'mosqueId',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'integer'),
-                example: 5
-            ),
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'search',     in: 'query', required: false, schema: new OA\Schema(type: 'string'),  description: 'Search by title or description'),
+            new OA\Parameter(name: 'status',     in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['active', 'paused', 'completed', 'cancelled'])),
+            new OA\Parameter(name: 'priority',   in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['high', 'medium', 'low'])),
+            new OA\Parameter(name: 'sort_by',    in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['created_at', 'start_date', 'end_date', 'target_amount', 'collected_amount', 'title', 'status']), description: 'Sort field (default: created_at)'),
+            new OA\Parameter(name: 'sort_order', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['asc', 'desc']), description: 'Sort order (default: desc)'),
+            new OA\Parameter(name: 'per_page',   in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100, default: 15), description: 'Items per page'),
         ],
         responses: [
             new OA\Response(
@@ -81,13 +85,53 @@ class CampaignEndpoints
                 description: 'Success',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'status',  type: 'boolean', example: true),
-                        new OA\Property(property: 'message', type: 'string',  example: 'Success'),
-                        new OA\Property(
-                            property: 'data',
-                            type: 'array',
-                            items: new OA\Items(ref: '#/components/schemas/Campaign')
-                        ),
+                        new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/Campaign')),
+                        new OA\Property(property: 'meta', type: 'object', properties: [
+                            new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                            new OA\Property(property: 'last_page',    type: 'integer', example: 5),
+                            new OA\Property(property: 'per_page',     type: 'integer', example: 15),
+                            new OA\Property(property: 'total',        type: 'integer', example: 72),
+                        ]),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function listAllCampaigns() {}
+
+    // =========================================================================
+    // GET /mosques/{mosqueId}/campaigns  (with filters)
+    // =========================================================================
+
+    #[OA\Get(
+        path: '/mosques/{mosqueId}/campaigns',
+        operationId: 'listCampaigns',
+        tags: ['Campaigns'],
+        summary: 'List campaigns for a mosque with search & filters',
+        description: 'Returns a paginated list of campaigns for the given mosque with optional search, status, priority, and sorting.',
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'mosqueId',  in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 5),
+            new OA\Parameter(name: 'search',     in: 'query', required: false, schema: new OA\Schema(type: 'string'),  description: 'Search by title or description'),
+            new OA\Parameter(name: 'status',     in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['active', 'paused', 'completed', 'cancelled'])),
+            new OA\Parameter(name: 'priority',   in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['high', 'medium', 'low'])),
+            new OA\Parameter(name: 'sort_by',    in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['created_at', 'start_date', 'end_date', 'target_amount', 'collected_amount', 'title', 'status']), description: 'Sort field (default: created_at)'),
+            new OA\Parameter(name: 'sort_order', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['asc', 'desc']), description: 'Sort order (default: desc)'),
+            new OA\Parameter(name: 'per_page',   in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100, default: 15), description: 'Items per page'),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/Campaign')),
+                        new OA\Property(property: 'meta', type: 'object', properties: [
+                            new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                            new OA\Property(property: 'last_page',    type: 'integer', example: 2),
+                            new OA\Property(property: 'per_page',     type: 'integer', example: 15),
+                            new OA\Property(property: 'total',        type: 'integer', example: 18),
+                        ]),
                     ]
                 )
             ),
@@ -107,6 +151,7 @@ class CampaignEndpoints
         description: 'Aggregated totals for the dashboard stats bar: total collected, active/completed counts, and month-on-month growth rate.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'mosqueId',
                 in: 'path',
@@ -173,6 +218,7 @@ class CampaignEndpoints
         summary: 'Get a campaign',
         description: 'Retrieve a single campaign by ID. Includes computed percent_complete and days_remaining.',
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'id',
                 in: 'path',
@@ -220,6 +266,7 @@ class CampaignEndpoints
         description: 'The four metric cards on the campaign detail page: weekly growth %, average donation, unique donors, and total donation count.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'id',
                 in: 'path',
@@ -286,6 +333,9 @@ class CampaignEndpoints
         summary: 'Create a campaign',
         description: 'Creates a new donation campaign. Send as multipart/form-data when attaching a cover image.',
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\MediaType(
@@ -353,6 +403,7 @@ class CampaignEndpoints
         description: 'Partial update. Send as multipart/form-data when replacing the cover image. Add `_method=PUT` for clients that do not support PUT with multipart.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'id',
                 in: 'path',
@@ -433,6 +484,7 @@ class CampaignEndpoints
         description: 'Permanently deletes the campaign and removes its cover image from Supabase storage.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'id',
                 in: 'path',

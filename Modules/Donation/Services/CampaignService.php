@@ -20,6 +20,12 @@ class CampaignService
         return $this->campaignRepository->all();
     }
 
+    public function getFilteredCampaigns(array $filters = [])
+    {
+        $this->campaignRepository->expirePastEndDateCampaigns();
+        return $this->campaignRepository->getFiltered($filters);
+    }
+
     public function getCampaignById($id)
     {
         $this->campaignRepository->expirePastEndDateCampaigns();
@@ -53,8 +59,8 @@ class CampaignService
     }
 
     public function deleteCampaign($id)
-    {        $campaign = $this->campaignRepository->find($id);
-        return $this->campaignRepository->delete($$campaign);
+    {
+        return $this->campaignRepository->delete($id);
     }
 
     public function expireEndedCampaigns(): int
