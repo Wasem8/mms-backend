@@ -3,6 +3,7 @@
 namespace Modules\Dashboard\Services;
 
 use Illuminate\Support\Facades\Log;
+use Mpdf\Config\ConfigVariables;
 
 class PdfGeneratorService
 {
@@ -37,7 +38,7 @@ class PdfGeneratorService
             }
 
             // 4. جلب الإعدادات الافتراضية للمكتبة للخطوط والمجلدات
-            $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+            $defaultConfig = (new ConfigVariables())->getDefaults();
             $fontDirs = $defaultConfig['fontDir'];
 
             $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
