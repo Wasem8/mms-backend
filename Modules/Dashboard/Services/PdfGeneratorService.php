@@ -31,11 +31,11 @@ class PdfGeneratorService
                 @file_put_contents($localBoldPath, @file_get_contents($remoteBoldUrl));
             }
 
-            // 2. جلب المجلدات الافتراضية بأمان (الملفات البرمجية مرفوعة الآن)
+            // 2. جلب المجلدات الافتراضية
             $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
             $fontDirs = $defaultConfig['fontDir'];
 
-            // 3. بناء مصفوفة الخطوط يدوياً بدلاً من دمج المصفوفة الكبيرة لمنع استدعاء الخطوط المحذوفة
+            // 3. مصفوفة الخطوط الصريحة والخفيفة (تجنب استدعاء الخطوط المستثناة)
             $fontData = [
                 'cairo' => [
                     'R'      => 'Cairo-Regular.ttf',
@@ -45,14 +45,11 @@ class PdfGeneratorService
                 'dejavusanscondensed' => [
                     'R' => 'DejaVuSansCondensed.ttf',
                     'B' => 'DejaVuSansCondensed-Bold.ttf',
-                    'I' => 'DejaVuSansCondensed-Oblique.ttf',
-                    'BI' => 'DejaVuSansCondensed-BoldOblique.ttf',
                     'useOTL' => 0xFF,
-                    'useKashida' => 75,
                 ]
             ];
 
-            // 4. تهيئة mPDF بوزن خفيف جداً ومتوافق مع Vercel
+            // 4. تهيئة mPDF الآمنة لبيئة Vercel بنظام تخسيس الوزن الإجباري
             $mpdf = new \Mpdf\Mpdf([
                 'mode'          => 'utf-8',
                 'format'        => 'A4',
@@ -70,7 +67,7 @@ class PdfGeneratorService
             return $mpdf->Output('', 'S');
 
         } catch (\Throwable $e) {
-            \Log::error('mPDF VERCEL COMPRESSED CONFIG ERROR', [
+            \Log::error('mPDF VERCEL POST-MERGE FIXED ERROR', [
                 'message' => $e->getMessage(),
                 'trace'   => $e->getTraceAsString(),
             ]);
