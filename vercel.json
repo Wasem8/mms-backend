@@ -3,7 +3,7 @@
     "functions": {
         "api/index.php": {
             "runtime": "vercel-php@0.9.0",
-            "excludeFiles": "{node_modules/**,tests/**,.git/**,storage/fonts/**,vendor/mpdf/mpdf/ttfonts/Sun-**,vendor/mpdf/mpdf/ttfonts/unifont**,vendor/mpdf/mpdf/ttfonts/Free**,vendor/mpdf/mpdf/ttfonts/XB**,vendor/mpdf/mpdf/ttfonts/Odoo**}",
+            "excludeFiles": "{node_modules/**,tests/**,.git/**,storage/fonts/**,vendor/mpdf/mpdf/ttfonts/**}",
             "maxDuration": 60
         }
     },
