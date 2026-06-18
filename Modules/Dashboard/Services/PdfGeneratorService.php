@@ -6,7 +6,6 @@ class PdfGeneratorService
 {
     public function generate(string $html): string
     {
-        // 1. تحديد مجلد الكاش بداخل /tmp لـ Vercel
         $tempDir = '/tmp/mpdf_cache_core';
 
         if (!file_exists($tempDir)) {
@@ -18,7 +17,7 @@ class PdfGeneratorService
         }
 
         try {
-            // 2. تحميل خطوط القاهرة وحفظها مؤقتاً في /tmp
+            // 1. تحميل خطوط القاهرة للمجلد المؤقت /tmp
             $remoteRegularUrl = 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/assets/Cairo-Regular.ttf';
             $remoteBoldUrl = 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/assets/Cairo-Bold.ttf';
 
@@ -32,8 +31,28 @@ class PdfGeneratorService
                 @file_put_contents($localBoldPath, @file_get_contents($remoteBoldUrl));
             }
 
-            // 3. تهيئة إعدادات mPDF بدون استدعاء كلاسات ConfigVariables لتفادي الـ Crash
-            // نمرر المجلدات والخطوط مباشرة للمكتبة وهي ستقوم بدمجها داخلياً تلقائياً
+            // 2. جلب المجلدات الافتراضية بأمان (الملفات البرمجية مرفوعة الآن)
+            $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+            $fontDirs = $defaultConfig['fontDir'];
+
+            // 3. بناء مصفوفة الخطوط يدوياً بدلاً من دمج المصفوفة الكبيرة لمنع استدعاء الخطوط المحذوفة
+            $fontData = [
+                'cairo' => [
+                    'R'      => 'Cairo-Regular.ttf',
+                    'B'      => 'Cairo-Bold.ttf',
+                    'useOTL' => 0xFF,
+                ],
+                'dejavusanscondensed' => [
+                    'R' => 'DejaVuSansCondensed.ttf',
+                    'B' => 'DejaVuSansCondensed-Bold.ttf',
+                    'I' => 'DejaVuSansCondensed-Oblique.ttf',
+                    'BI' => 'DejaVuSansCondensed-BoldOblique.ttf',
+                    'useOTL' => 0xFF,
+                    'useKashida' => 75,
+                ]
+            ];
+
+            // 4. تهيئة mPDF بوزن خفيف جداً ومتوافق مع Vercel
             $mpdf = new \Mpdf\Mpdf([
                 'mode'          => 'utf-8',
                 'format'        => 'A4',
@@ -42,38 +61,16 @@ class PdfGeneratorService
                 'margin_top'    => 8,
                 'margin_bottom' => 8,
                 'tempDir'       => $tempDir,
-
-                // نمرر المجلد الأساسي للمكتبة ومجلد /tmp الإضافي للخطوط
-                'fontDir' => array_merge([
-                    __DIR__ . '/../../../../vendor/mpdf/mpdf/ttfonts' // المسار الافتراضي لخطوط المكتبة بداخل الـ vendor
-                ], ['/tmp']),
-
-                // تعريف الخطوط مسبقاً بطريقة آمنة ومتوافقة مع الإصدارات المختلفة
-                'fontdata' => [
-                    'cairo' => [
-                        'R'      => 'Cairo-Regular.ttf',
-                        'B'      => 'Cairo-Bold.ttf',
-                        'useOTL' => 0xFF,
-                    ],
-                    // الاحتفاظ بالخطوط الافتراضية الهامة للمكتبة منعاً لأي خلل داخلي
-                    'dejavusanscondensed' => [
-                        'R' => 'DejaVuSansCondensed.ttf',
-                        'B' => 'DejaVuSansCondensed-Bold.ttf',
-                        'I' => 'DejaVuSansCondensed-Oblique.ttf',
-                        'BI' => 'DejaVuSansCondensed-BoldOblique.ttf',
-                        'useOTL' => 0xFF,
-                        'useKashida' => 75,
-                    ]
-                ],
-                'default_font' => 'cairo'
+                'fontDir'       => array_merge($fontDirs, ['/tmp']),
+                'fontdata'      => $fontData,
+                'default_font'  => 'cairo'
             ]);
 
-            // 4. ضخ الـ HTML وتوليد الملف كـ سِلسِلة باينري (Binary String) للرفع
             $mpdf->WriteHTML($html);
             return $mpdf->Output('', 'S');
 
         } catch (\Throwable $e) {
-            \Log::error('mPDF VERCEL SERVICE NO-CONFIG ERROR', [
+            \Log::error('mPDF VERCEL COMPRESSED CONFIG ERROR', [
                 'message' => $e->getMessage(),
                 'trace'   => $e->getTraceAsString(),
             ]);
