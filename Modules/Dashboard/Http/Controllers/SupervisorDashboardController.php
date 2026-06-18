@@ -31,29 +31,15 @@ class SupervisorDashboardController
     public function exportPdf(Request $request)
     {
         $mosqueId = auth()->user()->mosque_id;
-        $filters = $request->only(['halaqa_id']);
 
-        try {
             // جلب رابط التقرير الموقّع من السيرفيس باستخدام mPDF
             $result = $this->service->generateSupervisorPdfResponse(
-                $mosqueId,
-                $filters
+                $mosqueId
             );
 
-            // إرجاع الرابط كـ JSON للاستخدام الفوري في الفرونت إند
-            return response()->json([
-                'success' => true,
-                'url'     => $result['url'],
-                'cached'  => $result['cached']
-            ]);
-
-        } catch (\Throwable $e) {
-            Log::error('Supervisor Export PDF Controller Error: ' . $e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => 'حدث خطأ أثناء توليد التقرير، يرجى المحاولة لاحقاً.'
-            ], 500);
-        }
+            return ApiResponse::success(
+                $result,
+                'تم إنشاء التقرير بنجاح'
+            );
     }
 }

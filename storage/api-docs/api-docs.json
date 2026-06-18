@@ -3583,22 +3583,12 @@
         "/dashboard/supervisor/export-pdf": {
             "get": {
                 "tags": [
-                    "Dashboard"
+                    "Reports"
                 ],
-                "summary": "تصدير تقرير المشرف PDF",
-                "description": "تحميل تقرير PDF شامل لإحصائيات المشرف",
+                "summary": "تصدير تقرير المشرف الموحد PDF",
+                "description": "توليد وجلب رابط تحميل تقرير PDF شامل وموحد لكل حلقات المسجد بدون فلاتر (يدعم دخول المشرف أو مدير المسجد بكاش منفصل لكل مستخدم)",
                 "operationId": "exportSupervisorDashboardPdf",
                 "parameters": [
-                    {
-                        "name": "halaqa_id",
-                        "in": "query",
-                        "description": "فلترة حسب الحلقة",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "example": 1
-                        }
-                    },
                     {
                         "name": "Accept",
                         "in": "header",
@@ -3606,27 +3596,58 @@
                         "required": false,
                         "schema": {
                             "type": "string",
-                            "default": "application/pdf"
+                            "default": "application/json"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "تم توليد ملف الـ PDF بنجاح",
+                        "description": "تم توليد رابط التقرير بنجاح (سواء من الكاش أو جديد)",
                         "content": {
-                            "application/pdf": {
+                            "application/json": {
                                 "schema": {
-                                    "type": "string",
-                                    "format": "binary"
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم إنشاء تقرير المشرف الموحد بنجاح"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "url": {
+                                                    "type": "string",
+                                                    "format": "url",
+                                                    "example": "https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/sign/reports/supervisor-reports/1/general_1781780709.pdf?token=..."
+                                                },
+                                                "cached": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
                     },
                     "401": {
-                        "description": "Unauthenticated"
+                        "description": "Unauthenticated - المستخدم غير مسجل دخول"
+                    },
+                    "403": {
+                        "description": "Forbidden - لا تملك الصلاحية (ليست رتبة مشرف أو مدير)"
                     },
                     "500": {
-                        "description": "Server error"
+                        "description": "Server error - خطأ داخلي في السيرفر أثناء توليد الـ PDF"
                     }
                 },
                 "security": [
@@ -3892,36 +3913,71 @@
         "/dashboard/teacher/export-pdf": {
             "get": {
                 "tags": [
-                    "Dashboard"
+                    "Reports"
                 ],
                 "summary": "تحميل تقرير لوحة تحكم المعلم PDF",
-                "description": "يقوم بإنشاء وتحميل تقرير PDF يحتوي على إحصائيات المعلم والحلقة الخاصة به.",
+                "description": "يقوم بإنشاء تقرير PDF مخصص يخص حلقة المعلم الحالي، يرفعه إلى Supabase، ويعيد رابط تحميل موقّع مؤقت مع حالة الكاش لتجنب الضغط على الخادم.",
                 "operationId": "downloadTeacherDashboardPdf",
+                "parameters": [
+                    {
+                        "name": "Accept",
+                        "in": "header",
+                        "description": "نوع الرد المطلوب",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "application/json"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "ملف PDF جاهز للتحميل",
-                        "headers": {
-                            "Content-Disposition": {
-                                "description": "attachment; filename=\"teacher-dashboard-report.pdf\"",
-                                "schema": {
-                                    "type": "string"
-                                }
-                            }
-                        },
+                        "description": "تم إنشاء التقرير بنجاح وعاد برابط تحميل الملف السحابي الموقّع",
                         "content": {
-                            "application/pdf": {
+                            "application/json": {
                                 "schema": {
-                                    "type": "string",
-                                    "format": "binary"
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم إنشاء تقرير المعلم بنجاح"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "url": {
+                                                    "type": "string",
+                                                    "format": "url",
+                                                    "example": "https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/sign/reports/teacher-reports/4/general_1781780709.pdf?token=..."
+                                                },
+                                                "cached": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
                     },
                     "401": {
-                        "description": "Unauthenticated"
+                        "description": "غير مصرح - يجب تسجيل الدخول أولاً"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "ليس لديك صلاحية الوصول (يجب أن تكون معلماً)"
+                    },
+                    "500": {
+                        "description": "حدث خطأ في الخادم أو أثناء توليد ورفع ملف PDF"
                     }
                 },
                 "security": [
@@ -4039,7 +4095,7 @@
         "/dashboard/parent/export-pdf": {
             "get": {
                 "tags": [
-                    "Dashboard"
+                    "Reports"
                 ],
                 "summary": "إنشاء رابط تحميل تقرير ولي الأمر PDF",
                 "description": "يقوم بإنشاء تقرير PDF متعدد الصفحات يحتوي على متابعة الأبناء، ثم يرفعه إلى Supabase ويعود برابط موقّع مؤقت للتحميل.",
@@ -20059,6 +20115,10 @@
         {
             "name": "Dashboard",
             "description": "Dashboard"
+        },
+        {
+            "name": "Reports",
+            "description": "Reports"
         },
         {
             "name": "Dawah Programs",
