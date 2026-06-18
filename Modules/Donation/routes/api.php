@@ -45,6 +45,7 @@ Route::prefix('mosques/{mosqueId}/campaigns')->group(function () {
 });
 
 Route::prefix('campaigns')->group(function () {
+    Route::get('/',                [CampaignController::class, 'index']);
     Route::get('/{id}',           [CampaignController::class, 'show']);
     Route::get('/{id}/analytics', [CampaignController::class, 'analytics']);
 
@@ -52,19 +53,6 @@ Route::prefix('campaigns')->group(function () {
         Route::post('/',       [CampaignController::class, 'store']);
         Route::put('/{id}',    [CampaignController::class, 'update']);
         Route::delete('/{id}', [CampaignController::class, 'destroy']);
-    });
-});
-
-
-
-Route::prefix('campaigns')->group(function () {
-
-    Route::get('/{id}',            [CampaignController::class, 'show'])->name('campaign.show');
-    Route::middleware(['auth:api', 'role:mosque_manager'])->group(function () {
-        Route::get('/{id}/analytics',  [CampaignController::class, 'analytics'])->name('campaign.analytics');
-        Route::post('/',       [CampaignController::class, 'store'])->name('campaign.store');
-        Route::put('/{id}',    [CampaignController::class, 'update'])->name('campaign.update');
-        Route::delete('/{id}', [CampaignController::class, 'destroy'])->name('campaign.destroy');
     });
 });
 

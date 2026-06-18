@@ -1425,28 +1425,225 @@
                 ]
             }
         },
-        "/mosques/{mosqueId}/campaigns": {
+        "/campaigns": {
             "get": {
                 "tags": [
                     "Campaigns"
                 ],
-                "summary": "List campaigns for a mosque",
-                "description": "Returns all campaigns belonging to the given mosque, ordered newest first.",
-                "operationId": "listCampaigns",
+                "summary": "List all campaigns with search & filters",
+                "description": "Returns a paginated list of all campaigns with optional search, status, priority, and sorting filters.",
+                "operationId": "listAllCampaigns",
                 "parameters": [
                     {
-                        "name": "mosqueId",
-                        "in": "path",
-                        "required": true,
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search by title or description",
+                        "required": false,
                         "schema": {
-                            "type": "integer"
-                        },
-                        "example": 5
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "active",
+                                "paused",
+                                "completed",
+                                "cancelled"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "priority",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "high",
+                                "medium",
+                                "low"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sort_by",
+                        "in": "query",
+                        "description": "Sort field (default: created_at)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "created_at",
+                                "start_date",
+                                "end_date",
+                                "target_amount",
+                                "collected_amount",
+                                "title",
+                                "status"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sort_order",
+                        "in": "query",
+                        "description": "Sort order (default: desc)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Campaign"
+                                            }
+                                        },
+                                        "meta": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 72
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Campaigns"
+                ],
+                "summary": "Create a campaign",
+                "description": "Creates a new donation campaign. Send as multipart/form-data when attaching a cover image.",
+                "operationId": "createCampaign",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "mosque_id",
+                                    "title",
+                                    "target_amount",
+                                    "start_date"
+                                ],
+                                "properties": {
+                                    "mosque_id": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "title": {
+                                        "type": "string",
+                                        "example": "كسوة العيد للأيتام"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "target_amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 25000
+                                    },
+                                    "start_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-05-01"
+                                    },
+                                    "end_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-06-01",
+                                        "nullable": true
+                                    },
+                                    "priority": {
+                                        "type": "string",
+                                        "example": "medium",
+                                        "enum": [
+                                            "high",
+                                            "medium",
+                                            "low"
+                                        ]
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "active",
+                                        "enum": [
+                                            "active",
+                                            "paused",
+                                            "completed",
+                                            "cancelled"
+                                        ]
+                                    },
+                                    "cover_image": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Campaign created",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1457,13 +1654,165 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Success"
+                                            "example": "Campaign created successfully"
                                         },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Campaign"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/mosques/{mosqueId}/campaigns": {
+            "get": {
+                "tags": [
+                    "Campaigns"
+                ],
+                "summary": "List campaigns for a mosque with search & filters",
+                "description": "Returns a paginated list of campaigns for the given mosque with optional search, status, priority, and sorting.",
+                "operationId": "listCampaigns",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "mosqueId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 5
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search by title or description",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "active",
+                                "paused",
+                                "completed",
+                                "cancelled"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "priority",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "high",
+                                "medium",
+                                "low"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sort_by",
+                        "in": "query",
+                        "description": "Sort field (default: created_at)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "created_at",
+                                "start_date",
+                                "end_date",
+                                "target_amount",
+                                "collected_amount",
+                                "title",
+                                "status"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sort_order",
+                        "in": "query",
+                        "description": "Sort order (default: desc)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
                                         "data": {
                                             "type": "array",
                                             "items": {
                                                 "$ref": "#/components/schemas/Campaign"
                                             }
+                                        },
+                                        "meta": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 18
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -1483,6 +1832,9 @@
                 "description": "Aggregated totals for the dashboard stats bar: total collected, active/completed counts, and month-on-month growth rate.",
                 "operationId": "getCampaignStats",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "mosqueId",
                         "in": "path",
@@ -1559,6 +1911,9 @@
                 "operationId": "getCampaign",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "id",
                         "in": "path",
                         "required": true,
@@ -1626,6 +1981,9 @@
                 "description": "Partial update. Send as multipart/form-data when replacing the cover image. Add `_method=PUT` for clients that do not support PUT with multipart.",
                 "operationId": "updateCampaign",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -1750,6 +2108,9 @@
                 "operationId": "deleteCampaign",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "id",
                         "in": "path",
                         "required": true,
@@ -1811,6 +2172,9 @@
                 "operationId": "getCampaignAnalytics",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "id",
                         "in": "path",
                         "required": true,
@@ -1869,122 +2233,6 @@
                     },
                     "404": {
                         "description": "Not found"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/campaigns": {
-            "post": {
-                "tags": [
-                    "Campaigns"
-                ],
-                "summary": "Create a campaign",
-                "description": "Creates a new donation campaign. Send as multipart/form-data when attaching a cover image.",
-                "operationId": "createCampaign",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "required": [
-                                    "mosque_id",
-                                    "title",
-                                    "target_amount",
-                                    "start_date"
-                                ],
-                                "properties": {
-                                    "mosque_id": {
-                                        "type": "integer",
-                                        "example": 5
-                                    },
-                                    "title": {
-                                        "type": "string",
-                                        "example": "كسوة العيد للأيتام"
-                                    },
-                                    "description": {
-                                        "type": "string",
-                                        "nullable": true
-                                    },
-                                    "target_amount": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 25000
-                                    },
-                                    "start_date": {
-                                        "type": "string",
-                                        "format": "date",
-                                        "example": "2026-05-01"
-                                    },
-                                    "end_date": {
-                                        "type": "string",
-                                        "format": "date",
-                                        "example": "2026-06-01",
-                                        "nullable": true
-                                    },
-                                    "priority": {
-                                        "type": "string",
-                                        "example": "medium",
-                                        "enum": [
-                                            "high",
-                                            "medium",
-                                            "low"
-                                        ]
-                                    },
-                                    "status": {
-                                        "type": "string",
-                                        "example": "active",
-                                        "enum": [
-                                            "active",
-                                            "paused",
-                                            "completed",
-                                            "cancelled"
-                                        ]
-                                    },
-                                    "cover_image": {
-                                        "type": "string",
-                                        "format": "binary",
-                                        "nullable": true
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Campaign created",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Campaign created successfully"
-                                        },
-                                        "data": {
-                                            "$ref": "#/components/schemas/Campaign"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error"
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
                     }
                 },
                 "security": [
@@ -5977,25 +6225,65 @@
                                             "properties": {
                                                 "total_donations": {
                                                     "description": "إجمالي التبرعات — all-time completed cash donations",
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 125400
+                                                    "properties": {
+                                                        "value": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 125400
+                                                        },
+                                                        "growth_percent": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 12.5
+                                                        }
+                                                    },
+                                                    "type": "object"
                                                 },
                                                 "monthly_donations": {
                                                     "description": "تبرعات هذا الشهر — completed cash donations this month",
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 45200
+                                                    "properties": {
+                                                        "value": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 45200
+                                                        },
+                                                        "growth_percent": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": -3.2
+                                                        }
+                                                    },
+                                                    "type": "object"
                                                 },
                                                 "active_campaigns": {
                                                     "description": "حملات نشطة — campaigns with status = active",
-                                                    "type": "integer",
-                                                    "example": 12
+                                                    "properties": {
+                                                        "value": {
+                                                            "type": "integer",
+                                                            "example": 12
+                                                        },
+                                                        "change": {
+                                                            "description": "عدد الحملات التي زادت/نقصت عن الشهر الماضي",
+                                                            "type": "integer",
+                                                            "example": 2
+                                                        }
+                                                    },
+                                                    "type": "object"
                                                 },
                                                 "new_donors": {
                                                     "description": "متبرعون جدد — distinct donor_name values this month (فاعل خير counts as 1)",
-                                                    "type": "integer",
-                                                    "example": 85
+                                                    "properties": {
+                                                        "value": {
+                                                            "type": "integer",
+                                                            "example": 85
+                                                        },
+                                                        "growth_percent": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 25
+                                                        }
+                                                    },
+                                                    "type": "object"
                                                 }
                                             },
                                             "type": "object"
