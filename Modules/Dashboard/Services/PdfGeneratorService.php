@@ -6,6 +6,7 @@ class PdfGeneratorService
 {
     public function generate(string $html): string
     {
+        // 1. تحديد وتأمين مجلد الكاش بداخل /tmp لـ Vercel
         $tempDir = '/tmp/mpdf_cache_core';
 
         if (!file_exists($tempDir)) {
@@ -17,7 +18,7 @@ class PdfGeneratorService
         }
 
         try {
-            // 1. تحميل خطوط القاهرة للمجلد المؤقت /tmp
+            // 2. تحميل خطوط القاهرة للمجلد المؤقت /tmp
             $remoteRegularUrl = 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/assets/Cairo-Regular.ttf';
             $remoteBoldUrl = 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/assets/Cairo-Bold.ttf';
 
@@ -31,25 +32,8 @@ class PdfGeneratorService
                 @file_put_contents($localBoldPath, @file_get_contents($remoteBoldUrl));
             }
 
-            // 2. جلب المجلدات الافتراضية
-            $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
-            $fontDirs = $defaultConfig['fontDir'];
-
-            // 3. مصفوفة الخطوط الصريحة والخفيفة (تجنب استدعاء الخطوط المستثناة)
-            $fontData = [
-                'cairo' => [
-                    'R'      => 'Cairo-Regular.ttf',
-                    'B'      => 'Cairo-Bold.ttf',
-                    'useOTL' => 0xFF,
-                ],
-                'dejavusanscondensed' => [
-                    'R' => 'DejaVuSansCondensed.ttf',
-                    'B' => 'DejaVuSansCondensed-Bold.ttf',
-                    'useOTL' => 0xFF,
-                ]
-            ];
-
-            // 4. تهيئة mPDF الآمنة لبيئة Vercel بنظام تخسيس الوزن الإجباري
+            // 3. بناء إعدادات مستقلة تماماً 100% دون استدعاء أي كلاسات داخلية من mPDF
+            // هذا يحميك تماماً من مشاكل الـ Autoloading والـ Exclude في فيرسيل
             $mpdf = new \Mpdf\Mpdf([
                 'mode'          => 'utf-8',
                 'format'        => 'A4',
@@ -58,16 +42,27 @@ class PdfGeneratorService
                 'margin_top'    => 8,
                 'margin_bottom' => 8,
                 'tempDir'       => $tempDir,
-                'fontDir'       => array_merge($fontDirs, ['/tmp']),
-                'fontdata'      => $fontData,
-                'default_font'  => 'cairo'
+
+                // نخبر المكتبة بالبحث عن الخطوط بداخل مجلد /tmp فقط (المجلد الذي يحتوي على خط القاهرة المرفوع)
+                'fontDir' => ['/tmp'],
+
+                // تمرير مصفوفة الخطوط الصريحة والوحيدة المتاحة للطباعة
+                'fontdata' => [
+                    'cairo' => [
+                        'R'      => 'Cairo-Regular.ttf',
+                        'B'      => 'Cairo-Bold.ttf',
+                        'useOTL' => 0xFF,
+                    ]
+                ],
+                'default_font' => 'cairo'
             ]);
 
+            // 4. ضخ الـ HTML وتوليد الباينري للرفع إلى سوبابيس
             $mpdf->WriteHTML($html);
             return $mpdf->Output('', 'S');
 
         } catch (\Throwable $e) {
-            \Log::error('mPDF VERCEL POST-MERGE FIXED ERROR', [
+            \Log::error('mPDF VERCEL ULTIMATE ISOLATED ERROR', [
                 'message' => $e->getMessage(),
                 'trace'   => $e->getTraceAsString(),
             ]);
