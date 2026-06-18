@@ -2,6 +2,8 @@
 
 namespace Modules\Dashboard\Services;
 
+use Illuminate\Support\Facades\Log;
+
 class PdfGeneratorService
 {
     public function generate(string $html): string
@@ -66,7 +68,7 @@ class PdfGeneratorService
             return $mpdf->Output('', 'S');
 
         } catch (\Throwable $e) {
-            \Log::error('mPDF VERCEL SERVICE ERROR', [
+            Log::error('mPDF VERCEL SERVICE ERROR', [
                 'message' => $e->getMessage(),
                 'trace'   => $e->getTraceAsString(),
             ]);
