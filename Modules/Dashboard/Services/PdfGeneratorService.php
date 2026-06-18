@@ -2,9 +2,6 @@
 
 namespace Modules\Dashboard\Services;
 
-use Illuminate\Support\Facades\Log;
-use Mpdf\Mpdf;
-
 class PdfGeneratorService
 {
     public function generate(string $html): string
@@ -20,7 +17,7 @@ class PdfGeneratorService
         }
 
         try {
-            // تحميل خطوط القاهرة للمجلد المؤقت
+            // 1. تحميل خطوط القاهرة للمجلد المؤقت /tmp
             $remoteRegularUrl = 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/assets/Cairo-Regular.ttf';
             $remoteBoldUrl = 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/assets/Cairo-Bold.ttf';
 
@@ -34,14 +31,29 @@ class PdfGeneratorService
                 @file_put_contents($localBoldPath, @file_get_contents($remoteBoldUrl));
             }
 
-            // الآن بعد إلغاء الـ exclude، يمكننا جلب الإعدادات الافتراضية بأمان التام بدون كراش
+            // 2. جلب المجلدات الافتراضية بأمان (الملفات البرمجية مرفوعة الآن)
             $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
             $fontDirs = $defaultConfig['fontDir'];
 
-            $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
-            $fontData = $defaultFontConfig['fontdata'];
+            // 3. بناء مصفوفة الخطوط يدوياً بدلاً من دمج المصفوفة الكبيرة لمنع استدعاء الخطوط المحذوفة
+            $fontData = [
+                'cairo' => [
+                    'R'      => 'Cairo-Regular.ttf',
+                    'B'      => 'Cairo-Bold.ttf',
+                    'useOTL' => 0xFF,
+                ],
+                'dejavusanscondensed' => [
+                    'R' => 'DejaVuSansCondensed.ttf',
+                    'B' => 'DejaVuSansCondensed-Bold.ttf',
+                    'I' => 'DejaVuSansCondensed-Oblique.ttf',
+                    'BI' => 'DejaVuSansCondensed-BoldOblique.ttf',
+                    'useOTL' => 0xFF,
+                    'useKashida' => 75,
+                ]
+            ];
 
-            $mpdf = new Mpdf([
+            // 4. تهيئة mPDF بوزن خفيف جداً ومتوافق مع Vercel
+            $mpdf = new \Mpdf\Mpdf([
                 'mode'          => 'utf-8',
                 'format'        => 'A4',
                 'margin_left'   => 8,
@@ -49,22 +61,16 @@ class PdfGeneratorService
                 'margin_top'    => 8,
                 'margin_bottom' => 8,
                 'tempDir'       => $tempDir,
-                'fontDir'       => array_merge($fontDirs, ['/tmp']), // دمج مجلد المكتبة المرفوع مع مجلد /tmp الخاص بنا
-                'fontdata'      => array_merge($fontData, [
-                    'cairo' => [
-                        'R'      => 'Cairo-Regular.ttf',
-                        'B'      => 'Cairo-Bold.ttf',
-                        'useOTL' => 0xFF,
-                    ]
-                ]),
-                'default_font' => 'cairo'
+                'fontDir'       => array_merge($fontDirs, ['/tmp']),
+                'fontdata'      => $fontData,
+                'default_font'  => 'cairo'
             ]);
 
             $mpdf->WriteHTML($html);
             return $mpdf->Output('', 'S');
 
         } catch (\Throwable $e) {
-            Log::error('mPDF VERCEL FIXED CONFIG ERROR', [
+            \Log::error('mPDF VERCEL COMPRESSED CONFIG ERROR', [
                 'message' => $e->getMessage(),
                 'trace'   => $e->getTraceAsString(),
             ]);
