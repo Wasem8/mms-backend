@@ -11,7 +11,6 @@ use Modules\Education\Models\Student;
 use Modules\Mosque\Models\Mosque;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
-
 class User extends Authentication implements JWTSubject
 {
     use  Notifiable,HasFactory;

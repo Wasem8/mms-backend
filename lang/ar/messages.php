@@ -87,4 +87,33 @@ return [
     'certificate_already_exists' => 'تم إصدار شهادة لهذا المتطوع والفرصة مسبقاً.',
     'no_hours_for_certificate' => 'لا توجد ساعات مسجلة. لا يمكن إصدار شهادة.',
     'upload_failed' => 'فشل رفع الشهادة: :error',
+
+    // --- قسم الشكاوى ---
+    'complaint.submitted_guest' => 'تم تقديم الشكوى بنجاح. يمكنك تتبعها باستخدام رقم الشكوى الخاص بك.',
+    'complaint.submitted_member' => 'تم تقديم الشكوى بنجاح.',
+    'complaint.retrieved' => 'تم جلب الشكاوى بنجاح.',
+    'complaint.details_retrieved' => 'تم جلب تفاصيل الشكوى بنجاح.',
+    'complaint.status_updated' => 'تم تحديث حالة الشكوى بنجاح.',
+    'complaint.tracked' => 'تم جلب حالة الشكوى بنجاح.',
+    'complaint.statistics_retrieved' => 'تم استرجاع الإحصائيات بنجاح.',
+    'complaint.unauthorized' => 'غير مصرح لك بالوصول إلى هذه الشكوى.',
+    'complaint.no_mosque_assigned' => 'لا يوجد مسجد مرتبط بحسابك.',
+
+    'complaint.validation.title.required' => 'حقل العنوان مطلوب.',
+    'complaint.validation.title.max' => 'يجب ألا يتجاوز العنوان 255 حرفاً.',
+    'complaint.validation.description.required' => 'حقل الوصف مطلوب.',
+    'complaint.validation.description.min' => 'يجب أن يكون الوصف 20 حرفاً على الأقل.',
+    'complaint.validation.mosque_id.required' => 'حقل المسجد مطلوب.',
+    'complaint.validation.mosque_id.exists' => 'المسجد المحدد غير موجود.',
+    'complaint.validation.complaint_type.required' => 'حقل نوع الشكوى مطلوب.',
+    'complaint.validation.complaint_type.in' => 'نوع الشكوى المحدد غير صالح.',
+    'complaint.validation.priority.in' => 'الأولوية المحددة غير صالحة.',
+    'complaint.validation.email.email' => 'البريد الإلكتروني غير صالح.',
+    'complaint.validation.files.mimes' => 'الملف يجب أن يكون من نوع: jpg, jpeg, png, pdf.',
+    'complaint.validation.files.max' => 'حجم الملف يجب ألا يتجاوز 5 ميجابايت.',
+    'complaint.validation.status.required' => 'حقل الحالة مطلوب.',
+    'complaint.validation.status.in' => 'الحالة المحددة غير صالحة.',
+    'complaint.validation.note.string' => 'الملاحظة يجب أن تكون نصاً.',
+    'complaint.upload_failed' => 'فشل رفع الصورة: ',
+    
 ];

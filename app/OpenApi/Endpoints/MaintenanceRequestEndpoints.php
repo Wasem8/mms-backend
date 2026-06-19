@@ -127,22 +127,28 @@ class MaintenanceRequestEndpoints
                 description: 'Maintenance requests retrieved successfully.',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'status',  type: 'string', example: 'success'),
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
                         new OA\Property(property: 'message', type: 'string', example: 'Maintenance requests retrieved successfully.'),
                         new OA\Property(
                             property: 'data',
-                            type: 'array',
-                            items: new OA\Items(ref: '#/components/schemas/MaintenanceRequest'),
-                        ),
-                        new OA\Property(
-                            property: 'pagination',
                             type: 'object',
                             properties: [
-                                new OA\Property(property: 'current_page', type: 'integer', example: 1),
-                                new OA\Property(property: 'per_page',     type: 'integer', example: 15),
-                                new OA\Property(property: 'total',        type: 'integer', example: 8),
-                                new OA\Property(property: 'last_page',    type: 'integer', example: 1),
-                                new OA\Property(property: 'has_more',     type: 'boolean', example: false),
+                                new OA\Property(
+                                    property: 'data',
+                                    type: 'array',
+                                    items: new OA\Items(ref: '#/components/schemas/MaintenanceRequest'),
+                                ),
+                                new OA\Property(
+                                    property: 'pagination',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                        new OA\Property(property: 'per_page',     type: 'integer', example: 15),
+                                        new OA\Property(property: 'total',        type: 'integer', example: 8),
+                                        new OA\Property(property: 'last_page',    type: 'integer', example: 1),
+                                        new OA\Property(property: 'has_more',     type: 'boolean', example: false),
+                                    ],
+                                ),
                             ],
                         ),
                     ],
@@ -196,7 +202,7 @@ class MaintenanceRequestEndpoints
                 description: 'Maintenance request submitted successfully.',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'status',  type: 'string', example: 'success'),
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
                         new OA\Property(property: 'message', type: 'string', example: 'Maintenance request submitted successfully.'),
                         new OA\Property(property: 'data', ref: '#/components/schemas/MaintenanceRequest'),
                     ],
@@ -228,7 +234,7 @@ class MaintenanceRequestEndpoints
                 description: 'Maintenance request retrieved successfully.',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'status',  type: 'string', example: 'success'),
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
                         new OA\Property(property: 'message', type: 'string', example: 'Maintenance request retrieved successfully.'),
                         new OA\Property(property: 'data', ref: '#/components/schemas/MaintenanceRequest'),
                     ],
@@ -242,15 +248,14 @@ class MaintenanceRequestEndpoints
     public function show() {}
 
     #[OA\Get(
-        path: '/mosques/{mosqueId}/maintenance/stats',
+        path: '/maintenance/stats',
         operationId: 'getMaintenancePageStats',
         tags: ['Maintenance Requests'],
         summary: 'Maintenance page stat cards',
-        description: 'Returns the four stat cards shown at the top of the maintenance management page: open requests, in progress, completed this month, and critical failures.',
+        description: 'Returns the four stat cards for the authenticated mosque_manager\'s mosque: open requests, in progress, completed this month, and critical failures.',
         security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
-            new OA\Parameter(name: 'mosqueId', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 1),
         ],
         responses: [
             new OA\Response(
@@ -258,7 +263,7 @@ class MaintenanceRequestEndpoints
                 description: 'Success',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'status',  type: 'string', example: 'success'),
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
                         new OA\Property(property: 'message', type: 'string', example: 'Maintenance page stats retrieved successfully.'),
                         new OA\Property(
                             property: 'data',
@@ -295,20 +300,19 @@ class MaintenanceRequestEndpoints
             ),
             new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
             new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
-            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
         ]
     )]
     public function pageStats() {}
 
     #[OA\Get(
-        path: '/mosques/{mosqueId}/maintenance/recent',
+        path: '/maintenance/recent',
         operationId: 'getRecentMaintenanceRequests',
         tags: ['Maintenance Requests'],
-        summary: 'Get recent maintenance requests for a mosque',
-        description: 'Returns the latest maintenance requests for a specific mosque. Restricted to mosque_manager.',
+        summary: 'Get recent maintenance requests for my mosque',
+        description: 'Returns the latest maintenance requests for the authenticated mosque_manager\'s mosque.',
         security: [['bearerAuth' => []]],
         parameters: [
-            new OA\Parameter(name: 'mosqueId', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 1),
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 5, minimum: 1, maximum: 50), description: 'Number of requests to return'),
         ],
         responses: [
@@ -341,7 +345,6 @@ class MaintenanceRequestEndpoints
             ),
             new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
             new OA\Response(response: 403, description: 'Forbidden — requires mosque_manager role'),
-            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
         ]
     )]
     public function recentRequests() {}
@@ -380,7 +383,7 @@ class MaintenanceRequestEndpoints
                 description: 'Maintenance request updated successfully.',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'status',  type: 'string', example: 'success'),
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
                         new OA\Property(property: 'message', type: 'string', example: 'Maintenance request updated successfully.'),
                         new OA\Property(property: 'data', ref: '#/components/schemas/MaintenanceRequest'),
                     ],
@@ -413,7 +416,7 @@ class MaintenanceRequestEndpoints
                 description: 'Maintenance request deleted successfully.',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'status',  type: 'string', example: 'success'),
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
                         new OA\Property(property: 'message', type: 'string', example: 'Maintenance request deleted successfully.'),
                         new OA\Property(property: 'data',    nullable: true, example: null),
                     ],
@@ -450,7 +453,7 @@ class MaintenanceRequestEndpoints
                 description: 'Maintenance request retrieved successfully.',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'status',  type: 'string', example: 'success'),
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
                         new OA\Property(property: 'message', type: 'string', example: 'Maintenance request retrieved successfully.'),
                         new OA\Property(property: 'data', ref: '#/components/schemas/MaintenanceRequest'),
                     ],
@@ -510,22 +513,28 @@ class MaintenanceRequestEndpoints
                 description: 'All maintenance requests retrieved successfully.',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'status',  type: 'string', example: 'success'),
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
                         new OA\Property(property: 'message', type: 'string', example: 'All maintenance requests retrieved successfully.'),
                         new OA\Property(
                             property: 'data',
-                            type: 'array',
-                            items: new OA\Items(ref: '#/components/schemas/MaintenanceRequest'),
-                        ),
-                        new OA\Property(
-                            property: 'pagination',
                             type: 'object',
                             properties: [
-                                new OA\Property(property: 'current_page', type: 'integer', example: 1),
-                                new OA\Property(property: 'per_page',     type: 'integer', example: 15),
-                                new OA\Property(property: 'total',        type: 'integer', example: 43),
-                                new OA\Property(property: 'last_page',    type: 'integer', example: 3),
-                                new OA\Property(property: 'has_more',     type: 'boolean', example: true),
+                                new OA\Property(
+                                    property: 'data',
+                                    type: 'array',
+                                    items: new OA\Items(ref: '#/components/schemas/MaintenanceRequest'),
+                                ),
+                                new OA\Property(
+                                    property: 'pagination',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                        new OA\Property(property: 'per_page',     type: 'integer', example: 15),
+                                        new OA\Property(property: 'total',        type: 'integer', example: 43),
+                                        new OA\Property(property: 'last_page',    type: 'integer', example: 3),
+                                        new OA\Property(property: 'has_more',     type: 'boolean', example: true),
+                                    ],
+                                ),
                             ],
                         ),
                     ],
@@ -581,7 +590,7 @@ class MaintenanceRequestEndpoints
                 description: 'Maintenance request processed successfully.',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'status',  type: 'string', example: 'success'),
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
                         new OA\Property(property: 'message', type: 'string', example: 'Maintenance request processed successfully.'),
                         new OA\Property(property: 'data', ref: '#/components/schemas/MaintenanceRequest'),
                     ],

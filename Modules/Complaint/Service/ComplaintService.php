@@ -80,7 +80,7 @@ class ComplaintService
         $complaint = $this->repository->find($id);
 
         if (isset($filters['mosque_id']) && $complaint->mosque_id !== $filters['mosque_id']) {
-            abort(403, 'غير مصرح لك بالوصول إلى هذه الشكوى.');
+            abort(403, __('messages.complaint.unauthorized'));
         }
 
         return $complaint;
@@ -191,7 +191,7 @@ class ComplaintService
         )->post($uploadUrl);
 
         if (! $response->successful()) {
-            throw new \Exception('Upload failed: '.$response->body());
+            throw new \Exception(__('messages.complaint.upload_failed').$response->body());
         }
 
         return $baseUrl.'/storage/v1/object/public/'.$path;
