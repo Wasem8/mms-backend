@@ -135,6 +135,28 @@ class ComplaintController extends Controller
     }
 
 
+    public function search(Request $request)
+    {
+        $validated = $request->validate([
+            'q'           => ['required', 'string', 'min:1'],
+            'per_page'    => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $filters = ['search' => $validated['q']];
+
+        $mosqueId = $this->getManagerMosqueId();
+        if ($mosqueId) {
+            $filters['mosque_id'] = $mosqueId;
+        } elseif ($request->has('mosque_id')) {
+            $filters['mosque_id'] = $request->mosque_id;
+        }
+
+        $filters['per_page'] = (int) ($validated['per_page'] ?? 15);
+        $complaints = $this->service->getComplaintsForAdmin($filters);
+
+        return ApiResponse::success($complaints->items(), __('messages.complaint.retrieved'), $complaints);
+    }
+
     public function index(Request $request)
     {
         $filters = $request->only(['status', 'complaint_type', 'priority', 'per_page']);

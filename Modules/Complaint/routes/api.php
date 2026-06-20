@@ -16,6 +16,7 @@ Route::middleware(['auth:api', 'role:super_admin,mosque_manager'])
     ->prefix('admin/complaints')
     ->group(function () {
         Route::get('/statistics', [ComplaintController::class, 'statistics']);
+        Route::get('/search', [ComplaintController::class, 'search']);
         Route::get('/', [ComplaintController::class, 'index']);
         Route::get('/{id}', [ComplaintController::class, 'show']);
         Route::patch('/{id}/status', [ComplaintController::class, 'updateStatus']);

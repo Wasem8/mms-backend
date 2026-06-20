@@ -18,6 +18,15 @@ class ComplaintRepository implements ComplaintRepositoryInterface
         if (isset($filters['status']))     $query->where('status', $filters['status']);
         if (isset($filters['complaint_type'])) $query->where('complaint_type', $filters['complaint_type']);
         if (isset($filters['priority']))   $query->where('priority', $filters['priority']);
+        if (isset($filters['search'])) {
+            $s = $filters['search'];
+            $query->where(function ($q) use ($s) {
+                $q->where('complaint_number', 'like', "%{$s}%")
+                  ->orWhere('title', 'like', "%{$s}%")
+                  ->orWhere('description', 'like', "%{$s}%")
+                  ->orWhere('email', 'like', "%{$s}%");
+            });
+        }
         $perPage = isset($filters['per_page']) ? max(1, min(100, (int) $filters['per_page'])) : 15;
 
         return $query->latest()->paginate($perPage);

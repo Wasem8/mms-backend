@@ -38,6 +38,35 @@ class MaintenanceRequestController extends Controller
     //  MOSQUE MANAGER ENDPOINTS
     // =========================================================================
 
+    public function search(Request $request)
+    {
+        $validated = $request->validate([
+            'q'           => ['required', 'string', 'min:1'],
+            'per_page'    => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $filters = ['search' => $validated['q']];
+
+        $mosqueId = $this->getManagerMosqueId();
+        if ($mosqueId) {
+            $filters['mosque_id'] = $mosqueId;
+        }
+
+        $filters['per_page'] = (int) ($validated['per_page'] ?? 15);
+        $paginator = $this->service->getList($filters);
+
+        return ApiResponse::success([
+            'data' => $paginator->items(),
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'per_page'     => $paginator->perPage(),
+                'total'        => $paginator->total(),
+                'last_page'    => $paginator->lastPage(),
+                'has_more'     => $paginator->hasMorePages(),
+            ]
+        ], 'Search results retrieved successfully.');
+    }
+
     public function index(Request $request)
     {
         $filters = $request->only(['status', 'priority', 'per_page']);

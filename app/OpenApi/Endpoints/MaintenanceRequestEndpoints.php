@@ -348,6 +348,61 @@ class MaintenanceRequestEndpoints
         ]
     )]
     public function recentRequests() {}
+
+    // ─── GET /maintenance/search ───────────────────────────────────────────────
+
+    #[OA\Get(
+        path: '/maintenance/search',
+        operationId: 'searchMaintenanceRequests',
+        tags: ['Maintenance Requests'],
+        summary: 'Search maintenance requests',
+        description: 'Search maintenance requests by keyword across maintenance_number, title, and description.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'q', in: 'query', required: true, schema: new OA\Schema(type: 'string', minLength: 1), description: 'Search keyword'),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 15, minimum: 1, maximum: 100), description: 'Items per page'),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Search results retrieved successfully.',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Search results retrieved successfully.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'data',
+                                    type: 'array',
+                                    items: new OA\Items(ref: '#/components/schemas/MaintenanceRequest'),
+                                ),
+                                new OA\Property(
+                                    property: 'pagination',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                        new OA\Property(property: 'per_page',     type: 'integer', example: 15),
+                                        new OA\Property(property: 'total',        type: 'integer', example: 8),
+                                        new OA\Property(property: 'last_page',    type: 'integer', example: 1),
+                                        new OA\Property(property: 'has_more',     type: 'boolean', example: false),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+            new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
+            new OA\Response(response: 422, ref: '#/components/responses/ValidationError'),
+        ]
+    )]
+    public function search() {}
+
     // ─── PUT /maintenance/{id} ────────────────────────────────────────────────
 
     #[OA\Put(

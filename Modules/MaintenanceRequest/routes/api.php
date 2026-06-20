@@ -13,6 +13,7 @@ Route::get('/', [MaintenanceRequestController::class, 'index']);
 Route::post('/', [MaintenanceRequestController::class, 'store']);
 Route::get('/recent', [MaintenanceRequestController::class, 'recentRequests']);
 Route::get('/stats', [MaintenanceRequestController::class, 'pageStats']);
+Route::get('/search', [MaintenanceRequestController::class, 'search']);
 // Remember to put static routes BEFORE dynamic parameter routes!
 Route::get('/track/{maintenance_number}', [MaintenanceRequestController::class, 'track']);
 
