@@ -2248,8 +2248,13 @@
                     "Complaints"
                 ],
                 "summary": "Submit a complaint as a guest",
-                "description": "Allows non-authenticated users or unverified users to submit complaints.",
+                "description": "Allows non-authenticated users to submit complaints. Returns the complaint object directly (not wrapped in ApiResponse).",
                 "operationId": "submitComplaintGuest",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -2303,7 +2308,8 @@
                                         "type": "boolean",
                                         "example": false
                                     },
-                                    "files": {
+                                    "files[]": {
+                                        "description": "Optional attachments. Accepted: jpg, jpeg, png, pdf. Max 5 MB each.",
                                         "type": "array",
                                         "items": {
                                             "type": "string",
@@ -2322,78 +2328,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "تم تقديم الشكوى بنجاح. يمكنك تتبعها باستخدام رقم الشكوى الخاص بك."
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "complaint_number": {
-                                                    "type": "string",
-                                                    "example": "CMP-2026-ABC123"
-                                                },
-                                                "title": {
-                                                    "type": "string",
-                                                    "example": "Broken AC in prayer hall"
-                                                },
-                                                "description": {
-                                                    "type": "string",
-                                                    "example": "The air conditioning has been out of service for two days."
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "pending"
-                                                },
-                                                "priority": {
-                                                    "type": "string",
-                                                    "example": "high"
-                                                },
-                                                "complaint_type": {
-                                                    "type": "string",
-                                                    "example": "power_outage"
-                                                },
-                                                "email": {
-                                                    "type": "string",
-                                                    "example": "user@example.com",
-                                                    "nullable": true
-                                                },
-                                                "is_anonymous": {
-                                                    "type": "boolean",
-                                                    "example": false
-                                                },
-                                                "mosque_id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "created_at": {
-                                                    "type": "string",
-                                                    "format": "date-time",
-                                                    "example": "2026-05-13T08:30:00Z"
-                                                },
-                                                "updated_at": {
-                                                    "type": "string",
-                                                    "format": "date-time",
-                                                    "example": "2026-05-13T08:30:00Z"
-                                                }
-                                            },
-                                            "type": "object"
-                                        },
-                                        "pagination": {
-                                            "type": "object",
-                                            "example": null,
-                                            "nullable": true
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/Complaint"
                                 }
                             }
                         }
@@ -2412,6 +2347,11 @@
                 "summary": "Submit a complaint as a member",
                 "description": "Allows authenticated users to submit complaints.",
                 "operationId": "submitComplaintMember",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -2465,7 +2405,8 @@
                                         "type": "boolean",
                                         "example": false
                                     },
-                                    "files": {
+                                    "files[]": {
+                                        "description": "Optional attachments. Accepted: jpg, jpeg, png, pdf. Max 5 MB each.",
                                         "type": "array",
                                         "items": {
                                             "type": "string",
@@ -2491,63 +2432,10 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "تم تقديم الشكوى بنجاح. يمكنك تتبعها باستخدام رقم الشكوى الخاص بك."
+                                            "example": "Complaint submitted successfully."
                                         },
                                         "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "complaint_number": {
-                                                    "type": "string",
-                                                    "example": "CMP-2026-ABC123"
-                                                },
-                                                "title": {
-                                                    "type": "string",
-                                                    "example": "Broken AC in prayer hall"
-                                                },
-                                                "description": {
-                                                    "type": "string",
-                                                    "example": "The air conditioning has been out of service for two days."
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "pending"
-                                                },
-                                                "priority": {
-                                                    "type": "string",
-                                                    "example": "high"
-                                                },
-                                                "complaint_type": {
-                                                    "type": "string",
-                                                    "example": "power_outage"
-                                                },
-                                                "email": {
-                                                    "type": "string",
-                                                    "example": "user@example.com",
-                                                    "nullable": true
-                                                },
-                                                "is_anonymous": {
-                                                    "type": "boolean",
-                                                    "example": false
-                                                },
-                                                "mosque_id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "created_at": {
-                                                    "type": "string",
-                                                    "format": "date-time",
-                                                    "example": "2026-05-13T08:30:00Z"
-                                                },
-                                                "updated_at": {
-                                                    "type": "string",
-                                                    "format": "date-time",
-                                                    "example": "2026-05-13T08:30:00Z"
-                                                }
-                                            },
-                                            "type": "object"
+                                            "$ref": "#/components/schemas/Complaint"
                                         },
                                         "pagination": {
                                             "type": "object",
@@ -2674,26 +2562,17 @@
                 }
             }
         },
-        "/mosques/{mosqueId}/complaints/recent": {
+        "/complaints/recent": {
             "get": {
                 "tags": [
                     "Complaints"
                 ],
-                "summary": "Get recent complaints for a mosque",
-                "description": "Returns the latest complaints for a specific mosque. Restricted to mosque_manager.",
+                "summary": "Get recent complaints for my mosque",
+                "description": "Returns the latest complaints for the authenticated mosque_manager's mosque.",
                 "operationId": "getRecentComplaints",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/AcceptLanguageHeader"
-                    },
-                    {
-                        "name": "mosqueId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        },
-                        "example": 1
                     },
                     {
                         "name": "limit",
@@ -2721,7 +2600,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Success"
+                                            "example": "Complaints retrieved successfully."
                                         },
                                         "data": {
                                             "type": "array",
@@ -2797,10 +2676,34 @@
                         "$ref": "#/components/responses/Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden — requires mosque_manager role"
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/NotFound"
+                        "description": "Forbidden — requires proper role (Access Denied)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Access denied. Your role does not allow this action."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -2810,26 +2713,17 @@
                 ]
             }
         },
-        "/mosques/{mosqueId}/complaints/stats": {
+        "/complaints/stats": {
             "get": {
                 "tags": [
                     "Complaints"
                 ],
                 "summary": "Complaint page stat cards",
-                "description": "Returns the five stat cards shown at the top of the complaints management page: total, open, urgent, resolved this month, and average response time.",
+                "description": "Returns the five stat cards for the authenticated mosque_manager's mosque: total, open, urgent, resolved this month, and average response time.",
                 "operationId": "getComplaintPageStats",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/AcceptLanguageHeader"
-                    },
-                    {
-                        "name": "mosqueId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        },
-                        "example": 1
                     }
                 ],
                 "responses": {
@@ -2845,7 +2739,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Success"
+                                            "example": "Complaints retrieved successfully."
                                         },
                                         "data": {
                                             "properties": {
@@ -2876,6 +2770,11 @@
                                                 }
                                             },
                                             "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
                                         }
                                     },
                                     "type": "object"
@@ -2884,13 +2783,37 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthenticated"
+                        "$ref": "#/components/responses/Unauthenticated"
                     },
                     "403": {
-                        "description": "Forbidden — requires mosque_manager role"
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/NotFound"
+                        "description": "Forbidden — requires mosque_manager role (Access Denied)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Access denied. Your role does not allow this action."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -2961,6 +2884,18 @@
                                 "high"
                             ]
                         }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
                     }
                 ],
                 "responses": {
@@ -2981,47 +2916,33 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "integer",
-                                                        "example": 12
-                                                    },
-                                                    "complaint_number": {
-                                                        "type": "string",
-                                                        "example": "CMP-2026-ABC123"
-                                                    },
-                                                    "title": {
-                                                        "type": "string",
-                                                        "example": "Broken AC in prayer hall"
-                                                    },
-                                                    "status": {
-                                                        "type": "string",
-                                                        "example": "pending"
-                                                    },
-                                                    "priority": {
-                                                        "type": "string",
-                                                        "example": "high"
-                                                    },
-                                                    "complaint_type": {
-                                                        "type": "string",
-                                                        "example": "power_outage"
-                                                    },
-                                                    "mosque_id": {
-                                                        "type": "integer",
-                                                        "example": 1
-                                                    },
-                                                    "created_at": {
-                                                        "type": "string",
-                                                        "format": "date-time",
-                                                        "example": "2026-05-13T08:30:00Z"
-                                                    }
-                                                },
-                                                "type": "object"
+                                                "$ref": "#/components/schemas/Complaint"
                                             }
                                         },
                                         "pagination": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 42
+                                                },
+                                                "has_more_pages": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                }
+                                            },
                                             "type": "object",
-                                            "example": null,
                                             "nullable": true
                                         }
                                     },
@@ -3081,65 +3002,7 @@
                                             "example": "Complaint details retrieved successfully."
                                         },
                                         "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 12
-                                                },
-                                                "complaint_number": {
-                                                    "type": "string",
-                                                    "example": "CMP-2026-ABC123"
-                                                },
-                                                "title": {
-                                                    "type": "string",
-                                                    "example": "Broken AC in prayer hall"
-                                                },
-                                                "description": {
-                                                    "type": "string",
-                                                    "example": "The air conditioning has been out of service for two days."
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "pending"
-                                                },
-                                                "priority": {
-                                                    "type": "string",
-                                                    "example": "high"
-                                                },
-                                                "complaint_type": {
-                                                    "type": "string",
-                                                    "example": "power_outage"
-                                                },
-                                                "email": {
-                                                    "type": "string",
-                                                    "example": "user@example.com",
-                                                    "nullable": true
-                                                },
-                                                "is_anonymous": {
-                                                    "type": "boolean",
-                                                    "example": false
-                                                },
-                                                "admin_notes": {
-                                                    "type": "string",
-                                                    "example": null,
-                                                    "nullable": true
-                                                },
-                                                "mosque_id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "created_at": {
-                                                    "type": "string",
-                                                    "format": "date-time",
-                                                    "example": "2026-05-13T08:30:00Z"
-                                                },
-                                                "updated_at": {
-                                                    "type": "string",
-                                                    "format": "date-time",
-                                                    "example": "2026-05-13T09:30:00Z"
-                                                }
-                                            },
-                                            "type": "object"
+                                            "$ref": "#/components/schemas/Complaint"
                                         },
                                         "pagination": {
                                             "type": "object",
@@ -3236,26 +3099,7 @@
                                             "example": "Complaint status updated successfully."
                                         },
                                         "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 12
-                                                },
-                                                "complaint_number": {
-                                                    "type": "string",
-                                                    "example": "CMP-2026-ABC123"
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "resolved"
-                                                },
-                                                "admin_notes": {
-                                                    "type": "string",
-                                                    "example": "Resolved after maintenance team fixed the issue.",
-                                                    "nullable": true
-                                                }
-                                            },
-                                            "type": "object"
+                                            "$ref": "#/components/schemas/Complaint"
                                         },
                                         "pagination": {
                                             "type": "object",
@@ -3323,7 +3167,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "تم استرجاع الإحصائيات بنجاح"
+                                            "example": "Complaint statistics retrieved successfully."
                                         },
                                         "data": {
                                             "properties": {
@@ -3381,6 +3225,120 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/complaints/search": {
+            "get": {
+                "tags": [
+                    "Complaints"
+                ],
+                "summary": "Search complaints",
+                "description": "Search complaints by keyword across complaint_number, title, description, and email.",
+                "operationId": "searchComplaints",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "description": "Search keyword",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "minLength": 1
+                        }
+                    },
+                    {
+                        "name": "mosque_id",
+                        "in": "query",
+                        "description": "Filter by mosque (super_admin only)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Search results retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Complaints retrieved successfully."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Complaint"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 42
+                                                },
+                                                "has_more_pages": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                }
+                                            },
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
                     }
                 },
                 "security": [
@@ -9695,40 +9653,45 @@
                                 "schema": {
                                     "properties": {
                                         "status": {
-                                            "type": "string",
-                                            "example": "success"
+                                            "type": "boolean",
+                                            "example": true
                                         },
                                         "message": {
                                             "type": "string",
                                             "example": "Maintenance requests retrieved successfully."
                                         },
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/MaintenanceRequest"
-                                            }
-                                        },
-                                        "pagination": {
                                             "properties": {
-                                                "current_page": {
-                                                    "type": "integer",
-                                                    "example": 1
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/MaintenanceRequest"
+                                                    }
                                                 },
-                                                "per_page": {
-                                                    "type": "integer",
-                                                    "example": 15
-                                                },
-                                                "total": {
-                                                    "type": "integer",
-                                                    "example": 8
-                                                },
-                                                "last_page": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "has_more": {
-                                                    "type": "boolean",
-                                                    "example": false
+                                                "pagination": {
+                                                    "properties": {
+                                                        "current_page": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "per_page": {
+                                                            "type": "integer",
+                                                            "example": 15
+                                                        },
+                                                        "total": {
+                                                            "type": "integer",
+                                                            "example": 8
+                                                        },
+                                                        "last_page": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "has_more": {
+                                                            "type": "boolean",
+                                                            "example": false
+                                                        }
+                                                    },
+                                                    "type": "object"
                                                 }
                                             },
                                             "type": "object"
@@ -9845,8 +9808,8 @@
                                 "schema": {
                                     "properties": {
                                         "status": {
-                                            "type": "string",
-                                            "example": "success"
+                                            "type": "boolean",
+                                            "example": true
                                         },
                                         "message": {
                                             "type": "string",
@@ -9908,8 +9871,8 @@
                                 "schema": {
                                     "properties": {
                                         "status": {
-                                            "type": "string",
-                                            "example": "success"
+                                            "type": "boolean",
+                                            "example": true
                                         },
                                         "message": {
                                             "type": "string",
@@ -10023,8 +9986,8 @@
                                 "schema": {
                                     "properties": {
                                         "status": {
-                                            "type": "string",
-                                            "example": "success"
+                                            "type": "boolean",
+                                            "example": true
                                         },
                                         "message": {
                                             "type": "string",
@@ -10087,8 +10050,8 @@
                                 "schema": {
                                     "properties": {
                                         "status": {
-                                            "type": "string",
-                                            "example": "success"
+                                            "type": "boolean",
+                                            "example": true
                                         },
                                         "message": {
                                             "type": "string",
@@ -10121,26 +10084,17 @@
                 ]
             }
         },
-        "/mosques/{mosqueId}/maintenance/stats": {
+        "/maintenance/stats": {
             "get": {
                 "tags": [
                     "Maintenance Requests"
                 ],
                 "summary": "Maintenance page stat cards",
-                "description": "Returns the four stat cards shown at the top of the maintenance management page: open requests, in progress, completed this month, and critical failures.",
+                "description": "Returns the four stat cards for the authenticated mosque_manager's mosque: open requests, in progress, completed this month, and critical failures.",
                 "operationId": "getMaintenancePageStats",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/AcceptLanguageHeader"
-                    },
-                    {
-                        "name": "mosqueId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        },
-                        "example": 1
                     }
                 ],
                 "responses": {
@@ -10151,8 +10105,8 @@
                                 "schema": {
                                     "properties": {
                                         "status": {
-                                            "type": "string",
-                                            "example": "success"
+                                            "type": "boolean",
+                                            "example": true
                                         },
                                         "message": {
                                             "type": "string",
@@ -10194,9 +10148,6 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/Forbidden"
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/NotFound"
                     }
                 },
                 "security": [
@@ -10206,23 +10157,17 @@
                 ]
             }
         },
-        "/mosques/{mosqueId}/maintenance/recent": {
+        "/maintenance/recent": {
             "get": {
                 "tags": [
                     "Maintenance Requests"
                 ],
-                "summary": "Get recent maintenance requests for a mosque",
-                "description": "Returns the latest maintenance requests for a specific mosque. Restricted to mosque_manager.",
+                "summary": "Get recent maintenance requests for my mosque",
+                "description": "Returns the latest maintenance requests for the authenticated mosque_manager's mosque.",
                 "operationId": "getRecentMaintenanceRequests",
                 "parameters": [
                     {
-                        "name": "mosqueId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        },
-                        "example": 1
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
                     },
                     {
                         "name": "limit",
@@ -10316,9 +10261,115 @@
                     },
                     "403": {
                         "description": "Forbidden — requires mosque_manager role"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/maintenance/search": {
+            "get": {
+                "tags": [
+                    "Maintenance Requests"
+                ],
+                "summary": "Search maintenance requests",
+                "description": "Search maintenance requests by keyword across maintenance_number, title, and description.",
+                "operationId": "searchMaintenanceRequests",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
                     },
-                    "404": {
-                        "$ref": "#/components/responses/NotFound"
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "description": "Search keyword",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "minLength": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Search results retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Search results retrieved successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/MaintenanceRequest"
+                                                    }
+                                                },
+                                                "pagination": {
+                                                    "properties": {
+                                                        "current_page": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "per_page": {
+                                                            "type": "integer",
+                                                            "example": 15
+                                                        },
+                                                        "total": {
+                                                            "type": "integer",
+                                                            "example": 8
+                                                        },
+                                                        "last_page": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "has_more": {
+                                                            "type": "boolean",
+                                                            "example": false
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
                     }
                 },
                 "security": [
@@ -10358,8 +10409,8 @@
                                 "schema": {
                                     "properties": {
                                         "status": {
-                                            "type": "string",
-                                            "example": "success"
+                                            "type": "boolean",
+                                            "example": true
                                         },
                                         "message": {
                                             "type": "string",
@@ -10468,40 +10519,45 @@
                                 "schema": {
                                     "properties": {
                                         "status": {
-                                            "type": "string",
-                                            "example": "success"
+                                            "type": "boolean",
+                                            "example": true
                                         },
                                         "message": {
                                             "type": "string",
                                             "example": "All maintenance requests retrieved successfully."
                                         },
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/MaintenanceRequest"
-                                            }
-                                        },
-                                        "pagination": {
                                             "properties": {
-                                                "current_page": {
-                                                    "type": "integer",
-                                                    "example": 1
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/MaintenanceRequest"
+                                                    }
                                                 },
-                                                "per_page": {
-                                                    "type": "integer",
-                                                    "example": 15
-                                                },
-                                                "total": {
-                                                    "type": "integer",
-                                                    "example": 43
-                                                },
-                                                "last_page": {
-                                                    "type": "integer",
-                                                    "example": 3
-                                                },
-                                                "has_more": {
-                                                    "type": "boolean",
-                                                    "example": true
+                                                "pagination": {
+                                                    "properties": {
+                                                        "current_page": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "per_page": {
+                                                            "type": "integer",
+                                                            "example": 15
+                                                        },
+                                                        "total": {
+                                                            "type": "integer",
+                                                            "example": 43
+                                                        },
+                                                        "last_page": {
+                                                            "type": "integer",
+                                                            "example": 3
+                                                        },
+                                                        "has_more": {
+                                                            "type": "boolean",
+                                                            "example": true
+                                                        }
+                                                    },
+                                                    "type": "object"
                                                 }
                                             },
                                             "type": "object"
@@ -10587,8 +10643,8 @@
                                 "schema": {
                                     "properties": {
                                         "status": {
-                                            "type": "string",
-                                            "example": "success"
+                                            "type": "boolean",
+                                            "example": true
                                         },
                                         "message": {
                                             "type": "string",
@@ -18687,6 +18743,185 @@
                     "updated_at": {
                         "type": "string",
                         "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "ComplaintFile": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "file": {
+                        "type": "string",
+                        "example": "https://xyz.supabase.co/storage/v1/object/public/mms/complaints/abc123.jpg"
+                    },
+                    "file_type": {
+                        "type": "string",
+                        "example": "image/jpeg"
+                    }
+                },
+                "type": "object"
+            },
+            "ComplaintStatusLog": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "old_status": {
+                        "type": "string",
+                        "example": null,
+                        "nullable": true,
+                        "enum": [
+                            "pending",
+                            "in_progress",
+                            "resolved",
+                            "canceled"
+                        ]
+                    },
+                    "new_status": {
+                        "type": "string",
+                        "example": "pending",
+                        "enum": [
+                            "pending",
+                            "in_progress",
+                            "resolved",
+                            "canceled"
+                        ]
+                    },
+                    "note": {
+                        "type": "string",
+                        "example": "Complaint submitted and awaiting review",
+                        "nullable": true
+                    },
+                    "changed_at": {
+                        "type": "string",
+                        "example": "2026-05-13T09:00:00Z"
+                    }
+                },
+                "type": "object"
+            },
+            "Complaint": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 12
+                    },
+                    "complaint_number": {
+                        "type": "string",
+                        "example": "CMP-2026-ABC123"
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "Broken AC in prayer hall"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "The air conditioning has been out of service for two days."
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "pending",
+                        "enum": [
+                            "pending",
+                            "in_progress",
+                            "resolved",
+                            "canceled"
+                        ]
+                    },
+                    "priority": {
+                        "type": "string",
+                        "example": "high",
+                        "enum": [
+                            "low",
+                            "medium",
+                            "high"
+                        ]
+                    },
+                    "complaint_type": {
+                        "type": "string",
+                        "example": "power_outage",
+                        "enum": [
+                            "service_missing",
+                            "power_outage",
+                            "corruption",
+                            "employee_misconduct",
+                            "technical_issue"
+                        ]
+                    },
+                    "email": {
+                        "type": "string",
+                        "example": "user@example.com",
+                        "nullable": true
+                    },
+                    "is_anonymous": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "admin_notes": {
+                        "type": "string",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "mosque_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "mosque": {
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 1
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "Al-Noor Mosque"
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "user": {
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 5
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "Ahmed Hassan"
+                            },
+                            "email": {
+                                "type": "string",
+                                "example": "ahmed@example.com"
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "files": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ComplaintFile"
+                        }
+                    },
+                    "status_logs": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ComplaintStatusLog"
+                        }
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-05-13T08:30:00Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-05-13T09:30:00Z"
                     }
                 },
                 "type": "object"

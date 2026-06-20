@@ -93,10 +93,12 @@ class MaintenanceService
         $this->repository->delete($id);
     }
 
-    public function getPageStats(int $mosqueId): array
+    public function getPageStats(?int $mosqueId = null): array
     {
         $now   = now();
-        $query = fn() => Maintenance::where('mosque_id', $mosqueId);
+        $query = $mosqueId
+            ? fn() => Maintenance::where('mosque_id', $mosqueId)
+            : fn() => Maintenance::query();
 
         // طلبات مفتوحة
         $open = $query()
@@ -129,14 +131,13 @@ class MaintenanceService
         ];
     }
 
-    public function getRecentRequests(int $mosqueId, int $limit = 5): array
+    public function getRecentRequests(?int $mosqueId = null, int $limit = 5): array
     {
-        return Maintenance::where('mosque_id', $mosqueId)
-            ->with(['files'])
-            ->latest()
-            ->limit($limit)
-            ->get()
-            ->toArray();
+        $query = Maintenance::with(['files']);
+        if ($mosqueId) {
+            $query->where('mosque_id', $mosqueId);
+        }
+        return $query->latest()->limit($limit)->get()->toArray();
     }
 
     public function getForAdmin(array $filters = [])

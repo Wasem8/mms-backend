@@ -3,11 +3,11 @@
 namespace Modules\Complaint\Repositories;
 
 use Modules\Complaint\Models\Complaint;
-use Illuminate\Support\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 interface ComplaintRepositoryInterface
 {
-    public function getFiltered(array $filters = []): Collection;
+    public function getFiltered(array $filters = []): LengthAwarePaginator;
     public function find(int $id): Complaint;
     public function findByComplaintNumber(string $complaintNumber): Complaint;
     public function create(array $data): Complaint;

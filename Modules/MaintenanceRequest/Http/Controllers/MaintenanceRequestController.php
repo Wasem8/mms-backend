@@ -9,6 +9,7 @@ use Modules\MaintenanceRequest\Service\MaintenanceService;
 use Modules\MaintenanceRequest\Http\Requests\StoreMaintenanceRequest;
 use Modules\MaintenanceRequest\Http\Requests\UpdateMaintenanceRequest;
 use Modules\MaintenanceRequest\Http\Requests\ProcessMaintenanceRequest;
+use Modules\Mosque\Models\Mosque;
 use App\Support\ApiResponse;
 
 class MaintenanceRequestController extends Controller
@@ -17,14 +18,63 @@ class MaintenanceRequestController extends Controller
         protected MaintenanceService $service
     ) {}
 
+    private function getManagerMosqueId(): ?int
+    {
+        $user = auth()->user();
+        if (!$user || !$user->hasRole('mosque_manager')) {
+            return null;
+        }
+
+        $mosque = Mosque::where('manager_id', $user->id)->first();
+
+        if (!$mosque) {
+            abort(403, 'No mosque is assigned to your account.');
+        }
+
+        return $mosque->id;
+    }
+
     // =========================================================================
     //  MOSQUE MANAGER ENDPOINTS
     // =========================================================================
 
+    public function search(Request $request)
+    {
+        $validated = $request->validate([
+            'q'           => ['required', 'string', 'min:1'],
+            'per_page'    => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $filters = ['search' => $validated['q']];
+
+        $mosqueId = $this->getManagerMosqueId();
+        if ($mosqueId) {
+            $filters['mosque_id'] = $mosqueId;
+        }
+
+        $filters['per_page'] = (int) ($validated['per_page'] ?? 15);
+        $paginator = $this->service->getList($filters);
+
+        return ApiResponse::success([
+            'data' => $paginator->items(),
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'per_page'     => $paginator->perPage(),
+                'total'        => $paginator->total(),
+                'last_page'    => $paginator->lastPage(),
+                'has_more'     => $paginator->hasMorePages(),
+            ]
+        ], 'Search results retrieved successfully.');
+    }
+
     public function index(Request $request)
     {
         $filters = $request->only(['status', 'priority', 'per_page']);
-        $filters['mosque_id'] = $request->user()->mosque->id ?? null;
+
+        $mosqueId = $this->getManagerMosqueId();
+        if ($mosqueId) {
+            $filters['mosque_id'] = $mosqueId;
+        }
 
         $paginator = $this->service->getList($filters);
 
@@ -57,7 +107,11 @@ class MaintenanceRequestController extends Controller
 
     public function show(Request $request, int $id)
     {
-        $filters = ['mosque_id' => $request->user()->mosque->id ?? null];
+        $filters = [];
+        $mosqueId = $this->getManagerMosqueId();
+        if ($mosqueId) {
+            $filters['mosque_id'] = $mosqueId;
+        }
         $maintenance = $this->service->getDetails($id, $filters);
 
         return ApiResponse::success($maintenance->loadMissing(['files', 'statusLogs', 'mosque']), 'Maintenance request retrieved successfully.');
@@ -69,7 +123,11 @@ class MaintenanceRequestController extends Controller
      */
     public function update(UpdateMaintenanceRequest $request, int $id)
     {
-        $filters = ['mosque_id' => $request->user()->mosque->id ?? null];
+        $filters = [];
+        $mosqueId = $this->getManagerMosqueId();
+        if ($mosqueId) {
+            $filters['mosque_id'] = $mosqueId;
+        }
 
         // Ensure ownership before updating
         $this->service->getDetails($id, $filters);
@@ -85,7 +143,11 @@ class MaintenanceRequestController extends Controller
 
     public function destroy(Request $request, int $id)
     {
-        $filters = ['mosque_id' => $request->user()->mosque->id ?? null];
+        $filters = [];
+        $mosqueId = $this->getManagerMosqueId();
+        if ($mosqueId) {
+            $filters['mosque_id'] = $mosqueId;
+        }
         $this->service->getDetails($id, $filters);
 
         $this->service->delete($id);
@@ -125,9 +187,12 @@ class MaintenanceRequestController extends Controller
         ]);
     }
 
-    public function pageStats(int $mosqueId)
+    public function pageStats()
     {
-        $data = $this->service->getPageStats($mosqueId);
+        $mosqueId = $this->getManagerMosqueId();
+        $data = $mosqueId
+            ? $this->service->getPageStats($mosqueId)
+            : $this->service->getPageStats(null);
 
         return response()->json([
             'status'  => true,
@@ -136,10 +201,10 @@ class MaintenanceRequestController extends Controller
         ]);
     }
 
-    public function recentRequests(int $mosqueId)
+    public function recentRequests()
     {
         $limit = (int) request()->query('limit', 5);
-        $data  = $this->service->getRecentRequests($mosqueId, $limit);
+        $data  = $this->service->getRecentRequests($this->getManagerMosqueId(), $limit);
 
         return response()->json([
             'status'  => true,

@@ -9,12 +9,30 @@ use Illuminate\Support\Facades\Log;
 use Modules\Complaint\Http\Requests\SubmitComplaintRequest as RequestsSubmitComplaintRequest;
 use Modules\Complaint\Service\ComplaintService;
 use Modules\Complaint\Http\Requests\UpdateComplaintRequest;
+use Modules\Mosque\Models\Mosque;
 
 class ComplaintController extends Controller
 {
     public function __construct(
         protected ComplaintService $service
     ) {}
+
+    private function getManagerMosqueId(): ?int
+    {
+        $user = auth()->user();
+        if (!$user || !$user->hasRole('mosque_manager')) {
+            return null;
+        }
+
+        $mosque = Mosque::where('manager_id', $user->id)->first();
+
+        if (!$mosque) {
+            abort(403, __('messages.complaint.no_mosque_assigned'));
+        }
+
+        return $mosque->id;
+    }
+
     public function storeGuest(
         RequestsSubmitComplaintRequest $request
     ) {
@@ -71,20 +89,18 @@ class ComplaintController extends Controller
         $files = is_array($files) ? $files : ($files ? [$files] : []);
 
         $complaint = $this->service->submitComplaint($data, $files);
-        return ApiResponse::success($complaint, 'تم تقديم الشكوى بنجاح.');
+        return ApiResponse::success($complaint, __('messages.complaint.submitted_member'));
     }
     public function track($complaintNumber)
     {
         $complaint = $this->service->trackComplaint($complaintNumber);
 
-        // 1. نبدأ بسجل الحالة الابتدائية (عند الإنشاء)
         $history = collect([[
-            'status' => 'pending', // أو الحالة الابتدائية التي تبدأ بها الشكوى
+            'status' => 'pending',
             'date' => $complaint->created_at,
-            'note' => 'تم تقديم الشكوى بنجاح' // ملاحظة افتراضية
+            'note' => __('messages.complaint.submitted_member'),
         ]]);
 
-        // 2. نضيف سجلات التغيير التي قمت بتسجيلها في logStatusChange
         $logs = $complaint->statusLogs->map(function ($log) {
             return [
                 'status' => $log->new_status,
@@ -102,45 +118,61 @@ class ComplaintController extends Controller
             'admin_resolution_note' => $complaint->admin_notes,
             'created_at' => $complaint->created_at,
             'status_history' => $fullHistory
-        ], 'Complaint status retrieved successfully.');
+        ], __('messages.complaint.tracked'));
     }
 
-    public function recentComplaints(int $mosqueId)
+    public function recentComplaints()
     {
+        $mosqueId = $this->getManagerMosqueId();
+
         $data = $this->service->getRecentComplaints($mosqueId);
 
         return response()->json([
             'status'  => true,
-            'message' => 'Success',
+            'message' => __('messages.complaint.retrieved'),
             'data'    => $data,
         ]);
     }
-    // ==========================================
-    // ADMIN & MANAGER METHODS
-    // ==========================================
 
-    /**
-     * GET: List complaints with RBAC filtering (Mosque Manager / Region Manager)
-     */
+
+    public function search(Request $request)
+    {
+        $validated = $request->validate([
+            'q'           => ['required', 'string', 'min:1'],
+            'per_page'    => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $filters = ['search' => $validated['q']];
+
+        $mosqueId = $this->getManagerMosqueId();
+        if ($mosqueId) {
+            $filters['mosque_id'] = $mosqueId;
+        } elseif ($request->has('mosque_id')) {
+            $filters['mosque_id'] = $request->mosque_id;
+        }
+
+        $filters['per_page'] = (int) ($validated['per_page'] ?? 15);
+        $complaints = $this->service->getComplaintsForAdmin($filters);
+
+        return ApiResponse::success($complaints->items(), __('messages.complaint.retrieved'), $complaints);
+    }
+
     public function index(Request $request)
     {
-        $filters = $request->only(['status', 'mosque_id', 'complaint_type', 'priority']);
+        $filters = $request->only(['status', 'complaint_type', 'priority', 'per_page']);
 
-        $user = auth()->user();
-
-        // RBAC Enforcement: Mosque Managers only see their own mosque
-        if ($user && $user->role === 'mosque_manager') {
-            $filters['mosque_id'] = $user->mosque_id;
+        $mosqueId = $this->getManagerMosqueId();
+        if ($mosqueId) {
+            $filters['mosque_id'] = $mosqueId;
+        } elseif ($request->has('mosque_id')) {
+            $filters['mosque_id'] = $request->mosque_id;
         }
 
         $complaints = $this->service->getComplaintsForAdmin($filters);
 
-        return ApiResponse::success($complaints, 'Complaints retrieved successfully.');
+        return ApiResponse::success($complaints->items(), __('messages.complaint.retrieved'), $complaints);
     }
 
-    /**
-     * PATCH: Update status and add resolution notes (Mosque Manager / Region Manager)
-     */
     public function updateStatus(UpdateComplaintRequest $request, $id)
     {
         $validated = $request->validated();
@@ -152,46 +184,48 @@ class ComplaintController extends Controller
             $validated['note'] ?? null
         );
 
-        return ApiResponse::success($complaint, 'Complaint status updated successfully.');
+        return ApiResponse::success($complaint, __('messages.complaint.status_updated'));
     }
 
     public function show($id)
     {
-        $user = auth()->user();
         $filters = [];
 
-        if ($user && $user->role === 'mosque_manager') {
-            $filters['mosque_id'] = $user->mosque_id;
+        $mosqueId = $this->getManagerMosqueId();
+        if ($mosqueId) {
+            $filters['mosque_id'] = $mosqueId;
         }
 
         $complaint = $this->service->getComplaintDetails((int)$id, $filters);
 
-        return ApiResponse::success($complaint, 'Complaint details retrieved successfully.');
+        return ApiResponse::success($complaint, __('messages.complaint.details_retrieved'));
     }
 
     public function statistics(Request $request)
     {
-        $user = auth()->user();
         $filters = [];
 
-        if ($user && $user->role === 'mosque_manager') {
-            $filters['mosque_id'] = $user->mosque_id;
-        } elseif ($user && $user->role === 'super_admin' && $request->has('mosque_id')) {
+        $mosqueId = $this->getManagerMosqueId();
+        if ($mosqueId) {
+            $filters['mosque_id'] = $mosqueId;
+        } elseif ($request->has('mosque_id')) {
             $filters['mosque_id'] = $request->mosque_id;
         }
 
         $stats = $this->service->getComplaintStatistics($filters);
 
-        return ApiResponse::success($stats, 'تم استرجاع الإحصائيات بنجاح');
+        return ApiResponse::success($stats, __('messages.complaint.statistics_retrieved'));
     }
 
-    public function pageStats(int $mosqueId)
+    public function pageStats()
     {
+        $mosqueId = $this->getManagerMosqueId();
+
         $data = $this->service->getComplaintPageStats($mosqueId);
 
         return response()->json([
             'status'  => true,
-            'message' => 'Success',
+            'message' => __('messages.complaint.retrieved'),
             'data'    => $data,
         ]);
     }

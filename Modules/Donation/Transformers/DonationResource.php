@@ -44,8 +44,8 @@ class DonationResource extends JsonResource
 
             // ── Lifecycle ─────────────────────────────────────────────────
             'status'           => $this->status,                  // pending | completed
-            'created_at'       => $this->created_at->toDateTimeString(),
-            'updated_at'       => $this->updated_at->toDateTimeString(),
+            'created_at'       => $this->created_at?->toDateTimeString(),
+            'updated_at'       => $this->updated_at?->toDateTimeString(),
 
             // ── Stripe (only present for online donations) ────────────────
             'client_secret'    => $this->when(

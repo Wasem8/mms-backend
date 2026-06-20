@@ -49,6 +49,14 @@ class MaintenanceRepository implements MaintenanceRepositoryInterface
             ->when(isset($filters['category']),  fn($q) => $q->where('category',  $filters['category']))
             ->when(isset($filters['priority']),  fn($q) => $q->where('priority',  $filters['priority']))
             ->when(isset($filters['mosque_id']), fn($q) => $q->where('mosque_id', $filters['mosque_id']))
+            ->when(isset($filters['search']), function ($q) use ($filters) {
+                $s = $filters['search'];
+                $q->where(function ($sub) use ($s) {
+                    $sub->where('maintenance_number', 'like', "%{$s}%")
+                        ->orWhere('title', 'like', "%{$s}%")
+                        ->orWhere('description', 'like', "%{$s}%");
+                });
+            })
             ->latest()
             ->paginate($filters['per_page'] ?? 15);
     }

@@ -91,4 +91,32 @@ return [
     'no_hours_for_certificate' => 'No logged hours found. Cannot issue a certificate.',
     'upload_failed' => 'Failed to upload certificate: :error',
 
+    // --- Complaints Section ---
+    'complaint.submitted_guest' => 'Complaint submitted successfully. You can track it using your complaint number.',
+    'complaint.submitted_member' => 'Complaint submitted successfully.',
+    'complaint.retrieved' => 'Complaints retrieved successfully.',
+    'complaint.details_retrieved' => 'Complaint details retrieved successfully.',
+    'complaint.status_updated' => 'Complaint status updated successfully.',
+    'complaint.tracked' => 'Complaint status retrieved successfully.',
+    'complaint.statistics_retrieved' => 'Complaint statistics retrieved successfully.',
+    'complaint.unauthorized' => 'You are not authorized to access this complaint.',
+    'complaint.no_mosque_assigned' => 'No mosque is assigned to your account.',
+
+    'complaint.validation.title.required' => 'The title field is required.',
+    'complaint.validation.title.max' => 'The title must not exceed 255 characters.',
+    'complaint.validation.description.required' => 'The description field is required.',
+    'complaint.validation.description.min' => 'The description must be at least 20 characters.',
+    'complaint.validation.mosque_id.required' => 'The mosque field is required.',
+    'complaint.validation.mosque_id.exists' => 'The selected mosque does not exist.',
+    'complaint.validation.complaint_type.required' => 'The complaint type field is required.',
+    'complaint.validation.complaint_type.in' => 'The selected complaint type is invalid.',
+    'complaint.validation.priority.in' => 'The selected priority is invalid.',
+    'complaint.validation.email.email' => 'The email address is invalid.',
+    'complaint.validation.files.mimes' => 'Files must be of type: jpg, jpeg, png, pdf.',
+    'complaint.validation.files.max' => 'File size must not exceed 5 MB.',
+    'complaint.validation.status.required' => 'The status field is required.',
+    'complaint.validation.status.in' => 'The selected status is invalid.',
+    'complaint.validation.note.string' => 'The note must be a string.',
+    'complaint.upload_failed' => 'Image upload failed: ',
+    
 ];
