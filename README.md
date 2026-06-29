@@ -96,26 +96,6 @@ php artisan serve
 npm run dev
 ```
 
-## Environment Configuration
-
-Recommended baseline values in `.env`:
-
-```env
-APP_NAME=MMS
-APP_URL=http://localhost
-
-DB_CONNECTION=pgsql
-DB_HOST=127.0.0.1
-DB_PORT=5432
-DB_DATABASE=mms
-DB_USERNAME=root
-DB_PASSWORD=
-
-QUEUE_CONNECTION=database
-SESSION_DRIVER=database
-CACHE_STORE=database
-MAIL_MAILER=log
-```
 
 ## Useful Composer Commands
 
