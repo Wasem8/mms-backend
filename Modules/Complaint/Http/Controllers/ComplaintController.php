@@ -5,6 +5,7 @@ namespace Modules\Complaint\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Support\ApiResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Modules\Complaint\Http\Requests\SubmitComplaintRequest as RequestsSubmitComplaintRequest;
 use Modules\Complaint\Service\ComplaintService;
 use Modules\Complaint\Http\Requests\UpdateComplaintRequest;
@@ -14,16 +15,51 @@ class ComplaintController extends Controller
     public function __construct(
         protected ComplaintService $service
     ) {}
-    public function storeGuest(RequestsSubmitComplaintRequest $request)
-    {
-        $data = $request->validated();
-        $data['user_id'] = null;
+    public function storeGuest(
+        RequestsSubmitComplaintRequest $request
+    ) {
+        try {
 
-        $files = $request->file('files');
-        $files = is_array($files) ? $files : ($files ? [$files] : []);
+            $data = $request->validated();
 
-        $complaint = $this->service->submitComplaint($data, $files);
-        return ApiResponse::success($complaint, 'تم تقديم الشكوى بنجاح.');
+            $files =
+                $request->file('files');
+
+            $files =
+                is_array($files)
+                    ? $files
+                    : ($files ? [$files] : []);
+
+            $complaint =
+                $this->service
+                    ->submitComplaint(
+                        $data,
+                        $files
+                    );
+
+            return response()->json($complaint);
+
+        } catch (\Throwable $e) {
+
+            Log::error(
+                'Complaint upload failed',
+                [
+                    'message' =>
+                        $e->getMessage(),
+
+                    'line' =>
+                        $e->getLine(),
+
+                    'file' =>
+                        $e->getFile(),
+
+                    'trace' =>
+                        $e->getTraceAsString(),
+                ]
+            );
+
+            throw $e;
+        }
     }
 
     public function storeMember(RequestsSubmitComplaintRequest $request)
@@ -67,6 +103,17 @@ class ComplaintController extends Controller
             'created_at' => $complaint->created_at,
             'status_history' => $fullHistory
         ], 'Complaint status retrieved successfully.');
+    }
+
+    public function recentComplaints(int $mosqueId)
+    {
+        $data = $this->service->getRecentComplaints($mosqueId);
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Success',
+            'data'    => $data,
+        ]);
     }
     // ==========================================
     // ADMIN & MANAGER METHODS
@@ -136,5 +183,16 @@ class ComplaintController extends Controller
         $stats = $this->service->getComplaintStatistics($filters);
 
         return ApiResponse::success($stats, 'تم استرجاع الإحصائيات بنجاح');
+    }
+
+    public function pageStats(int $mosqueId)
+    {
+        $data = $this->service->getComplaintPageStats($mosqueId);
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Success',
+            'data'    => $data,
+        ]);
     }
 }

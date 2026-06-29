@@ -159,4 +159,22 @@ class User extends Authentication implements JWTSubject
     {
         return $this->hasMany(Halaqa::class, 'teacher_id');
     }
+
+    public function teacherProfile()
+    {
+        return $this->hasOne(TeacherProfile::class, 'user_id');
+    }
+
+    public function assignRole($roleName): void
+    {
+        $role = Role::where('name', $roleName)->first();
+
+        if (!$role) {
+            return;
+        }
+
+        if (!$this->roles()->where('role_id', $role->id)->exists()) {
+            $this->roles()->attach($role->id);
+        }
+    }
 }

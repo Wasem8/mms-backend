@@ -1,10 +1,14 @@
 <?php
 
 return [
+
+    'messages.otp_resent_successfully' => 'OTP verification code has been resent to your email.',
+
     // --- Students Section ---
     'students_retrieved' => 'Student list retrieved successfully.',
     'student_stored' => 'Student data registered successfully, please wait for supervisor approval to activate the account.',
     'student_retrieved' => 'Student data retrieved successfully.',
+    'student_approved_and_assigned' => 'Student has been approved and assigned to the halaqa successfully.',
     'student_updated' => 'Student data updated successfully.',
     'student_deleted' => 'Student record deleted successfully.',
     'student_approved' => 'Student approved successfully.',
@@ -37,6 +41,7 @@ return [
 
     // --- Evaluations Section ---
     'evaluation_stored' => 'Student evaluated successfully.',
+    'evaluation_already_exists' => 'Evaluation already exists',
     'evaluation_retrieved' => 'Evaluations retrieved successfully.',
     'evaluation_updated' => 'Evaluation updated successfully.',
     'evaluation_deleted' => 'Evaluation deleted successfully.',
@@ -51,4 +56,39 @@ return [
     'notification_marked_read' => 'Notification marked as read.',
     'notifications_all_marked_read' => 'All notifications marked as read.',
     'notification_deleted' => 'Notification deleted successfully.',
+
+
+    //Donation
+    // lang/en/messages.php  — add these keys
+    'campaign_already_completed' => 'This campaign has already reached its target and is no longer accepting donations.',
+    'exceeds_remaining'          => 'Your donation amount exceeds the remaining balance of :remaining :currency for this campaign.',
+    'mosque_need_already_fulfilled' => 'This mosque need has already been fulfilled and is no longer accepting donations.',
+
+    // --- Volunteer Section ---
+    'opportunity_created' => 'Volunteer opportunity created successfully.',
+    'opportunity_updated' => 'Volunteer opportunity updated successfully.',
+    'opportunity_closed' => 'Volunteer opportunity closed successfully.',
+    'opportunity_retrieved' => 'Volunteer opportunity retrieved successfully.',
+    'opportunities_retrieved' => 'Volunteer opportunities retrieved successfully.',
+    'application_submitted' => 'Application submitted successfully.',
+    'application_approved' => 'Application approved successfully.',
+    'application_rejected' => 'Application rejected successfully.',
+    'applications_retrieved' => 'Applications retrieved successfully.',
+    'my_applications_retrieved' => 'My applications retrieved successfully.',
+    'task_assigned' => 'Task assigned successfully.',
+    'task_completed' => 'Task marked as completed successfully.',
+    'tasks_retrieved' => 'Tasks retrieved successfully.',
+    'hours_logged' => 'Hours logged and evaluation saved successfully.',
+    'hours_retrieved' => 'Total hours retrieved successfully.',
+    'logs_retrieved' => 'Logs retrieved successfully.',
+    'certificate_issued' => 'Certificate issued successfully.',
+    'certificates_retrieved' => 'Certificates retrieved successfully.',
+    'volunteer_not_found' => 'Volunteer or opportunity data not found.',
+    'opportunity_closed_app' => 'This opportunity is closed for applications.',
+    'pending_application_exists' => 'You already have a pending application for this opportunity.',
+    'task_only_approved' => 'Tasks can only be assigned to approved applications.',
+    'certificate_already_exists' => 'A certificate has already been issued for this volunteer and opportunity.',
+    'no_hours_for_certificate' => 'No logged hours found. Cannot issue a certificate.',
+    'upload_failed' => 'Failed to upload certificate: :error',
+
 ];

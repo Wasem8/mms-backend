@@ -12,6 +12,7 @@ use Modules\Mosque\Database\Seeders\MosqueDatabaseSeeder;
 use Modules\Mosque\Database\Seeders\MosqueSpaceSeedSeeder;
 use Modules\User\Database\Seeders\RolesAndPermissionsSeeder;
 use Modules\User\Models\User;
+use Modules\Donation\Database\Seeders\SettingSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -25,10 +26,14 @@ class DatabaseSeeder extends Seeder
         $this->call([
             MosqueDatabaseSeeder::class,
             RolesAndPermissionsSeeder::class,
-            EducationDatabaseSeeder::class,
+           // EducationDatabaseSeeder::class,
             MosqueSeeder::class,
             FacilitiesSeeder::class,
             MosqueSpaceSeedSeeder::class,
+            SettingSeeder::class,
+            \Modules\Donation\Database\Seeders\DonationDatabaseSeeder::class,
+            \Modules\Complaint\Database\Seeders\ComplaintDatabaseSeeder::class,
+            \Modules\MaintenanceRequest\Database\Seeders\MaintenanceRequestDatabaseSeeder::class,
 
         ]);
 

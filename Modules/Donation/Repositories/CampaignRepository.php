@@ -18,6 +18,7 @@ class CampaignRepository implements CampaignRepositoryInterface
 
     public function findByMosque($mosqueId)
     {
+
         return Campaign::where('mosque_id', $mosqueId)->get();
     }
 
@@ -37,6 +38,43 @@ class CampaignRepository implements CampaignRepositoryInterface
     {
         $campaign = $this->find($id);
         return $campaign->delete();
+    }
+
+    public function getFiltered(array $filters = [])
+    {
+        $query = Campaign::query();
+
+        if (isset($filters['mosque_id'])) {
+            $query->where('mosque_id', $filters['mosque_id']);
+        }
+
+        if (isset($filters['search'])) {
+            $query->where(function ($q) use ($filters) {
+                $q->where('title', 'like', "%{$filters['search']}%")
+                  ->orWhere('description', 'like', "%{$filters['search']}%");
+            });
+        }
+
+        if (isset($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (isset($filters['priority'])) {
+            $query->where('priority', $filters['priority']);
+        }
+
+        $sortField = $filters['sort_by'] ?? 'created_at';
+        $sortOrder = $filters['sort_order'] ?? 'desc';
+        $allowedSortFields = ['created_at', 'start_date', 'end_date', 'target_amount', 'collected_amount', 'title', 'status'];
+        if (!in_array($sortField, $allowedSortFields)) {
+            $sortField = 'created_at';
+        }
+
+        $query->orderBy($sortField, $sortOrder === 'asc' ? 'asc' : 'desc');
+
+        $perPage = isset($filters['per_page']) ? max(1, min(100, (int) $filters['per_page'])) : 15;
+
+        return $query->paginate($perPage);
     }
 
     public function expirePastEndDateCampaigns()

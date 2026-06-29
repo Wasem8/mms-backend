@@ -11,10 +11,17 @@ class Evaluation extends Model
         'student_id',
         'score',
         'notes',
+        'client_uuid',
         'surah_name',
         'from_ayah',
         'to_ayah',
+        'dimensions',
+        'voice_note_id',
         'evaluated_at'
+    ];
+
+    protected $casts = [
+        'dimensions' => 'array',
     ];
 
     public function student()
@@ -25,5 +32,10 @@ class Evaluation extends Model
     public function halaqa()
     {
         return $this->belongsTo(Halaqa::class);
+    }
+
+    public function voiceNote()
+    {
+        return $this->belongsTo(MediaUpload::class, 'voice_note_id');
     }
 }

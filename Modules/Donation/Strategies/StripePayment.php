@@ -3,114 +3,63 @@
 namespace Modules\Donation\Strategies;
 
 use Illuminate\Support\Facades\Log;
+use Stripe\StripeClient;
+
 
 class StripePayment implements PaymentStrategyInterface
 {
-    protected \Stripe\StripeClient $stripe;
+    private StripeClient $stripe;
 
-    public function __construct(\Stripe\StripeClient $stripe)
+    public function __construct()
     {
-        $this->stripe = $stripe;
+        $this->stripe = new StripeClient(config('services.stripe.secret'));
     }
 
-    public function pay(float $amount, array $details): array
+    public function pay(array $data): PaymentResult
     {
-        if ($amount <= 0) {
-            return [
-                'success'        => false,
-                'transaction_id' => '',
-                'gateway'        => 'stripe',
-                'message'        => 'المبلغ غير صالح للدفع.',
-            ];
+
+        if (!isset($data['amount']) || (float) $data['amount'] <= 0) {
+            throw new \InvalidArgumentException('عفواً، يجب تحديد مبلغ مالي صحيح لإتمام عملية الدفع عبر Stripe.');
         }
+        $reference = $this->generateReference();
 
-        if (!$this->validate($details)) {
-            return [
-                'success'        => false,
-                'transaction_id' => '',
-                'gateway'        => 'stripe',
-                'message'        => 'تفاصيل الدفع غير مكتملة أو غير صحيحة.',
-            ];
-        }
+        $intent = $this->stripe->paymentIntents->create([
+            'amount'   => $this->toStripeAmount($data['amount']),
+            'currency' => config('services.stripe.currency', 'usd'),
+            'metadata' => [
+                'reference'   => $reference,
+                'mosque_id'   => $data['mosque_id'],
+                'campaign_id' => $data['campaign_id'] ?? null,
+                'donor_name'  => $data['donor_name']  ?? 'فاعل خير',
+            ],
+            'automatic_payment_methods' => ['enabled' => true],
+        ]);
 
-        try {
-            $currency = strtolower($details['currency'] ?? 'sar');
-            $amountCents = (int) round($amount * 100);
-
-            $sessionData = [
-                'mode'                 => 'payment',
-                'currency'             => $currency,
-                'line_items'           => [[
-                    'price_data' => [
-                        'currency'     => $currency,
-                        'unit_amount'  => $amountCents,
-                        'product_data' => [
-                            'name'        => $details['item_description'] ?? $details['description'] ?? 'تبرع',
-                            'description' => 'المرجع: ' . ($details['reference'] ?? $details['donation_ref'] ?? ''),
-                        ],
-                    ],
-                    'quantity' => 1,
-                ]],
-                'payment_method_types' => config('services.stripe.payment_methods', ['card']),
-                'success_url'          => $details['success_url'],
-                'cancel_url'           => $details['cancel_url'],
-                'metadata'             => array_merge(
-                    ['donation_ref' => $details['donation_ref'] ?? ''],
-                    $details['metadata'] ?? []
-                ),
-            ];
-
-            if (!empty($details['customer_email'])) {
-                $sessionData['customer_email'] = $details['customer_email'];
-            }
-
-            if (!empty($details['customer_id'])) {
-                $sessionData['customer'] = $details['customer_id'];
-            }
-
-            $session = $this->stripe->checkout->sessions->create($sessionData);
-
-            return [
-                'success'        => true,
-                'transaction_id' => $session->id,
-                'gateway'        => 'stripe',
-                'message'        => 'تم إنشاء جلسة الدفع',
-                'checkout_url'   => $session->url,
-                'raw'            => $session->toArray(),
-            ];
-        } catch (\Stripe\Exception\ApiErrorException $e) {
-            Log::error('StripePayment::pay failed', [
-                'error'   => $e->getMessage(),
-                'details' => $details,
-            ]);
-
-            return [
-                'success'        => false,
-                'transaction_id' => '',
-                'gateway'        => 'stripe',
-                'message'        => 'فشل الاتصال ببوابة Stripe: ' . $e->getMessage(),
-            ];
-        }
+        return PaymentResult::stripe($reference, $intent->client_secret, $intent->id);
     }
 
-    public function validate(array $details): bool
+    // ─── Helpers ─────────────────────────────────────────────────────────────
+
+    /**
+     * Stripe amounts are in the smallest currency unit (cents for USD).
+     * 100.00 USD → 10000 cents
+     */
+    private function toStripeAmount(float $amount): int
     {
-        if (empty($details['success_url']) || empty($details['cancel_url'])) {
-            return false;
+        return (int) round($amount * 100);
+    }
+
+    private function generateReference(): string
+    {
+        $sequence  = str_pad(random_int(1000, 9999), 6, '0', STR_PAD_LEFT);
+        $year      = now()->year;
+        $candidate = "REC-{$sequence}-{$year}";
+
+        while (\Modules\Donation\Models\Donation::where('reference', $candidate)->exists()) {
+            $sequence  = str_pad(random_int(1000, 9999), 6, '0', STR_PAD_LEFT);
+            $candidate = "REC-{$sequence}-{$year}";
         }
 
-        if (empty($details['item_description']) && empty($details['description']) && empty($details['reference']) && empty($details['donation_ref'])) {
-            return false;
-        }
-
-        if (!empty($details['customer_email']) && !filter_var($details['customer_email'], FILTER_VALIDATE_EMAIL)) {
-            return false;
-        }
-
-        if (!empty($details['currency']) && (!is_string($details['currency']) || strlen($details['currency']) !== 3)) {
-            return false;
-        }
-
-        return true;
+        return $candidate;
     }
 }

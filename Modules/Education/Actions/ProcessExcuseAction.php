@@ -8,12 +8,18 @@ use Illuminate\Support\Facades\DB;
 
 class ProcessExcuseAction
 {
-    public function execute(AttendanceExcuse $excuse, array $data): AttendanceExcuse
-    {
+    public function execute(
+        AttendanceExcuse $excuse,
+        array $data
+    ): AttendanceExcuse {
+
         return DB::transaction(function () use ($excuse, $data) {
+
             $excuse->update([
                 'status' => $data['status'],
                 'admin_comment' => $data['admin_comment'] ?? null,
+
+                'processed_at' => $data['processed_at'] ?? now(),
             ]);
 
             if ($data['status'] === 'accepted') {

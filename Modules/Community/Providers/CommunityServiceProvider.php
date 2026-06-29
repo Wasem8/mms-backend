@@ -4,6 +4,10 @@ namespace Modules\Community\Providers;
 
 use Nwidart\Modules\Support\ModuleServiceProvider;
 use Illuminate\Console\Scheduling\Schedule;
+use Modules\Community\Repositories\SermonRepository;
+use Modules\Community\Repositories\SermonRepositoryInterface;
+use Modules\Community\Repositories\TameemRepository;
+use Modules\Community\Repositories\TameemRepositoryInterface;
 
 class CommunityServiceProvider extends ModuleServiceProvider
 {
@@ -37,6 +41,16 @@ class CommunityServiceProvider extends ModuleServiceProvider
     public function register(): void
     {
 
+
+        $this->app->bind(
+            SermonRepositoryInterface::class,
+            SermonRepository::class,
+        );
+
+        $this->app->bind(
+            TameemRepositoryInterface::class,
+            TameemRepository::class,
+        );
 
         $this->app->bind(
             \Modules\Community\Repositories\DawahProgramRepositoryInterface::class,

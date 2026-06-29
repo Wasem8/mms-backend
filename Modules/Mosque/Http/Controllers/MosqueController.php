@@ -17,11 +17,44 @@ class MosqueController extends Controller
     ) {}
 
 
+    public function nearby(Request $request)
+    {
+        $validated = $request->validate([
+            'latitude'    => 'required|numeric|between:-90,90',
+            'longitude'   => 'required|numeric|between:-180,180',
+            'limit'       => 'nullable|integer|min:1|max:100',
+            'facility_id' => ['nullable', 'integer', 'exists:facilities,id'],
+        ]);
+
+        $paginatedMosques = $this->mosqueService->getNearbyMosques($validated);
+
+        return ApiResponse::success(
+            $paginatedMosques->items(),
+            'تم جلب المساجد الأقرب لموقعك بنجاح',
+            $paginatedMosques
+        );
+    }
+
+
     public function index(Request $request)
     {
+        $validated = $request->validate([
+            'per_page'    => ['nullable', 'integer', 'min:1', 'max:100'],
+            'city'        => ['nullable', 'string'],
+            'district'    => ['nullable', 'string'],
+            'status'      => ['nullable', 'string'],
+            'is_featured' => ['nullable', 'boolean'],
+            'min_rating'  => ['nullable', 'numeric', 'min:0', 'max:5'],
+            'has_imam'    => ['nullable', 'boolean'],
+            'sort_by'     => ['nullable', 'string', 'in:name,city,district,average_rating,reviews_count,created_at'],
+            'sort_order'  => ['nullable', 'string', 'in:asc,desc'],
+            'facility_id' => ['nullable', 'integer', 'exists:facilities,id'],
+
+        ]);
+
         $data = $this->mosqueService->getAllMosques(
-            $request->all(),
-            (int) $request->get('per_page', 15)
+            $validated,
+            (int) ($validated['per_page'] ?? 15)
         );
 
         return ApiResponse::success(
@@ -104,14 +137,17 @@ class MosqueController extends Controller
     public function search(Request $request)
     {
         $validated = $request->validate([
-            'q' => ['required', 'string', 'min:1'],
-            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'q'           => ['required', 'string', 'min:1'],
+            'per_page'    => ['nullable', 'integer', 'min:1', 'max:100'],
+            'facility_id' => ['nullable', 'integer', 'exists:facilities,id'],
         ]);
 
         $data = $this->mosqueService->searchMosques(
             $validated['q'],
-            $request->except(['q', 'per_page']),
-            (int) $request->get('per_page', 15)
+            array_filter([
+                'facility_id' => $validated['facility_id'] ?? null,
+            ]),
+            (int) ($validated['per_page'] ?? 15)
         );
 
         return ApiResponse::success(

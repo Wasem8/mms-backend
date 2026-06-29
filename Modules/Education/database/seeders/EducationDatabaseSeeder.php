@@ -3,148 +3,318 @@
 namespace Modules\Education\Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+use Illuminate\Support\Str;
+
+use Modules\User\Models\User;
+use Modules\User\Models\Role;
+use Modules\Mosque\Models\Mosque;
 use Modules\Education\Models\Halaqa;
 use Modules\Education\Models\Student;
 use Modules\Education\Models\Attendance;
-use Modules\Education\Models\Evaluation; // 💡 تم إضافة موديل التقييمات
-use Modules\Mosque\Models\Mosque;
-use Modules\User\Models\User;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+use Modules\Education\Models\Evaluation;
+use Modules\Education\Models\AttendanceExcuse;
 
 class EducationDatabaseSeeder extends Seeder
 {
+    private array $firstNames = [
+        'محمد', 'أحمد', 'علي', 'فاطمة', 'عائشة', 'خديجة',
+        'حسن', 'حسين', 'إبراهيم', 'موسى', 'عمر', 'سارة',
+        'مريم', 'زينب', 'هند', 'آمنة', 'نور', 'ياسر', 'سلمى', 'ليلى'
+    ];
+
+    private array $lastNames = [
+        'محمود', 'علي', 'الشاملي', 'الغافري', 'النعماني',
+        'المالكي', 'الخروصي', 'البوسعيدي', 'الحارثي', 'السليمي',
+        'الحسني', 'الدرعي', 'الكندي', 'الصقري', 'البطاشي'
+    ];
+
+    private array $surahs = [
+        'الفاتحة', 'البقرة', 'آل عمران', 'النساء', 'المائدة', 'الأنعام',
+        'الأعراف', 'الأنفال', 'التوبة', 'يونس', 'هود', 'يوسف',
+        'الرعد', 'إبراهيم', 'الحجر', 'النحل', 'الإسراء', 'الكهف'
+    ];
+
+    private array $evaluationNotes = [
+        'ممتاز جداً', 'متميز', 'جيد جداً', 'جيد', 'مقبول',
+        'يحتاج تحسين', 'بحاجة لمتابعة', 'متوسط الأداء', 'متقدم'
+    ];
+
+    private array $excuseReasons = [
+        'وعكة صحية', 'ظرف عائلي طاريء', 'مرض مفاجئ', 'سفر ضروري',
+        'موعد طبي', 'ظروف قاهرة'
+    ];
+
+    private array $schedules = [
+        ['saturday', 'monday', 'wednesday'],
+        ['sunday', 'tuesday', 'thursday'],
+        ['monday', 'wednesday', 'friday'],
+    ];
+
     public function run(): void
     {
         DB::beginTransaction();
 
         try {
-            // 🕌 1. جلب المساجد والتأكد من وجودها
-            $mosques = Mosque::take(2)->get();
-            $mosque1 = $mosques[0] ?? null;
-            $mosque2 = $mosques[1] ?? null;
+            $this->command->info('🔄🔄🔄 بدء ملء بيانات Education الشاملة والمحصنة... 🔄🔄🔄');
 
-            if (!$mosque1) {
-                // خطوة احترازية إذا كانت قاعدة البيانات فارغة تماماً من المساجد
-                $mosque1 = Mosque::create(['name' => 'المسجد الكبير']);
-                $mosque2 = Mosque::create(['name' => 'مسجد النور']);
+            // ============ 1. MOSQUES ============
+            $mosqueIds = [];
+            foreach (['مسجد النور', 'المسجد الكبير', 'مسجد الرحمة', 'مسجد التوحيد'] as $name) {
+                $m = Mosque::firstOrCreate(['name' => $name]);
+                $mosqueIds[] = $m->id;
             }
+            $this->command->info('✅ تم تجهيز المساجد');
 
-            // 👨‍🏫 2. إنشاء المدرسين وربطهم بالمسجد الأول
-            $teacher = User::firstOrCreate(
-                ['email' => 'teacher@test.com'],
-                [
-                    'name' => 'Teacher One',
-                    'password' => bcrypt('password'),
-                    'mosque_id' => $mosque1->id, // 💡 ربط المعلم بالمسجد
-                ]
+            // ============ 2. MAIN ACCOUNTS ============
+            $mainParent = User::firstOrCreate(
+                ['email' => 'parent@test.com'],
+                ['name' => 'ولي أمر رئيسي', 'password' => bcrypt('password'), 'mosque_id' => $mosqueIds[0]]
             );
 
-            if (!$teacher->hasRole('teacher')) {
-                $teacher->assignRole('teacher');
-            }
+            $mainTeacher = User::firstOrCreate(
+                ['email' => 'teacher@test.com'],
+                ['name' => 'معلم رئيسي', 'password' => bcrypt('password'), 'mosque_id' => $mosqueIds[0]]
+            );
 
-            // 📚 3. إنشاء الحلقات
-            $halaqa1 = Halaqa::create([
-                'name' => 'حلقة التحفيظ - المستوى الأول',
-                'teacher_id' => $teacher->id,
-                'mosque_id' => $mosque1->id,
-                'capacity' => 10,
-                'schedule_days' => ['sunday', 'tuesday', 'thursday'],
-                'start_time' => '16:00',
-                'end_time' => '18:00',
-                'status' => 'active',
-            ]);
+            $parentRole = Role::where('name', 'parent')->first();
 
-            $halaqa2 = Halaqa::create([
-                'name' => 'حلقة النور',
-                'teacher_id' => $teacher->id,
-                'mosque_id' => $mosque2->id,
-                'capacity' => 15,
-                'schedule_days' => ['saturday', 'monday'],
-                'start_time' => '15:00',
-                'end_time' => '17:00',
-                'status' => 'active',
-            ]);
-
-            // 👦 4. إنشاء الطلاب
-            $students = collect();
+            // ============ 3. TEACHERS & PARENTS ============
+            $teachers = [$mainTeacher];
             for ($i = 1; $i <= 10; $i++) {
-                $students->push(
-                    Student::create([
-                        'first_name' => "Student",
-                        'last_name' => "$i",
-                        'mosque_id' => $i <= 5 ? $mosque1->id : $mosque2->id,
-                        'date_of_birth' => now()->subYears(10 + $i)->toDateString(),
-                        'status' => 'active',
-                    ])
+                $teachers[] = User::firstOrCreate(
+                    ['email' => "teacher$i@test.com"],
+                    ['name' => $this->generateArabicName(), 'password' => bcrypt('password'), 'mosque_id' => $mosqueIds[$i % 4]]
                 );
             }
 
-            // 🔗 5. ربط الطلاب بالحلقات
-            $halaqa1->students()->attach(
-                $students->take(5)->pluck('id')->mapWithKeys(fn ($id) => [
-                    $id => ['joined_at' => now(), 'status' => 'active']
-                ])
-            );
+            $parents = [$mainParent];
+            for ($i = 1; $i <= 20; $i++) {
+                $p = User::firstOrCreate(
+                    ['email' => "parent$i@test.com"],
+                    ['name' => $this->generateArabicName(), 'password' => bcrypt('password'), 'mosque_id' => $mosqueIds[$i % 4]]
+                );
+                if ($parentRole && !$p->hasRole('parent')) {
+                    $p->roles()->syncWithoutDetaching([$parentRole->id]);
+                }
+                $parents[] = $p;
+            }
+            $this->command->info('✅ تم إنشاء المعلمين وأولياء الأمور.');
 
-            $halaqa2->students()->attach(
-                $students->skip(5)->pluck('id')->mapWithKeys(fn ($id) => [
-                    $id => ['joined_at' => now(), 'status' => 'active']
-                ])
-            );
+            // ============ 4. HALAQAT CREATION ============
+            $mainHalaqa = Halaqa::create([
+                'name' => 'حلقة التميز - ' . $mainTeacher->name,
+                'teacher_id' => $mainTeacher->id,
+                'mosque_id' => $mainTeacher->mosque_id,
+                'capacity' => 25,
+                'schedule_days' => ['saturday', 'monday', 'wednesday'],
+                'start_time' => '16:00',
+                'end_time' => '17:30',
+                'status' => 'active',
+            ]);
 
-            // 📅 6. توليد سجل حضور وغياب مكثف (لآخر 7 أيام) لتغذية الشارت الأسبوعي
-            for ($dayOffset = 6; $dayOffset >= 0; $dayOffset--) {
-                $targetDate = Carbon::today()->subDays($dayOffset);
+            $counter = 1;
+            foreach ($teachers as $teacher) {
+                if ($teacher->email === 'teacher@test.com') {
+                    continue;
+                }
 
-                foreach ($students as $student) {
-                    // جعل الطالب رقم 1 يغيب كثيراً ليظهر بوضوح في "تقرير الغياب العام"
-                    if ($student->id == 1 && $dayOffset % 2 == 0) {
-                        $status = 'absent';
-                    } else {
-                        $status = collect(['present', 'present', 'present', 'late', 'absent'])->random();
-                    }
+                for ($i = 1; $i <= 2; $i++) {
+                    $startTimes = ['16:00', '18:00', '19:30'];
+                    $startTime = collect($startTimes)->random();
 
-                    Attendance::create([
-                        'halaqa_id' => $student->id <= 5 ? $halaqa1->id : $halaqa2->id,
-                        'student_id' => $student->id,
-                        'date' => $targetDate->toDateString(),
-                        'status' => $status,
-                        'notes' => $status === 'absent' ? 'غياب بدون عذر' : null,
+                    Halaqa::create([
+                        'name' => 'حلقة ' . $counter . ' - ' . $teacher->name,
+                        'teacher_id' => $teacher->id,
+                        'mosque_id' => $teacher->mosque_id,
+                        'capacity' => rand(15, 35),
+                        'schedule_days' => collect($this->schedules)->random(),
+                        'start_time' => $startTime,
+                        'end_time' => Carbon::createFromFormat('H:i', $startTime)->addMinutes(90)->format('H:i:s'),
+                        'status' => 'active',
                     ]);
+                    $counter++;
+                }
+            }
+            $halaqat = Halaqa::all();
+            $this->command->info('✅ تم إنشاء وعزل الحلقات. العدد الحالي: ' . $halaqat->count());
+
+            // ============ 5. STUDENTS CREATION ============
+            $studentHalaqaMap = [];
+            $studentCount = 0;
+
+            for ($k = 1; $k <= 15; $k++) {
+                $student = Student::create([
+                    'first_name' => collect($this->firstNames)->random(),
+                    'last_name' => collect($this->lastNames)->random(),
+                    'parent_id' => collect($parents)->random()->id,
+                    'mosque_id' => $mainHalaqa->mosque_id,
+                    'date_of_birth' => now()->subYears(rand(7, 15))->toDateString(),
+                    'gender' => collect(['male', 'female'])->random(),
+                    'status' => 'active',
+                ]);
+
+                if ($student && $student->id) {
+                    $studentHalaqaMap[$student->id] = $mainHalaqa->id;
+                    $mainHalaqa->students()->attach([
+                        $student->id => [
+                            'joined_at' => now()->subDays(rand(1, 30)),
+                            'status' => 'active'
+                        ]
+                    ]);
+                    $studentCount++;
+                }
+            }
+            $this->command->info('🎯 تم ربط 15 طالباً بحلقة المعلم الرئيسي بنجاح.');
+
+            $mainStudents = Student::whereHas('halaqats', function ($q) use ($mainHalaqa) {
+                $q->where('halaqats.id', $mainHalaqa->id);
+            })->take(3)->get();
+
+            foreach ($mainStudents as $student) {
+                AttendanceExcuse::create([
+                    'student_id' => $student->id,
+                    'halaqa_id' => $mainHalaqa->id,
+                    'parent_id' => $student->parent_id,
+                    'absence_date' => now()->subDays(rand(1, 3))->toDateString(),
+                    'reason' => collect($this->excuseReasons)->random(),
+                    'status' => 'pending',
+                    'admin_comment' => null,
+                ]);
+            }
+
+            for ($i = 1; $i <= 185; $i++) {
+                $assignedMosqueId = $mosqueIds[$i % 4];
+                $appropriateHalaqat = $halaqat->where('mosque_id', $assignedMosqueId)->where('id', '!=', $mainHalaqa->id);
+
+                if ($appropriateHalaqat->isEmpty()) {
+                    continue;
+                }
+                $selectedHalaqa = $appropriateHalaqat->random();
+                $parent = collect($parents)->random();
+
+                $student = Student::create([
+                    'first_name' => collect($this->firstNames)->random(),
+                    'last_name' => collect($this->lastNames)->random(),
+                    'parent_id' => $parent->id,
+                    'mosque_id' => $assignedMosqueId,
+                    'date_of_birth' => now()->subYears(rand(7, 15))->toDateString(),
+                    'gender' => collect(['male', 'female'])->random(),
+                    'status' => 'active',
+                ]);
+
+                if ($student && $student->id) {
+                    $studentHalaqaMap[$student->id] = $selectedHalaqa->id;
+                    $selectedHalaqa->students()->attach([
+                        $student->id => [
+                            'joined_at' => now()->subDays(rand(1, 30)),
+                            'status' => 'active'
+                        ]
+                    ]);
+                    $studentCount++;
+                }
+
+                if ($studentCount % 50 === 0) {
+                    $this->command->info("  ➜ تم إنشاء $studentCount طالب...");
                 }
             }
 
-            // 📝 7. توليد بيانات تقييمات (Evaluations) لآخر 5 أشهر لتغذية منحنى الحفظ
-            $surahs = ['البقرة', 'آل عمران', 'النساء', 'المائدة', 'الأنعام'];
+            $totalStudentsInDB = Student::count();
+            $this->command->info('🎯 تم التحقق الفعلي: تم حفظ (' . $totalStudentsInDB . ') طالب في قاعدة البيانات!');
 
-            for ($monthOffset = 4; $monthOffset >= 0; $monthOffset--) {
-                $evaluatedMonth = Carbon::today()->subMonths($monthOffset);
+            if ($totalStudentsInDB === 0) {
+                throw new \Exception('❌ لا يزال جدول الطلاب فارغاً!');
+            }
 
-                // نختار عينة عشوائية من الطلاب لوضع تقييمات لهم كل شهر
-                foreach ($students as $student) {
-                    $fromAyah = rand(1, 50);
-                    $toAyah = $fromAyah + rand(10, 30); // توليد فارق آيات مناسب للإنجاز
+            // ============ 6. OPTIMIZED ATTENDANCE & EVALUATIONS (BULK INSERT) ============
+            $this->command->info('🔄 جاري حقن سجلات الحضور والتقييمات بسرعة فائقة (Bulk)...');
 
-                    Evaluation::create([
-                        'halaqa_id' => $student->id <= 5 ? $halaqa1->id : $halaqa2->id,
-                        'student_id' => $student->id,
-                        'surah_name' => collect($surahs)->random(),
-                        'from_ayah' => $fromAyah,
-                        'to_ayah' => $toAyah,
-                        'score' => rand(80, 100), // درجات ممتازة ليرتفع منحنى الأداء
-                        'notes' => 'قراءة ممتازة مع مراعاة أحكام التجويد',
-                        'evaluated_at' => $evaluatedMonth->subDays(rand(1, 20))->toDateTimeString(),
-                    ]);
+            $attendancesData = [];
+            $evaluationsData = [];
+            $nowStr = Carbon::now()->toDateTimeString();
+
+            foreach ($studentHalaqaMap as $studentId => $halaqaId) {
+                $halaqa = $halaqat->find($halaqaId);
+                if (!$halaqa) continue;
+
+                // 1. تجميع بيانات الحضور
+                for ($day = 30; $day >= 0; $day--) {
+                    $date = Carbon::today()->subDays($day);
+                    $dayName = strtolower($date->format('l'));
+
+                    if (!in_array($dayName, $halaqa->schedule_days ?? [])) {
+                        continue;
+                    }
+
+                    $attendancesData[] = [
+                        'halaqa_id'  => $halaqaId,
+                        'student_id' => $studentId,
+                        'date'       => $date->toDateString(),
+                        'status'     => collect(['present', 'present', 'present', 'late', 'absent'])->random(),
+                        'notes'      => null,
+                        'created_at' => $nowStr,
+                        'updated_at' => $nowStr
+                    ];
                 }
+
+                // 2. تجميع بيانات التقييمات
+                $evalCountForStudent = rand(5, 15);
+                for ($i = 0; $i < $evalCountForStudent; $i++) {
+                    $from = rand(1, 100);
+                    $evaluationsData[] = [
+                        'client_uuid'  => Str::uuid()->toString(),
+                        'halaqa_id'    => $halaqaId,
+                        'student_id'   => $studentId,
+                        'surah_name'   => collect($this->surahs)->random(),
+                        'from_ayah'    => $from,
+                        'to_ayah'      => $from + rand(2, 15),
+                        'score'        => collect([75, 80, 85, 90, 95, 100])->random(),
+                        'notes'        => collect($this->evaluationNotes)->random(),
+                        'evaluated_at' => now()->subDays(rand(1, 30))->toDateString(),
+                        'created_at'   => $nowStr,
+                        'updated_at'   => $nowStr
+                    ];
+                }
+            }
+
+            // 🎯 حقن البيانات على دفعات (Chunks) لضمان أداء خارق دون استهلاك ذاكرة السيرفر
+            $this->command->info('⚡ جاري تنفيذ الإدخال الجماعي لـ ' . count($attendancesData) . ' سجل حضور...');
+            foreach (array_chunk($attendancesData, 500) as $chunk) {
+                Attendance::insert($chunk);
+            }
+
+            $this->command->info('⚡ جاري تنفيذ الإدخال الجماعي لـ ' . count($evaluationsData) . ' سجل تقييم...');
+            foreach (array_chunk($evaluationsData, 500) as $chunk) {
+                Evaluation::insert($chunk);
             }
 
             DB::commit();
+            $this->command->info('✅✅✅ اكتمل السيردر بنجاح وتم حفظ كافة البيانات! ✅✅✅');
+            $this->printSummary($totalStudentsInDB, $halaqat->count(), count($attendancesData), count($evaluationsData));
 
         } catch (\Throwable $e) {
             DB::rollBack();
+            $this->command->error('❌ حدث خطأ غير متوقع: ' . $e->getMessage());
+            $this->command->error('في السطر: ' . $e->getLine());
             throw $e;
         }
+    }
+
+    private function generateArabicName(): string
+    {
+        return collect($this->firstNames)->random() . ' ' . collect($this->lastNames)->random();
+    }
+
+    private function printSummary($students, $halaqat, $attendance, $evaluations): void
+    {
+        $this->command->info('');
+        $this->command->info('📊 ملخص البيانات المنشأة:');
+        $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        $this->command->info('👦 الطلاب: ' . $students);
+        $this->command->info('📖 الحلقات: ' . $halaqat);
+        $this->command->info('📝 سجلات الحضور: ' . $attendance);
+        $this->command->info('⭐ التقييمات: ' . $evaluations);
+        $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     }
 }

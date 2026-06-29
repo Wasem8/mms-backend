@@ -8,6 +8,8 @@ use Modules\Donation\Services\CampaignService;
 use Modules\Donation\Http\Requests\StoreCampaignRequest;
 use Modules\Donation\Http\Requests\UpdateCampaignRequest;
 use Modules\Donation\Services\CampaignAnalyticsService;
+use Illuminate\Support\Collection;
+use Modules\Donation\ApiResource\CampaignResource;
 
 class CampaignController extends Controller
 {
@@ -20,44 +22,50 @@ class CampaignController extends Controller
         $this->campaignService = $campaignService;
         $this->analyticsService = $analyticsService;
     }
-
     public function index()
     {
-        $campaigns = $this->campaignService->getAllCampaigns();
-        return ApiResponse::success($campaigns,'Campaigns retrieved successfully');
-        }
-
-    public function stats(int $mosqueId)
-    {
-        $stats = $this->campaignService->getStatsByMosque($mosqueId);
-
-        return ApiResponse::success($stats, 'Campaign statistics retrieved successfully');
+        $filters = request()->only(['search', 'status', 'priority', 'sort_by', 'sort_order', 'per_page']);
+        $campaigns = $this->campaignService->getFilteredCampaigns($filters);
+        return CampaignResource::collection($campaigns);
     }
 
     public function show($id)
     {
         $campaign = $this->campaignService->getCampaignById($id);
-        return ApiResponse::success($campaign,'Campaign retrieved successfully');
+        return ApiResponse::success(new CampaignResource($campaign), 'Campaign retrieved successfully');
     }
 
-   public function showByMosque($mosqueId)
+    public function showByMosque($mosqueId)
     {
-        $campaigns = $this->campaignService->getCampaignsByMosque($mosqueId);
-        return ApiResponse::success($campaigns,'Campaigns retrieved successfully');
+        $filters = request()->only(['search', 'status', 'priority', 'sort_by', 'sort_order', 'per_page']);
+        $filters['mosque_id'] = $mosqueId;
+        $campaigns = $this->campaignService->getFilteredCampaigns($filters);
+        return CampaignResource::collection($campaigns);
     }
 
     public function store(StoreCampaignRequest $request)
     {
-        $data = $request->all();
-        $campaign = $this->campaignService->createCampaign($data);
-        return ApiResponse::success($campaign, 'Campaign created successfully', 201);
+        $campaign = $this->campaignService->createCampaign($request->all());
+        return ApiResponse::success(new CampaignResource($campaign), 'Campaign created successfully', 201);
     }
 
     public function update(UpdateCampaignRequest $request, $id)
     {
-        $data = $request->all();
-        $campaign = $this->campaignService->updateCampaign($id, $data);
-        return ApiResponse::success($campaign, 'Campaign updated successfully');
+        $campaign = $this->campaignService->updateCampaign($id, $request->all());
+        return ApiResponse::success(new CampaignResource($campaign), 'Campaign updated successfully');
+    }
+
+    public function stats(int $mosqueId)
+    {
+        $data = $this->campaignService->getStatsByMosque($mosqueId);
+        return ApiResponse::success($data, 'Success');
+    }
+
+    public function analytics(int $id)
+    {
+        $campaign  = $this->campaignService->getCampaignById($id);
+        $analytics = $this->analyticsService->getAnalytics($campaign);
+        return ApiResponse::success($analytics, 'Campaign analytics retrieved successfully');
     }
 
     public function destroy($id)
@@ -65,13 +73,4 @@ class CampaignController extends Controller
         $this->campaignService->deleteCampaign($id);
         return ApiResponse::success(null, 'Campaign deleted successfully');
     }
-
-    public function analytics(int $id)
-    {
-        $campaign  = $this->campaignService->getCampaignById($id);
-        $analytics = $this->analyticsService->getAnalytics($campaign);
-
-        return ApiResponse::success($analytics, 'Campaign analytics retrieved successfully');
-    }
-
 }

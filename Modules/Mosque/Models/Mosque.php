@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 use Modules\Community\Models\DawahProgram;
+use Modules\Donation\Models\Donation;
+use Modules\MaintenanceRequest\Models\Maintenance;
 use Modules\User\Models\User;
 
 // use Modules\Mosque\Database\Factories\MosqueFactory;
@@ -34,6 +36,7 @@ class Mosque extends Model
         'reviews_count',
         'imam',
         'khatib',
+        'donation_total',
         'manager_id'
     ];
 
@@ -65,7 +68,7 @@ class Mosque extends Model
 
     public function maintenanceRequests(): HasMany
     {
-        return $this->hasMany(MaintenanceRequest::class);
+        return $this->hasMany(Maintenance::class);
     }
     public function needs()
     {
@@ -80,5 +83,28 @@ class Mosque extends Model
     {
         return $this->hasMany(DawahProgram::class);
     }
+
+    public function donations()
+    {
+        return $this->hasMany(Donation::class);
+    }
+
+
+    protected static function newFactory()
+    {
+        return \Modules\Mosque\Database\Factories\MosqueFactory::new();
+    }
+
+    public function scopeScopeNearby($query, $latitude, $longitude)
+    {
+        // معادلة هافرسين لحساب المسافة الجغرافية بالكيلومترات
+        return $query->select('*')
+            ->selectRaw(
+                '( 6371 * acos( cos( radians(?) ) * cos( radians( latitude ) ) * cos( radians( longitude ) - radians(?) ) + sin( radians(?) ) * sin( radians( latitude ) ) ) ) AS distance',
+                [$latitude, $longitude, $latitude]
+            )
+            ->orderBy('distance', 'asc');
+    }
+
 
 }

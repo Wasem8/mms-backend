@@ -1,12 +1,16 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Complaint\Http\Controllers\AdminMaintenanceRequestController;
 use Modules\Complaint\Http\Controllers\ComplaintController;
+use Modules\Complaint\Http\Controllers\MaintenanceRequestController;
 
 Route::prefix('complaints')->group(function () {
     Route::post('/guest', [ComplaintController::class, 'storeGuest']);
-        Route::get('/track/{complaintNumber}', [ComplaintController::class, 'track']);
+    Route::get('/track/{complaintNumber}', [ComplaintController::class, 'track']);
 });
+
+// Public tracking endpoint for maintenance requests (by reference number)
 
 Route::middleware(['auth:api', 'role:super_admin,mosque_manager'])
     ->prefix('admin/complaints')
@@ -16,8 +20,9 @@ Route::middleware(['auth:api', 'role:super_admin,mosque_manager'])
         Route::get('/{id}', [ComplaintController::class, 'show']);
         Route::patch('/{id}/status', [ComplaintController::class, 'updateStatus']);
     });
+Route::middleware(['auth:api',])->prefix('complaints/member')->group(function () {
+    Route::post('/', [ComplaintController::class, 'storeMember']);
+});
 
-    Route::middleware(['auth:api',])->prefix('complaints/member')->group(function () {
-        Route::post('/', [ComplaintController::class, 'storeMember']);
-    });
-
+Route::get('mosques/{mosqueId}/complaints/recent', [ComplaintController::class, 'recentComplaints'])->middleware(['auth:api', 'role:mosque_manager']);
+Route::get('mosques/{mosqueId}/complaints/stats', [ComplaintController::class, 'pageStats'])->middleware(['auth:api', 'role:mosque_manager']);

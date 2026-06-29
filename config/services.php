@@ -17,6 +17,8 @@ return [
         'url' => env('SUPABASE_URL'),
         'key' => env('SUPABASE_KEY'),
         'bucket' => env('SUPABASE_BUCKET'),
+        'reports_bucket' => env('SUPABASE_REPORTS_BUCKET'),
+        'voices' => env('SUPABASE_EVALUATION_VOICE_BUCKET'),
     ],
 
     'postmark' => [
@@ -40,9 +42,10 @@ return [
         ],
     ],
     'stripe' => [
-        'key' => env('STRIPE_KEY'),
-        'secret' => env('STRIPE_SECRET'),
-        'payment_methods' => ['card'],
+        'key'            => env('STRIPE_KEY'),
+        'secret'         => env('STRIPE_SECRET'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+        'currency'       => env('STRIPE_CURRENCY', 'usd'),
     ],
 
 ];

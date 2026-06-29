@@ -186,6 +186,119 @@ class ComplaintEndpoints
     public function track() {}
 
     #[OA\Get(
+        path: '/mosques/{mosqueId}/complaints/recent',
+        operationId: 'getRecentComplaints',
+        tags: ['Complaints'],
+        summary: 'Get recent complaints for a mosque',
+        description: 'Returns the latest complaints for a specific mosque. Restricted to mosque_manager.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'mosqueId', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 1),
+            new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 5, minimum: 1, maximum: 50), description: 'Number of complaints to return'),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Recent complaints retrieved successfully.',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string',  example: 'Success'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(
+                                type: 'object',
+                                properties: [
+                                    new OA\Property(property: 'id',               type: 'integer', example: 12),
+                                    new OA\Property(property: 'complaint_number', type: 'string',  example: 'CMP-2026-ABC123'),
+                                    new OA\Property(property: 'title',            type: 'string',  example: 'Broken AC in prayer hall'),
+                                    new OA\Property(property: 'status',           type: 'string',  enum: ['pending', 'in_progress', 'resolved', 'canceled'], example: 'pending'),
+                                    new OA\Property(property: 'priority',         type: 'string',  enum: ['low', 'medium', 'high'], example: 'high'),
+                                    new OA\Property(property: 'complaint_type',   type: 'string',  enum: ['service_missing', 'power_outage', 'corruption', 'employee_misconduct', 'technical_issue'], example: 'power_outage'),
+                                    new OA\Property(property: 'is_anonymous',     type: 'boolean', example: false),
+                                    new OA\Property(property: 'created_at',       type: 'string',  format: 'date-time', example: '2026-05-13T08:30:00Z'),
+                                ]
+                            )
+                        ),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — requires mosque_manager role'),
+            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+        ]
+    )]
+    public function recentComplaints() {}
+
+    #[OA\Get(
+        path: '/mosques/{mosqueId}/complaints/stats',
+        operationId: 'getComplaintPageStats',
+        tags: ['Complaints'],
+        summary: 'Complaint page stat cards',
+        description: 'Returns the five stat cards shown at the top of the complaints management page: total, open, urgent, resolved this month, and average response time.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'mosqueId', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 1),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string',  example: 'Success'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'total_complaints',
+                                    type: 'integer',
+                                    example: 142,
+                                    description: 'إجمالي الشكاوى — all complaints for this mosque'
+                                ),
+                                new OA\Property(
+                                    property: 'open_complaints',
+                                    type: 'integer',
+                                    example: 12,
+                                    description: 'شكاوى مفتوحة — complaints with status pending or in_progress'
+                                ),
+                                new OA\Property(
+                                    property: 'urgent_complaints',
+                                    type: 'integer',
+                                    example: 3,
+                                    description: 'شكاوى عاجلة — open complaints with priority = high'
+                                ),
+                                new OA\Property(
+                                    property: 'resolved_this_month',
+                                    type: 'integer',
+                                    example: 85,
+                                    description: 'تم الحل (الشهر) — complaints resolved in the current month'
+                                ),
+                                new OA\Property(
+                                    property: 'avg_response_hours',
+                                    type: 'integer',
+                                    example: 4,
+                                    description: 'متوسط الاستجابة — average hours from complaint creation to first status change, rounded'
+                                ),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — requires mosque_manager role'),
+            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+        ]
+    )]
+    public function pageStats() {}
+
+    #[OA\Get(
         path: '/admin/complaints',
         operationId: 'getAdminComplaints',
         tags: ['Complaints'],

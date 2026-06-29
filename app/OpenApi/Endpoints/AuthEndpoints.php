@@ -142,6 +142,60 @@ class AuthEndpoints
     public function verifyOtp() {}
 
     #[OA\Post(
+        path: '/auth/resend-otp',
+        operationId: 'resendOtp',
+        tags: ['Auth'],
+        summary: 'Resend OTP verification code',
+        description: 'Regenerate and resend a fresh OTP verification code to the user email. Rate-limited to 1 request per minute.',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['email'],
+                properties: [
+                    new OA\Property(property: 'email', type: 'string', format: 'email', example: 'parent@test.com'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'OTP code resent successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'OTP verification code has been resent to your email.'),
+                        new OA\Property(property: 'data', type: 'object', example: []),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Validation error - Email not found or invalid format',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: false),
+                        new OA\Property(property: 'message', type: 'string', example: 'The selected email is invalid.'),
+                        new OA\Property(property: 'data', type: 'object', example: ['email' => ['The selected email is invalid.']]),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 429,
+                description: 'Too many requests - Throttled for 60 seconds',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: false),
+                        new OA\Property(property: 'message', type: 'string', example: 'Too many attempts. Please wait before retrying.'),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function resendOtp() {}
+
+    #[OA\Post(
         path: '/auth/login',
         operationId: 'login',
         tags: ['Auth'],

@@ -14,7 +14,6 @@ class DashboardEndpoints
         description: 'يعيد أرقام المؤشرات السريعة، الحضور الأسبوعي، منحنى تقدم الحفظ، المعلمين الأكثر إنجازاً، تقرير الغياب العام، وأحدث الأنشطة اللحظية. يدعم الفلترة الاختيارية بناءً على معرف الحلقة.',
         security: [['bearerAuth' => []]],
 
-        // 🆕 إضافة بارامتر الفلترة بالـ halaqa_id في الـ Query URL
         parameters: [
             new OA\Parameter(
                 name: 'halaqa_id',
@@ -37,7 +36,6 @@ class DashboardEndpoints
                             property: 'data',
                             type: 'object',
                             properties: [
-                                // 1. الـ Cards
                                 new OA\Property(
                                     property: 'cards',
                                     type: 'object',
@@ -48,7 +46,6 @@ class DashboardEndpoints
                                         new OA\Property(property: 'attendance_today_percentage', type: 'string', example: '60%'),
                                     ]
                                 ),
-                                // 2. الحضور الأسبوعي
                                 new OA\Property(
                                     property: 'weekly_attendance',
                                     type: 'array',
@@ -60,7 +57,6 @@ class DashboardEndpoints
                                         ]
                                     )
                                 ),
-                                // 3. منحنى الحفظ والجودة
                                 new OA\Property(
                                     property: 'quran_progress',
                                     type: 'array',
@@ -73,7 +69,6 @@ class DashboardEndpoints
                                         ]
                                     )
                                 ),
-                                // 4. المعلمون الأكثر إنجازاً
                                 new OA\Property(
                                     property: 'top_teachers',
                                     type: 'array',
@@ -86,7 +81,6 @@ class DashboardEndpoints
                                         ]
                                     )
                                 ),
-                                // 5. تقرير الغياب
                                 new OA\Property(
                                     property: 'absenteeism_report',
                                     type: 'array',
@@ -99,7 +93,6 @@ class DashboardEndpoints
                                         ]
                                     )
                                 ),
-                                // 6. الأنشطة الأخيرة
                                 new OA\Property(
                                     property: 'recent_activities',
                                     type: 'array',
@@ -124,33 +117,346 @@ class DashboardEndpoints
             new OA\Response(response: 500, description: 'خطأ داخلي في السيرفر')
         ]
     )]
-    public function getSupervisorStats()
-    {
-
-    }
+    public function getSupervisorStats() {}
 
     #[OA\Get(
         path: '/dashboard/supervisor/export-pdf',
         operationId: 'exportSupervisorDashboardPdf',
-        tags: ['Dashboard'],
-        summary: 'تنزيل تقرير لوحة التحكم بصيغة PDF',
-        description: 'يقوم بتوليد وتنزيل ملف PDF يحتوي على الإحصائيات الحالية للمشرف التربوي مع دعم نفس فلاتر البحث التلقائية.',
+        tags: ['Reports'],
+        summary: 'تصدير تقرير المشرف الموحد PDF',
+        description: 'توليد وجلب رابط تحميل تقرير PDF شامل وموحد لكل حلقات المسجد بدون فلاتر (يدعم دخول المشرف أو مدير المسجد بكاش منفصل لكل مستخدم)',
         security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(
-                name: 'halaqa_id',
-                in: 'query',
-                description: 'معرف الحلقة المحددة لتخصيص محتوى الـ PDF المتولد (اختياري)',
+                name: 'Accept',
+                in: 'header',
                 required: false,
-                schema: new OA\Schema(type: 'integer')
+                description: 'نوع الرد المطلوب',
+                schema: new OA\Schema(type: 'string', default: 'application/json')
             )
         ],
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'يتم إرجاع الملف كملف باينري جاهز للتحميل (.pdf Binary Stream)'
-            )
+                description: 'تم توليد رابط التقرير بنجاح (سواء من الكاش أو جديد)',
+                content: [
+                    new OA\MediaType(
+                        mediaType: 'application/json',
+                        schema: new OA\Schema(
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'status', type: 'boolean', example: true),
+                                new OA\Property(property: 'message', type: 'string', example: 'تم إنشاء تقرير المشرف الموحد بنجاح'),
+                                new OA\Property(
+                                    property: 'data',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'url', type: 'string', format: 'url', example: 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/sign/reports/supervisor-reports/1/general_1781780709.pdf?token=...'),
+                                        new OA\Property(property: 'cached', type: 'boolean', example: false)
+                                    ]
+                                ),
+                                new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                            ]
+                        )
+                    )
+                ]
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated - المستخدم غير مسجل دخول'),
+            new OA\Response(response: 403, description: 'Forbidden - لا تملك الصلاحية (ليست رتبة مشرف أو مدير)'),
+            new OA\Response(response: 500, description: 'Server error - خطأ داخلي في السيرفر أثناء توليد الـ PDF')
         ]
     )]
     public function exportPdfDocumentation() {}
+
+    #[OA\Get(
+        path: '/dashboard/teacher/bootstrap',
+        operationId: 'getTeacherBootstrap',
+        tags: ['Dashboard'],
+        summary: 'تحميل جميع بيانات المعلم اللازمة للعمل Offline',
+        description: 'يعيد بيانات الحلقة، الطلاب، الأعذار المعلقة، وإحصائيات الداشبورد في طلب واحد لتقليل عدد الاتصالات ودعم Offline First.',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'تم تحميل بيانات التهيئة بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم تحميل بيانات التهيئة بنجاح'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'halaqat',
+                                    type: 'array',
+                                    items: new OA\Items(
+                                        properties: [
+                                            new OA\Property(property: 'id', type: 'integer', example: 1),
+                                            new OA\Property(property: 'name', type: 'string', example: 'حلقة التميز')
+                                        ]
+                                    )
+                                ),
+                                new OA\Property(
+                                    property: 'rosters',
+                                    type: 'object',
+                                    example: [
+                                        '1' => [
+                                            ['id' => 10, 'name' => 'أحمد الحارثي'],
+                                            ['id' => 11, 'name' => 'محمد الكندي']
+                                        ]
+                                    ]
+                                ),
+                                new OA\Property(property: 'pending_excuses', type: 'array', items: new OA\Items(type: 'object')),
+                                new OA\Property(
+                                    property: 'dashboard',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'has_halaqa', type: 'boolean', example: true),
+                                        new OA\Property(property: 'halaqa_name', type: 'string', example: 'حلقة التميز'),
+                                        new OA\Property(
+                                            property: 'cards',
+                                            type: 'object',
+                                            properties: [
+                                                new OA\Property(property: 'total_students', type: 'integer', example: 15),
+                                                new OA\Property(property: 'evaluated_today', type: 'string', example: '3 / 15'),
+                                                new OA\Property(property: 'attendance_percentage', type: 'string', example: '87%'),
+                                                new OA\Property(property: 'month_ayahs_progress', type: 'string', example: '250 آية تم تسميعها'),
+                                            ]
+                                        )
+                                    ]
+                                )
+                            ]
+                        ),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden')
+        ]
+    )]
+    public function getTeacherBootstrapDocumentation() {}
+
+    #[OA\Get(
+        path: '/dashboard/teacher/dashboard',
+        operationId: 'getTeacherDashboardStats',
+        tags: ['Dashboard'],
+        summary: 'إحصائيات لوحة التحكم الخاصة بالمعلم لحلقته الموكلة',
+        description: 'يعيد تفاصيل حلقة المعلم، الكروت الإحصائية لليوم، التنبيهات الخاصة بالطلاب الأكثر غياباً هذا الشهر، وجدولاً بآخر التسميعات والتقييمات المنجزة مؤخراً.',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'تم جلب إحصائيات لوحة تحكم المعلم بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم جلب إحصائيات لوحة تحكم المعلم بنجاح'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'has_halaqa', type: 'boolean', example: true),
+                                new OA\Property(property: 'halaqa_name', type: 'string', example: 'حلقة زيد بن ثابت'),
+                                new OA\Property(
+                                    property: 'cards',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'total_students', type: 'integer', example: 15),
+                                        new OA\Property(property: 'evaluated_today', type: 'string', example: '5 / 15'),
+                                        new OA\Property(property: 'attendance_percentage', type: 'string', example: '87%'),
+                                        new OA\Property(property: 'month_ayahs_progress', type: 'string', example: '320 آية تم تسميعها')
+                                    ]
+                                ),
+                                new OA\Property(
+                                    property: 'alerts',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(
+                                            property: 'frequent_absentees',
+                                            type: 'array',
+                                            items: new OA\Items(
+                                                type: 'object',
+                                                properties: [
+                                                    new OA\Property(property: 'student_name', type: 'string', example: 'عبد الرحمن محمد'),
+                                                    new OA\Property(property: 'absent_days', type: 'integer', example: 4)
+                                                ]
+                                            )
+                                        )
+                                    ]
+                                ),
+                                new OA\Property(
+                                    property: 'recent_evaluations',
+                                    type: 'array',
+                                    items: new OA\Items(
+                                        type: 'object',
+                                        properties: [
+                                            new OA\Property(property: 'student_name', type: 'string', example: 'أحمد محمود'),
+                                            new OA\Property(property: 'type', type: 'string', example: 'حفظ جديد'),
+                                            new OA\Property(property: 'surah', type: 'string', example: 'البقرة'),
+                                            new OA\Property(property: 'score', type: 'integer', example: 95),
+                                            new OA\Property(property: 'time', type: 'string', example: 'منذ ساعتين')
+                                        ]
+                                    )
+                                )
+                            ]
+                        )
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'غير مصرح له الدخول - Unauthenticated'),
+            new OA\Response(response: 403, description: 'ليس لديك صلاحية الوصول (ليست رتبة معلم) - Forbidden'),
+            new OA\Response(response: 500, description: 'خطأ داخلي في السيرفر')
+        ]
+    )]
+    public function getTeacherStats() {}
+
+    /**
+     * 🔥 تم تحديثها بالكامل هنا لتتوافق مع الـ JSON Response ورابط Supabase
+     */
+    #[OA\Get(
+        path: '/dashboard/teacher/export-pdf',
+        operationId: 'downloadTeacherDashboardPdf',
+        tags: ['Reports'],
+        summary: 'تحميل تقرير لوحة تحكم المعلم PDF',
+        description: 'يقوم بإنشاء تقرير PDF مخصص يخص حلقة المعلم الحالي، يرفعه إلى Supabase، ويعيد رابط تحميل موقّع مؤقت مع حالة الكاش لتجنب الضغط على الخادم.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'Accept',
+                in: 'header',
+                required: false,
+                description: 'نوع الرد المطلوب',
+                schema: new OA\Schema(type: 'string', default: 'application/json')
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'تم إنشاء التقرير بنجاح وعاد برابط تحميل الملف السحابي الموقّع',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم إنشاء تقرير المعلم بنجاح'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'url',
+                                    type: 'string',
+                                    format: 'url',
+                                    example: 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/sign/reports/teacher-reports/4/general_1781780709.pdf?token=...'
+                                ),
+                                new OA\Property(property: 'cached', type: 'boolean', example: false)
+                            ]
+                        ),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'غير مصرح - يجب تسجيل الدخول أولاً'),
+            new OA\Response(response: 403, description: 'ليس لديك صلاحية الوصول (يجب أن تكون معلماً)'),
+            new OA\Response(response: 500, description: 'حدث خطأ في الخادم أو أثناء توليد ورفع ملف PDF')
+        ]
+    )]
+    public function exportPdfDoc() {}
+
+    #[OA\Get(
+        path: '/dashboard/parent/dashboard',
+        operationId: 'getParentDashboardStats',
+        tags: ['Dashboard'],
+        summary: 'إحصائيات لوحة التحكم الخاصة بولي الأمر (الأب)',
+        description: 'يعيد مصفوفة بأسماء كافة الأبناء التابعين لولي الأمر الحالي، مع تفاصيل الحلقة الموكلين بها، وحالة حضورهم اليوم، بالإضافة لآخر تقييم وتسميع حصلوا عليه مع المجموع التراكمي لآيات الحفظ والمراجعة هذا الشهر.',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'تم جلب بيانات لوحة تحكم ولي الأمر بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم جلب بيانات لوحة تحكم ولي الأمر بنجاح'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'has_children', type: 'boolean', example: true),
+                                new OA\Property(
+                                    property: 'children',
+                                    type: 'array',
+                                    items: new OA\Items(
+                                        type: 'object',
+                                        properties: [
+                                            new OA\Property(property: 'id', type: 'integer', example: 12),
+                                            new OA\Property(property: 'name', type: 'string', example: 'عمر أحمد محمد'),
+                                            new OA\Property(property: 'halaqa', type: 'string', example: 'حلقة عاصم بن أبي النجود'),
+                                            new OA\Property(property: 'today_attendance', type: 'string', example: 'present'),
+                                            new OA\Property(property: 'month_progress', type: 'string', example: '145 آية المجموع التراكمي'),
+                                            new OA\Property(
+                                                property: 'last_evaluation',
+                                                type: 'object',
+                                                nullable: true,
+                                                properties: [
+                                                    new OA\Property(property: 'surah', type: 'string', example: 'الكهف'),
+                                                    new OA\Property(property: 'type', type: 'string', example: 'مراجعة ثانية'),
+                                                    new OA\Property(property: 'score', type: 'integer', example: 98),
+                                                    new OA\Property(property: 'date', type: 'string', example: 'منذ 4 ساعات')
+                                                ]
+                                            )
+                                        ]
+                                    )
+                                )
+                            ]
+                        )
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'غير مصرح له الدخول - Unauthenticated'),
+            new OA\Response(response: 403, description: 'ليس لديك صلاحية الوصول (ليست رتبة ولي أمر) - Forbidden'),
+            new OA\Response(response: 500, description: 'خطأ داخلي في السيرفر')
+        ]
+    )]
+    public function getParentStats() {}
+
+    #[OA\Get(
+        path: '/dashboard/parent/export-pdf',
+        operationId: 'exportParentDashboardPdf',
+        tags: ['Reports'],
+        summary: 'إنشاء رابط تحميل تقرير ولي الأمر PDF',
+        description: 'يقوم بإنشاء تقرير PDF متعدد الصفحات يحتوي على متابعة الأبناء، ثم يرفعه إلى Supabase ويعود برابط موقّع مؤقت للتحميل.',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'تم إنشاء التقرير بنجاح وعاد بالرابط الموقّع',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم إنشاء التقرير بنجاح'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'url',
+                                    type: 'string',
+                                    format: 'uri',
+                                    example: 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/sign/reports/parent-reports/5/1780904552.pdf?token=...'
+                                ),
+                                new OA\Property(property: 'cached', type: 'boolean', example: false)
+                            ]
+                        ),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'غير مصرح - يجب تسجيل الدخول'),
+            new OA\Response(response: 403, description: 'ليس لديك صلاحية للوصول (يجب أن تكون ولي أمر)'),
+            new OA\Response(response: 404, description: 'لا يوجد أبناء مرتبطون بهذا الحساب حالياً'),
+            new OA\Response(response: 500, description: 'حدث خطأ في الخادم أو أثناء توليد ورفع ملف PDF')
+        ]
+    )]
+    public function exportPdf() {}
 }

@@ -1,4 +1,8 @@
-/vendor
 /node_modules
-/storage/*.key
-.env
+/tests
+/storage/framework/cache
+/storage/framework/views
+/storage/framework/sessions
+.git
+.github
+README.md

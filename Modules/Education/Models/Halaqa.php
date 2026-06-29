@@ -3,17 +3,19 @@
 namespace Modules\Education\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Mosque\Models\Mosque;
 
 class Halaqa extends Model
 {
+    use HasFactory;
+
     protected $table = 'halaqats';
     protected $fillable = [
         'name',
         'teacher_id',
         'capacity',
         'mosque_id',
-        'level',
         'schedule_days',
         'start_time',
         'end_time',
@@ -43,5 +45,10 @@ class Halaqa extends Model
     public function attendances()
     {
         return $this->hasMany(Attendance::class);
+    }
+
+    protected static function newFactory()
+    {
+        return \Modules\Education\Database\Factories\HalaqaFactory::new();
     }
 }

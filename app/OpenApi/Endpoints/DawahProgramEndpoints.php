@@ -28,6 +28,23 @@ class DawahProgramEndpoints
                 description: 'Page number',
                 schema: new OA\Schema(type: 'integer', example: 1)
             ),
+            new OA\Parameter(
+                name: 'type',
+                in: 'query',
+                required: false,
+                description: 'Filter by program type',
+                schema: new OA\Schema(
+                    type: 'string',
+                    enum: ['lecture', 'course', 'competition', 'other']
+                )
+            ),
+            new OA\Parameter(
+                name: 'q',
+                in: 'query',
+                required: false,
+                description: 'Search by program name (partial match)',
+                schema: new OA\Schema(type: 'string', example: 'درس القرآن')
+            ),
         ],
         responses: [
 

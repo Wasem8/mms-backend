@@ -22,10 +22,21 @@ class DawahProgramController extends Controller
 
     public function index(Request $request)
     {
-        $perPage = $request->input('per_page', 10);
-        $programs = $this->dawahProgramService->getAllPrograms($perPage);
+        $validated = $request->validate([
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'type'     => ['nullable', 'string', 'in:lecture,course,competition,other'],
+            'q'        => ['nullable', 'string', 'min:1'],
+        ]);
 
-        return ApiResponse::success($programs, 'تم جلب البرامج بنجاح');
+        $programs = $this->dawahProgramService->getAllPrograms(
+            (int) ($validated['per_page'] ?? 10),
+            array_filter([
+                'type' => $validated['type'] ?? null,
+                'q'    => $validated['q'] ?? null,
+            ])
+        );
+
+        return ApiResponse::success($programs->items(), 'تم جلب البرامج بنجاح', $programs);
     }
 
     public function show(Mosque $mosque, DawahProgram $program)

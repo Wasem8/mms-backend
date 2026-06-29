@@ -27,6 +27,7 @@ return new class extends Migration
             $table->integer('reviews_count')->default(0);;
             $table->string('imam')->nullable();
             $table->string('khatib')->nullable();
+            $table->decimal('donation_total', 15, 2)->default(0.00);
             $table->unsignedBigInteger('manager_id')->nullable();
 
             $table->foreign('manager_id')->references('id')->on('users')->onDelete('set null');

@@ -3,11 +3,14 @@
 namespace Modules\Education\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Mosque\Models\Mosque;
 use Modules\User\Models\User;
 
 class Student extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'parent_id',
         'first_name',
@@ -15,12 +18,13 @@ class Student extends Model
         'mosque_id',
         'date_of_birth',
         'gender',
-        'status'
+        'status',
     ];
 
-    public function halaqat()
+    public function halaqats()
     {
-        return $this->belongsToMany(Halaqa::class);
+        return $this->belongsToMany(Halaqa::class, 'halaqa_student', 'student_id', 'halaqa_id')
+            ->withPivot(['status', 'joined_at']);
     }
 
     public function parent()
@@ -38,12 +42,6 @@ class Student extends Model
         return $this->hasMany(Attendance::class);
     }
 
-    public function halaqats()
-    {
-        return $this->belongsToMany(Halaqa::class, 'halaqa_student', 'student_id', 'halaqa_id')
-            ->withPivot(['status', 'joined_at']);
-    }
-
     public function getFullNameAttribute()
     {
         return trim($this->first_name . ' ' . $this->last_name);
@@ -51,13 +49,28 @@ class Student extends Model
 
     public function scopeForUser($query, $user)
     {
+        if (!$user) {
+            return $query->whereRaw('1 = 0');
+        }
+
         return match (true) {
-            $user->isAreaManager()  => $query,
-            $user->isMosqueManager()   => $query->where('mosque_id', $user->mosque_id),
-            $user->isSupervisor()   => $query->where('mosque_id', $user->mosque_id),
-            $user->isTeacher()      => $query->whereHas('halaqats', fn($q) => $q->where('teacher_id', $user->id)),
-            $user->isParent()       => $query->where('parent_id', $user->id),
-            default                 => $query->whereRaw('1 = 0'),
+            $user->isAreaManager()   => $query,
+            $user->isMosqueManager() => $query->where('mosque_id', $user->mosque_id),
+            $user->isSupervisor()    => $query->where('mosque_id', $user->mosque_id),
+            $user->isTeacher()       => $query->whereHas('halaqats', fn($q) => $q->where('teacher_id', $user->id)),
+            $user->isParent()        => $query->where('parent_id', $user->id),
+            default                  => $query->whereRaw('1 = 0'),
         };
+    }
+
+
+    public function evaluations()
+    {
+        return $this->hasMany(Evaluation::class);
+    }
+
+    protected static function newFactory()
+    {
+        return \Modules\Education\Database\Factories\StudentFactory::new();
     }
 }

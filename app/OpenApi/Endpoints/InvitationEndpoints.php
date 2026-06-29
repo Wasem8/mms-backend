@@ -13,7 +13,11 @@ class InvitationEndpoints
         operationId: 'sendInvitation',
         tags: ['Invitations'],
         summary: 'Send invitation to user',
-        description: 'Send invitation email. Prevents duplicate active invitations for same email.',
+        description: "Send invitation email based on a strict hierarchy:\n\n" .
+        "1. **Super Admin** (Zone Manager): Can ONLY invite a `mosque_manager`. (Requires `mosque_id` in request)\n" .
+        "2. **Mosque Manager**: Can invite a `halaqa_supervisor` or `teacher`.\n" .
+        "3. **Halaqa Supervisor**: Can ONLY invite a `teacher`.\n\n" .
+        "**Business Rules:** Each mosque is strictly limited to ONE active/pending Mosque Manager and ONE active/pending Halaqa Supervisor.",
         security: [['bearerAuth' => []]],
         requestBody: new OA\RequestBody(
             required: true,
@@ -24,9 +28,16 @@ class InvitationEndpoints
                     new OA\Property(
                         property: 'role',
                         type: 'string',
-                        enum: self::AVAILABLE_ROLES,
-                        example: 'teacher',
-                        description: 'User role to assign'
+                        enum: ['mosque_manager', 'halaqa_supervisor', 'teacher'], // 🎯 توثيق الأدوار المتاحة للدعوة صراحة هنا
+                        example: 'mosque_manager',
+                        description: 'The role assigned to the invited user. Allowed values: mosque_manager, halaqa_supervisor, teacher.'
+                    ),
+                    new OA\Property(
+                        property: 'mosque_id',
+                        type: 'integer',
+                        nullable: true,
+                        example: 5,
+                        description: 'Required ONLY if the sender is a Super Admin (Zone Manager). For other roles, it is handled automatically from their profile.'
                     ),
                 ]
             )
@@ -45,9 +56,8 @@ class InvitationEndpoints
                             properties: [
                                 new OA\Property(property: 'id', type: 'integer', example: 1),
                                 new OA\Property(property: 'email', type: 'string', example: 'user@example.com'),
-                                new OA\Property(property: 'role', type: 'string', example: 'teacher'),
-                                new OA\Property(property: 'token', type: 'string', example: 'abc123token'),
-                                new OA\Property(property: 'status', type: 'string', enum: ['pending', 'accepted', 'rejected']),
+                                new OA\Property(property: 'role', type: 'string', example: 'mosque_manager'),
+                                new OA\Property(property: 'mosque_id', type: 'integer', example: 5),
                                 new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
                             ]
                         ),
@@ -69,7 +79,7 @@ class InvitationEndpoints
             ),
             new OA\Response(
                 response: 422,
-                description: 'Validation error - Request validation failed',
+                description: 'Validation error - Request validation failed or hierarchy/limit violation',
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'status', type: 'boolean', example: false),
@@ -77,7 +87,7 @@ class InvitationEndpoints
                         new OA\Property(
                             property: 'data',
                             type: 'object',
-                            example: ['field_name' => ['Error message']]
+                            example: ['role' => ['لا يمكن إرسال الدعوة. هذا المسجد يمتلك (مدير مسجد) نشط بالفعل.']]
                         ),
                         new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
                     ]

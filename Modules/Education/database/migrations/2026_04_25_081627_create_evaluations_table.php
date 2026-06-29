@@ -15,12 +15,15 @@ return new class extends Migration
             $table->id();
             $table->foreignId('halaqa_id')->constrained('halaqats')->cascadeOnDelete();
             $table->foreignId('student_id')->constrained()->cascadeOnDelete();
+            $table->uuid('client_uuid')->unique();
             $table->string('surah_name')->nullable();
             $table->integer('from_ayah')->nullable();
             $table->integer('to_ayah')->nullable();
             $table->integer('score')->nullable();
             $table->text('notes')->nullable();
             $table->timestamp('evaluated_at')->nullable();
+            $table->json('dimensions')->nullable();
+            $table->foreignId('voice_note_id')->nullable()->constrained('media_uploads')->nullOnDelete();
             $table->timestamps();
         });
     }

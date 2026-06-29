@@ -111,9 +111,9 @@ requestBody: new OA\RequestBody(
                     new OA\Property(property: 'name', type: 'string', example: 'حلقة التجويد'),
                     new OA\Property(property: 'teacher_id', type: 'integer', nullable: true, example: 4),
                     new OA\Property(property: 'capacity', type: 'integer', example: 20),
-                    new OA\Property(property: 'schedule_days', type: 'array', items: new OA\Items(type: 'string'), example: ['Sunday', 'Tuesday']),
-                    new OA\Property(property: 'start_time', type: 'string', example: '16:00'),
-                    new OA\Property(property: 'end_time', type: 'string', example: '18:00'),
+                    new OA\Property(property: 'schedule_days', type: 'array', items: new OA\Items(type: 'string'), example: ['sunday', 'tuesday', 'thursday']),
+                    new OA\Property(property: 'start_time', type: 'string', format: 'time', example: '16:00:00'),
+                    new OA\Property(property: 'end_time', type: 'string', format: 'time', example: '18:00:00'),
                     new OA\Property(property: 'status', type: 'string', enum: self::HALAQA_STATUSES, example: 'active'),
                 ]
             )
@@ -355,67 +355,235 @@ requestBody: new OA\RequestBody(
     )]
     public function detachStudent() {}
 
-    /////////////////
-    ///
-    ///
-    ///
-    ///
+    #[OA\Post(
+        path: '/education/sync',
+        operationId: 'syncOfflineOperations',
+        tags: ['Education', 'Offline Sync'],
+        summary: 'Offline batch synchronization',
+        description: '
+            Supported operation types:
 
+            - attendance
+            - evaluation
+            - evaluation_update
+            - evaluation_delete
+            - excuse_decision
 
-    // --- قائمة المعلمين ---
-    #[OA\Get(
-        path: '/education/teachers',
-        operationId: 'getTeachersList',
-        tags: ['Teachers Management'],
-        summary: 'قائمة المعلمين (حسب صلاحية المستخدم)',
-        description: 'تعيد القائمة بناءً على الدور: مدير المنطقة يرى الكل، مدير المسجد والمشرف يريان معلمي مسجدهما فقط.',
+            Evaluation operations support an optional dimensions object:
+
+            {
+              "tajweed": "excellent|good|needs_work",
+              "hifz": "excellent|good|needs_work",
+              "fluency": "excellent|good|needs_work",
+              "makharij": "excellent|good|needs_work"
+            }
+
+            Each operation is processed independently and returns its own status.
+        ',
         security: [['bearerAuth' => []]],
-        parameters: [
-            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
-        ],
-        responses: [
-            new OA\Response(
-                response: 200,
-                description: 'قائمة المعلمين المسترجعة',
-                content: new OA\JsonContent(ref: '#/components/schemas/TeacherListResponse')
-            ),
-            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
-        ]
-    )]
-    public function index()
-    {
 
-    }
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['ops'],
+                properties: [
 
-    #[OA\Get(
-        path: '/education/teachers/{id}',
-        operationId: 'getTeacherDetails',
-        tags: ['Teachers Management'],
-        summary: 'تفاصيل المعلم العميقة والإحصائيات',
-        description: 'جلب بيانات المعلم، حلقاته، وإحصائيات الحضور والغياب للطلاب التابعين له.',
-        security: [['bearerAuth' => []]],
-        parameters: [
-            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
-            new OA\Parameter(
-                name: 'id',
-                in: 'path',
-                description: 'معرف المعلم (User ID)',
-                required: true,
-                schema: new OA\Schema(type: 'integer')
+                    new OA\Property(
+                        property: 'ops',
+                        type: 'array',
+                        description: 'List of offline operations queued on the device',
+                        items: new OA\Items(
+                            type: 'object',
+                            required: ['type', 'client_uuid', 'data'],
+                            properties: [
+
+                                new OA\Property(
+                                    property: 'type',
+                                    type: 'string',
+                                    enum: [
+                                        'attendance',
+                                        'evaluation',
+                                        'evaluation_update',
+                                        'evaluation_delete',
+                                        'excuse_decision'
+                                    ],
+                                    example: 'evaluation_update'
+                                ),
+
+                                new OA\Property(
+                                    property: 'client_uuid',
+                                    type: 'string',
+                                    format: 'uuid',
+                                    description: 'Idempotency key generated by the client',
+                                    example: '6b2d1c44-9c2f-4f3a-8a0b-123456789abc'
+                                ),
+
+                                new OA\Property(
+                                    property: 'data',
+                                    type: 'object',
+                                    additionalProperties: true,
+                                    description: 'Payload depends on operation type'
+                                )
+                            ]
+                        ),
+                        example: [
+
+                            [
+                                'type' => 'attendance',
+                                'client_uuid' => '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+                                'data' => [
+                                    'halaqa_id' => 1,
+                                    'date' => '2026-06-05',
+                                    'attendances' => [
+                                        [
+                                            'student_id' => 12,
+                                            'status' => 'present'
+                                        ],
+                                        [
+                                            'student_id' => 13,
+                                            'status' => 'absent'
+                                        ]
+                                    ]
+                                ]
+                            ],
+
+                            [
+                                'type' => 'evaluation',
+                                'client_uuid' => '6b2d1c44-9c2f-4f3a-8a0b-123456789abc',
+                                'data' => [
+                                    'halaqa_id' => 1,
+                                    'student_id' => 12,
+                                    'surah_name' => 'الفاتحة',
+                                    'from_ayah' => 1,
+                                    'to_ayah' => 7,
+                                    'score' => 95,
+
+                                    'voice_note_id' => 2,
+                                    'notes' => 'Good recitation, but work on makharij',
+                                    'dimensions' => [
+                                        'tajweed' => 'excellent',
+                                        'hifz' => 'good',
+                                        'fluency' => 'excellent',
+                                        'makharij' => 'needs_work'
+                                    ],
+
+                                    'evaluated_at' => '2026-06-05T15:30:00Z'
+                                ]
+                            ],
+
+                            [
+                                'type' => 'evaluation_update',
+                                'client_uuid' => '11111111-2222-3333-4444-555555555555',
+                                'data' => [
+                                    'id' => 25,
+                                    'score' => 98,
+                                    'notes' => 'Excellent progress',
+                                    'surah_name' => 'البقرة',
+                                    'from_ayah' => 10,
+                                    'to_ayah' => 20,
+                                    'voice_note_id' => 3,
+
+                                    'dimensions' => [
+                                        'tajweed' => 'excellent',
+                                        'hifz' => 'excellent',
+                                        'fluency' => 'good',
+                                        'makharij' => 'good'
+                                    ],
+
+                                    'evaluated_at' => '2026-06-05T18:00:00Z'
+                                ]
+                            ],
+
+                            [
+                                'type' => 'evaluation_delete',
+                                'client_uuid' => '66666666-7777-8888-9999-000000000000',
+                                'data' => [
+                                    'id' => 25
+                                ]
+                            ],
+
+                            [
+                                'type' => 'excuse_decision',
+                                'client_uuid' => '9a7d2f11-2222-4aaa-bbbb-ccccdddd1111',
+                                'data' => [
+                                    'excuse_id' => 10,
+                                    'status' => 'accepted',
+                                    'admin_comment' => 'مقبول',
+
+                                    // authoritative client timestamp
+                                    'processed_at' => '2026-06-05T16:05:00Z'
+                                ]
+                            ]
+                        ]
+                    )
+                ]
             )
-        ],
+        ),
+
         responses: [
+
             new OA\Response(
                 response: 200,
-                description: 'تفاصيل المعلم والحلقات المسترجعة',
-                content: new OA\JsonContent(ref: '#/components/schemas/TeacherDetailResponse')
+                description: 'Synchronization completed',
+                content: new OA\JsonContent(
+                    properties: [
+
+                        new OA\Property(
+                            property: 'status',
+                            type: 'boolean',
+                            example: true
+                        ),
+
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'تمت مزامنة العمليات بنجاح'
+                        ),
+
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(
+                                type: 'object',
+                                properties: [
+
+                                    new OA\Property(
+                                        property: 'client_uuid',
+                                        type: 'string',
+                                        example: '6b2d1c44-9c2f-4f3a-8a0b-123456789abc'
+                                    ),
+
+                                    new OA\Property(
+                                        property: 'status',
+                                        type: 'string',
+                                        enum: ['ok', 'error', 'conflict'],
+                                        example: 'ok'
+                                    ),
+
+                                    new OA\Property(
+                                        property: 'message',
+                                        type: 'string',
+                                        example: 'evaluation saved'
+                                    ),
+
+                                    new OA\Property(
+                                        property: 'data',
+                                        type: 'object',
+                                        nullable: true
+                                    )
+                                ]
+                            )
+                        )
+                    ]
+                )
             ),
-            new OA\Response(response: 404, description: 'المعلم غير موجود أو لا تملك صلاحية الوصول إليه'),
-            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+
+            new OA\Response(
+                response: 401,
+                ref: '#/components/responses/Unauthenticated'
+            )
         ]
     )]
-    public function show($id)
-    {
-    }
+    public function syncOffline() {}
 }
 

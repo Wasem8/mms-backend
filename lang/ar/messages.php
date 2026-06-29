@@ -1,11 +1,14 @@
 <?php
 
 return [
+    'messages.otp_resent_successfully' => 'تم إعادة إرسال رمز التحقق OTP إلى بريدك الإلكتروني.',
+
     // --- قسم الطلاب ---
     'students_retrieved' => 'تم استعادة قائمة الطلاب بنجاح.',
     'student_stored' => 'تم تسجيل بيانات الطالب بنجاح، يرجى انتظار موافقة المشرف لتفعيل الحساب.',
     'student_retrieved' => 'تم جلب بيانات الطالب بنجاح.',
     'student_updated' => 'تم تحديث بيانات الطالب بنجاح.',
+    'student_approved_and_assigned' => 'تم قبول الطالب وإسناده للحلقة بنجاح.',
     'student_deleted' => 'تم حذف سجل الطالب بنجاح.',
     'student_approved' => 'تم قبول الطالب وتفعيل حسابه بنجاح.',
     'student_rejected' => 'تم رفض طلب التسجيل.',
@@ -37,6 +40,7 @@ return [
 
     // --- قسم التقييمات ---
     'evaluation_stored' => 'تم تقييم الطالب بنجاح.',
+    'evaluation_already_exists' => 'التقييم موجود بالفعل',
     'evaluation_retrieved' => 'تم جلب التقييمات بنجاح.',
     'evaluation_updated' => 'تم تحديث التقييم بنجاح.',
     'evaluation_deleted' => 'تم حذف التقييم بنجاح.',
@@ -51,4 +55,36 @@ return [
     'notification_marked_read' => 'تم تحديد الإشعار كمقروء.',
     'notifications_all_marked_read' => 'تم تحديد كل الإشعارات كمقروءة.',
     'notification_deleted' => 'تم حذف الإشعار بنجاح.',
+
+    //التبرعات
+    'campaign_already_completed' => 'لقد بلغت هذه الحملة هدفها ولم تعد تقبل التبرعات.',
+    'exceeds_remaining'          => 'مبلغ تبرعك يتجاوز المبلغ المتبقي وهو :remaining :currency لهذه الحملة.',
+    'mosque_need_already_fulfilled' => 'تم استيفاء هذه الحاجة بالكامل ولم تعد تقبل التبرعات.',
+
+    // --- قسم التطوع ---
+    'opportunity_created' => 'تم إنشاء فرصة التطوع بنجاح.',
+    'opportunity_updated' => 'تم تحديث فرصة التطوع بنجاح.',
+    'opportunity_closed' => 'تم إغلاق فرصة التطوع بنجاح.',
+    'opportunity_retrieved' => 'تم جلب فرصة التطوع بنجاح.',
+    'opportunities_retrieved' => 'تم جلب فرص التطوع بنجاح.',
+    'application_submitted' => 'تم تقديم الطلب بنجاح.',
+    'application_approved' => 'تم قبول الطلب بنجاح.',
+    'application_rejected' => 'تم رفض الطلب بنجاح.',
+    'applications_retrieved' => 'تم جلب الطلبات بنجاح.',
+    'my_applications_retrieved' => 'تم جلب طلباتي بنجاح.',
+    'task_assigned' => 'تم تعيين المهمة بنجاح.',
+    'task_completed' => 'تم إكمال المهمة بنجاح.',
+    'tasks_retrieved' => 'تم جلب المهام بنجاح.',
+    'hours_logged' => 'تم تسجيل الساعات والتقييم بنجاح.',
+    'hours_retrieved' => 'تم جلب إجمالي الساعات بنجاح.',
+    'logs_retrieved' => 'تم جلب السجلات بنجاح.',
+    'certificate_issued' => 'تم إصدار الشهادة بنجاح.',
+    'certificates_retrieved' => 'تم جلب الشهادات بنجاح.',
+    'volunteer_not_found' => 'بيانات المتطوع أو الفرصة غير موجودة.',
+    'opportunity_closed_app' => 'هذه الفرصة مغلقة للتقديم.',
+    'pending_application_exists' => 'لديك طلب معلق لهذه الفرصة مسبقاً.',
+    'task_only_approved' => 'يمكن تعيين المهام فقط للطلبات المقبولة.',
+    'certificate_already_exists' => 'تم إصدار شهادة لهذا المتطوع والفرصة مسبقاً.',
+    'no_hours_for_certificate' => 'لا توجد ساعات مسجلة. لا يمكن إصدار شهادة.',
+    'upload_failed' => 'فشل رفع الشهادة: :error',
 ];

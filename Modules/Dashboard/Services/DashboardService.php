@@ -9,6 +9,7 @@ use Modules\Education\Models\Evaluation;
 use Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Spatie\Browsershot\Browsershot;
 
 class DashboardService
 {
@@ -177,56 +178,44 @@ class DashboardService
         return $recentAttendance->concat($recentStudents)->sortByDesc('time')->values()->all();
     }
 
-    /**
-     * الحصول على إحصائيات المشرف بصيغة PDF
-     * تعيد البيانات بالصيغة المتوقعة من قبل view الـ PDF
-     */
-    public function getSupervisorStatsForPdf($mosqueId, array $filters = [])
-    {
-        $cardsStats = $this->getCardsStats($mosqueId, $filters);
 
-        return [
-            'halaqat_count' => $cardsStats['total_halaqas'],
-            'students_count' => $cardsStats['total_students'],
-            'teachers_count' => $cardsStats['total_teachers'],
-            'attendance_rate' => (int) str_replace('%', '', $cardsStats['attendance_today_percentage']),
-            'halaqat' => $this->getHalaqatDetailsForPdf($mosqueId, $filters),
-        ];
-    }
 
-    /**
-     * الحصول على تفاصيل الحلقات للـ PDF
-     */
-    private function getHalaqatDetailsForPdf($mosqueId, array $filters = [])
+    public function generateSupervisorReportPdf(int $mosqueId, array $filters = [])
     {
-        $query = Halaqa::where('mosque_id', $mosqueId)
-            ->with('teacher')
-            ->withCount('students');
+        // 1. جلب البيانات الأساسية بناءً على حالات الاستخدام (UCs)
+        $query = Halaqa::where('mosque_id', $mosqueId);
 
         if (!empty($filters['halaqa_id'])) {
             $query->where('id', $filters['halaqa_id']);
         }
 
-        return $query->get()->map(function ($halaqa) {
-            $today = Carbon::today()->toDateString();
+        $halaqats = $query->withCount(['students', 'teachers'])->get();
 
-            $attendanceQuery = Attendance::where('halaqa_id', $halaqa->id)
-                ->whereDate('date', $today);
+        // إحصائيات عامة للمسجد (لإظهارها في رأس التقرير)
+        $stats = [
+            'total_halaqats' => $halaqats->count(),
+            'total_students' => Student::where('mosque_id', $mosqueId)->count(),
+            'active_students'=> Student::where('mosque_id', $mosqueId)->where('status', 'active')->count(),
+            'pending_requests'=> Student::where('mosque_id', $mosqueId)->where('status', 'pending')->count(), // UC-45
+        ];
 
-            $totalAttendance = (clone $attendanceQuery)->count();
-            $presentCount = $attendanceQuery->where('status', 'present')->count();
+        // 2. تجهيز مصفوفة البيانات الممررة للـ View
+        $data = [
+            'title'     => 'تقرير المشرف العام للحلقات والمتابعة',
+            'date'      => now()->format('Y-m-d'),
+            'stats'     => $stats,
+            'halaqats'  => $halaqats,
+        ];
 
-            $attendanceRate = $totalAttendance > 0
-                ? round(($presentCount / $totalAttendance) * 100)
-                : 0;
-
-            return [
-                'name' => $halaqa->name,
-                'teacher_name' => $halaqa->teacher?->name ?? '-',
-                'students_count' => $halaqa->students_count ?? 0,
-                'attendance_rate' => $attendanceRate
-            ];
-        })->toArray();
+        // 3. توليد الـ PDF عبر الـ View وضبط الخصائص لدعم الترميز العربي UTF-8
+        return Browsershot::html($html)
+            ->setChromePath('C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe')
+            ->format('A4')
+            ->margins(5,5,5,5)
+            ->showBackground()
+            ->waitUntilNetworkIdle()
+            ->setDelay(3000)
+            ->pdf();
     }
 
 }

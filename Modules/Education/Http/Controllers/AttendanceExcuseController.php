@@ -37,6 +37,11 @@ class AttendanceExcuseController extends Controller
     {
         $excuses = AttendanceExcuse::with(['student:id,first_name,last_name', 'halaqa:id,name'])
             ->where('parent_id', auth()->id())
+
+            ->when(request('student_id'), function ($query, $studentId) {
+                $query->where('student_id', $studentId);
+            })
+
             ->latest()
             ->paginate(15);
 
@@ -84,7 +89,16 @@ class AttendanceExcuseController extends Controller
         }
 
         if ($excuse->status !== 'pending') {
-            return ApiResponse::error('هذا العذر تم معالجته مسبقاً', 422);
+
+            return ApiResponse::success(
+                [
+                    'code' => 'EXCUSE_ALREADY_PROCESSED',
+                    'status' => $excuse->status,
+                    'processed_at' => $excuse->updated_at,
+                    'final' => true
+                ],
+                'already processed'
+            );
         }
 
         $action->execute($excuse, $request->only(['status', 'admin_comment']));

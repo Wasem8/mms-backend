@@ -14,8 +14,11 @@ use Modules\User\Actions\VerifyOtpAction;
 use Modules\User\Http\Requests\ForgotPasswordRequest;
 use Modules\User\Http\Requests\LoginRequest;
 use Modules\User\Http\Requests\RegisterParentRequest;
+use Modules\User\Http\Requests\ResendOtpRequest;
 use Modules\User\Http\Requests\ResetPasswordRequest;
 use Modules\User\Http\Requests\VerifyOtpRequest;
+use Modules\User\Models\User;
+use Modules\User\Notifications\SendOTPNotification;
 use Modules\User\Transformers\UserResource;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
@@ -126,6 +129,18 @@ class AuthController extends Controller {
         $request->user()->update(['fcm_token' => null]);
 
         return ApiResponse::success(null, 'تم حذف توكن الإشعارات بنجاح');
+    }
+
+    public function resendOtp(ResendOtpRequest $request)
+    {
+        $request->validated();
+
+        $user = User::where('email', $request->email)->first();
+        $otp = $user->generateOtp();
+
+        $user->notify(new SendOTPNotification($otp, 'verification'));
+
+        return ApiResponse::success([], __('messages.otp_resent_successfully'));
     }
 
 }

@@ -32,7 +32,7 @@ class MosqueFilters
         }
 
         if (isset($filters['facility_id'])) {
-            $this->filterByFacility($query, $filters['facility_id']);
+            $this->filterByFacility($query, (int) $filters['facility_id']);
         }
 
         if (isset($filters['min_rating'])) {
@@ -85,12 +85,10 @@ class MosqueFilters
     }
 
 
-    private function filterByFacility(Builder $query, int|array $facilityId): void
+    private function filterByFacility(Builder $query, int $facilityId): void
     {
-        $facilityIds = is_array($facilityId) ? $facilityId : [$facilityId];
-
-        $query->whereHas('facilities', function (Builder $q) use ($facilityIds) {
-            $q->whereIn('facilities.id', $facilityIds);
+        $query->whereHas('facilities', function (Builder $q) use ($facilityId) {
+            $q->where('facilities.id', $facilityId);
         });
     }
 

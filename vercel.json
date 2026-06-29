@@ -1,6 +1,12 @@
 {
     "version": 2,
-    "functions": { "api/index.php": { "runtime": "vercel-php@0.9.0" } },
+    "functions": {
+        "api/index.php": {
+            "runtime": "vercel-php@0.9.0",
+            "excludeFiles": "{node_modules/**,tests/**,.git/**,storage/fonts/**,vendor/mpdf/mpdf/ttfonts/*.ttf}",
+            "maxDuration": 60
+        }
+    },
     "routes": [
         {
             "src": "/api/(.*)",
@@ -15,7 +21,7 @@
     ],
     "env": {
         "APP_ENV": "production",
-        "APP_DEBUG": "false",
+        "APP_DEBUG": "true",
         "LOG_CHANNEL": "stderr",
         "CACHE_DRIVER": "array"
     }
