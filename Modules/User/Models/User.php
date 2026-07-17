@@ -147,6 +147,11 @@ class User extends Authentication implements JWTSubject
         return $this->hasRole('teacher');
     }
 
+    public function isVolunteer(): bool
+    {
+        return $this->hasRole('volunteer');
+    }
+
     public function scopeRole($query, $roleName)
     {
         return $query->whereHas('roles', function ($q) use ($roleName) {

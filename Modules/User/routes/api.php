@@ -9,6 +9,7 @@ Route::prefix('auth')->group(function () {
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
     Route::post('/register-parent', [AuthController::class, 'registerParent']);
+    Route::post('/register-volunteer', [AuthController::class, 'registerVolunteer']);
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
     Route::post('resend-otp', [AuthController::class, 'resendOtp'])
         ->middleware('throttle:1,1');

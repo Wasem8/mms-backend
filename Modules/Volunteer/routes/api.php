@@ -1,11 +1,15 @@
 <?php
 
+use Modules\Volunteer\Http\Controllers\VolunteerAuthController;
 use Modules\Volunteer\Http\Controllers\VolunteerOpportunityController;
 use Modules\Volunteer\Http\Controllers\VolunteerTaskController;
 use Modules\Volunteer\Http\Controllers\VolunteerEvaluationController;
 
-
 use Illuminate\Support\Facades\Route;
+
+// ─── Volunteer Auth (public) ──────────────────────────────────────────────────
+Route::post('volunteer/register', [VolunteerAuthController::class, 'register']);
+Route::post('volunteer/login', [VolunteerAuthController::class, 'login']);
 
 /*
 | Volunteer Management Module Routes
