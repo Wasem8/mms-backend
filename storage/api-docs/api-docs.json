@@ -18685,6 +18685,126 @@
                 ]
             }
         },
+        "/volunteer/certificates/{volunteerId}/{opportunityId}/download": {
+            "get": {
+                "tags": [
+                    "Volunteer Evaluation"
+                ],
+                "summary": "Download certificate as PDF",
+                "description": "Download an issued certificate as a PDF file. Requires `mosque_manager` role.",
+                "operationId": "downloadVolunteerCertificate",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "volunteerId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 12
+                        }
+                    },
+                    {
+                        "name": "opportunityId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF file downloaded successfully",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Certificate not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/volunteer/certificates/{volunteerId}/{opportunityId}/stream": {
+            "get": {
+                "tags": [
+                    "Volunteer Evaluation"
+                ],
+                "summary": "View certificate PDF in browser",
+                "description": "Stream an issued certificate PDF inline in the browser. Requires `mosque_manager` role.",
+                "operationId": "streamVolunteerCertificate",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "volunteerId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 12
+                        }
+                    },
+                    {
+                        "name": "opportunityId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF streamed successfully",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Certificate not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/volunteer/my-certificates": {
             "get": {
                 "tags": [
@@ -18752,6 +18872,57 @@
                     },
                     "500": {
                         "description": "Internal server error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/volunteer/my-certificates/{certificateId}/download": {
+            "get": {
+                "tags": [
+                    "Volunteer Evaluation"
+                ],
+                "summary": "Download my certificate as PDF",
+                "description": "Download your own issued certificate as a PDF file. Requires `volunteer` role.",
+                "operationId": "downloadMyVolunteerCertificate",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "certificateId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF file downloaded successfully",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Certificate not found"
                     }
                 },
                 "security": [
