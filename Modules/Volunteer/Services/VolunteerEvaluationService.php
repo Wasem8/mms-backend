@@ -130,24 +130,22 @@ class VolunteerEvaluationService
             @file_put_contents($localBold, @file_get_contents($remoteBold));
         }
 
-        $mpdf = new \Mpdf\Mpdf([
-            'mode'          => 'utf-8',
-            'format'        => 'A4',
-            'margin_left'   => 8,
-            'margin_right'  => 8,
-            'margin_top'    => 8,
-            'margin_bottom' => 8,
-            'tempDir'       => $tempDir,
-            'fontDir'       => ['/tmp'],
-            'fontdata'      => [
-                'cairo' => [
-                    'R'      => 'Cairo-Regular.ttf',
-                    'B'      => 'Cairo-Bold.ttf',
-                    'useOTL' => 0xFF,
-                ]
-            ],
-            'default_font' => 'cairo',
-        ]);
+        if (!defined('_MPDF_TTFONTPATH')) {
+            define('_MPDF_TTFONTPATH', '/tmp/');
+        }
+        if (!defined('_MPDF_TEMP_DIR')) {
+            define('_MPDF_TEMP_DIR', $tempDir);
+        }
+
+        $mpdf = new \mPDF('utf-8', 'A4', 0, '', 8, 8, 8, 8, 9, 9, 'P');
+        $mpdf->fontdata = [
+            'cairo' => [
+                'R'      => 'Cairo-Regular.ttf',
+                'B'      => 'Cairo-Bold.ttf',
+                'useOTL' => 0xFF,
+            ]
+        ];
+        $mpdf->default_font = 'cairo';
 
         $mpdf->WriteHTML($html);
 
