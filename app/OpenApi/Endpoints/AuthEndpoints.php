@@ -67,6 +67,66 @@ class AuthEndpoints
     public function registerParent() {}
 
     #[OA\Post(
+        path: '/auth/register-volunteer',
+        operationId: 'registerVolunteer',
+        tags: ['Auth'],
+        summary: 'Register a new volunteer account',
+        description: 'Create a new volunteer account. An OTP verification email will be sent.',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['name', 'email', 'password', 'password_confirmation'],
+                properties: [
+                    new OA\Property(property: 'name', type: 'string', example: 'Volunteer Name', minLength: 2, maxLength: 255),
+                    new OA\Property(property: 'email', type: 'string', format: 'email', example: 'volunteer@test.com'),
+                    new OA\Property(property: 'password', type: 'string', example: 'password123', minLength: 8),
+                    new OA\Property(property: 'password_confirmation', type: 'string', example: 'password123'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Account created successfully. OTP sent to email.',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Account created. An OTP has been sent to your email for verification.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'id', type: 'integer', example: 7),
+                                new OA\Property(property: 'name', type: 'string', example: 'Volunteer Name'),
+                                new OA\Property(property: 'email', type: 'string', example: 'volunteer@test.com'),
+                                new OA\Property(property: 'status', type: 'string', example: 'inactive'),
+                            ]
+                        ),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Validation error - Request validation failed',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: false),
+                        new OA\Property(property: 'message', type: 'string', example: 'Validation error.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            example: ['field_name' => ['Error message']]
+                        ),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function registerVolunteer() {}
+
+    #[OA\Post(
         path: '/auth/verify-otp',
         operationId: 'verifyOtp',
         tags: ['Auth'],
