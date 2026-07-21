@@ -13,10 +13,10 @@ class SendInvitationAction
 {
     public function execute(User $user, string $email, string $role, int $mosqueId): Invitation
     {
-        // 1. تحديد اسم الصلاحية المطلوبة ديناميكياً (مثال: invite_mosque_manager)
+
         $permissionName = 'invite_' . $role;
 
-        // فحص الصلاحية بداخل نظام الأدوار الحالي لديك
+
         if (!$user->hasPermission($permissionName)) {
             throw ValidationException::withMessages([
                 'role' => 'غير مصرح لك بإرسال دعوة لهذا الدور الوظيفي.'
@@ -49,7 +49,6 @@ class SendInvitationAction
             ]);
         }
 
-        // 4. التحقق من عدم وجود دعوة معلقة ونشطة لنفس الإيميل
         $existingInvitation = Invitation::where('email', $email)
             ->whereNull('accepted_at')
             ->where('expires_at', '>', now())
@@ -61,10 +60,10 @@ class SendInvitationAction
             ]);
         }
 
-        // 🔥 5. قانون الحظر الصارم (مدير واحد ومشرف واحد فقط للمسجد الواحد)
+
         if (in_array($role, ['mosque_manager', 'halaqa_supervisor'])) {
 
-            // أ. فحص إذا كان هناك مستخدم حقيقي في قاعدة البيانات يشغل هذا الدور في نفس المسجد
+
             $hasActiveUser = User::where('mosque_id', $mosqueId)
                 ->whereHas('roles', function($query) use ($role) {
                     $query->where('name', $role);
@@ -77,7 +76,6 @@ class SendInvitationAction
                 ]);
             }
 
-            // ب. فحص إذا كان هناك دعوة سابقة معلقة لم تنتهِ صلاحيتها لنفس الدور والمسجد
             $hasPendingInvitation = Invitation::where('mosque_id', $mosqueId)
                 ->where('role', $role)
                 ->whereNull('accepted_at')
@@ -92,7 +90,6 @@ class SendInvitationAction
             }
         }
 
-        // 6. إنشاء الدعوة وربطها بالـ mosque_id الفعلي
         $invitation = Invitation::create([
             'email'      => $email,
             'role'       => $role,
@@ -102,7 +99,6 @@ class SendInvitationAction
             'expires_at' => now()->addDays(7),
         ]);
 
-        // 7. إرسال الإشعار بالقالب الأخضر والشعار المخصص
         Notification::route('mail', $email)
             ->notify(new InvitationNotification($invitation));
 

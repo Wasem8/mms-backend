@@ -20,7 +20,7 @@ class InvitationResource extends JsonResource
             'created_at' => $this->created_at,
             'mosque' => [
                 'id' => $this->mosque_id,
-                'name' => $this->mosque?->name, // إرجاع الاسم فقط كافٍ جداً للفرونت إند
+                'name' => $this->mosque?->name,
             ]
         ];
     }

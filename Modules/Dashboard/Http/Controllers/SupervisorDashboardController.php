@@ -18,11 +18,22 @@ class SupervisorDashboardController
     public function index(Request $request)
     {
         $mosqueId = auth()->user()->mosque_id;
+        // قراءة halaqa_id الاختياري من الطلب
+        $halaqaId = $request->query('halaqa_id');
 
-        // 🎯 استدعاء الدالة الصحيحة من السيرفيس getDashboard
-        $stats = $this->service->getDashboard($mosqueId);
+        $stats = $this->service->getDashboard($mosqueId, $halaqaId);
 
         return ApiResponse::success($stats, 'تم جلب إحصائيات لوحة التحكم بنجاح');
+    }
+
+    public function formatted(Request $request)
+    {
+        $mosqueId = auth()->user()->mosque_id;
+        $halaqaId = $request->query('halaqa_id');
+
+        $data = $this->service->getFormattedDashboard($mosqueId, $halaqaId);
+
+        return response()->json($data);
     }
 
     /**

@@ -17,7 +17,7 @@ class InvitationController
 {
     public function send(SendInvitationRequest $request, SendInvitationAction $action)
     {
-        // 🎯 التحقق من أن المستخدم مسجل دخول بالفعل وليس null
+
         $user = $request->user();
 
         if (!$user) {
@@ -26,7 +26,7 @@ class InvitationController
 
         $mosqueId = $user->mosque_id ?? $request->input('mosque_id');
 
-        // تنفيذ الأكشن بأمان بعد التأكد من وجود المستخدم
+
         $invitation = $action->execute(
             $user,
             $request->email,
@@ -41,7 +41,7 @@ class InvitationController
 
     public function accept(Request $request, AcceptInvitationAction $action)
     {
-        // 1. تعريف رسائل الخطأ المخصصة باللغة العربية
+
         $messages = [
             'required'  => 'حقل :attribute مطلوب ولا يمكن تركه فارغاً.',
             'min'       => 'حقل :attribute يجب ألا يقل عن :min أحرف أو رموز.',
@@ -49,21 +49,20 @@ class InvitationController
             'string'    => 'حقل :attribute يجب أن يكون نصاً صالحاً.',
         ];
 
-        // 2. تعريب أسماء الحقول لكي تظهر بشكل أنيق داخل الرسالة
+
         $attributes = [
             'name'     => 'الاسم الكامل',
             'password' => 'كلمة المرور الجديده',
             'token'    => 'رمز الدعوة',
         ];
 
-        // 3. إجراء الفحص وتمرير المصفوفات الجديدة
+
         $validator = Validator::make($request->all(), [
             'token'    => 'required|string',
             'name'     => 'required|string',
             'password' => 'required|min:6|confirmed',
-        ], $messages, $attributes); // 🎯 قمنا بإضافة المصفوفات هنا
+        ], $messages, $attributes);
 
-        // 4. إذا فشل الفحص، سيتم التوجيه بالرسائل العربية
         if ($validator->fails()) {
 
             if (! $request->wantsJson()) {
@@ -80,7 +79,6 @@ class InvitationController
             ], 422);
         }
         try {
-            // 3. إذا نجح الفحص، نقوم بتنفيذ الأكشن الأصلي
             $result = $action->execute($validator->validated());
 
             if (! $request->wantsJson()) {
@@ -111,14 +109,14 @@ class InvitationController
         $token = $request->query('token');
         $invitation = Invitation::where('token', $token)->first();
 
-        // بدلاً من abort(404)، يمكننا تمرير متغير فحص الصلاحية للـ Blade
+
         $isValid = $invitation && $invitation->isValid();
 
         if (! $isValid) {
-            // يمكنك إما توجيهه لصفحة مخصصة أو تمرير خطأ مخصص
+
             return view('invitation::accept', [
                 'invitation' => $invitation,
-                'is_expired' => true // نمرر هذا المتغير للبليد للتعامل معه بشكل جمالي
+                'is_expired' => true
             ]);
         }
 

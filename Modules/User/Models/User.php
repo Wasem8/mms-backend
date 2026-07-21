@@ -6,6 +6,7 @@ namespace Modules\User\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authentication;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Hash;
 use Modules\Education\Models\Halaqa;
 use Modules\Education\Models\Student;
 use Modules\Mosque\Models\Mosque;
@@ -30,10 +31,13 @@ class User extends Authentication implements JWTSubject
     protected $hidden = [
         'password',
         'remember_token',
+        'otp',
+        'otp_expires_at',
     ];
 
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'otp_expires_at'=>'datetime',
     ];
 
     /*
@@ -76,21 +80,21 @@ class User extends Authentication implements JWTSubject
         $otp = rand(100000, 999999);
 
         $this->update([
-            'otp' => $otp,
+            'otp' => Hash::make($otp),
             'otp_expires_at' => now()->addMinutes(10)
         ]);
 
         return $otp;
     }
 
-    public function verifyOtp($otp): bool
+    public function verifyOtp(string $otp): bool
     {
-        if (! $this->otp || ! $this->otp_expires_at) {
+        if (!$this->otp || !$this->otp_expires_at) {
             return false;
         }
 
-        return (string)$this->otp === (string)$otp
-            && now()->lessThanOrEqualTo($this->otp_expires_at);
+        return Hash::check($otp, $this->otp)
+            && now()->lte($this->otp_expires_at);
     }
 
     public function clearOtp(): void
