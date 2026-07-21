@@ -1,11 +1,15 @@
 <?php
 
+use Modules\Volunteer\Http\Controllers\VolunteerAuthController;
 use Modules\Volunteer\Http\Controllers\VolunteerOpportunityController;
 use Modules\Volunteer\Http\Controllers\VolunteerTaskController;
 use Modules\Volunteer\Http\Controllers\VolunteerEvaluationController;
 
-
 use Illuminate\Support\Facades\Route;
+
+// ─── Volunteer Auth (public) ──────────────────────────────────────────────────
+Route::post('volunteer/register', [VolunteerAuthController::class, 'register']);
+Route::post('volunteer/login', [VolunteerAuthController::class, 'login']);
 
 /*
 | Volunteer Management Module Routes
@@ -39,6 +43,8 @@ Route::middleware('auth:api')->group(function () {
         // Hours & evaluation
         Route::post('volunteer/logs',                          [VolunteerEvaluationController::class, 'logHours']);
         Route::post('volunteer/certificates/{volunteerId}/{opportunityId}', [VolunteerEvaluationController::class, 'issueCertificate']);
+        Route::get('volunteer/certificates/{volunteerId}/{opportunityId}/download', [VolunteerEvaluationController::class, 'downloadCertificate']);
+        Route::get('volunteer/certificates/{volunteerId}/{opportunityId}/stream',  [VolunteerEvaluationController::class, 'streamCertificate']);
         Route::get('volunteer/hours/{volunteerId}/{opportunityId}',        [VolunteerEvaluationController::class, 'totalHours']);
     });
 
@@ -60,5 +66,6 @@ Route::middleware('auth:api')->group(function () {
         // Personal logs & certificates
         Route::get('volunteer/my-logs',         [VolunteerEvaluationController::class, 'myLogs']);
         Route::get('volunteer/my-certificates', [VolunteerEvaluationController::class, 'myCertificates']);
+        Route::get('volunteer/my-certificates/{certificateId}/download', [VolunteerEvaluationController::class, 'myCertificateDownload']);
     });
 });

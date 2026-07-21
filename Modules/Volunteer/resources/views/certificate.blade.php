@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <style>
         body {
-            font-family: 'DejaVu Sans', sans-serif;
+            font-family: 'cairo', sans-serif;
             direction: rtl;
             margin: 0;
             padding: 0;

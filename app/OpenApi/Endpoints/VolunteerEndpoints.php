@@ -737,6 +737,66 @@ class VolunteerEndpoints
     // ─────────────────────────────────────────────
 
     #[OA\Get(
+        path: '/volunteer/certificates/{volunteerId}/{opportunityId}/download',
+        operationId: 'downloadVolunteerCertificate',
+        tags: ['Volunteer Evaluation'],
+        summary: 'Download certificate as PDF',
+        description: 'Download an issued certificate as a PDF file. Requires `mosque_manager` role.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'volunteerId',   in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 12)),
+            new OA\Parameter(name: 'opportunityId', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1)),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'PDF file downloaded successfully',
+                content: new OA\MediaType(
+                    mediaType: 'application/pdf',
+                    schema: new OA\Schema(type: 'string', format: 'binary')
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden'),
+            new OA\Response(response: 404, description: 'Certificate not found'),
+        ]
+    )]
+    public function downloadCertificate() {}
+
+    // ─────────────────────────────────────────────
+
+    #[OA\Get(
+        path: '/volunteer/certificates/{volunteerId}/{opportunityId}/stream',
+        operationId: 'streamVolunteerCertificate',
+        tags: ['Volunteer Evaluation'],
+        summary: 'View certificate PDF in browser',
+        description: 'Stream an issued certificate PDF inline in the browser. Requires `mosque_manager` role.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'volunteerId',   in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 12)),
+            new OA\Parameter(name: 'opportunityId', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1)),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'PDF streamed successfully',
+                content: new OA\MediaType(
+                    mediaType: 'application/pdf',
+                    schema: new OA\Schema(type: 'string', format: 'binary')
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden'),
+            new OA\Response(response: 404, description: 'Certificate not found'),
+        ]
+    )]
+    public function streamCertificate() {}
+
+    // ─────────────────────────────────────────────
+
+    #[OA\Get(
         path: '/volunteer/my-certificates',
         operationId: 'getMyVolunteerCertificates',
         tags: ['Volunteer Evaluation'],
@@ -770,4 +830,33 @@ class VolunteerEndpoints
         ]
     )]
     public function myCertificates() {}
+
+    // ─────────────────────────────────────────────
+
+    #[OA\Get(
+        path: '/volunteer/my-certificates/{certificateId}/download',
+        operationId: 'downloadMyVolunteerCertificate',
+        tags: ['Volunteer Evaluation'],
+        summary: 'Download my certificate as PDF',
+        description: 'Download your own issued certificate as a PDF file. Requires `volunteer` role.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'certificateId', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1)),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'PDF file downloaded successfully',
+                content: new OA\MediaType(
+                    mediaType: 'application/pdf',
+                    schema: new OA\Schema(type: 'string', format: 'binary')
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden'),
+            new OA\Response(response: 404, description: 'Certificate not found'),
+        ]
+    )]
+    public function myCertificateDownload() {}
 }

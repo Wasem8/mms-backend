@@ -4,11 +4,7 @@ namespace Modules\Volunteer\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Support\ApiResponse;
-use Modules\Volunteer\Resources\VolunteerApplicationResource;
-use Modules\Volunteer\Resources\VolunteerOpportunityResource;
 use Modules\Volunteer\Services\VolunteerOpportunityService;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Modules\Volunteer\Http\Requests\CreateOpportunityRequest as RequestsCreateOpportunityRequest;
 use Modules\Volunteer\Http\Requests\UpdateOpportunityRequest;
 use Modules\Volunteer\Http\Requests\AssignTaskRequest;
