@@ -4,7 +4,7 @@
         "api/index.php": {
             "runtime": "vercel-php@0.9.0",
             "includeFiles": "{vendor/**,Modules/**}",
-            "excludeFiles": "{node_modules/**,tests/**,.git/**,storage/fonts/**}",
+            "excludeFiles": "{node_modules/**,tests/**,.git/**,storage/fonts/**,vendor/mpdf/mpdf/ttfonts/**,vendor/mpdf/mpdf/data/**,vendor/swagger-api/**}",
             "maxDuration": 60
         }
     },
