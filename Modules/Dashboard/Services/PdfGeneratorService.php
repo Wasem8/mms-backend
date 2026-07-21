@@ -2,6 +2,8 @@
 
 namespace Modules\Dashboard\Services;
 
+use Mpdf\Mpdf;
+
 class PdfGeneratorService
 {
     public function generate(string $html): string
@@ -34,7 +36,7 @@ class PdfGeneratorService
 
             // 3. بناء إعدادات مستقلة تماماً 100% دون استدعاء أي كلاسات داخلية من mPDF
             // هذا يحميك تماماً من مشاكل الـ Autoloading والـ Exclude في فيرسيل
-            $mpdf = new \Mpdf\Mpdf([
+            $mpdf = new Mpdf([
                 'mode'          => 'utf-8',
                 'format'        => 'A4',
                 'margin_left'   => 8,
