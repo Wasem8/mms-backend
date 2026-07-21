@@ -1,5 +1,9 @@
 {
     "amiri": {
         "normal": "amiri_normal_99b33333f8b0707246c14ad1a618e4b0"
+    },
+    "cairo": {
+        "normal": "C:\\Laravel\\mms-backend\\storage\\fonts\/cairo_normal_0600b5aa19a7ac312b09202813cff4be",
+        "bold": "cairo_bold_cd33c662db148e92cae4167ddc563aa6"
     }
 }
