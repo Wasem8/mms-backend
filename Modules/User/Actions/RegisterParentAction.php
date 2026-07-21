@@ -2,6 +2,7 @@
 
 namespace Modules\User\Actions;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Modules\User\Models\Role;
 use Modules\User\Models\User;
@@ -11,19 +12,34 @@ class RegisterParentAction
 {
     public function execute(array $data)
     {
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-            'status' => 'inactive',
-        ]);
+        $user = DB::transaction(function () use ($data) {
 
-        $role = Role::where('name', 'parent')->first();
+            $user = User::create([
+                'name'     => $data['name'],
+                'email'    => $data['email'],
+                'password' => Hash::make($data['password']),
+                'status'   => 'inactive',
+            ]);
 
-        $user->roles()->attach($role->id);
+            $role = Role::firstWhere('name', 'parent');
 
-        $otp = $user->generateOtp();
-        $user->notify(new SendOTPNotification($otp, 'verification'));
-        return $user;
+            $user->roles()->attach($role->id);
+
+            $otp = $user->generateOtp();
+
+            return [
+                'user' => $user,
+                'otp'  => $otp,
+            ];
+        });
+
+        $user['user']->notify(
+            new SendOTPNotification(
+                $user['otp'],
+                'verification'
+            )
+        );
+
+        return $user['user'];
     }
 }
