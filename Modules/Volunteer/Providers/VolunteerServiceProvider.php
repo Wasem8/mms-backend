@@ -12,6 +12,7 @@ use Modules\Volunteer\Repositories\Contracts\VolunteerTaskRepositoryInterface;
 use Modules\Volunteer\Repositories\Eloquent\EloquentVolunteerTaskRepository;
 use Modules\Volunteer\Repositories\Contracts\VolunteerEvaluationRepositoryInterface;
 use Modules\Volunteer\Repositories\Eloquent\EloquentVolunteerEvaluationRepository;
+use Modules\Volunteer\Services\VolunteerEvaluationService;
 
 class VolunteerServiceProvider extends ModuleServiceProvider
 {

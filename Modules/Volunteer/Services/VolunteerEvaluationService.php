@@ -2,6 +2,8 @@
 
 namespace Modules\Volunteer\Services;
 
+use App\Support\Pdf\PdfGeneratorService;
+use App\Support\Storage\SupabaseStorageService;
 use Modules\Volunteer\DTOs\LogHoursDTO;
 use Modules\Volunteer\Events\CertificateIssued;
 use Modules\Volunteer\Models\VolunteerCertificate;
@@ -10,7 +12,6 @@ use Modules\Volunteer\Models\VolunteerOpportunity;
 use Modules\Volunteer\Repositories\Contracts\VolunteerEvaluationRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
 use Modules\User\Models\User;
 
@@ -18,6 +19,8 @@ class VolunteerEvaluationService
 {
     public function __construct(
         private readonly VolunteerEvaluationRepositoryInterface $evaluationRepo,
+        private readonly PdfGeneratorService $pdfGenerator,
+        private readonly SupabaseStorageService $storage,
     ) {}
 
     public function logHours(LogHoursDTO $dto): VolunteerLog
@@ -53,20 +56,31 @@ class VolunteerEvaluationService
             ]);
         }
 
-        return DB::transaction(function () use ($volunteerId, $opportunityId, $totalHours): VolunteerCertificate {
-            $url = $this->generateLocalPdf($volunteerId, $opportunityId, $totalHours);
+        // توليد ورفع الـ PDF بره الـ DB transaction — دي عمليات I/O بطيئة
+        // (network + mpdf rendering)، مينفعش نمسك transaction مفتوحة عليها
+        $pdfContent = $this->pdfGenerator->generate(
+            $this->buildCertificateHtml($volunteerId, $opportunityId, $totalHours),
+            cacheKey: 'volunteer'
+        );
 
-            $certificate = $this->evaluationRepo->issueCertificate($volunteerId, $opportunityId, $url);
+        $bucket = config('services.supabase.bucket');
+        $fileName = "volunteer_{$volunteerId}_opportunity_{$opportunityId}_" . now()->timestamp . '.pdf';
 
+        $this->storage->uploadPdf($pdfContent, $fileName, $bucket);
+
+        return DB::transaction(function () use ($volunteerId, $opportunityId, $fileName): VolunteerCertificate {
+            $certificate = $this->evaluationRepo->issueCertificate($volunteerId, $opportunityId, $fileName);
             event(new CertificateIssued($certificate));
-
-            dispatch(function () use ($volunteerId, $opportunityId, $totalHours) {
-                $this->uploadPdfAsync($volunteerId, $opportunityId, $totalHours);
-            })->afterResponse();
-
             return $certificate;
         });
     }
+    public function getCertificateDownloadUrl(VolunteerCertificate $certificate): string
+{
+    return $this->storage->createSignedUrl(
+        $certificate->certificate_url, // now holds the file path, e.g. "volunteer_12_opportunity_1_...pdf"
+        config('services.supabase.bucket')
+    );
+}
 
     public function getCertificatesForVolunteer(int $volunteerId): Collection
     {
@@ -80,116 +94,24 @@ class VolunteerEvaluationService
 
     public function findCertificateById(int $certificateId): ?VolunteerCertificate
     {
-        return \Modules\Volunteer\Models\VolunteerCertificate::find($certificateId);
+        return VolunteerCertificate::find($certificateId);
     }
 
-    public function buildCertificatePdfContent(int $volunteerId, int $opportunityId): string
+    private function buildCertificateHtml(int $volunteerId, int $opportunityId, float $totalHours): string
     {
-        return $this->renderCertificateMpdf($volunteerId, $opportunityId);
-    }
-
-    private function getCertificateViewData(int $volunteerId, int $opportunityId): array
-    {
-        $volunteer = User::find($volunteerId);
+        $volunteer   = User::find($volunteerId);
         $opportunity = VolunteerOpportunity::with('mosque')->find($opportunityId);
-        $totalHours = $this->evaluationRepo->totalHours($volunteerId, $opportunityId);
 
         if (!$volunteer || !$opportunity) {
             throw new \RuntimeException(__('messages.volunteer_not_found'));
         }
 
-        return [
+        return view('volunteer::certificate', [
             'volunteerName'    => $volunteer->name,
             'opportunityTitle' => $opportunity->title,
             'mosqueName'       => $opportunity->mosque?->name ?? '—',
             'totalHours'       => $totalHours,
             'issuedAt'         => now()->format('Y/m/d'),
-        ];
-    }
-
-    private function renderCertificateMpdf(int $volunteerId, int $opportunityId): string
-    {
-        $data = $this->getCertificateViewData($volunteerId, $opportunityId);
-
-        $html = view('volunteer::certificate', $data)->render();
-
-        $tempDir = '/tmp/mpdf_cache_volunteer';
-        if (!is_dir($tempDir)) {
-            @mkdir($tempDir, 0777, true);
-        }
-
-        $localRegular = '/tmp/Cairo-Regular.ttf';
-        $localBold = '/tmp/Cairo-Bold.ttf';
-
-        if (!file_exists($localRegular)) {
-            $remoteRegular = 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/assets/Cairo-Regular.ttf';
-            @file_put_contents($localRegular, @file_get_contents($remoteRegular));
-        }
-        if (!file_exists($localBold)) {
-            $remoteBold = 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/assets/Cairo-Bold.ttf';
-            @file_put_contents($localBold, @file_get_contents($remoteBold));
-        }
-
-        if (!defined('_MPDF_TTFONTPATH')) {
-            define('_MPDF_TTFONTPATH', '/tmp/');
-        }
-        if (!defined('_MPDF_TEMP_DIR')) {
-            define('_MPDF_TEMP_DIR', $tempDir);
-        }
-
-        $mpdf = new \mPDF('utf-8', 'A4', 0, '', 8, 8, 8, 8, 9, 9, 'P');
-        $mpdf->fontdata = [
-            'cairo' => [
-                'R'      => 'Cairo-Regular.ttf',
-                'B'      => 'Cairo-Bold.ttf',
-                'useOTL' => 0xFF,
-            ]
-        ];
-        $mpdf->default_font = 'cairo';
-
-        $mpdf->WriteHTML($html);
-
-        return $mpdf->Output('', 'S');
-    }
-
-    private function generateLocalPdf(int $volunteerId, int $opportunityId, float $totalHours): string
-    {
-        $pdfContent = $this->renderCertificateMpdf($volunteerId, $opportunityId);
-
-        $pdfDir = '/tmp/certificates';
-        if (!is_dir($pdfDir)) {
-            @mkdir($pdfDir, 0777, true);
-        }
-
-        $fileName = "volunteer_{$volunteerId}_opportunity_{$opportunityId}.pdf";
-        $filePath = $pdfDir . '/' . $fileName;
-
-        @file_put_contents($filePath, $pdfContent);
-
-        return $filePath;
-    }
-
-    private function uploadPdfAsync(int $volunteerId, int $opportunityId, float $totalHours): void
-    {
-        try {
-            $pdfContent = $this->renderCertificateMpdf($volunteerId, $opportunityId);
-            $fileName = "certificates/volunteer_{$volunteerId}_opportunity_{$opportunityId}.pdf";
-
-            $baseUrl = config('services.supabase.url');
-            $bucket  = config('services.supabase.bucket');
-            $key     = config('services.supabase.key');
-
-            $uploadUrl = $baseUrl . '/storage/v1/object/' . $bucket . '/' . $fileName;
-
-            Http::timeout(10)
-                ->withHeaders([
-                    'apikey'       => $key,
-                    'Authorization'=> 'Bearer ' . $key,
-                    'Content-Type' => 'application/pdf',
-                ])->withBody($pdfContent, 'application/pdf')
-                ->post($uploadUrl);
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('Certificate upload to Supabase failed: ' . $e->getMessage());
-        }
+        ])->render();
     }
 }

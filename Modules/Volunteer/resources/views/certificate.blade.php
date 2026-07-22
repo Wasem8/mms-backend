@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
     <style>
@@ -11,12 +12,14 @@
             color: #334155;
             background: #ffffff;
         }
+
         .certificate-wrapper {
             width: 100%;
             height: 100%;
             padding: 40px;
             box-sizing: border-box;
         }
+
         .certificate-border {
             border: 4px solid #d97706;
             border-radius: 24px;
@@ -25,27 +28,32 @@
             min-height: 700px;
             position: relative;
         }
+
         .header {
             text-align: center;
             margin-bottom: 30px;
         }
+
         .basmala {
             font-size: 22px;
             color: #2563eb;
             font-weight: bold;
             margin: 0 0 10px 0;
         }
+
         .title {
             font-size: 36px;
             color: #d97706;
             font-weight: bold;
             margin: 0 0 5px 0;
         }
+
         .subtitle {
             font-size: 18px;
             color: #64748b;
             margin: 0 0 30px 0;
         }
+
         .divider {
             text-align: center;
             font-size: 24px;
@@ -53,51 +61,61 @@
             letter-spacing: 6px;
             margin: 20px 0;
         }
+
         .content {
             text-align: center;
             margin: 40px 0;
         }
+
         .content p {
             font-size: 20px;
             line-height: 2;
             margin: 15px 0;
             color: #334155;
         }
+
         .content .highlight {
             color: #d97706;
             font-weight: bold;
             font-size: 24px;
         }
+
         .content .volunteer-name {
             font-size: 32px;
             color: #2563eb;
             font-weight: bold;
             margin: 20px 0;
         }
+
         .content .opportunity-title {
             font-size: 22px;
             color: #0f172a;
             font-weight: bold;
         }
+
         .details-table {
             width: 60%;
             margin: 30px auto;
             border-collapse: collapse;
         }
+
         .details-table td {
             padding: 10px 20px;
             font-size: 18px;
             border-bottom: 1px solid #e2e8f0;
         }
+
         .details-table td:first-child {
             font-weight: bold;
             color: #64748b;
             text-align: left;
         }
+
         .details-table td:last-child {
             color: #0f172a;
             text-align: right;
         }
+
         .footer {
             position: absolute;
             bottom: 30px;
@@ -109,10 +127,12 @@
             border-top: 1px solid #e2e8f0;
             padding-top: 15px;
         }
+
         .stamp {
             text-align: center;
             margin-top: 40px;
         }
+
         .stamp-circle {
             display: inline-block;
             border: 3px solid #2563eb;
@@ -128,6 +148,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="certificate-wrapper">
         <div class="certificate-border">
@@ -169,4 +190,5 @@
         </div>
     </div>
 </body>
+
 </html>

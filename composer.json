@@ -9,7 +9,7 @@
         "php": "^8.4",
         "ext-pdo": "*",
         "barryvdh/laravel-dompdf": "^3.1",
-        "darkaonline/l5-swagger": "^11.0",
+        "darkaonline/l5-swagger": "^11.1",
         "kreait/laravel-firebase": "^7.2",
         "laravel/framework": "^13.0",
         "laravel/tinker": "^3.0",
@@ -92,6 +92,8 @@
             "pestphp/pest-plugin": true,
             "php-http/discovery": true,
             "wikimedia/composer-merge-plugin": true
+        },
+        "platform": {
         }
     },
     "minimum-stability": "stable",
