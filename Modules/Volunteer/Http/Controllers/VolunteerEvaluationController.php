@@ -43,7 +43,6 @@ class VolunteerEvaluationController extends Controller
         );
     }
 
-    /** Manager: download certificate as PDF */
     public function downloadCertificate(string $volunteerId, string $opportunityId)
     {
         $certificate = $this->service->findCertificate((int) $volunteerId, (int) $opportunityId);
@@ -54,9 +53,13 @@ class VolunteerEvaluationController extends Controller
 
         $url = $this->service->getCertificateDownloadUrl($certificate);
 
-        return redirect()->away($url);
+        // تدفق الملف مباشرة للمتصفح كملف قابل للتنزيل
+        return response()->streamDownload(function () use ($url) {
+            echo file_get_contents($url);
+        }, 'volunteer-certificate.pdf', [
+            'Content-Type' => 'application/pdf',
+        ]);
     }
-
     /** Manager: stream certificate as PDF in browser */
     public function streamCertificate(string $volunteerId, string $opportunityId)
     {
