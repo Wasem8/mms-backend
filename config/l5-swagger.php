@@ -12,7 +12,7 @@ return [
                 /*
                  * Route for accessing api documentation interface
                  */
-                'api' => 'developer/docs',
+                'api' => 'api/documentation',
             ],
             'paths' => [
                 /*
@@ -170,12 +170,6 @@ return [
         */
         'securityDefinitions' => [
             'securitySchemes' => [
-
-                'bearerAuth' => [
-                    'type' => 'http',
-                    'scheme' => 'bearer',
-                    'bearerFormat' => 'JWT',
-                ],
                 /*
                  * Examples of Security schemes
                  */
@@ -223,12 +217,6 @@ return [
                 */
             ],
             'security' => [
-
-                /*
-          [
-              'bearerAuth' => [],
-          ],
-          */
                 /*
                  * Examples of Securities
                  */
@@ -260,7 +248,7 @@ return [
          * Edit to trust the proxy's ip address - needed for AWS Load Balancer
          * string[]
          */
-        'proxy' => true,
+        'proxy' => false,
 
         /*
          * Configs plugin allows to fetch external configs instead of passing them to SwaggerUIBundle.

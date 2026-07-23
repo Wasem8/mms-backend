@@ -3,12 +3,24 @@
     "functions": {
         "api/index.php": {
             "runtime": "vercel-php@0.9.0",
-            "includeFiles": "{vendor/**,Modules/**}",
+            "includeFiles": "{vendor/**,Modules/**,public/**,storage/api-docs/**}",
             "excludeFiles": "{node_modules/**,tests/**,.git/**,storage/fonts/**,vendor/mpdf/mpdf/ttfonts/**}",
             "maxDuration": 60
         }
     },
     "routes": [
+        {
+            "src": "/vendor/(.*)",
+            "dest": "/public/vendor/$1"
+        },
+        {
+            "src": "/docs/(.*)",
+            "dest": "/api/index.php"
+        },
+        {
+            "src": "/api-docs/(.*)",
+            "dest": "/api/index.php"
+        },
         {
             "src": "/api/(.*)",
             "headers": {
@@ -18,12 +30,16 @@
             },
             "dest": "/api/index.php"
         },
-        { "src": "/(.*)", "dest": "/api/index.php" }
+        {
+            "src": "/(.*)",
+            "dest": "/api/index.php"
+        }
     ],
     "env": {
         "APP_ENV": "production",
         "APP_DEBUG": "true",
         "LOG_CHANNEL": "stderr",
-        "CACHE_DRIVER": "array"
+        "CACHE_DRIVER": "array",
+        "L5_SWAGGER_CONST_HOST": "https://mms-backend.vercel.app/api"
     }
 }
