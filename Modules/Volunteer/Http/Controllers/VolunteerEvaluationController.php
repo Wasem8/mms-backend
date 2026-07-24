@@ -43,7 +43,6 @@ class VolunteerEvaluationController extends Controller
         );
     }
 
-    /** Manager: download certificate as PDF */
     public function downloadCertificate(string $volunteerId, string $opportunityId)
     {
         $certificate = $this->service->findCertificate((int) $volunteerId, (int) $opportunityId);
@@ -54,9 +53,13 @@ class VolunteerEvaluationController extends Controller
 
         $url = $this->service->getCertificateDownloadUrl($certificate);
 
-        return redirect()->away($url);
+        return ApiResponse::success(
+            ['certificate_url' => $url],
+            __('messages.certificate_url_generated'),
+            200
+        );
     }
-    
+
     public function myCertificateDownload(string $certificateId)
     {
         $certificate = $this->service->findCertificateById((int) $certificateId);
