@@ -56,21 +56,7 @@ class VolunteerEvaluationController extends Controller
 
         return redirect()->away($url);
     }
-
-    /** Manager: stream certificate as PDF in browser */
-    public function streamCertificate(string $volunteerId, string $opportunityId)
-    {
-        $certificate = $this->service->findCertificate((int) $volunteerId, (int) $opportunityId);
-
-        if (!$certificate) {
-            return ApiResponse::error(__('messages.certificate_not_found'), 404);
-        }
-
-        $url = $this->service->getCertificateDownloadUrl($certificate);
-
-        return redirect()->away($url);
-    }
-
+    
     public function myCertificateDownload(string $certificateId)
     {
         $certificate = $this->service->findCertificateById((int) $certificateId);
@@ -81,7 +67,11 @@ class VolunteerEvaluationController extends Controller
 
         $url = $this->service->getCertificateDownloadUrl($certificate);
 
-        return redirect()->away($url);
+        return ApiResponse::success(
+            ['certificate_url' => $url],
+            __('messages.certificate_url_generated'),
+            200
+        );
     }
     /** Summary: total hours for a volunteer on an opportunity */
     public function totalHours(string $volunteerId, string $opportunityId)
