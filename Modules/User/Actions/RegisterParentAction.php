@@ -14,16 +14,28 @@ class RegisterParentAction
     {
         $user = DB::transaction(function () use ($data) {
 
+            // استخراج وتحديد الأسماء
+            $firstName = $data['first_name'] ?? null;
+            $lastName  = $data['last_name'] ?? null;
+
+            // إذا أُرسل name نستخدمه، وإلا ندمج first_name و last_name تلقائياً
+            $fullName  = $data['name'] ?? trim("{$firstName} {$lastName}");
+
             $user = User::create([
-                'name'     => $data['name'],
-                'email'    => $data['email'],
-                'password' => Hash::make($data['password']),
-                'status'   => 'inactive',
+                'first_name' => $firstName,
+                'last_name'  => $lastName,
+                'name'       => $fullName,
+                'email'      => $data['email'],
+                'phone'      => $data['phone'] ?? null,
+                'password'   => Hash::make($data['password']),
+                'status'     => 'inactive',
             ]);
 
             $role = Role::firstWhere('name', 'parent');
 
-            $user->roles()->attach($role->id);
+            if ($role) {
+                $user->roles()->attach($role->id);
+            }
 
             $otp = $user->generateOtp();
 

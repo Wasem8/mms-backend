@@ -17,8 +17,11 @@ class User extends Authentication implements JWTSubject
     use  Notifiable,HasFactory;
 
     protected $fillable = [
+        'first_name',
+        'last_name',
         'name',
         'email',
+        'phone',
         'password',
         'otp',
         'otp_expires_at',

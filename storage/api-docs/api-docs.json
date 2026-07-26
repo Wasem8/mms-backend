@@ -339,17 +339,38 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "name",
                                     "email",
                                     "password",
                                     "password_confirmation"
                                 ],
                                 "properties": {
-                                    "name": {
+                                    "first_name": {
                                         "type": "string",
-                                        "example": "Ahmed Ali",
+                                        "example": "أحمد",
+                                        "nullable": true,
+                                        "maxLength": 100,
+                                        "minLength": 2
+                                    },
+                                    "last_name": {
+                                        "type": "string",
+                                        "example": "الشديد",
+                                        "nullable": true,
+                                        "maxLength": 100,
+                                        "minLength": 2
+                                    },
+                                    "name": {
+                                        "description": "Fallback full name if first_name/last_name are not sent",
+                                        "type": "string",
+                                        "example": "أحمد الشديد",
+                                        "nullable": true,
                                         "maxLength": 255,
                                         "minLength": 2
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+963900000000",
+                                        "nullable": true,
+                                        "maxLength": 20
                                     },
                                     "email": {
                                         "type": "string",
@@ -392,17 +413,32 @@
                                                     "type": "integer",
                                                     "example": 7
                                                 },
+                                                "first_name": {
+                                                    "type": "string",
+                                                    "example": "أحمد",
+                                                    "nullable": true
+                                                },
+                                                "last_name": {
+                                                    "type": "string",
+                                                    "example": "الشديد",
+                                                    "nullable": true
+                                                },
                                                 "name": {
                                                     "type": "string",
-                                                    "example": "Ahmed Ali"
+                                                    "example": "أحمد الشديد"
                                                 },
                                                 "email": {
                                                     "type": "string",
                                                     "example": "parent@test.com"
                                                 },
+                                                "phone": {
+                                                    "type": "string",
+                                                    "example": "+963900000000",
+                                                    "nullable": true
+                                                },
                                                 "status": {
                                                     "type": "string",
-                                                    "example": "pending"
+                                                    "example": "inactive"
                                                 }
                                             },
                                             "type": "object"
@@ -434,8 +470,8 @@
                                         "data": {
                                             "type": "object",
                                             "example": {
-                                                "field_name": [
-                                                    "Error message"
+                                                "email": [
+                                                    "The email has already been taken."
                                                 ]
                                             }
                                         },
@@ -8880,6 +8916,72 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/education/evaluation-labels": {
+            "get": {
+                "tags": [
+                    "Evaluations"
+                ],
+                "summary": "قائمة تسميات وقيم التقييم المتاحة",
+                "description": "يجلب قائمة بجميع المفاتيح والقيم النصية المترجمة المعتمدة للتقييمات (مثل ممتاز، جيد، الخ).",
+                "operationId": "getEvaluationLabels",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم جلب القائمة بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Evaluation labels retrieved successfully."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "key": {
+                                                        "type": "string",
+                                                        "example": "excellent"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "ممتاز"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "غير مصرح"
                     }
                 },
                 "security": [

@@ -4,6 +4,7 @@ namespace Modules\Education\Http\Controllers;
 
 use App\Support\ApiResponse;
 use Illuminate\Http\Request;
+use Modules\Education\Enums\EvaluationLabel;
 use Modules\Education\Http\Requests\UpdateEvalutionRequest;
 use Modules\Education\Services\EvaluationService;
 use Modules\Education\Http\Requests\StoreEvaluationRequest;
@@ -75,5 +76,14 @@ class EvaluationController
         } catch (\Exception $e) {
             return ApiResponse::error($e->getMessage(), 403);
         }
+    }
+
+    public function __invoke()
+    {
+        return ApiResponse::success(
+            EvaluationLabel::toArray(),
+            'Evaluation labels retrieved successfully.'
+        );
+
     }
 }
