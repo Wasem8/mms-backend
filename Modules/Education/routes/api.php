@@ -29,6 +29,7 @@ Route::prefix('education')->group(function () {
         Route::put('students/{id}', [StudentController::class, 'update']);
         Route::delete('students/{id}', [StudentController::class, 'destroy']);
 
+        Route::get('/evaluation-labels', EvaluationController::class);
     });
 
     Route::middleware(['auth:api', 'role:parent'])->group(function () {
@@ -66,6 +67,7 @@ Route::prefix('education')->group(function () {
         Route::get('teacher/excuses', [AttendanceExcuseController::class, 'indexForTeacher']);
         Route::put('teacher/excuses/{id}/process', [AttendanceExcuseController::class, 'process']);
         Route::post('evaluations', [EvaluationController::class, 'store']);
+
 
     });
 

@@ -15,9 +15,11 @@ class AuthEndpoints
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['name', 'email', 'password', 'password_confirmation'],
+                required: ['email', 'password', 'password_confirmation'],
                 properties: [
-                    new OA\Property(property: 'name', type: 'string', example: 'Ahmed Ali', minLength: 2, maxLength: 255),
+                    new OA\Property(property: 'first_name', type: 'string', example: 'أحمد', minLength: 2, maxLength: 100, nullable: true),
+                    new OA\Property(property: 'last_name', type: 'string', example: 'الشديد', minLength: 2, maxLength: 100, nullable: true),
+                    new OA\Property(property: 'phone', type: 'string', example: '+963900000000', maxLength: 20, nullable: true),
                     new OA\Property(property: 'email', type: 'string', format: 'email', example: 'parent@test.com'),
                     new OA\Property(property: 'password', type: 'string', example: 'password123', minLength: 8),
                     new OA\Property(property: 'password_confirmation', type: 'string', example: 'password123'),
@@ -37,9 +39,12 @@ class AuthEndpoints
                             type: 'object',
                             properties: [
                                 new OA\Property(property: 'id', type: 'integer', example: 7),
-                                new OA\Property(property: 'name', type: 'string', example: 'Ahmed Ali'),
+                                new OA\Property(property: 'first_name', type: 'string', example: 'أحمد', nullable: true),
+                                new OA\Property(property: 'last_name', type: 'string', example: 'الشديد', nullable: true),
+                                new OA\Property(property: 'name', type: 'string', example: 'أحمد الشديد'),
                                 new OA\Property(property: 'email', type: 'string', example: 'parent@test.com'),
-                                new OA\Property(property: 'status', type: 'string', example: 'pending'),
+                                new OA\Property(property: 'phone', type: 'string', example: '+963900000000', nullable: true),
+                                new OA\Property(property: 'status', type: 'string', example: 'inactive'),
                             ]
                         ),
                         new OA\Property(property: 'pagination', type: 'object', nullable: true),
@@ -56,7 +61,7 @@ class AuthEndpoints
                         new OA\Property(
                             property: 'data',
                             type: 'object',
-                            example: ['field_name' => ['Error message']]
+                            example: ['email' => ['The email has already been taken.']]
                         ),
                         new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
                     ]
