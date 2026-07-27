@@ -358,14 +358,6 @@
                                         "maxLength": 100,
                                         "minLength": 2
                                     },
-                                    "name": {
-                                        "description": "Fallback full name if first_name/last_name are not sent",
-                                        "type": "string",
-                                        "example": "أحمد الشديد",
-                                        "nullable": true,
-                                        "maxLength": 255,
-                                        "minLength": 2
-                                    },
                                     "phone": {
                                         "type": "string",
                                         "example": "+963900000000",
@@ -15784,12 +15776,22 @@
                 "tags": [
                     "Students"
                 ],
-                "summary": "عرض قائمة الطلاب مع الفلترة",
-                "description": "يمكن الفلترة حسب الحالة باستخدام query parameter: ?status=active أو pending أو rejected",
+                "summary": "عرض قائمة الطلاب مع الفلترة والبحث",
+                "description": "يمكن الفلترة حسب الحالة، البحث بالاسم، تصفية الطلاب حسب وجود حلقة، أو جلب الطلاب القابلين للإضافة لحلقة محددة.",
                 "operationId": "getStudentsList",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "البحث عن طالب عن طريق الاسم الأول أو الأخير أو الاسم الكامل",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "عمر"
+                        }
                     },
                     {
                         "name": "has_halaqa",
@@ -15805,6 +15807,16 @@
                         }
                     },
                     {
+                        "name": "assignable_to_halaqa",
+                        "in": "query",
+                        "description": "جلب الطلاب الذين يمكن إضافتهم للحلقة رقم (ID) المحددة (أي ليسوا مضافين إليها حالياً)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 7
+                        }
+                    },
+                    {
                         "name": "status",
                         "in": "query",
                         "description": "فلترة الطلاب حسب الحالة",
@@ -15815,8 +15827,21 @@
                             "enum": [
                                 "active",
                                 "pending",
-                                "rejected"
+                                "rejected",
+                                "paused",
+                                "suspended"
                             ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "عدد النتائج في الصفحة الواحدة",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15,
+                            "default": 10
                         }
                     }
                 ],
@@ -15843,6 +15868,26 @@
                                         },
                                         "pagination": {
                                             "$ref": "#/components/schemas/Pagination"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "قيمة فلتر غير صحيحة (Validation Error)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The selected has_halaqa is invalid."
                                         }
                                     },
                                     "type": "object"
@@ -16702,11 +16747,54 @@
                     "Teachers Management"
                 ],
                 "summary": "قائمة المعلمين: مشرف الحلقات / مدير المسجد",
-                "description": "تعيد القائمة بناءً على الدور: مدير المنطقة يرى الكل، مدير المسجد والمشرف يريان معلمي مسجدهما فقط.",
+                "description": "تعيد القائمة بناءً على الدور مع دعم البحث والفلترة والبيجينيشن.",
                 "operationId": "getTeachersList",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "تصفية حسب حالة المعلم (active, paused, suspended)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "active",
+                                "paused",
+                                "suspended"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "البحث باسم المعلم، البريد الإلكتروني، أو رقم الهاتف",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "عدد العناصر في الصفحة الواحدة (الافتراضي 10)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "رقم الصفحة المراد جلبها",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
                     }
                 ],
                 "responses": {
@@ -16722,7 +16810,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "تم جلب قائمة المعلمين بنجاح."
+                                            "example": "تم جلب قائمة المعلمين."
                                         },
                                         "data": {
                                             "type": "array",
@@ -16730,7 +16818,7 @@
                                                 "properties": {
                                                     "id": {
                                                         "type": "integer",
-                                                        "example": 5
+                                                        "example": 4
                                                     },
                                                     "name": {
                                                         "type": "string",
@@ -16738,7 +16826,7 @@
                                                     },
                                                     "email": {
                                                         "type": "string",
-                                                        "example": "teacher1@mosque.com"
+                                                        "example": "teacher@test.com"
                                                     },
                                                     "mosque_id": {
                                                         "type": "integer",
@@ -16751,7 +16839,7 @@
                                                     },
                                                     "specialization": {
                                                         "type": "string",
-                                                        "example": "التجويد والقراءات العشر",
+                                                        "example": "عاصم عن حفص والتجويد المتقدم",
                                                         "nullable": true
                                                     },
                                                     "status": {
@@ -16760,12 +16848,20 @@
                                                     },
                                                     "notes": {
                                                         "type": "string",
-                                                        "example": null,
+                                                        "example": "تم نقل المعلم لحلقات المتقدمين لكفاءته العالية.",
                                                         "nullable": true
+                                                    },
+                                                    "halaqats_count": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "students_count": {
+                                                        "type": "integer",
+                                                        "example": 15
                                                     },
                                                     "created_at": {
                                                         "type": "string",
-                                                        "example": "2026-05-14 07:48:51"
+                                                        "example": "2026-07-26 08:22:33"
                                                     }
                                                 },
                                                 "type": "object"
@@ -16773,6 +16869,29 @@
                                         },
                                         "pagination": {
                                             "$ref": "#/components/schemas/Pagination"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "خطأ في التحقق من الفلاتر الممررة (Validation Error)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "قيمة الفلتر الممررة غير صحيحة."
+                                        },
+                                        "errors": {
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -16826,13 +16945,13 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "تم جلب تفاصيل المعلم بنجاح."
+                                            "example": "تم جلب تفاصيل المعلم"
                                         },
                                         "data": {
                                             "properties": {
                                                 "id": {
                                                     "type": "integer",
-                                                    "example": 5
+                                                    "example": 4
                                                 },
                                                 "name": {
                                                     "type": "string",
@@ -16840,7 +16959,7 @@
                                                 },
                                                 "email": {
                                                     "type": "string",
-                                                    "example": "teacher1@mosque.com"
+                                                    "example": "teacher@test.com"
                                                 },
                                                 "phone": {
                                                     "type": "string",
@@ -16849,16 +16968,16 @@
                                                 },
                                                 "specialization": {
                                                     "type": "string",
-                                                    "example": "التجويد والقراءات العشر",
+                                                    "example": "عاصم عن حفص والتجويد المتقدم",
                                                     "nullable": true
                                                 },
                                                 "status": {
                                                     "type": "string",
-                                                    "example": "paused"
+                                                    "example": "active"
                                                 },
                                                 "notes": {
                                                     "type": "string",
-                                                    "example": "تم الإيقاف المؤقت لظروف السفر الطارئة.",
+                                                    "example": "تم نقل المعلم لحلقات المتقدمين لكفاءته العالية.",
                                                     "nullable": true
                                                 },
                                                 "halaqats": {
@@ -16867,11 +16986,11 @@
                                                         "properties": {
                                                             "id": {
                                                                 "type": "integer",
-                                                                "example": 12
+                                                                "example": 1
                                                             },
                                                             "name": {
                                                                 "type": "string",
-                                                                "example": "حلقة الإتقان والتميز"
+                                                                "example": "حلقة التميز - الشيخ عبد الرحمن السديس"
                                                             },
                                                             "stats": {
                                                                 "properties": {
@@ -16881,15 +17000,16 @@
                                                                     },
                                                                     "total_present_all_time": {
                                                                         "type": "integer",
-                                                                        "example": 120
+                                                                        "example": 117
                                                                     },
                                                                     "total_absent_all_time": {
                                                                         "type": "integer",
-                                                                        "example": 5
+                                                                        "example": 46
                                                                     },
                                                                     "overall_attendance_rate": {
-                                                                        "type": "string",
-                                                                        "example": "96%"
+                                                                        "type": "number",
+                                                                        "format": "float",
+                                                                        "example": 71.78
                                                                     }
                                                                 },
                                                                 "type": "object"
@@ -16900,15 +17020,10 @@
                                                 },
                                                 "created_at": {
                                                     "type": "string",
-                                                    "example": "2026-05-14 07:48:51"
+                                                    "example": "2026-07-26 08:22:33"
                                                 }
                                             },
                                             "type": "object"
-                                        },
-                                        "pagination": {
-                                            "type": "object",
-                                            "example": null,
-                                            "nullable": true
                                         }
                                     },
                                     "type": "object"
@@ -16934,7 +17049,7 @@
                     "Teachers Management"
                 ],
                 "summary": "تعديل بيانات المعلم وتغيير حالته: مشرف الحلقات / مدير المسجد",
-                "description": "تعديل الاسم (في جدول المستخدمين) وتحديث بيانات البروفايل المنفصل (تخصص، ملاحظات، هاتف) ",
+                "description": "تعديل الاسم (في جدول المستخدمين) وتحديث بيانات البروفايل المنفصل (تخصص، ملاحظات، هاتف)",
                 "operationId": "updateTeacher",
                 "parameters": [
                     {
@@ -17005,13 +17120,13 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "تم تحديث بيانات المعلم وحالته بنجاح."
+                                            "example": "تم تحديث بيانات المعلم بنجاح."
                                         },
                                         "data": {
                                             "properties": {
                                                 "id": {
                                                     "type": "integer",
-                                                    "example": 5
+                                                    "example": 4
                                                 },
                                                 "name": {
                                                     "type": "string",
@@ -17019,7 +17134,7 @@
                                                 },
                                                 "email": {
                                                     "type": "string",
-                                                    "example": "teacher1@mosque.com"
+                                                    "example": "teacher@test.com"
                                                 },
                                                 "mosque_id": {
                                                     "type": "integer",
@@ -17046,15 +17161,10 @@
                                                 },
                                                 "created_at": {
                                                     "type": "string",
-                                                    "example": "2026-05-14 07:48:51"
+                                                    "example": "2026-07-26 08:22:33"
                                                 }
                                             },
                                             "type": "object"
-                                        },
-                                        "pagination": {
-                                            "type": "object",
-                                            "example": null,
-                                            "nullable": true
                                         }
                                     },
                                     "type": "object"
@@ -17079,14 +17189,8 @@
                                             "type": "string",
                                             "example": "حالة المعلم الممررة غير صحيحة."
                                         },
-                                        "data": {
+                                        "errors": {
                                             "type": "object",
-                                            "example": null,
-                                            "nullable": true
-                                        },
-                                        "pagination": {
-                                            "type": "object",
-                                            "example": null,
                                             "nullable": true
                                         }
                                     },

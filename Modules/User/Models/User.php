@@ -171,6 +171,18 @@ class User extends Authentication implements JWTSubject
         return $this->hasMany(Halaqa::class, 'teacher_id');
     }
 
+    public function students()
+    {
+        return $this->hasManyThrough(
+            Student::class,
+            Halaqa::class,
+            'teacher_id',
+            'halaqa_id',
+            'id',
+            'id'
+        );
+    }
+
     public function teacherProfile()
     {
         return $this->hasOne(TeacherProfile::class, 'user_id');
