@@ -2,6 +2,7 @@
 
 namespace Modules\Education\Services;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Modules\Education\Models\Halaqa;
@@ -10,19 +11,36 @@ use Modules\User\Models\User;
 class TeacherService
 {
 
-    public function getTeachersList()
+    public function getTeachersList(Request $request = null)
     {
+        if ($request) {
+            $request->validate([
+                'status'   => 'nullable|string|in:active,paused,suspended',
+                'search'   => 'nullable|string|max:100',
+                'per_page' => 'nullable|integer|min:1|max:100',
+                'page'     => 'nullable|integer|min:1',
+            ]);
+        }
+
         $user = auth()->user();
 
         $query = User::role('teacher')
             ->with([
                 'teacherProfile' => function($q) {
-                    // 🎯 أضف الحقول المفقودة هنا ليتم سحبها من قاعدة البيانات
                     $q->select('id', 'user_id', 'phone', 'status', 'specialization', 'notes');
                 }
             ])
-            ->withCount('halaqats');
+            // 🎯 1. إرجاع halaqats_count و students_count
+            ->withCount(['halaqats'])
+            ->selectSub(
+                DB::table('halaqa_student')
+                    ->join('halaqats','halaqats.id','=','halaqa_student.halaqa_id')
+                    ->whereColumn('halaqats.teacher_id','users.id')
+                    ->selectRaw('COUNT(DISTINCT halaqa_student.student_id)'),
+                'students_count'
+            );
 
+        // صلاحيات الوصول
         match (true) {
             $user->isAreaManager() => null,
             $user->isMosqueManager() || $user->isSupervisor() => $query->where('mosque_id', $user->mosque_id),
@@ -30,10 +48,32 @@ class TeacherService
             default => $query->whereRaw('1 = 0'),
         };
 
-        return $query->latest()
-            ->get(['id', 'name', 'email', 'mosque_id', 'created_at']);
-    }
+        if ($request) {
+            // 🎯 2. الفلترة حسب الحالة (active, paused, suspended)
+            if ($request->filled('status')) {
+                $query->whereHas('teacherProfile', function ($q) use ($request) {
+                    $q->where('status', $request->status);
+                });
+            }
 
+            // 🎯 3. البحث بالاسم، الايميل، أو رقم الهاتف
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhereHas('teacherProfile', function ($qp) use ($search) {
+                            $qp->where('phone', 'like', "%{$search}%");
+                        });
+                });
+            }
+        }
+
+        // 🎯 4. دعم التصفح والـ Pagination تلقائياً
+        $perPage = $request?->get('per_page', 10);
+
+        return $query->latest('id')->paginate($perPage);
+    }
 
     public function getTeacherDetails($teacherId)
     {
@@ -55,8 +95,19 @@ class TeacherService
             $query->where('mosque_id', $user->mosque_id);
         }
 
-        return $query->findOrFail($teacherId);
+        $teacher = $query->findOrFail($teacherId);
+
+        // حساب عدد الطلاب المرتبطين بالحلقات للمعلم
+        $teacher->students_count = DB::table('halaqa_student')
+            ->join('halaqats','halaqats.id','=','halaqa_student.halaqa_id')
+            ->where('halaqats.teacher_id', $teacher->id)
+            ->distinct()
+            ->count('halaqa_student.student_id');
+
+        return $teacher;
     }
+
+
     public function updateTeacher(int $id, array $data): User
     {
         return DB::transaction(function () use ($id, $data) {

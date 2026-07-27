@@ -53,11 +53,21 @@ class HalaqaService
 
     public function update($id, array $data)
     {
-
         $halaqa = $this->find($id);
+
+        // إذا جرى تعديل السعة، نتأكد من أنها لا تقل عن عدد الطلاب المقيدين حالياً
+        if (isset($data['capacity'])) {
+            $currentStudentsCount = $halaqa->students()->count();
+            if ($data['capacity'] < $currentStudentsCount) {
+                throw ValidationException::withMessages([
+                    'capacity' => [__('messages.capacity_less_than_students', ['count' => $currentStudentsCount])]
+                ]);
+            }
+        }
+
         $halaqa->update($data);
 
-        return $halaqa;
+        return $halaqa->fresh(['teacher']);
     }
 
     public function delete($id)

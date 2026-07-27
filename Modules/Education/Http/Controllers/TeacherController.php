@@ -29,10 +29,14 @@ class TeacherController extends Controller
             __('messages.teacher_updated_successfully')
         );
     }
-    public function index()
+    public function index(Request $request)
     {
-        $teachers = $this->service->getTeachersList();
-        return ApiResponse::success(TeacherResource::collection($teachers), 'تم جلب قائمة المعلمين');
+        $teachers = $this->service->getTeachersList($request);
+        return ApiResponse::success(
+            TeacherResource::collection($teachers),
+            'تم جلب قائمة المعلمين',
+            $teachers
+        );
     }
 
     public function show($id)

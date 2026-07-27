@@ -12,10 +12,10 @@ class UpdateTeacherRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'           => 'sometimes|required|string|max:255',
-            'phone'          => 'sometimes|required|string|max:20',
+            'name'           => 'sometimes|string|max:255',
+            'phone'          => 'sometimes|string|max:20',
             'specialization' => 'nullable|string|max:255',
-            'status'         => 'sometimes|required|in:active,paused,suspended',
+            'status'         => 'sometimes|in:active,paused,suspended',
             'notes'          => 'nullable|string|max:1000',
         ];
     }

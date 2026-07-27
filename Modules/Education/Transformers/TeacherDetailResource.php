@@ -23,21 +23,27 @@ class TeacherDetailResource extends JsonResource
             'status'         => $profile ? $profile->status : 'active',
             'notes'          => $profile ? $profile->notes : null,
 
-
             'halaqats' => $this->whenLoaded('halaqats', function() {
-                return $this->halaqats->map(fn($h) => [
-                    'id'   => $h->id,
-                    'name' => $h->name,
-                    'stats' => [
-                        'total_students'          => $h->students_count ?? 0,
-                        'total_present_all_time'  => $h->total_present_count ?? 0,
-                        'total_absent_all_time'   => $h->total_absent_count ?? 0,
+                return $this->halaqats->map(function ($h) {
+                    $totalPresent = $h->total_present_count ?? 0;
+                    $totalAbsent = $h->total_absent_count ?? 0;
+                    $total = $totalPresent + $totalAbsent;
 
-                        'overall_attendance_rate' => (($h->total_present_count ?? 0) + ($h->total_absent_count ?? 0)) > 0
-                            ? round(($h->total_present_count / ($h->total_present_count + $h->total_absent_count)) * 100, 2) . '%'
-                            : '0%'
-                    ]
-                ]);
+                    return [
+                        'id'   => $h->id,
+                        'name' => $h->name,
+                        'stats' => [
+                            'total_students'          => $h->students_count ?? 0,
+                            'total_present_all_time'  => $totalPresent,
+                            'total_absent_all_time'   => $totalAbsent,
+
+                            // 🎯 التعديل المطلوبة من §5: إرجاع رقم مجرد (Float) بدون علامة %
+                            'overall_attendance_rate' => $total > 0
+                                ? round(($totalPresent / $total) * 100, 2)
+                                : 0
+                        ]
+                    ];
+                });
             }),
 
             'created_at' => $this->created_at?->toDateTimeString(),
