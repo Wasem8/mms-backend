@@ -11,33 +11,51 @@ class StudentService
 
     public function list()
     {
+        if (request()->has('has_halaqa')) {
+            $hasHalaqaVal = request('has_halaqa');
+            if (!in_array($hasHalaqaVal, ['0', '1', 0, 1], true)) {
+                abort(422, __('messages.invalid_has_halaqa_value'));
+            }
+        }
+
         return Student::query()
             ->with([
                 'mosque',
                 'parent',
-                'halaqats:id,name'
+                'halaqats:id,name,teacher_id',
+                'halaqats.teacher:id,name',
+                'evaluations' => fn($q) => $q->latest('evaluated_at')
             ])
-
+            ->withAvg('evaluations', 'score')
             ->forUser(auth()->user())
 
-            ->when(
-                request('status'),
-                fn($q, $status) => $q->where('status', $status)
-            )
+            ->when(request('search'), function ($q, $search) {
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('first_name', 'ILIKE', "%{$search}%")
+                        ->orWhere('last_name', 'ILIKE', "%{$search}%")
+                        ->orWhereRaw("CONCAT(first_name, ' ', last_name) ILIKE ?", ["%{$search}%"]);
+                });
+            })
+
+            ->when(request('status'), fn($q, $status) => $q->where('status', $status))
 
             ->when(request()->has('has_halaqa'), function ($q) {
-
                 if (request('has_halaqa') == 1) {
                     $q->whereHas('halaqats');
-                }
-
-                if (request('has_halaqa') == 0) {
+                } else {
                     $q->whereDoesntHave('halaqats');
                 }
             })
 
+            // §8: فلتر الطلاب القابلين للإضافة لحلقة معينة (حيث الطالب ليس في هذه الحلقة)
+            ->when(request('assignable_to_halaqa'), function ($q, $halaqaId) {
+                $q->whereDoesntHave('halaqats', function ($sub) use ($halaqaId) {
+                    $sub->where('halaqats.id', $halaqaId);
+                });
+            })
+
             ->latest()
-            ->paginate(10);
+            ->paginate(request('per_page', 10));
     }
 
     public function create(array $data)
@@ -52,7 +70,12 @@ class StudentService
 
     public function find($id)
     {
-        return Student::with(['mosque', 'parent', 'halaqats'])
+        return Student::with([
+            'mosque',
+            'parent',
+            'halaqats:id,name,teacher_id',
+            'halaqats.teacher:id,name' // §7: معلم الحلقة
+        ])
             ->with([
                 'evaluations' => fn($q) => $q->latest('evaluated_at')
             ])
