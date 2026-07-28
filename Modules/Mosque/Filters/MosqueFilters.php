@@ -11,6 +11,15 @@ class MosqueFilters
 
     public function apply(Builder $query, array $filters): Builder
     {
+
+        if (isset($filters['city_id'])) {
+            $this->filterByCityId($query, (int) $filters['city_id']);
+        }
+
+        if (isset($filters['district_id'])) {
+            $this->filterByDistrictId($query, (int) $filters['district_id']);
+        }
+
         if (isset($filters['city'])) {
             $this->filterByCity($query, $filters['city']);
         }
@@ -48,6 +57,17 @@ class MosqueFilters
         }
 
         return $query;
+    }
+
+    private function filterByCityId(Builder $query, int $cityId): void
+    {
+        $query->where('city_id', $cityId);
+    }
+
+
+    private function filterByDistrictId(Builder $query, int $districtId): void
+    {
+        $query->where('district_id', $districtId);
     }
 
 

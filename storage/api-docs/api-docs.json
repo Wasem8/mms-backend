@@ -358,14 +358,6 @@
                                         "maxLength": 100,
                                         "minLength": 2
                                     },
-                                    "name": {
-                                        "description": "Fallback full name if first_name/last_name are not sent",
-                                        "type": "string",
-                                        "example": "أحمد الشديد",
-                                        "nullable": true,
-                                        "maxLength": 255,
-                                        "minLength": 2
-                                    },
                                     "phone": {
                                         "type": "string",
                                         "example": "+963900000000",
@@ -3503,6 +3495,172 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/complaints/mine": {
+            "get": {
+                "tags": [
+                    "Complaints"
+                ],
+                "summary": "List my complaints",
+                "description": "Returns the authenticated member's own complaints, paginated. Guest complaints (submitted via /complaints/guest) never appear here since guests have no account — their only recovery path is the tracking number returned on submission.",
+                "operationId": "getMyComplaints",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by complaint status",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pending",
+                                "in_progress",
+                                "resolved",
+                                "canceled"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Complaints retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Complaints retrieved successfully."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 41
+                                                    },
+                                                    "complaint_number": {
+                                                        "type": "string",
+                                                        "example": "CMP-2026-000123"
+                                                    },
+                                                    "title": {
+                                                        "type": "string",
+                                                        "example": "تسريب مياه في دورة المياه"
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "in_progress",
+                                                        "enum": [
+                                                            "pending",
+                                                            "in_progress",
+                                                            "resolved",
+                                                            "canceled"
+                                                        ]
+                                                    },
+                                                    "priority": {
+                                                        "type": "string",
+                                                        "example": "high",
+                                                        "enum": [
+                                                            "low",
+                                                            "medium",
+                                                            "high"
+                                                        ]
+                                                    },
+                                                    "complaint_type": {
+                                                        "type": "string",
+                                                        "example": "technical_issue",
+                                                        "enum": [
+                                                            "service_missing",
+                                                            "power_outage",
+                                                            "corruption",
+                                                            "employee_misconduct",
+                                                            "technical_issue"
+                                                        ]
+                                                    },
+                                                    "mosque": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 12
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "جامع الرحمن"
+                                                            }
+                                                        },
+                                                        "type": "object",
+                                                        "nullable": true
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "example": "2026-07-20 14:32"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "has_more_pages": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                }
+                                            },
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
                     }
                 },
                 "security": [
@@ -9488,6 +9646,139 @@
                 ]
             }
         },
+        "/geo": {
+            "get": {
+                "tags": [
+                    "Geo"
+                ],
+                "summary": "جلب الكاتالوج الجغرافي",
+                "description": "يرجع شجرة جغرافية (محافظة ← مدينة ← حي) لسوريا. تُستخدم لاختيار الموقع بالتطبيق ولفلترة المساجد. الأسماء تُرجع مترجمة حسب Accept-Language. لا يتطلب توكن.",
+                "operationId": "getGeoCatalog",
+                "parameters": [
+                    {
+                        "name": "Accept-Language",
+                        "in": "header",
+                        "description": "لغة الأسماء المرجعة (ar أو en)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "ar",
+                            "enum": [
+                                "ar",
+                                "en"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "شجرة الكاتالوج الجغرافي",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم جلب الكاتالوج الجغرافي بنجاح."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "دمشق"
+                                                    },
+                                                    "lat": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 33.5138
+                                                    },
+                                                    "lng": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 36.2765
+                                                    },
+                                                    "cities": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "integer",
+                                                                    "example": 101
+                                                                },
+                                                                "name": {
+                                                                    "type": "string",
+                                                                    "example": "دوما"
+                                                                },
+                                                                "lat": {
+                                                                    "type": "number",
+                                                                    "format": "float",
+                                                                    "example": 33.5722
+                                                                },
+                                                                "lng": {
+                                                                    "type": "number",
+                                                                    "format": "float",
+                                                                    "example": 36.4022
+                                                                },
+                                                                "districts": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "properties": {
+                                                                            "id": {
+                                                                                "type": "integer",
+                                                                                "example": 1001
+                                                                            },
+                                                                            "name": {
+                                                                                "type": "string",
+                                                                                "example": "المزة"
+                                                                            },
+                                                                            "lat": {
+                                                                                "type": "number",
+                                                                                "format": "float",
+                                                                                "example": 33.5024,
+                                                                                "nullable": true
+                                                                            },
+                                                                            "lng": {
+                                                                                "type": "number",
+                                                                                "format": "float",
+                                                                                "example": 36.238,
+                                                                                "nullable": true
+                                                                            }
+                                                                        },
+                                                                        "type": "object"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/invitations/send": {
             "post": {
                 "tags": [
@@ -10937,8 +11228,29 @@
                         }
                     },
                     {
+                        "name": "city_id",
+                        "in": "query",
+                        "description": "Filter by city ID (from GET /geo catalog).",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 101
+                        }
+                    },
+                    {
+                        "name": "district_id",
+                        "in": "query",
+                        "description": "Filter by district ID (from GET /geo catalog).",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1001
+                        }
+                    },
+                    {
                         "name": "city",
                         "in": "query",
+                        "description": "Legacy free-text filter, kept for backwards compatibility. Prefer city_id.",
                         "required": false,
                         "schema": {
                             "type": "string",
@@ -10948,6 +11260,7 @@
                     {
                         "name": "district",
                         "in": "query",
+                        "description": "Legacy free-text filter, kept for backwards compatibility. Prefer district_id.",
                         "required": false,
                         "schema": {
                             "type": "string",
@@ -11075,14 +11388,26 @@
                                                         "type": "boolean",
                                                         "example": 0
                                                     },
+                                                    "city_id": {
+                                                        "type": "integer",
+                                                        "example": 101,
+                                                        "nullable": true
+                                                    },
                                                     "city": {
+                                                        "description": "Localized city name resolved from the Geo catalog",
                                                         "type": "string",
-                                                        "example": "Cairo",
+                                                        "example": "دمشق",
+                                                        "nullable": true
+                                                    },
+                                                    "district_id": {
+                                                        "type": "integer",
+                                                        "example": 1001,
                                                         "nullable": true
                                                     },
                                                     "district": {
+                                                        "description": "Localized district name resolved from the Geo catalog",
                                                         "type": "string",
-                                                        "example": "Downtown",
+                                                        "example": "المزة",
                                                         "nullable": true
                                                     },
                                                     "latitude": {
@@ -11180,7 +11505,8 @@
                         "multipart/form-data": {
                             "schema": {
                                 "required": [
-                                    "name"
+                                    "name",
+                                    "city_id"
                                 ],
                                 "properties": {
                                     "name": {
@@ -11212,14 +11538,15 @@
                                         "type": "boolean",
                                         "example": 0
                                     },
-                                    "city": {
-                                        "type": "string",
-                                        "example": "Cairo",
-                                        "nullable": true
+                                    "city_id": {
+                                        "description": "Required. Must exist in the Geo catalog (GET /geo).",
+                                        "type": "integer",
+                                        "example": 101
                                     },
-                                    "district": {
-                                        "type": "string",
-                                        "example": "Downtown",
+                                    "district_id": {
+                                        "description": "Optional. Must belong to the given city_id.",
+                                        "type": "integer",
+                                        "example": 1001,
                                         "nullable": true
                                     },
                                     "latitude": {
@@ -11305,14 +11632,24 @@
                                                     "type": "boolean",
                                                     "example": 0
                                                 },
+                                                "city_id": {
+                                                    "type": "integer",
+                                                    "example": 101,
+                                                    "nullable": true
+                                                },
                                                 "city": {
                                                     "type": "string",
-                                                    "example": "Cairo",
+                                                    "example": "دمشق",
+                                                    "nullable": true
+                                                },
+                                                "district_id": {
+                                                    "type": "integer",
+                                                    "example": 1001,
                                                     "nullable": true
                                                 },
                                                 "district": {
                                                     "type": "string",
-                                                    "example": "Downtown",
+                                                    "example": "المزة",
                                                     "nullable": true
                                                 },
                                                 "latitude": {
@@ -11491,6 +11828,26 @@
                         }
                     },
                     {
+                        "name": "city_id",
+                        "in": "query",
+                        "description": "Refine nearby results by city ID (from GET /geo catalog).",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 101
+                        }
+                    },
+                    {
+                        "name": "district_id",
+                        "in": "query",
+                        "description": "Refine nearby results by district ID (from GET /geo catalog).",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1001
+                        }
+                    },
+                    {
                         "name": "facility_id",
                         "in": "query",
                         "description": "Filter mosques by facility ID.",
@@ -11552,14 +11909,24 @@
                                                         "type": "boolean",
                                                         "example": 0
                                                     },
+                                                    "city_id": {
+                                                        "type": "integer",
+                                                        "example": 101,
+                                                        "nullable": true
+                                                    },
                                                     "city": {
                                                         "type": "string",
-                                                        "example": "Cairo",
+                                                        "example": "دمشق",
+                                                        "nullable": true
+                                                    },
+                                                    "district_id": {
+                                                        "type": "integer",
+                                                        "example": 1001,
                                                         "nullable": true
                                                     },
                                                     "district": {
                                                         "type": "string",
-                                                        "example": "Downtown",
+                                                        "example": "المزة",
                                                         "nullable": true
                                                     },
                                                     "latitude": {
@@ -11643,6 +12010,26 @@
                         }
                     },
                     {
+                        "name": "city_id",
+                        "in": "query",
+                        "description": "Refine search results by city ID (from GET /geo catalog).",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 101
+                        }
+                    },
+                    {
+                        "name": "district_id",
+                        "in": "query",
+                        "description": "Refine search results by district ID (from GET /geo catalog).",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1001
+                        }
+                    },
+                    {
                         "name": "facility_id",
                         "in": "query",
                         "description": "Filter mosques by facility ID.",
@@ -11704,14 +12091,24 @@
                                                         "type": "boolean",
                                                         "example": 0
                                                     },
+                                                    "city_id": {
+                                                        "type": "integer",
+                                                        "example": 101,
+                                                        "nullable": true
+                                                    },
                                                     "city": {
                                                         "type": "string",
-                                                        "example": "Cairo",
+                                                        "example": "دمشق",
+                                                        "nullable": true
+                                                    },
+                                                    "district_id": {
+                                                        "type": "integer",
+                                                        "example": 1001,
                                                         "nullable": true
                                                     },
                                                     "district": {
                                                         "type": "string",
-                                                        "example": "Downtown",
+                                                        "example": "المزة",
                                                         "nullable": true
                                                     },
                                                     "latitude": {
@@ -11959,8 +12356,8 @@
                 "tags": [
                     "Mosques"
                 ],
-                "summary": "List mosques by city",
-                "description": "Returns all mosques located in the specified city.",
+                "summary": "List mosques by city (legacy, free-text)",
+                "description": "Returns all mosques located in the specified city, matched by legacy free-text value. Prefer filtering GET /mosques with city_id where possible.",
                 "operationId": "getMosquesByCity",
                 "parameters": [
                     {
@@ -12193,14 +12590,26 @@
                                                     "type": "boolean",
                                                     "example": 0
                                                 },
+                                                "city_id": {
+                                                    "type": "integer",
+                                                    "example": 101,
+                                                    "nullable": true
+                                                },
                                                 "city": {
+                                                    "description": "Localized city name resolved from the Geo catalog",
                                                     "type": "string",
-                                                    "example": "Cairo",
+                                                    "example": "دمشق",
+                                                    "nullable": true
+                                                },
+                                                "district_id": {
+                                                    "type": "integer",
+                                                    "example": 1001,
                                                     "nullable": true
                                                 },
                                                 "district": {
+                                                    "description": "Localized district name resolved from the Geo catalog",
                                                     "type": "string",
-                                                    "example": "Downtown",
+                                                    "example": "المزة",
                                                     "nullable": true
                                                 },
                                                 "latitude": {
@@ -12352,14 +12761,16 @@
                                         "type": "boolean",
                                         "example": true
                                     },
-                                    "city": {
-                                        "type": "string",
-                                        "example": "Cairo",
+                                    "city_id": {
+                                        "description": "Must exist in the Geo catalog (GET /geo).",
+                                        "type": "integer",
+                                        "example": 101,
                                         "nullable": true
                                     },
-                                    "district": {
-                                        "type": "string",
-                                        "example": "New District",
+                                    "district_id": {
+                                        "description": "Must belong to the given city_id.",
+                                        "type": "integer",
+                                        "example": 1001,
                                         "nullable": true
                                     },
                                     "latitude": {
@@ -12445,14 +12856,24 @@
                                                     "type": "boolean",
                                                     "example": true
                                                 },
+                                                "city_id": {
+                                                    "type": "integer",
+                                                    "example": 101,
+                                                    "nullable": true
+                                                },
                                                 "city": {
                                                     "type": "string",
-                                                    "example": "Cairo",
+                                                    "example": "دمشق",
+                                                    "nullable": true
+                                                },
+                                                "district_id": {
+                                                    "type": "integer",
+                                                    "example": 1001,
                                                     "nullable": true
                                                 },
                                                 "district": {
                                                     "type": "string",
-                                                    "example": "New District",
+                                                    "example": "المزة",
                                                     "nullable": true
                                                 },
                                                 "latitude": {
@@ -13788,7 +14209,7 @@
                     "Needs"
                 ],
                 "summary": "List all needs across all mosques",
-                "description": "Returns a paginated list of needs from all mosques with optional filtering.",
+                "description": "Returns a paginated list of needs from all mosques with optional filtering, search, sorting, and proximity search.",
                 "operationId": "getAllMosquesNeeds",
                 "parameters": [
                     {
@@ -13843,6 +14264,84 @@
                         "schema": {
                             "type": "boolean",
                             "example": true
+                        }
+                    },
+                    {
+                        "name": "city",
+                        "in": "query",
+                        "description": "Filter by the mosque city",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "الرياض"
+                        }
+                    },
+                    {
+                        "name": "mosque_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Free-text search in need title or description",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "سجاد"
+                        }
+                    },
+                    {
+                        "name": "near",
+                        "in": "query",
+                        "description": "User coordinates as \"lat,lng\" to search needs near a location",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "24.7136,46.6753"
+                        }
+                    },
+                    {
+                        "name": "radius_km",
+                        "in": "query",
+                        "description": "Max distance in kilometers, used together with \"near\"",
+                        "required": false,
+                        "schema": {
+                            "type": "number",
+                            "example": 10
+                        }
+                    },
+                    {
+                        "name": "sort_by",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "distance",
+                            "enum": [
+                                "urgency",
+                                "funding_gap",
+                                "created_at",
+                                "deadline",
+                                "distance"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sort_order",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "desc",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
                         }
                     }
                 ],
@@ -13909,6 +14408,17 @@
                                                         "type": "boolean",
                                                         "example": true
                                                     },
+                                                    "funding_gap": {
+                                                        "description": "target_amount - collected_amount",
+                                                        "type": "number",
+                                                        "example": 75
+                                                    },
+                                                    "distance_km": {
+                                                        "description": "Only present when \"near\" is used",
+                                                        "type": "number",
+                                                        "example": 3.42,
+                                                        "nullable": true
+                                                    },
                                                     "mosque": {
                                                         "description": "The embedded mosque data required for the aggregate UI",
                                                         "properties": {
@@ -13926,6 +14436,16 @@
                                                             },
                                                             "image_url": {
                                                                 "type": "string",
+                                                                "nullable": true
+                                                            },
+                                                            "latitude": {
+                                                                "type": "number",
+                                                                "example": 24.7136,
+                                                                "nullable": true
+                                                            },
+                                                            "longitude": {
+                                                                "type": "number",
+                                                                "example": 46.6753,
                                                                 "nullable": true
                                                             }
                                                         },
@@ -20780,6 +21300,10 @@
         {
             "name": "Attendance Excuses",
             "description": "Attendance Excuses"
+        },
+        {
+            "name": "Geo",
+            "description": "Geo"
         },
         {
             "name": "Invitations",

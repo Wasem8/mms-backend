@@ -17,8 +17,34 @@ class MosqueEndpoints
         parameters: [
             new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 1)),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 15)),
-            new OA\Parameter(name: 'city', in: 'query', required: false, schema: new OA\Schema(type: 'string', example: 'Cairo')),
-            new OA\Parameter(name: 'district', in: 'query', required: false, schema: new OA\Schema(type: 'string', example: 'Downtown')),
+            new OA\Parameter(
+                name: 'city_id',
+                in: 'query',
+                required: false,
+                description: 'Filter by city ID (from GET /geo catalog).',
+                schema: new OA\Schema(type: 'integer', example: 101)
+            ),
+            new OA\Parameter(
+                name: 'district_id',
+                in: 'query',
+                required: false,
+                description: 'Filter by district ID (from GET /geo catalog).',
+                schema: new OA\Schema(type: 'integer', example: 1001)
+            ),
+            new OA\Parameter(
+                name: 'city',
+                in: 'query',
+                required: false,
+                description: 'Legacy free-text filter, kept for backwards compatibility. Prefer city_id.',
+                schema: new OA\Schema(type: 'string', example: 'Cairo')
+            ),
+            new OA\Parameter(
+                name: 'district',
+                in: 'query',
+                required: false,
+                description: 'Legacy free-text filter, kept for backwards compatibility. Prefer district_id.',
+                schema: new OA\Schema(type: 'string', example: 'Downtown')
+            ),
             new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['active', 'maintenance', 'closed'])),
             new OA\Parameter(name: 'is_featured', in: 'query', required: false, schema: new OA\Schema(type: 'boolean')),
             new OA\Parameter(name: 'min_rating', in: 'query', required: false, schema: new OA\Schema(type: 'number', format: 'float', example: 4.0)),
@@ -56,8 +82,11 @@ class MosqueEndpoints
                                     ),
                                     new OA\Property(property: 'working_hours', type: 'string', nullable: true, example: '5:00 AM - 10:00 PM'),
                                     new OA\Property(property: 'status', type: 'string', enum: ['active', 'maintenance', 'closed'], example: 'active'),
-                                    new OA\Property(property: 'is_featured', type: 'boolean', example: 0),                                    new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Cairo'),
-                                    new OA\Property(property: 'district', type: 'string', nullable: true, example: 'Downtown'),
+                                    new OA\Property(property: 'is_featured', type: 'boolean', example: 0),
+                                    new OA\Property(property: 'city_id', type: 'integer', nullable: true, example: 101),
+                                    new OA\Property(property: 'city', type: 'string', nullable: true, example: 'دمشق', description: 'Localized city name resolved from the Geo catalog'),
+                                    new OA\Property(property: 'district_id', type: 'integer', nullable: true, example: 1001),
+                                    new OA\Property(property: 'district', type: 'string', nullable: true, example: 'المزة', description: 'Localized district name resolved from the Geo catalog'),
                                     new OA\Property(property: 'latitude', type: 'number', format: 'float', nullable: true, example: 30.0444),
                                     new OA\Property(property: 'longitude', type: 'number', format: 'float', nullable: true, example: 31.2357),
                                     new OA\Property(property: 'average_rating', type: 'number', format: 'float', example: 4.5),
@@ -101,6 +130,20 @@ class MosqueEndpoints
             new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 1)),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 15)),
             new OA\Parameter(
+                name: 'city_id',
+                in: 'query',
+                required: false,
+                description: 'Refine nearby results by city ID (from GET /geo catalog).',
+                schema: new OA\Schema(type: 'integer', example: 101)
+            ),
+            new OA\Parameter(
+                name: 'district_id',
+                in: 'query',
+                required: false,
+                description: 'Refine nearby results by district ID (from GET /geo catalog).',
+                schema: new OA\Schema(type: 'integer', example: 1001)
+            ),
+            new OA\Parameter(
                 name: 'facility_id',
                 in: 'query',
                 required: false,
@@ -110,8 +153,8 @@ class MosqueEndpoints
         ],
         responses: [
             new OA\Response(
-                response:200,
-                description:'list nearby mosque returned success',
+                response: 200,
+                description: 'list nearby mosque returned success',
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'status', type: 'boolean', example: true),
@@ -132,18 +175,21 @@ class MosqueEndpoints
                                     ),
                                     new OA\Property(property: 'working_hours', type: 'string', nullable: true, example: '5:00 AM - 10:00 PM'),
                                     new OA\Property(property: 'status', type: 'string', enum: ['active', 'maintenance', 'closed'], example: 'active'),
-                                    new OA\Property(property: 'is_featured', type: 'boolean', example: 0),                                    new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Cairo'),
-                                    new OA\Property(property: 'district', type: 'string', nullable: true, example: 'Downtown'),
+                                    new OA\Property(property: 'is_featured', type: 'boolean', example: 0),
+                                    new OA\Property(property: 'city_id', type: 'integer', nullable: true, example: 101),
+                                    new OA\Property(property: 'city', type: 'string', nullable: true, example: 'دمشق'),
+                                    new OA\Property(property: 'district_id', type: 'integer', nullable: true, example: 1001),
+                                    new OA\Property(property: 'district', type: 'string', nullable: true, example: 'المزة'),
                                     new OA\Property(property: 'latitude', type: 'number', format: 'float', nullable: true, example: 30.0444),
                                     new OA\Property(property: 'longitude', type: 'number', format: 'float', nullable: true, example: 31.2357),
                                     new OA\Property(property: 'average_rating', type: 'number', format: 'float', example: 4.5),
                                     new OA\Property(property: 'reviews_count', type: 'integer', example: 10),
                                     new OA\Property(property: 'imam', type: 'string', nullable: true, example: 'Sheikh Ahmed'),
-                                    new OA\Property(property: 'khatib', type: 'string', nullable:true, example:'Sheikh Hassan')
+                                    new OA\Property(property: 'khatib', type: 'string', nullable: true, example: 'Sheikh Hassan')
                                 ]
                             )
                         )
-                        ]
+                    ]
                 )
             )
         ]
@@ -162,6 +208,20 @@ class MosqueEndpoints
             new OA\Parameter(name: 'q', in: 'query', required: true, schema: new OA\Schema(type: 'string', example: 'Al-Rahma')),
             new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 1)),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 15)),
+            new OA\Parameter(
+                name: 'city_id',
+                in: 'query',
+                required: false,
+                description: 'Refine search results by city ID (from GET /geo catalog).',
+                schema: new OA\Schema(type: 'integer', example: 101)
+            ),
+            new OA\Parameter(
+                name: 'district_id',
+                in: 'query',
+                required: false,
+                description: 'Refine search results by district ID (from GET /geo catalog).',
+                schema: new OA\Schema(type: 'integer', example: 1001)
+            ),
             new OA\Parameter(
                 name: 'facility_id',
                 in: 'query',
@@ -194,8 +254,11 @@ class MosqueEndpoints
                                     ),
                                     new OA\Property(property: 'working_hours', type: 'string', nullable: true, example: '5:00 AM - 10:00 PM'),
                                     new OA\Property(property: 'status', type: 'string', enum: ['active', 'maintenance', 'closed'], example: 'active'),
-                                    new OA\Property(property: 'is_featured', type: 'boolean', example: 0),                                    new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Cairo'),
-                                    new OA\Property(property: 'district', type: 'string', nullable: true, example: 'Downtown'),
+                                    new OA\Property(property: 'is_featured', type: 'boolean', example: 0),
+                                    new OA\Property(property: 'city_id', type: 'integer', nullable: true, example: 101),
+                                    new OA\Property(property: 'city', type: 'string', nullable: true, example: 'دمشق'),
+                                    new OA\Property(property: 'district_id', type: 'integer', nullable: true, example: 1001),
+                                    new OA\Property(property: 'district', type: 'string', nullable: true, example: 'المزة'),
                                     new OA\Property(property: 'latitude', type: 'number', format: 'float', nullable: true, example: 30.0444),
                                     new OA\Property(property: 'longitude', type: 'number', format: 'float', nullable: true, example: 31.2357),
                                     new OA\Property(property: 'average_rating', type: 'number', format: 'float', example: 4.5),
@@ -288,8 +351,8 @@ class MosqueEndpoints
         path: '/mosques/city/{city}',
         operationId: 'getMosquesByCity',
         tags: ['Mosques'],
-        summary: 'List mosques by city',
-        description: 'Returns all mosques located in the specified city.',
+        summary: 'List mosques by city (legacy, free-text)',
+        description: 'Returns all mosques located in the specified city, matched by legacy free-text value. Prefer filtering GET /mosques with city_id where possible.',
         parameters: [
             new OA\Parameter(name: 'city', in: 'path', required: true, schema: new OA\Schema(type: 'string', example: 'Cairo')),
         ],
@@ -317,7 +380,8 @@ class MosqueEndpoints
                                     ),
                                     new OA\Property(property: 'working_hours', type: 'string', nullable: true, example: '5:00 AM - 10:00 PM'),
                                     new OA\Property(property: 'status', type: 'string', enum: ['active', 'maintenance', 'closed'], example: 'active'),
-                                    new OA\Property(property: 'is_featured', type: 'boolean', example: 0),                                    new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Cairo'),
+                                    new OA\Property(property: 'is_featured', type: 'boolean', example: 0),
+                                    new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Cairo'),
                                     new OA\Property(property: 'district', type: 'string', nullable: true, example: 'Downtown'),
                                     new OA\Property(property: 'latitude', type: 'number', format: 'float', nullable: true, example: 30.0444),
                                     new OA\Property(property: 'longitude', type: 'number', format: 'float', nullable: true, example: 31.2357),
@@ -383,8 +447,11 @@ class MosqueEndpoints
                                 ),
                                 new OA\Property(property: 'working_hours', type: 'string', nullable: true, example: '5:00 AM - 10:00 PM'),
                                 new OA\Property(property: 'status', type: 'string', enum: ['active', 'maintenance', 'closed'], example: 'active'),
-                                new OA\Property(property: 'is_featured', type: 'boolean', example: 0),                                new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Cairo'),
-                                new OA\Property(property: 'district', type: 'string', nullable: true, example: 'Downtown'),
+                                new OA\Property(property: 'is_featured', type: 'boolean', example: 0),
+                                new OA\Property(property: 'city_id', type: 'integer', nullable: true, example: 101),
+                                new OA\Property(property: 'city', type: 'string', nullable: true, example: 'دمشق', description: 'Localized city name resolved from the Geo catalog'),
+                                new OA\Property(property: 'district_id', type: 'integer', nullable: true, example: 1001),
+                                new OA\Property(property: 'district', type: 'string', nullable: true, example: 'المزة', description: 'Localized district name resolved from the Geo catalog'),
                                 new OA\Property(property: 'latitude', type: 'number', format: 'float', nullable: true, example: 30.0444),
                                 new OA\Property(property: 'longitude', type: 'number', format: 'float', nullable: true, example: 31.2357),
                                 new OA\Property(property: 'average_rating', type: 'number', format: 'float', example: 4.5),
@@ -428,14 +495,15 @@ class MosqueEndpoints
             content: new OA\MediaType(
                 mediaType: 'multipart/form-data',
                 schema: new OA\Schema(
-                    required: ['name'],
+                    required: ['name', 'city_id'],
                     properties: [
                         new OA\Property(property: 'name', type: 'string', example: 'Al-Rahma Mosque', minLength: 2, maxLength: 255),
                         new OA\Property(property: 'image', type: 'string', format: 'binary', description: 'Mosque image file to upload'),
                         new OA\Property(property: 'working_hours', type: 'string', nullable: true, example: '5:00 AM - 10:00 PM'),
                         new OA\Property(property: 'status', type: 'string', enum: ['active', 'maintenance', 'closed'], example: 'active'),
-                        new OA\Property(property: 'is_featured', type: 'boolean', example: 0),                        new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Cairo'),
-                        new OA\Property(property: 'district', type: 'string', nullable: true, example: 'Downtown'),
+                        new OA\Property(property: 'is_featured', type: 'boolean', example: 0),
+                        new OA\Property(property: 'city_id', type: 'integer', example: 101, description: 'Required. Must exist in the Geo catalog (GET /geo).'),
+                        new OA\Property(property: 'district_id', type: 'integer', nullable: true, example: 1001, description: 'Optional. Must belong to the given city_id.'),
                         new OA\Property(property: 'latitude', type: 'number', format: 'float', nullable: true, example: 30.0444),
                         new OA\Property(property: 'longitude', type: 'number', format: 'float', nullable: true, example: 31.2357),
                         new OA\Property(property: 'imam', type: 'string', nullable: true, example: 'Sheikh Ahmed'),
@@ -468,8 +536,11 @@ class MosqueEndpoints
                                 ),
                                 new OA\Property(property: 'working_hours', type: 'string', nullable: true, example: '5:00 AM - 10:00 PM'),
                                 new OA\Property(property: 'status', type: 'string', enum: ['active', 'maintenance', 'closed'], example: 'active'),
-                                new OA\Property(property: 'is_featured', type: 'boolean', example: 0),                                new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Cairo'),
-                                new OA\Property(property: 'district', type: 'string', nullable: true, example: 'Downtown'),
+                                new OA\Property(property: 'is_featured', type: 'boolean', example: 0),
+                                new OA\Property(property: 'city_id', type: 'integer', nullable: true, example: 101),
+                                new OA\Property(property: 'city', type: 'string', nullable: true, example: 'دمشق'),
+                                new OA\Property(property: 'district_id', type: 'integer', nullable: true, example: 1001),
+                                new OA\Property(property: 'district', type: 'string', nullable: true, example: 'المزة'),
                                 new OA\Property(property: 'latitude', type: 'number', format: 'float', nullable: true, example: 30.0444),
                                 new OA\Property(property: 'longitude', type: 'number', format: 'float', nullable: true, example: 31.2357),
                                 new OA\Property(property: 'average_rating', type: 'number', format: 'float', example: 0.0),
@@ -535,8 +606,8 @@ class MosqueEndpoints
                         new OA\Property(property: 'working_hours', type: 'string', nullable: true, example: '6:00 AM - 11:00 PM'),
                         new OA\Property(property: 'status', type: 'string', enum: ['active', 'maintenance', 'closed'], example: 'active'),
                         new OA\Property(property: 'is_featured', type: 'boolean', example: true),
-                        new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Cairo'),
-                        new OA\Property(property: 'district', type: 'string', nullable: true, example: 'New District'),
+                        new OA\Property(property: 'city_id', type: 'integer', nullable: true, example: 101, description: 'Must exist in the Geo catalog (GET /geo).'),
+                        new OA\Property(property: 'district_id', type: 'integer', nullable: true, example: 1001, description: 'Must belong to the given city_id.'),
                         new OA\Property(property: 'latitude', type: 'number', format: 'float', nullable: true, example: 30.0444),
                         new OA\Property(property: 'longitude', type: 'number', format: 'float', nullable: true, example: 31.2357),
                         new OA\Property(property: 'imam', type: 'string', nullable: true, example: 'Sheikh Ahmed Updated'),
@@ -570,8 +641,10 @@ class MosqueEndpoints
                                 new OA\Property(property: 'working_hours', type: 'string', nullable: true, example: '6:00 AM - 11:00 PM'),
                                 new OA\Property(property: 'status', type: 'string', enum: ['active', 'maintenance', 'closed'], example: 'active'),
                                 new OA\Property(property: 'is_featured', type: 'boolean', example: true),
-                                new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Cairo'),
-                                new OA\Property(property: 'district', type: 'string', nullable: true, example: 'New District'),
+                                new OA\Property(property: 'city_id', type: 'integer', nullable: true, example: 101),
+                                new OA\Property(property: 'city', type: 'string', nullable: true, example: 'دمشق'),
+                                new OA\Property(property: 'district_id', type: 'integer', nullable: true, example: 1001),
+                                new OA\Property(property: 'district', type: 'string', nullable: true, example: 'المزة'),
                                 new OA\Property(property: 'latitude', type: 'number', format: 'float', nullable: true, example: 30.0444),
                                 new OA\Property(property: 'longitude', type: 'number', format: 'float', nullable: true, example: 31.2357),
                                 new OA\Property(property: 'average_rating', type: 'number', format: 'float', example: 4.5),
@@ -1170,13 +1243,12 @@ class MosqueEndpoints
     )]
     public function needsIndex() {}
 
-
     #[OA\Get(
         path: '/allNeeds',
         operationId: 'getAllMosquesNeeds',
         tags: ['Needs'],
         summary: 'List all needs across all mosques',
-        description: 'Returns a paginated list of needs from all mosques with optional filtering.',
+        description: 'Returns a paginated list of needs from all mosques with optional filtering, search, sorting, and proximity search.',
         parameters: [
             new OA\Parameter(
                 name: 'page',
@@ -1209,6 +1281,52 @@ class MosqueEndpoints
                 description: 'Filter by urgency (true/false or 1/0)',
                 schema: new OA\Schema(type: 'boolean', example: true)
             ),
+            new OA\Parameter(
+                name: 'city',
+                in: 'query',
+                required: false,
+                description: 'Filter by the mosque city',
+                schema: new OA\Schema(type: 'string', example: 'الرياض')
+            ),
+            new OA\Parameter(
+                name: 'mosque_id',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', example: 15)
+            ),
+            new OA\Parameter(
+                name: 'search',
+                in: 'query',
+                required: false,
+                description: 'Free-text search in need title or description',
+                schema: new OA\Schema(type: 'string', example: 'سجاد')
+            ),
+            new OA\Parameter(
+                name: 'near',
+                in: 'query',
+                required: false,
+                description: 'User coordinates as "lat,lng" to search needs near a location',
+                schema: new OA\Schema(type: 'string', example: '24.7136,46.6753')
+            ),
+            new OA\Parameter(
+                name: 'radius_km',
+                in: 'query',
+                required: false,
+                description: 'Max distance in kilometers, used together with "near"',
+                schema: new OA\Schema(type: 'number', example: 10)
+            ),
+            new OA\Parameter(
+                name: 'sort_by',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string', enum: ['urgency', 'funding_gap', 'created_at', 'deadline', 'distance'], example: 'distance')
+            ),
+            new OA\Parameter(
+                name: 'sort_order',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'], example: 'desc')
+            ),
         ],
         responses: [
             new OA\Response(
@@ -1232,6 +1350,8 @@ class MosqueEndpoints
                                     new OA\Property(property: 'status', type: 'string', enum: ['open', 'partially_fulfilled', 'fulfilled']),
                                     new OA\Property(property: 'image', type: 'string', nullable: true),
                                     new OA\Property(property: 'is_urgent', type: 'boolean', example: true),
+                                    new OA\Property(property: 'funding_gap', type: 'number', example: 75, description: 'target_amount - collected_amount'),
+                                    new OA\Property(property: 'distance_km', type: 'number', nullable: true, example: 3.42, description: 'Only present when "near" is used'),
                                     new OA\Property(
                                         property: 'mosque',
                                         type: 'object',
@@ -1240,7 +1360,9 @@ class MosqueEndpoints
                                             new OA\Property(property: 'id', type: 'integer', example: 15),
                                             new OA\Property(property: 'name', type: 'string', example: 'جامع الراجحي الكبير'),
                                             new OA\Property(property: 'city', type: 'string', example: 'الرياض'),
-                                            new OA\Property(property: 'image_url', type: 'string', nullable: true)
+                                            new OA\Property(property: 'image_url', type: 'string', nullable: true),
+                                            new OA\Property(property: 'latitude', type: 'number', nullable: true, example: 24.7136),
+                                            new OA\Property(property: 'longitude', type: 'number', nullable: true, example: 46.6753),
                                         ]
                                     )
                                 ]
@@ -1263,7 +1385,8 @@ class MosqueEndpoints
             )
         ]
     )]
-    public function AllNeeds(){}
+    public function AllNeeds() {}
+
     #[OA\Get(
         path: '/mosques/{mosque}/needs/{need}',
         operationId: 'getMosqueNeed',
@@ -1559,7 +1682,4 @@ class MosqueEndpoints
         ]
     )]
     public function needById() {}
-
-
 }
-

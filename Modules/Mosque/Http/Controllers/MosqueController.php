@@ -23,6 +23,8 @@ class MosqueController extends Controller
             'latitude'    => 'required|numeric|between:-90,90',
             'longitude'   => 'required|numeric|between:-180,180',
             'limit'       => 'nullable|integer|min:1|max:100',
+            'city_id'     => ['nullable', 'integer', 'exists:cities,id'],       // ⬅ إضافة
+            'district_id' => ['nullable', 'integer', 'exists:districts,id'],    // ⬅ إضافة
             'facility_id' => ['nullable', 'integer', 'exists:facilities,id'],
         ]);
 
@@ -40,6 +42,8 @@ class MosqueController extends Controller
     {
         $validated = $request->validate([
             'per_page'    => ['nullable', 'integer', 'min:1', 'max:100'],
+            'city_id'     => ['nullable', 'integer', 'exists:cities,id'],
+            'district_id' => ['nullable', 'integer', 'exists:districts,id'],
             'city'        => ['nullable', 'string'],
             'district'    => ['nullable', 'string'],
             'status'      => ['nullable', 'string'],
@@ -49,7 +53,6 @@ class MosqueController extends Controller
             'sort_by'     => ['nullable', 'string', 'in:name,city,district,average_rating,reviews_count,created_at'],
             'sort_order'  => ['nullable', 'string', 'in:asc,desc'],
             'facility_id' => ['nullable', 'integer', 'exists:facilities,id'],
-
         ]);
 
         $data = $this->mosqueService->getAllMosques(
@@ -139,12 +142,16 @@ class MosqueController extends Controller
         $validated = $request->validate([
             'q'           => ['required', 'string', 'min:1'],
             'per_page'    => ['nullable', 'integer', 'min:1', 'max:100'],
+            'city_id'     => ['nullable', 'integer', 'exists:cities,id'],       // ⬅ إضافة
+            'district_id' => ['nullable', 'integer', 'exists:districts,id'],    // ⬅ إضافة
             'facility_id' => ['nullable', 'integer', 'exists:facilities,id'],
         ]);
 
         $data = $this->mosqueService->searchMosques(
             $validated['q'],
             array_filter([
+                'city_id' => $validated['city_id'] ?? null,        // ⬅ إضافة هون كمان
+                'district_id' => $validated['district_id'] ?? null, // ⬅ وهون
                 'facility_id' => $validated['facility_id'] ?? null,
             ]),
             (int) ($validated['per_page'] ?? 15)
