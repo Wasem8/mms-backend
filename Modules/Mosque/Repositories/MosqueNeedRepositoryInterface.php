@@ -16,5 +16,5 @@ interface MosqueNeedRepositoryInterface
     public function update(MosqueNeed $need, array $data): MosqueNeed;
 
     public function delete(MosqueNeed $need): bool;
-    public function getAllPaginated(array $filters, int $perPage = 10): LengthAwarePaginator;
-}
+    
+    public function getAllPaginated(array $filters, int $perPage = 15): LengthAwarePaginator;}

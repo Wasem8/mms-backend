@@ -10,5 +10,6 @@
     "Complaint": true,
     "Donation": true,
     "MaintenanceRequest": true,
-    "Volunteer": true
+    "Volunteer": true,
+    "Geo": true
 }

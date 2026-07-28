@@ -212,4 +212,12 @@ class ComplaintService
             'Authorization' => 'Bearer '.env('SUPABASE_KEY'),
         ])->delete($deleteUrl);
     }
+
+    public function getMyComplaints(int $userId, array $filters = [])
+    {
+        $filters['user_id'] = $userId;
+        $filters['per_page'] = (int) ($filters['per_page'] ?? 15);
+
+        return $this->repository->getFiltered($filters);
+    }
 }

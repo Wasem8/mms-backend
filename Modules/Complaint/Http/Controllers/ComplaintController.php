@@ -229,4 +229,23 @@ class ComplaintController extends Controller
             'data'    => $data,
         ]);
     }
+
+    public function mine(Request $request)
+    {
+        $validated = $request->validate([
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'status'   => ['nullable', 'string', 'in:pending,in_progress,resolved,canceled'],
+        ]);
+
+        $complaints = $this->service->getMyComplaints(
+            auth()->id(),
+            $validated
+        );
+
+        return ApiResponse::success(
+            \Modules\Complaint\Http\Resources\ComplaintResource::collection($complaints->items()),
+            __('messages.complaint.retrieved'),
+            $complaints
+        );
+    }
 }

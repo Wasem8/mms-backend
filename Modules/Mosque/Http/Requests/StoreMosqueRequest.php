@@ -19,8 +19,14 @@ class StoreMosqueRequest extends FormRequest
             'working_hours' => ['nullable', 'string', 'max:500'],
             'status' => ['required', Rule::in(['active', 'maintenance', 'closed'])],
             'is_featured' => 'nullable|in:true,false,1,0,true,false',
-            'city' => ['required', 'string', 'max:100'],
-            'district' => ['required', 'string', 'max:100'],
+            'city_id' => ['required', 'integer', 'exists:cities,id'],
+            'district_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('districts', 'id')->where(function ($query) {
+                    $query->whereColumn('city_id', 'city_id');
+                }),
+            ],
             'latitude' => ['required', 'numeric', 'decimal:0,8', 'between:-90,90'],
             'longitude' => ['required', 'numeric', 'decimal:0,8', 'between:-180,180'],
             'manager_id' => [

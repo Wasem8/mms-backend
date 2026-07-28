@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 use Modules\Community\Models\DawahProgram;
 use Modules\Donation\Models\Donation;
+use Modules\Geo\Models\City;
+use Modules\Geo\Models\District;
 use Modules\MaintenanceRequest\Models\Maintenance;
 use Modules\User\Models\User;
 
@@ -27,8 +29,8 @@ class Mosque extends Model
         'working_hours',
         'status',
         'is_featured',
-        'city',
-        'district',
+        'city_id',
+        'district_id',
         'latitude',
         'longitude',
         //'place_id',
@@ -104,6 +106,16 @@ class Mosque extends Model
                 [$latitude, $longitude, $latitude]
             )
             ->orderBy('distance', 'asc');
+    }
+
+    public function city(): BelongsTo
+    {
+        return $this->belongsTo(City::class);
+    }
+
+    public function district(): BelongsTo
+    {
+        return $this->belongsTo(District::class);
     }
 
 

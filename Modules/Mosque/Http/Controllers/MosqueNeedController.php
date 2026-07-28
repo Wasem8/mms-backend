@@ -33,10 +33,26 @@ class MosqueNeedController extends Controller
     {
         $perPage = $request->get('per_page', 10);
 
+        $allowedSortFields = ['urgency', 'funding_gap', 'created_at', 'deadline', 'distance'];
+        $sortBy = in_array($request->get('sort_by'), $allowedSortFields)
+            ? $request->get('sort_by')
+            : 'created_at';
+
+        $sortOrder = strtolower($request->get('sort_order', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        $near = $this->parseNear($request->get('near'));
+
         $filters = [
-            'status' => $request->get('status'),
-            'type'   => $request->get('type'),
-            'urgent' => $request->get('urgent'),
+            'status'     => $request->get('status'),
+            'type'       => $request->get('type'),
+            'urgent'     => $request->get('urgent'),
+            'city'       => $request->get('city'),
+            'mosque_id'  => $request->get('mosque_id'),
+            'search'     => $request->get('search'),
+            'sort_by'    => $near && $sortBy === 'created_at' ? 'distance' : $sortBy,
+            'sort_order' => $sortOrder,
+            'near'       => $near,
+            'radius_km'  => $request->get('radius_km'),
         ];
 
         $needs = $this->service->listAggregate($filters, $perPage);
@@ -48,6 +64,27 @@ class MosqueNeedController extends Controller
         );
     }
 
+    private function parseNear(?string $near): ?array
+    {
+        if (! $near) {
+            return null;
+        }
+
+        $parts = explode(',', $near);
+
+        if (count($parts) !== 2 || ! is_numeric($parts[0]) || ! is_numeric($parts[1])) {
+            return null;
+        }
+
+        $lat = (float) $parts[0];
+        $lng = (float) $parts[1];
+
+        if ($lat < -90 || $lat > 90 || $lng < -180 || $lng > 180) {
+            return null;
+        }
+
+        return [$lat, $lng];
+    }
     public function show($mosqueId,$needId)
     {
         try {
