@@ -49,6 +49,18 @@ class CampaignEndpoints
                 description: 'null when no end_date is set. 0 when the campaign has ended.'
             ),
             new OA\Property(property: 'cover_image', type: 'string', nullable: true, example: 'https://…/storage/campaigns/abc.jpg'),
+            new OA\Property(
+                property: 'mosque',
+                type: 'object',
+                nullable: true,
+                description: 'Embedded mosque summary — present on list/detail endpoints',
+                properties: [
+                    new OA\Property(property: 'id',        type: 'integer', example: 5),
+                    new OA\Property(property: 'name',      type: 'string',  example: 'جامع الراجحي الكبير'),
+                    new OA\Property(property: 'city',      type: 'string',  example: 'الرياض'),
+                    new OA\Property(property: 'image_url', type: 'string',  nullable: true),
+                ]
+            ),
             new OA\Property(property: 'created_at',  type: 'string', format: 'date-time'),
             new OA\Property(property: 'updated_at',  type: 'string', format: 'date-time'),
         ]
@@ -86,12 +98,18 @@ class CampaignEndpoints
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/Campaign')),
-                        new OA\Property(property: 'meta', type: 'object', properties: [
-                            new OA\Property(property: 'current_page', type: 'integer', example: 1),
-                            new OA\Property(property: 'last_page',    type: 'integer', example: 5),
-                            new OA\Property(property: 'per_page',     type: 'integer', example: 15),
-                            new OA\Property(property: 'total',        type: 'integer', example: 72),
-                        ]),
+                        new OA\Property(
+                            property: 'pagination',
+                            type: 'object',
+                            nullable: true,
+                            properties: [
+                                new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                new OA\Property(property: 'last_page',    type: 'integer', example: 5),
+                                new OA\Property(property: 'per_page',     type: 'integer', example: 15),
+                                new OA\Property(property: 'total',        type: 'integer', example: 72),
+                                new OA\Property(property: 'has_more_pages', type: 'boolean', example: true),
+                            ]
+                        ),
                     ]
                 )
             ),
@@ -126,12 +144,18 @@ class CampaignEndpoints
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/Campaign')),
-                        new OA\Property(property: 'meta', type: 'object', properties: [
-                            new OA\Property(property: 'current_page', type: 'integer', example: 1),
-                            new OA\Property(property: 'last_page',    type: 'integer', example: 2),
-                            new OA\Property(property: 'per_page',     type: 'integer', example: 15),
-                            new OA\Property(property: 'total',        type: 'integer', example: 18),
-                        ]),
+                        new OA\Property(
+                            property: 'pagination',
+                            type: 'object',
+                            nullable: true,
+                            properties: [
+                                new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                new OA\Property(property: 'last_page',    type: 'integer', example: 5),
+                                new OA\Property(property: 'per_page',     type: 'integer', example: 15),
+                                new OA\Property(property: 'total',        type: 'integer', example: 72),
+                                new OA\Property(property: 'has_more_pages', type: 'boolean', example: true),
+                            ]
+                        ),
                     ]
                 )
             ),

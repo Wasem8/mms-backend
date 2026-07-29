@@ -34,7 +34,7 @@ Route::prefix('program')->group(function () {
 
 Route::prefix('sermons')->middleware('auth:api')->group(function () {
 
-
+    Route::get('/search', [SermonController::class, 'search']);
     Route::post('/', [SermonController::class, 'store'])->middleware('role:mosque_manager');
     Route::get('/{id}', [SermonController::class, 'show'])->whereNumber('id');
     Route::get('/pending', [SermonController::class, 'pending']);
@@ -46,6 +46,9 @@ Route::prefix('sermons')->middleware('auth:api')->group(function () {
 
 Route::prefix('tameems')->middleware('auth:api')->group(function () {
 
+    Route::get('/my-tameems', [TameemController::class, 'myTameems'])->middleware('role:mosque_manager');
+    Route::patch('/{id}/read', [TameemController::class, 'markAsRead'])->middleware('role:mosque_manager');
+
 Route::middleware('role:super_admin')->group(function () {
     Route::post('/', [TameemController::class, 'store']);
     Route::put('/{id}', [TameemController::class, 'update']);
@@ -54,8 +57,7 @@ Route::middleware('role:super_admin')->group(function () {
     Route::get('/{id}', [TameemController::class, 'show']);
 });
 
-    Route::get('/my-tameems', [TameemController::class, 'myTameems'])->middleware('role:mosque_manager');
-    Route::patch('/{id}/read', [TameemController::class, 'markAsRead'])->middleware('role:mosque_manager');
+
 });
 
 

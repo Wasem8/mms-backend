@@ -91,6 +91,26 @@ class MosqueEndpoints
                                     new OA\Property(property: 'longitude', type: 'number', format: 'float', nullable: true, example: 31.2357),
                                     new OA\Property(property: 'average_rating', type: 'number', format: 'float', example: 4.5),
                                     new OA\Property(property: 'reviews_count', type: 'integer', example: 10),
+                                    new OA\Property(
+                                        property: 'open_needs_count',
+                                        type: 'integer',
+                                        example: 3,
+                                        description: 'Count of needs with status = open for this mosque'
+                                    ),
+                                    new OA\Property(
+                                        property: 'has_urgent_need',
+                                        type: 'boolean',
+                                        example: true,
+                                        description: 'True if the mosque has at least one open, urgent need'
+                                    ),
+                                    new OA\Property(
+                                        property: 'total_gap',
+                                        type: 'number',
+                                        format: 'float',
+                                        nullable: true,
+                                        example: 4250.0,
+                                        description: 'Sum of (target_amount - collected_amount) across open needs. Null if no open needs.'
+                                    ),
                                     new OA\Property(property: 'imam', type: 'string', nullable: true, example: 'Sheikh Ahmed'),
                                     new OA\Property(property: 'khatib', type: 'string', nullable: true, example: 'Sheikh Mohamed'),
                                     new OA\Property(property: 'donation_total', type: 'number', format: 'float', example: 12500.00),
@@ -263,6 +283,26 @@ class MosqueEndpoints
                                     new OA\Property(property: 'longitude', type: 'number', format: 'float', nullable: true, example: 31.2357),
                                     new OA\Property(property: 'average_rating', type: 'number', format: 'float', example: 4.5),
                                     new OA\Property(property: 'reviews_count', type: 'integer', example: 10),
+                                    new OA\Property(
+                                        property: 'open_needs_count',
+                                        type: 'integer',
+                                        example: 3,
+                                        description: 'Count of needs with status = open for this mosque'
+                                    ),
+                                    new OA\Property(
+                                        property: 'has_urgent_need',
+                                        type: 'boolean',
+                                        example: true,
+                                        description: 'True if the mosque has at least one open, urgent need'
+                                    ),
+                                    new OA\Property(
+                                        property: 'total_gap',
+                                        type: 'number',
+                                        format: 'float',
+                                        nullable: true,
+                                        example: 4250.0,
+                                        description: 'Sum of (target_amount - collected_amount) across open needs. Null if no open needs.'
+                                    ),
                                     new OA\Property(property: 'imam', type: 'string', nullable: true, example: 'Sheikh Ahmed'),
                                     new OA\Property(property: 'khatib', type: 'string', nullable: true, example: 'Sheikh Mohamed'),
                                     new OA\Property(property: 'manager_id', type: 'integer', nullable: true, example: 2),
@@ -299,7 +339,7 @@ class MosqueEndpoints
         ]
     )]
     public function search() {}
-
+    
     #[OA\Get(
         path: '/mosques/featured',
         operationId: 'getFeaturedMosques',

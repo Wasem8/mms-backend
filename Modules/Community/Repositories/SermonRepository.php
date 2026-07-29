@@ -34,4 +34,22 @@ class SermonRepository implements SermonRepositoryInterface
             ->where('sermon_date', '<=', $currentDate)
             ->get();
     }
+    public function search(array $filters, int $perPage = 15)
+    {
+        return Sermon::with(['attachments', 'mosqueManager', 'regionManager'])
+            ->filter($filters)
+            ->when(
+                $filters['sort'] ?? null,
+                function ($q, $sort) {
+                    // مثال: sort=sermon_date:asc أو sort=created_at:desc
+                    [$column, $direction] = array_pad(explode(':', $sort), 2, 'desc');
+                    $allowedColumns = ['sermon_date', 'created_at', 'title', 'status'];
+                    if (in_array($column, $allowedColumns, true)) {
+                        $q->orderBy($column, $direction === 'asc' ? 'asc' : 'desc');
+                    }
+                },
+                fn($q) => $q->latest()
+            )
+            ->paginate($perPage);
+    }
 }

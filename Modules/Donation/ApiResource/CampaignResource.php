@@ -28,6 +28,12 @@ class CampaignResource extends JsonResource
             'cover_image'      => $this->cover_image,
             'remaining_days'   => $remainingDays,
             'donors_count'     => $this->donations()->where('status', 'completed')->distinct('donor_name')->count('donor_name'),
+            'mosque'           => $this->whenLoaded('mosque', fn() => [
+                'id'        => $this->mosque->id,
+                'name'      => $this->mosque->name,
+                'city'      => $this->mosque->city,
+                'image_url' => $this->mosque->image_url,
+            ]),
         ];
     }
 }
