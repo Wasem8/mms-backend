@@ -49,8 +49,16 @@ class Mosque extends Model
         'average_rating' => 'decimal:2',
     ];
 
-    protected $appends = ['image_url'];
 
+    protected $appends = ['image_url', 'has_urgent_need'];
+
+    protected $hidden = ['open_urgent_needs_count'];
+
+    public function getHasUrgentNeedAttribute(): bool
+    {
+        return (int) ($this->open_urgent_needs_count ?? 0) > 0;
+    }
+    
     public function getImageUrlAttribute(): ?string
     {
         return $this->image

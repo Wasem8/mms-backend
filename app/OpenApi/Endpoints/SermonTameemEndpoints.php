@@ -329,7 +329,137 @@ class SermonTameemEndpoints
         ]
     )]
     public function indexSermons() {}
-    
+
+    #[OA\Get(
+        path: '/sermons/search',
+        operationId: 'searchSermons',
+        tags: ['Sermons'],
+        summary: 'Search and filter sermons',
+        description: 'Returns a paginated, filtered list of sermons. Results are automatically scoped by the authenticated user\'s role: mosque managers see only their own sermons.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'status',
+                in: 'query',
+                required: false,
+                description: 'Filter by sermon status',
+                schema: new OA\Schema(type: 'string', enum: ['Pending', 'Archived', 'Rejected'])
+            ),
+            new OA\Parameter(
+                name: 'mosque_manager_id',
+                in: 'query',
+                required: false,
+                description: 'Filter by the mosque manager who submitted the sermon',
+                schema: new OA\Schema(type: 'integer', example: 3)
+            ),
+            new OA\Parameter(
+                name: 'region_manager_id',
+                in: 'query',
+                required: false,
+                description: 'Filter by the admin who approved/rejected the sermon',
+                schema: new OA\Schema(type: 'integer', example: 7)
+            ),
+            new OA\Parameter(
+                name: 'speaker_name',
+                in: 'query',
+                required: false,
+                description: 'Partial match on speaker name',
+                schema: new OA\Schema(type: 'string', example: 'أحمد')
+            ),
+            new OA\Parameter(
+                name: 'keyword',
+                in: 'query',
+                required: false,
+                description: 'Full-text style search across title, content, and speaker name',
+                schema: new OA\Schema(type: 'string', example: 'التوبة')
+            ),
+            new OA\Parameter(
+                name: 'sermon_date_from',
+                in: 'query',
+                required: false,
+                description: 'Filter sermons delivered on or after this date',
+                schema: new OA\Schema(type: 'string', format: 'date', example: '2026-01-01')
+            ),
+            new OA\Parameter(
+                name: 'sermon_date_to',
+                in: 'query',
+                required: false,
+                description: 'Filter sermons delivered on or before this date',
+                schema: new OA\Schema(type: 'string', format: 'date', example: '2026-06-30')
+            ),
+            new OA\Parameter(
+                name: 'submitted_from',
+                in: 'query',
+                required: false,
+                description: 'Filter by submission date (created_at), on or after',
+                schema: new OA\Schema(type: 'string', format: 'date', example: '2026-01-01')
+            ),
+            new OA\Parameter(
+                name: 'submitted_to',
+                in: 'query',
+                required: false,
+                description: 'Filter by submission date (created_at), on or before',
+                schema: new OA\Schema(type: 'string', format: 'date', example: '2026-06-30')
+            ),
+            new OA\Parameter(
+                name: 'sort',
+                in: 'query',
+                required: false,
+                description: 'Sort field and direction, format: field:direction. Allowed fields: sermon_date, created_at, title, status.',
+                schema: new OA\Schema(type: 'string', example: 'sermon_date:asc')
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                description: 'Number of results per page (max 100)',
+                schema: new OA\Schema(type: 'integer', example: 15)
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Filtered sermons retrieved successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'Sermons filtered successfully.'
+                        ),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'data',
+                                    type: 'array',
+                                    items: new OA\Items(ref: '#/components/schemas/Sermon')
+                                ),
+                                new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                new OA\Property(property: 'last_page', type: 'integer', example: 4),
+                                new OA\Property(property: 'per_page', type: 'integer', example: 15),
+                                new OA\Property(property: 'total', type: 'integer', example: 52),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(
+                response: 422,
+                description: 'Validation error',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'خطأ في التحقق من البيانات'),
+                        new OA\Property(property: 'errors', type: 'object'),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function searchSermons() {}
+
     #[OA\Put(
         path: '/sermons/{id}/approve',
         operationId: 'approveSermon',

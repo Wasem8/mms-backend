@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Support\ApiResponse;
 use Modules\Community\Http\Requests\CreateSermon;
 use Modules\Community\Services\SermonService;
+use Modules\Community\Http\Requests\SearchSermonRequest;
+
 
 class SermonController extends Controller
 {
@@ -50,9 +52,9 @@ class SermonController extends Controller
         $this->sermonService->rejectAndDestroySermon($id);
         return ApiResponse::success(null, 'Sermon has been rejected and deleted from the system.');
     }
-
-    public function index() {
-        $sermons = $this->sermonService->getAllSermons();
+    public function index()
+    {
+        $sermons = $this->sermonService->getAllSermons(auth()->user());
         return ApiResponse::success($sermons, 'All sermons retrieved successfully.');
     }
     public function pending() {
@@ -65,5 +67,14 @@ class SermonController extends Controller
         return ApiResponse::success($sermons, 'Archived sermons retrieved successfully.');
     }
 
+    public function search(SearchSermonRequest $request)
+    {
+        $filters = $request->validated();
+        $perPage = $filters['per_page'] ?? 15;
+
+        $sermons = $this->sermonService->searchSermons($filters, auth()->user(), $perPage);
+
+        return ApiResponse::success($sermons, 'Sermons filtered successfully.');
+    }
 
 }

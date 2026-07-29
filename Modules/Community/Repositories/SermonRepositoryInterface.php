@@ -11,4 +11,5 @@ interface SermonRepositoryInterface
     public function updateStatus(Sermon $sermon, string $status): bool;
     public function delete(Sermon $sermon): bool;
     public function getExpiredPendingSermons(string $currentDate);
+    public function search(array $filters, int $perPage = 15);
 }

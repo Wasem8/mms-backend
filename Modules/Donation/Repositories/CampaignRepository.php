@@ -13,7 +13,7 @@ class CampaignRepository implements CampaignRepositoryInterface
 
     public function find($id)
     {
-        return Campaign::findOrFail($id);
+        return Campaign::with('mosque')->findOrFail($id);
     }
 
     public function findByMosque($mosqueId)
@@ -42,7 +42,7 @@ class CampaignRepository implements CampaignRepositoryInterface
 
     public function getFiltered(array $filters = [])
     {
-        $query = Campaign::query();
+        $query = Campaign::query()->with('mosque');
 
         if (isset($filters['mosque_id'])) {
             $query->where('mosque_id', $filters['mosque_id']);
