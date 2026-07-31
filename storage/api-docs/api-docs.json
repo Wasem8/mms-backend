@@ -15626,6 +15626,90 @@
                 ]
             }
         },
+        "/sermons/most-selected": {
+            "get": {
+                "tags": [
+                    "Sermons"
+                ],
+                "summary": "Get most selected sermons",
+                "description": "Returns archived sermons ranked by how many times they were selected for a Friday sermon, optionally within a date range.",
+                "operationId": "mostSelectedSermons",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    },
+                    {
+                        "name": "friday_date_from",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "friday_date_to",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم جلب الخطب الأكثر اختيارًا بنجاح."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "allOf": [
+                                                    {
+                                                        "$ref": "#/components/schemas/Sermon"
+                                                    },
+                                                    {
+                                                        "properties": {
+                                                            "selections_count": {
+                                                                "type": "integer",
+                                                                "example": 12
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/sermons/{id}": {
             "get": {
                 "tags": [
@@ -16536,6 +16620,419 @@
                     },
                     "404": {
                         "description": "Tameem not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/sermon-selections": {
+            "get": {
+                "tags": [
+                    "Sermon Selections"
+                ],
+                "summary": "Get all sermon selections",
+                "description": "Returns a paginated list of all sermon selections. Admins can see all selections.",
+                "operationId": "indexSermonSelections",
+                "parameters": [
+                    {
+                        "name": "mosque_manager_id",
+                        "in": "query",
+                        "description": "Filter by mosque manager ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 3
+                        }
+                    },
+                    {
+                        "name": "friday_date_from",
+                        "in": "query",
+                        "description": "Filter by Friday date, on or after",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2026-01-01"
+                        }
+                    },
+                    {
+                        "name": "friday_date_to",
+                        "in": "query",
+                        "description": "Filter by Friday date, on or before",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2026-06-30"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of results per page (max 100)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم جلب سجل الاختيارات بنجاح."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/SermonSelection"
+                                                    }
+                                                },
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 65
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — only admins can view all selections"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Sermon Selections"
+                ],
+                "summary": "Select an archived sermon for a specific Friday",
+                "description": "Allows a mosque manager to select an approved sermon to be delivered on a specific Friday.",
+                "operationId": "storeSermonSelection",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "sermon_id",
+                                    "friday_date"
+                                ],
+                                "properties": {
+                                    "sermon_id": {
+                                        "description": "ID of the approved sermon to select",
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "friday_date": {
+                                        "description": "The Friday date for which the sermon is selected",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-07-18"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Sermon selected successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم اختيار الخطبة بنجاح لإلقائها يوم الجمعة."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/SermonSelection"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — only mosque managers can select sermons"
+                    },
+                    "404": {
+                        "description": "Sermon not found or not approved"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "خطأ في التحقق من البيانات"
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict — sermon already selected for this Friday",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم اختيار خطبة لهذا اليوم مسبقاً."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/sermon-selections/mine": {
+            "get": {
+                "tags": [
+                    "Sermon Selections"
+                ],
+                "summary": "Get my sermon selections",
+                "description": "Returns all sermon selections made by the authenticated mosque manager.",
+                "operationId": "mySermonSelections",
+                "parameters": [
+                    {
+                        "name": "friday_date_from",
+                        "in": "query",
+                        "description": "Filter by Friday date, on or after",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2026-01-01"
+                        }
+                    },
+                    {
+                        "name": "friday_date_to",
+                        "in": "query",
+                        "description": "Filter by Friday date, on or before",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2026-06-30"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم جلب اختياراتك بنجاح."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/SermonSelection"
+                                                    }
+                                                },
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 30
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/sermon-selections/upcoming": {
+            "get": {
+                "tags": [
+                    "Sermon Selections"
+                ],
+                "summary": "Get upcoming sermon selections per mosque",
+                "description": "Returns the selected sermon for each mosque for the upcoming Friday.",
+                "operationId": "upcomingSermonSelections",
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم جلب الخطبة المختارة لكل مسجد بنجاح."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/SermonSelection"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/sermon-selections/{id}": {
+            "delete": {
+                "tags": [
+                    "Sermon Selections"
+                ],
+                "summary": "Cancel a sermon selection",
+                "description": "Allows a mosque manager to cancel their sermon selection for a Friday.",
+                "operationId": "deleteSermonSelection",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Selection cancelled successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم إلغاء اختيار الخطبة بنجاح."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — not the owner of the selection"
+                    },
+                    "404": {
+                        "description": "Sermon selection not found"
+                    },
+                    "409": {
+                        "description": "Conflict — selection cannot be cancelled because the Friday has passed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "لا يمكن إلغاء اختيار خطبة لتاريخ مضى."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -20625,6 +21122,39 @@
                 },
                 "type": "object"
             },
+            "SermonSelection": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "sermon_id": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "mosque_manager_id": {
+                        "type": "integer",
+                        "example": 3
+                    },
+                    "friday_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-07-18"
+                    },
+                    "sermon": {
+                        "$ref": "#/components/schemas/Sermon"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
             "ProgramSchedule": {
                 "description": "A single session schedule belonging to a Dawah program",
                 "properties": {
@@ -21633,6 +22163,10 @@
         {
             "name": "Tameems",
             "description": "Manage circulars/announcements (تعاميم) sent between mosque managers."
+        },
+        {
+            "name": "Sermon Selections",
+            "description": "Manage sermon selections for Friday prayers (اختيار خطبة الجمعة)."
         },
         {
             "name": "Attendance",

@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Community\Http\Controllers\SermonSelectionController;
 use Modules\Community\Http\Controllers\DawahProgramController;
 use Modules\Community\Http\Controllers\ProgramScheduleController;
 use Modules\Community\Http\Controllers\SermonController;
@@ -32,13 +33,25 @@ Route::prefix('program')->group(function () {
     });
 });
 
+Route::middleware(['auth:api', 'role:mosque_manager'])->group(function () {
+    Route::post('sermon-selections', [SermonSelectionController::class, 'store']);
+    Route::get('sermon-selections/mine', [SermonSelectionController::class, 'mine']);
+    Route::delete('sermon-selections/{id}', [SermonSelectionController::class, 'destroy']);
+});
+
+Route::middleware(['auth:api', 'role:super_admin'])->group(function () {
+    Route::get('sermon-selections/upcoming', [SermonSelectionController::class, 'upcoming']); // مسار محدد قبل {id}
+    Route::get('sermon-selections', [SermonSelectionController::class, 'index']);
+});
+
 Route::prefix('sermons')->middleware('auth:api')->group(function () {
 
     Route::get('/search', [SermonController::class, 'search']);
     Route::post('/', [SermonController::class, 'store'])->middleware('role:mosque_manager');
+    Route::get('/most-selected', [SermonController::class, 'mostSelected']); // بلا تقييد دور — مفيدة للطرفين
     Route::get('/{id}', [SermonController::class, 'show'])->whereNumber('id');
     Route::get('/pending', [SermonController::class, 'pending']);
-    Route::get('/archived', [SermonController::class, 'archived']);
+    Route::get('/archived', [SermonController::class, 'archived'])->middleware('role:mosque_manager');
     Route::get('/', [SermonController::class, 'index']);
     Route::put('/{id}/approve', [SermonController::class, 'approve'])->middleware('role:super_admin');
     Route::put('/{id}/reject', [SermonController::class, 'reject'])->middleware('role:super_admin');
