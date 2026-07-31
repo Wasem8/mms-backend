@@ -4,6 +4,7 @@ namespace Modules\Community\Repositories;
 
 use Modules\Community\Models\Sermon;
 use Modules\Community\Repositories\SermonRepositoryInterface;
+use Illuminate\Support\Collection;
 
 
 class SermonRepository implements SermonRepositoryInterface
@@ -51,5 +52,21 @@ class SermonRepository implements SermonRepositoryInterface
                 fn($q) => $q->latest()
             )
             ->paginate($perPage);
+    }
+
+    public function mostSelected(int $limit = 10, ?string $fridayDateFrom = null, ?string $fridayDateTo = null): \Illuminate\Support\Collection
+    {
+        $dateFilter = function ($q) use ($fridayDateFrom, $fridayDateTo) {
+            $q->when($fridayDateFrom, fn($qq, $date) => $qq->whereDate('friday_date', '>=', $date))
+                ->when($fridayDateTo, fn($qq, $date) => $qq->whereDate('friday_date', '<=', $date));
+        };
+
+        return Sermon::query()
+            ->withCount(['selections' => $dateFilter])
+            ->whereHas('selections', $dateFilter)
+            ->orderByDesc('selections_count')
+            ->with(['mosqueManager:id,name,mosque_id']) // ← فقط الأعمدة الآمنة
+            ->limit($limit)
+            ->get();
     }
 }

@@ -12,6 +12,10 @@ use OpenApi\Attributes as OA;
     name: 'Tameems',
     description: 'Manage circulars/announcements (تعاميم) sent between mosque managers.'
 )]
+#[OA\Tag(
+    name: 'Sermon Selections',
+    description: 'Manage sermon selections for Friday prayers (اختيار خطبة الجمعة).'
+)]
 class SermonTameemEndpoints
 {
 
@@ -68,6 +72,22 @@ class SermonTameemEndpoints
         ]
     )]
     public function schemaTameem() {}
+
+    #[OA\Schema(
+        schema: 'SermonSelection',
+        type: 'object',
+        properties: [
+            new OA\Property(property: 'id', type: 'integer', example: 1),
+            new OA\Property(property: 'sermon_id', type: 'integer', example: 5),
+            new OA\Property(property: 'mosque_manager_id', type: 'integer', example: 3),
+            new OA\Property(property: 'friday_date', type: 'string', format: 'date', example: '2026-07-18'),
+            new OA\Property(property: 'sermon', ref: '#/components/schemas/Sermon'),
+            new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
+            new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
+        ]
+    )]
+    public function schemaSermonSelection() {}
+
 
 
     // =========================================================================
@@ -176,6 +196,45 @@ class SermonTameemEndpoints
         ]
     )]
     public function storeSermon() {}
+
+    #[OA\Get(
+        path: '/sermons/most-selected',
+        operationId: 'mostSelectedSermons',
+        tags: ['Sermons'],
+        summary: 'Get most selected sermons',
+        description: 'Returns archived sermons ranked by how many times they were selected for a Friday sermon, optionally within a date range.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 10)),
+            new OA\Parameter(name: 'friday_date_from', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'friday_date_to', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'تم جلب الخطب الأكثر اختيارًا بنجاح.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(
+                                allOf: [
+                                    new OA\Schema(ref: '#/components/schemas/Sermon'),
+                                    new OA\Schema(properties: [
+                                        new OA\Property(property: 'selections_count', type: 'integer', example: 12),
+                                    ]),
+                                ]
+                            )
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+        ]
+    )]
+    public function mostSelectedSermons() {}
 
     #[OA\Get(
         path: '/sermons/{id}',
@@ -843,4 +902,287 @@ class SermonTameemEndpoints
         ]
     )]
     public function getTameemById() {}
+    // =========================================================================
+    // Sermon Selections Endpoints
+    // =========================================================================
+
+    #[OA\Post(
+        path: '/sermon-selections',
+        operationId: 'storeSermonSelection',
+        tags: ['Sermon Selections'],
+        summary: 'Select an archived sermon for a specific Friday',
+        description: 'Allows a mosque manager to select an approved sermon to be delivered on a specific Friday.',
+        security: [['bearerAuth' => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    required: ['sermon_id', 'friday_date'],
+                    properties: [
+                        new OA\Property(
+                            property: 'sermon_id',
+                            type: 'integer',
+                            description: 'ID of the approved sermon to select',
+                            example: 5
+                        ),
+                        new OA\Property(
+                            property: 'friday_date',
+                            type: 'string',
+                            format: 'date',
+                            description: 'The Friday date for which the sermon is selected',
+                            example: '2026-07-18'
+                        ),
+                    ]
+                )
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Sermon selected successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'تم اختيار الخطبة بنجاح لإلقائها يوم الجمعة.'
+                        ),
+                        new OA\Property(
+                            property: 'data',
+                            ref: '#/components/schemas/SermonSelection'
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — only mosque managers can select sermons'),
+            new OA\Response(response: 404, description: 'Sermon not found or not approved'),
+            new OA\Response(
+                response: 422,
+                description: 'Validation error',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'خطأ في التحقق من البيانات'),
+                        new OA\Property(property: 'errors', type: 'object'),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 409,
+                description: 'Conflict — sermon already selected for this Friday',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'تم اختيار خطبة لهذا اليوم مسبقاً.'),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function storeSermonSelection() {}
+    #[OA\Get(
+        path: '/sermon-selections/mine',
+        operationId: 'mySermonSelections',
+        tags: ['Sermon Selections'],
+        summary: 'Get my sermon selections',
+        description: 'Returns all sermon selections made by the authenticated mosque manager.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'friday_date_from',
+                in: 'query',
+                required: false,
+                description: 'Filter by Friday date, on or after',
+                schema: new OA\Schema(type: 'string', format: 'date', example: '2026-01-01')
+            ),
+            new OA\Parameter(
+                name: 'friday_date_to',
+                in: 'query',
+                required: false,
+                description: 'Filter by Friday date, on or before',
+                schema: new OA\Schema(type: 'string', format: 'date', example: '2026-06-30')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'تم جلب اختياراتك بنجاح.'
+                        ),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'data',
+                                    type: 'array',
+                                    items: new OA\Items(ref: '#/components/schemas/SermonSelection')
+                                ),
+                                new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                new OA\Property(property: 'last_page', type: 'integer', example: 3),
+                                new OA\Property(property: 'per_page', type: 'integer', example: 15),
+                                new OA\Property(property: 'total', type: 'integer', example: 30),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+        ]
+    )]
+    public function mySermonSelections() {}
+
+    #[OA\Get(
+        path: '/sermon-selections/upcoming',
+        operationId: 'upcomingSermonSelections',
+        tags: ['Sermon Selections'],
+        summary: 'Get upcoming sermon selections per mosque',
+        description: 'Returns the selected sermon for each mosque for the upcoming Friday.',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'تم جلب الخطبة المختارة لكل مسجد بنجاح.'
+                        ),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/SermonSelection')
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+        ]
+    )]
+    public function upcomingSermonSelections() {}
+
+    #[OA\Get(
+        path: '/sermon-selections',
+        operationId: 'indexSermonSelections',
+        tags: ['Sermon Selections'],
+        summary: 'Get all sermon selections',
+        description: 'Returns a paginated list of all sermon selections. Admins can see all selections.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'mosque_manager_id',
+                in: 'query',
+                required: false,
+                description: 'Filter by mosque manager ID',
+                schema: new OA\Schema(type: 'integer', example: 3)
+            ),
+            new OA\Parameter(
+                name: 'friday_date_from',
+                in: 'query',
+                required: false,
+                description: 'Filter by Friday date, on or after',
+                schema: new OA\Schema(type: 'string', format: 'date', example: '2026-01-01')
+            ),
+            new OA\Parameter(
+                name: 'friday_date_to',
+                in: 'query',
+                required: false,
+                description: 'Filter by Friday date, on or before',
+                schema: new OA\Schema(type: 'string', format: 'date', example: '2026-06-30')
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                description: 'Number of results per page (max 100)',
+                schema: new OA\Schema(type: 'integer', example: 15)
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'تم جلب سجل الاختيارات بنجاح.'
+                        ),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'data',
+                                    type: 'array',
+                                    items: new OA\Items(ref: '#/components/schemas/SermonSelection')
+                                ),
+                                new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                new OA\Property(property: 'last_page', type: 'integer', example: 5),
+                                new OA\Property(property: 'per_page', type: 'integer', example: 15),
+                                new OA\Property(property: 'total', type: 'integer', example: 65),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — only admins can view all selections'),
+        ]
+    )]
+    public function indexSermonSelections() {}
+
+    #[OA\Delete(
+        path: '/sermon-selections/{id}',
+        operationId: 'deleteSermonSelection',
+        tags: ['Sermon Selections'],
+        summary: 'Cancel a sermon selection',
+        description: 'Allows a mosque manager to cancel their sermon selection for a Friday.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                example: 1
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Selection cancelled successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'تم إلغاء اختيار الخطبة بنجاح.'
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — not the owner of the selection'),
+            new OA\Response(response: 404, description: 'Sermon selection not found'),
+            new OA\Response(
+                response: 409,
+                description: 'Conflict — selection cannot be cancelled because the Friday has passed',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'لا يمكن إلغاء اختيار خطبة لتاريخ مضى.'),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function deleteSermonSelection() {}
 }

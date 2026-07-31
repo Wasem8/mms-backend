@@ -31,6 +31,11 @@ class Sermon extends Model
         return $this->belongsTo(User::class, 'region_manager_id');
     }
 
+    public function selections()
+    {
+        return $this->hasMany(SermonSelection::class);
+    }
+
 
     // app/Modules/Community/Models/Sermon.php
 

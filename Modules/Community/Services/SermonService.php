@@ -148,5 +148,8 @@ class SermonService
         return $filters;
     }
 
-
+    public function getMostSelectedSermons(int $limit = 10, ?string $fridayDateFrom = null, ?string $fridayDateTo = null)
+    {
+        return $this->sermonRepo->mostSelected($limit, $fridayDateFrom, $fridayDateTo);
+    }
 }

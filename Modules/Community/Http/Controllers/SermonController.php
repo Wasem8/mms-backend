@@ -77,4 +77,20 @@ class SermonController extends Controller
         return ApiResponse::success($sermons, 'Sermons filtered successfully.');
     }
 
+    public function mostSelected(Request $request)
+    {
+        $filters = $request->validate([
+            'limit' => ['nullable', 'integer', 'min:1', 'max:50'],
+            'friday_date_from' => ['nullable', 'date'],
+            'friday_date_to' => ['nullable', 'date'],
+        ]);
+
+        $sermons = $this->sermonService->getMostSelectedSermons(
+            $filters['limit'] ?? 10,
+            $filters['friday_date_from'] ?? null,
+            $filters['friday_date_to'] ?? null,
+        );
+
+        return ApiResponse::success($sermons, 'تم جلب الخطب الأكثر اختيارًا بنجاح.');
+    }
 }
