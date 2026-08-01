@@ -8,9 +8,13 @@ use Illuminate\Http\Request;
 use Modules\Mosque\Models\Mosque;
 use Modules\Mosque\Models\MosqueSpace;
 use Modules\Mosque\Services\MosqueSpaceService;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+
 
 class MosqueSpaceController extends Controller
 {
+    use AuthorizesRequests;
+
     public function __construct(
         private readonly MosqueSpaceService $spaceService
     ) {}
@@ -46,6 +50,8 @@ class MosqueSpaceController extends Controller
 
     public function store(Request $request, Mosque $mosque)
     {
+        $this->authorize('manage', $mosque);
+
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'capacity' => 'required|integer|min:1',
@@ -53,7 +59,6 @@ class MosqueSpaceController extends Controller
 
         try {
             $validatedData['mosque_id'] = $mosque->id;
-
             $space = $this->spaceService->createSpace($validatedData);
 
             return ApiResponse::success($space, 'تمت إضافة المساحة بنجاح', null);
@@ -62,12 +67,16 @@ class MosqueSpaceController extends Controller
         }
     }
 
-
     public function update(Request $request, Mosque $mosque, MosqueSpace $space)
     {
+
+        $this->authorize('manage', $mosque);
+
         if ($space->mosque_id !== $mosque->id) {
             return ApiResponse::error('هذه المساحة لا تنتمي لهذا المسجد', 404);
         }
+
+
 
         $validatedData = $request->validate([
             'name' => 'sometimes|required|string|max:255',
@@ -88,10 +97,11 @@ class MosqueSpaceController extends Controller
      */
     public function destroy(Mosque $mosque, MosqueSpace $space)
     {
+        $this->authorize('manage', $mosque);
+
         if ($space->mosque_id !== $mosque->id) {
             return ApiResponse::error('هذه المساحة لا تنتمي لهذا المسجد', 404);
         }
-
         try {
             $this->spaceService->deleteSpace($space);
 

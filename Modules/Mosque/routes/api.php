@@ -36,16 +36,14 @@ Route::prefix('mosques')->group(function () {
 
     Route::middleware('auth:api')->group(function () {
         // ── Mosque Management ──
+        Route::put('/{mosque}',                [MosqueController::class, 'update']);
         Route::middleware('role:super_admin')->group(function () {
             Route::post('/',                       [MosqueController::class, 'store']);
-            Route::put('/{mosque}',                [MosqueController::class, 'update']);
             Route::delete('/{mosque}',             [MosqueController::class, 'destroy']);
             Route::patch('/{mosque}/status',       [MosqueController::class, 'updateStatus']);
             Route::patch('/{mosque}/featured',     [MosqueController::class, 'toggleFeatured']);
             Route::patch('/{mosque}/rating',       [MosqueController::class, 'updateRating']);
-            Route::post('/{mosque}/spaces', [MosqueSpaceController::class, 'store']);
-            Route::put('/{mosque}/spaces/{space}', [MosqueSpaceController::class, 'update']);
-            Route::delete('/{mosque}/spaces/{space}', [MosqueSpaceController::class, 'destroy']);
+
         });
 
 
@@ -56,6 +54,9 @@ Route::prefix('mosques')->group(function () {
             Route::post('/{mosque}/needs', [MosqueNeedController::class, 'store']);
             Route::put('/{mosque}/needs/{need}', [MosqueNeedController::class, 'update']);
             Route::delete('/{mosque}/needs/{need}', [MosqueNeedController::class, 'destroy']);
+            Route::post('/{mosque}/spaces', [MosqueSpaceController::class, 'store']);
+            Route::put('/{mosque}/spaces/{space}', [MosqueSpaceController::class, 'update']);
+            Route::delete('/{mosque}/spaces/{space}', [MosqueSpaceController::class, 'destroy']);
         });
     });
 });

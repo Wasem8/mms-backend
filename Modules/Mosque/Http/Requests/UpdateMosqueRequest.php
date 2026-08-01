@@ -13,45 +13,52 @@ class UpdateMosqueRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'name' => ['sometimes', 'required', 'string', 'max:255'],
-            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'working_hours' => ['nullable', 'string', 'max:500'],
-            'status' => ['sometimes', 'required', Rule::in(['active', 'maintenance', 'closed'])],
-            'is_featured' => ['sometimes', 'nullable|in:true,false,1,0,true,false'],
-            'city' => ['sometimes', 'required', 'string', 'max:100'],
-            'district' => ['sometimes', 'required', 'string', 'max:100'],
-            'latitude' => ['sometimes', 'required', 'numeric', 'decimal:0,8', 'between:-90,90'],
-            'longitude' => ['sometimes', 'required', 'numeric', 'decimal:0,8', 'between:-180,180'],
-            'imam_id' => ['nullable', 'integer', 'exists:users,id'],
-            'khatib_id' => ['nullable', 'integer', 'exists:users,id'],
-            'manager_id' => [
-                'nullable',
-                'integer',
-                Rule::exists('users', 'id')->where(function ($query) {
-                    $query->whereExists(function ($subquery) {
-                        $subquery->select(DB::raw('1'))
-                            ->from('role_user')
-                            ->join('roles', 'roles.id', '=', 'role_user.role_id')
-                            ->whereColumn('role_user.user_id', 'users.id')
-                            ->where('roles.name', 'mosque_manager');
-                    });
-                }),
-            ],
-            'facility_ids' => ['nullable', 'array'],
-            'facility_ids.*' => ['required', 'integer', 'exists:facilities,id'],
-            'spaces' => ['nullable', 'array'],
-            'spaces.*.name' => ['required', 'string', 'max:255'],
-            'spaces.*.capacity' => ['required', 'integer', 'min:1'],
-            'spaces.*.type' => ['nullable', 'string'],
+        $isPrivileged = $this->user()->hasRole('SUPER_ADMIN')
+            || $this->user()->hasRole('REGIONAL_ADMIN');
+
+        $rules = [
+            'name'           => 'sometimes|string|max:255',
+            'image'          => 'sometimes|image|max:5120',
+            'working_hours'  => 'sometimes|array',
+            'imam'           => 'sometimes|nullable|string|max:255',
+            'khatib'         => 'sometimes|nullable|string|max:255',
         ];
+
+        if ($isPrivileged) {
+            $rules += [
+                'status'      => 'sometimes|string',
+                'is_featured' => 'sometimes|boolean',
+                'city_id'     => 'sometimes|exists:cities,id',
+                'district_id' => 'sometimes|exists:districts,id',
+                'manager_id'  => 'sometimes|exists:users,id',
+            ];
+        } else {
+            $rules += [
+                'status'          => 'prohibited',
+                'is_featured'     => 'prohibited',
+                'city_id'         => 'prohibited',
+                'district_id'     => 'prohibited',
+                'manager_id'      => 'prohibited',
+                'average_rating'  => 'prohibited',
+                'reviews_count'   => 'prohibited',
+                'donation_total'  => 'prohibited',
+            ];
+        }
+
+        return $rules;
     }
 
+    public function messages(): array
+    {
+        return [
+            '*.prohibited' => 'هذا الحقل خاص بالإدارة العليا فقط.',
+        ];
+    }
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->user()->can('update', $this->route('mosque'));
     }
 }
