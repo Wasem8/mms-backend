@@ -27,7 +27,7 @@ class MosqueNeedsService
     public function get(int $id): MosqueNeed
     {
         return $this->repository->find($id)
-            ?? throw new \Exception('Need not found');
+            ?? throw new \Exception(__('messages.mosque.need_not_found'));
     }
 
     public function getNeedForMosque($mosqueId, $needId)
@@ -37,7 +37,7 @@ class MosqueNeedsService
             ->first();
 
         if (! $need) {
-            throw new Exception('Need not found or does not belong to the specified mosque.');
+            throw new Exception(__('messages.mosque.need_not_in_mosque'));
         }
 
         return $need;
@@ -48,7 +48,7 @@ class MosqueNeedsService
         ->first();
 
         if(! $need) {
-            throw new Exception('Need not found');
+            throw new Exception(__('messages.mosque.need_not_found'));
         }
         return $need;
 

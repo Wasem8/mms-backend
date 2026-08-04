@@ -167,7 +167,7 @@ class DonationService
 
         $percentage = match (true) {
             $yesterdayTotal > 0 => round((($todayTotal - $yesterdayTotal) / $yesterdayTotal) * 100, 1),
-            $todayTotal   > 0   => 100.0,  
+            $todayTotal   > 0   => 100.0,
             default             => 0.0,
         };
 
@@ -188,7 +188,6 @@ class DonationService
     {
         $rows = Donation::where('mosque_id', $mosqueId)
             ->where('status', 'completed')
-            ->where('donation_type', 'cash')          // ← add this
             ->where(function ($q) {
                 $q->where(
                     fn($q1) => $q1
@@ -202,15 +201,14 @@ class DonationService
                             ->whereMonth('created_at', now()->month)
                     );
             })
-            ->selectRaw('donation_type, COALESCE(SUM(base_amount), 0) as total')
+            ->selectRaw('donation_type, COALESCE(SUM(base_amount), 0) as total, COUNT(*) as count')
             ->groupBy('donation_type')
-            ->pluck('total', 'donation_type');
-
-        $cash = (float) ($rows['cash'] ?? 0);
+            ->get()
+            ->keyBy('donation_type');
 
         return [
-            'cash'          => $cash,
-         //   'monthly_total' => $cash,   // same value now, kept for consistency
+            'cash'    => (float) ($rows['cash']->total ?? 0),
+            'in_kind' => (int) ($rows['in_kind']->count ?? 0), // count, not sum — in-kind has no monetary value
         ];
     }
     public function create(array $data): array

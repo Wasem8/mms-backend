@@ -23,7 +23,7 @@ class SelectSermonForFridayRequest extends FormRequest
         $validator->after(function ($validator) {
             $date = $this->input('friday_date');
             if ($date && Carbon::parse($date)->dayOfWeekIso !== 5) {
-                $validator->errors()->add('friday_date', 'التاريخ المحدد يجب أن يكون يوم جمعة.');
+                $validator->errors()->add('friday_date', __('messages.community.friday_date_required'));
             }
         });
     }

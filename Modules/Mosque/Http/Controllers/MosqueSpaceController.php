@@ -27,10 +27,10 @@ class MosqueSpaceController extends Controller
 
             return ApiResponse::success(
                 $spaces,
-                'تم جلب مساحات المسجد بنجاح'
+                __('messages.mosque.spaces_retrieved')
             );
         } catch (\Exception $e) {
-            return ApiResponse::error('حدث خطأ أثناء جلب البيانات', 500, $e->getMessage());
+            return ApiResponse::error(__('messages.mosque.spaces_fetch_error'), 500, $e->getMessage());
         }
     }
 
@@ -41,10 +41,10 @@ class MosqueSpaceController extends Controller
     {
         // التحقق من أن المساحة تابعة للمسجد المطلوب
         if ($space->mosque_id !== $mosque->id) {
-            return ApiResponse::error('هذه المساحة لا تنتمي لهذا المسجد', 404);
+            return ApiResponse::error(__('messages.mosque.space_not_in_mosque'), 404);
         }
 
-        return ApiResponse::success($space, 'تم جلب تفاصيل المساحة بنجاح');
+        return ApiResponse::success($space, __('messages.mosque.space_retrieved'));
     }
 
 
@@ -61,9 +61,9 @@ class MosqueSpaceController extends Controller
             $validatedData['mosque_id'] = $mosque->id;
             $space = $this->spaceService->createSpace($validatedData);
 
-            return ApiResponse::success($space, 'تمت إضافة المساحة بنجاح', null);
+            return ApiResponse::success($space, __('messages.mosque.space_created'), null);
         } catch (\Exception $e) {
-            return ApiResponse::error('حدث خطأ أثناء إضافة المساحة', 500, $e->getMessage());
+            return ApiResponse::error(__('messages.mosque.space_create_error'), 500, $e->getMessage());
         }
     }
 
@@ -73,7 +73,7 @@ class MosqueSpaceController extends Controller
         $this->authorize('manage', $mosque);
 
         if ($space->mosque_id !== $mosque->id) {
-            return ApiResponse::error('هذه المساحة لا تنتمي لهذا المسجد', 404);
+            return ApiResponse::error(__('messages.mosque.space_not_in_mosque'), 404);
         }
 
 
@@ -86,9 +86,9 @@ class MosqueSpaceController extends Controller
         try {
             $updatedSpace = $this->spaceService->updateSpace($space, $validatedData);
 
-            return ApiResponse::success($updatedSpace, 'تم تحديث المساحة بنجاح');
+            return ApiResponse::success($updatedSpace, __('messages.mosque.space_updated'));
         } catch (\Exception $e) {
-            return ApiResponse::error('حدث خطأ أثناء تحديث المساحة', 500, $e->getMessage());
+            return ApiResponse::error(__('messages.mosque.space_update_error'), 500, $e->getMessage());
         }
     }
 
@@ -100,14 +100,14 @@ class MosqueSpaceController extends Controller
         $this->authorize('manage', $mosque);
 
         if ($space->mosque_id !== $mosque->id) {
-            return ApiResponse::error('هذه المساحة لا تنتمي لهذا المسجد', 404);
+            return ApiResponse::error(__('messages.mosque.space_not_in_mosque'), 404);
         }
         try {
             $this->spaceService->deleteSpace($space);
 
-            return ApiResponse::success([], 'تم حذف المساحة بنجاح');
+            return ApiResponse::success([], __('messages.mosque.space_deleted'));
         } catch (\Exception $e) {
-            return ApiResponse::error('حدث خطأ أثناء حذف المساحة', 500, $e->getMessage());
+            return ApiResponse::error(__('messages.mosque.space_delete_error'), 500, $e->getMessage());
         }
     }
 }

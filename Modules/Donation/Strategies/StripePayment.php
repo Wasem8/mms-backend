@@ -22,19 +22,27 @@ class StripePayment implements PaymentStrategyInterface
             throw new \InvalidArgumentException('عفواً، يجب تحديد مبلغ مالي صحيح لإتمام عملية الدفع عبر Stripe.');
         }
         $reference = $this->generateReference();
-
-        $intent = $this->stripe->paymentIntents->create([
-            'amount'   => $this->toStripeAmount($data['amount']),
-            'currency' => config('services.stripe.currency', 'usd'),
-            'metadata' => [
-                'reference'   => $reference,
+        try {
+            $intent = $this->stripe->paymentIntents->create([
+                'amount'   => $this->toStripeAmount($data['amount']),
+                'currency' => config('services.stripe.currency', 'usd'),
+                'metadata' => [
+                    'reference'   => $reference,
                 'mosque_id'   => $data['mosque_id'],
                 'campaign_id' => $data['campaign_id'] ?? null,
                 'donor_name'  => $data['donor_name']  ?? 'فاعل خير',
             ],
             'automatic_payment_methods' => ['enabled' => true],
         ]);
-
+        } catch (\Stripe\Exception\ApiErrorException $e) {
+            Log::error('Stripe PaymentIntent failed', [
+                'type'    => $e->getError()->type ?? null,
+                'code'    => $e->getError()->code ?? null,
+                'message' => $e->getError()->message ?? null,
+            ]);
+            throw $e;
+        }
+        
         return PaymentResult::stripe($reference, $intent->client_secret, $intent->id);
     }
 

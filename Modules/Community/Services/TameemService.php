@@ -25,7 +25,7 @@ return $this->tameemRepo->getAll();
         $tameem = $this->tameemRepo->findById($id);
 
         if ($tameem->sender_id !== $actorId) {
-            throw new AuthorizationException('غير مصرح لك بتعديل هذا التعميم.');
+            throw new AuthorizationException(__('messages.community.cannot_edit_tameem'));
         }
 
         $payload = array_filter([
@@ -50,7 +50,7 @@ return $this->tameemRepo->getAll();
         $tameem = $this->tameemRepo->findById($id);
 
         if ($tameem->sender_id !== $actorId) {
-            throw new AuthorizationException('غير مصرح لك بحذف هذا التعميم.');
+            throw new AuthorizationException(__('messages.community.cannot_delete_tameem'));
         }
 
         $this->tameemRepo->delete($id);

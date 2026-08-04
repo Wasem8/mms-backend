@@ -20,7 +20,7 @@ class GeoController extends Controller
     {
         $tree = $this->geoService->getCatalog();
 
-        return ApiResponse::success($tree, 'Geo Catalog retrieved successfully');
+        return ApiResponse::success($tree, __('messages.geo.catalog_retrieved'));
     }
     
 

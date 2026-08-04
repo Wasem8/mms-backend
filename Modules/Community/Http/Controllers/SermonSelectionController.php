@@ -21,7 +21,7 @@ class SermonSelectionController extends Controller
 
         return ApiResponse::success(
             new SermonSelectionResource($selection),
-            'تم اختيار الخطبة بنجاح لإلقائها يوم الجمعة.'
+            __('messages.community.sermon_selected')
         );
     }
 
@@ -36,7 +36,7 @@ class SermonSelectionController extends Controller
 
         return ApiResponse::success(
             SermonSelectionResource::collection($selections->items()),
-            'تم جلب اختياراتك بنجاح.',
+            __('messages.community.my_selections_retrieved'),
             $selections
         );
     }
@@ -47,7 +47,7 @@ class SermonSelectionController extends Controller
 
         return ApiResponse::success(
             SermonSelectionResource::collection($selections),
-            'تم جلب الخطبة المختارة لكل مسجد بنجاح.'
+            __('messages.community.upcoming_selections_retrieved')
         );
     }
 
@@ -63,7 +63,7 @@ class SermonSelectionController extends Controller
 
         return ApiResponse::success(
             SermonSelectionResource::collection($selections->items()),
-            'تم جلب سجل الاختيارات بنجاح.',
+            __('messages.community.selections_retrieved'),
             $selections
         );
     }
@@ -71,6 +71,6 @@ class SermonSelectionController extends Controller
     public function destroy(int $id, Request $request)
     {
         $this->service->cancelSelection($id, $request->user());
-        return ApiResponse::success(null, 'تم إلغاء اختيار الخطبة بنجاح.');
+        return ApiResponse::success(null, __('messages.community.selection_cancelled'));
     }
 }

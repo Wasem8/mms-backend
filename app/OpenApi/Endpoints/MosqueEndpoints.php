@@ -15,6 +15,7 @@ class MosqueEndpoints
         summary: 'List all mosques',
         description: 'Returns a paginated list of all mosques.',
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 1)),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 15)),
             new OA\Parameter(
@@ -145,6 +146,7 @@ class MosqueEndpoints
         summary: 'List nearby mosques',
         description: 'Returns a paginated list of mosques near the specified latitude and longitude.',
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'latitude', in: 'query', required: true, schema: new OA\Schema(type: 'number', format: 'float', example: 30.0444)),
             new OA\Parameter(name: 'longitude', in: 'query', required: true, schema: new OA\Schema(type: 'number', format: 'float', example: 31.2357)),
             new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 1)),
@@ -225,6 +227,7 @@ class MosqueEndpoints
         summary: 'Search mosques by name, city, or district',
         description: 'Search mosques by name, city, or district.',
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'q', in: 'query', required: true, schema: new OA\Schema(type: 'string', example: 'Al-Rahma')),
             new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 1)),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 15)),
@@ -346,6 +349,9 @@ class MosqueEndpoints
         tags: ['Mosques'],
         summary: 'List featured mosques',
         description: 'Returns a list of mosques marked as featured.',
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
         responses: [
             new OA\Response(
                 response: 200,
@@ -394,6 +400,7 @@ class MosqueEndpoints
         summary: 'List mosques by city (legacy, free-text)',
         description: 'Returns all mosques located in the specified city, matched by legacy free-text value. Prefer filtering GET /mosques with city_id where possible.',
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'city', in: 'path', required: true, schema: new OA\Schema(type: 'string', example: 'Cairo')),
         ],
         responses: [
@@ -462,6 +469,7 @@ class MosqueEndpoints
         summary: 'Get a single mosque',
         description: 'Returns the details of a specific mosque by its ID.',
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1)),
         ],
         responses: [
@@ -530,6 +538,9 @@ class MosqueEndpoints
         summary: 'Create a new mosque',
         description: 'Creates a new mosque record. Requires authentication.',
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\MediaType(
@@ -632,6 +643,7 @@ class MosqueEndpoints
         description: 'Updates an existing mosque record. Requires authentication.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'mosque', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1)),
         ],
         requestBody: new OA\RequestBody(
@@ -715,6 +727,7 @@ class MosqueEndpoints
         description: 'Permanently deletes a mosque record. Requires authentication.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'mosque', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1)),
         ],
         responses: [
@@ -744,6 +757,7 @@ class MosqueEndpoints
         description: 'Updates only the status of a mosque (active/inactive). Requires authentication.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'mosque', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1)),
         ],
         requestBody: new OA\RequestBody(
@@ -790,6 +804,7 @@ class MosqueEndpoints
         description: 'Toggles the featured state of a mosque. Requires authentication.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'mosque', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1)),
         ],
         responses: [
@@ -826,6 +841,7 @@ class MosqueEndpoints
         description: 'Updates the rating of a mosque. Requires authentication.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'mosque', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1)),
         ],
         requestBody: new OA\RequestBody(
@@ -874,6 +890,9 @@ class MosqueEndpoints
         tags: ['Facilities'],
         summary: 'List all facilities /{public endpoint}',
         description: 'Returns a list of all available facilities. Public endpoint.',
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
         responses: [
             new OA\Response(
                 response: 200,
@@ -909,6 +928,9 @@ class MosqueEndpoints
         summary: 'Create a new facility / {Region Manager Only}',
         description: 'Creates a new standalone facility. Requires authentication.',
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -965,6 +987,7 @@ class MosqueEndpoints
         description: 'Updates an existing facility. Requires authentication.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'facility', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 5)),
         ],
         requestBody: new OA\RequestBody(
@@ -1011,6 +1034,7 @@ class MosqueEndpoints
         description: 'Permanently deletes a facility. Requires authentication.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'facility', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 5)),
         ],
         responses: [
@@ -1039,6 +1063,7 @@ class MosqueEndpoints
         summary: 'List facilities for a mosque /{public endpoint}',
         description: 'Returns all facilities associated with a specific mosque. Public endpoint.',
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'mosque', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1)),
         ],
         responses: [
@@ -1076,6 +1101,7 @@ class MosqueEndpoints
         description: 'Adds one or more facilities to a mosque without removing existing ones. Requires authentication.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'mosque', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1)),
         ],
         requestBody: new OA\RequestBody(
@@ -1129,6 +1155,7 @@ class MosqueEndpoints
         description: 'Removes one or more facilities from a mosque. Requires authentication.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'mosque', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1)),
         ],
         requestBody: new OA\RequestBody(
@@ -1173,6 +1200,7 @@ class MosqueEndpoints
         description: 'Replaces all existing facility associations with the provided list. Requires authentication.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'mosque', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1)),
         ],
         requestBody: new OA\RequestBody(
@@ -1230,6 +1258,7 @@ class MosqueEndpoints
         summary: 'List mosque needs',
         description: 'Returns all needs for a specific mosque.',
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'mosque',
                 in: 'path',
@@ -1290,6 +1319,7 @@ class MosqueEndpoints
         summary: 'List all needs across all mosques',
         description: 'Returns a paginated list of needs from all mosques with optional filtering, search, sorting, and proximity search.',
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'page',
                 in: 'query',
@@ -1433,6 +1463,7 @@ class MosqueEndpoints
         tags: ['Needs'],
         summary: 'Get single need',
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'mosque', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'need', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
         ],
@@ -1473,6 +1504,9 @@ class MosqueEndpoints
         tags: ['Needs'],
         summary: 'Create a new mosque need',
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
 
         requestBody: new OA\RequestBody(
             required: true,
@@ -1560,6 +1594,7 @@ class MosqueEndpoints
         security: [['bearerAuth' => []]],
 
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'mosque',
                 in: 'path',
@@ -1643,6 +1678,7 @@ class MosqueEndpoints
         security: [['bearerAuth' => []]],
 
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'mosque',
                 in: 'path',
@@ -1684,6 +1720,7 @@ class MosqueEndpoints
         summary: 'Get need by ID',
         description: 'Returns a single need by its ID. Public endpoint.',
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'id',
                 in: 'path',
