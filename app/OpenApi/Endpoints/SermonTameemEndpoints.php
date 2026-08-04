@@ -100,6 +100,9 @@ class SermonTameemEndpoints
         summary: 'Submit a sermon',
         description: 'Allows mosque managers to submit a sermon for approval. Multiple attachments are supported. Allowed file types: PDF, DOC, DOCX, JPG, JPEG and PNG. Maximum size: 5MB per file.',
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
 
         requestBody: new OA\RequestBody(
             required: true,
@@ -205,6 +208,7 @@ class SermonTameemEndpoints
         description: 'Returns archived sermons ranked by how many times they were selected for a Friday sermon, optionally within a date range.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 10)),
             new OA\Parameter(name: 'friday_date_from', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
             new OA\Parameter(name: 'friday_date_to', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
@@ -244,6 +248,7 @@ class SermonTameemEndpoints
         description: 'Returns the details of a specific sermon.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'id',
                 in: 'path',
@@ -302,6 +307,9 @@ class SermonTameemEndpoints
         summary: 'Get pending sermons',
         description: 'Returns all sermons awaiting approval.',
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
         responses: [
             new OA\Response(
                 response: 200,
@@ -333,6 +341,9 @@ class SermonTameemEndpoints
         summary: 'Get archived sermons',
         description: 'Returns approved, rejected, or completed sermons.',
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
         responses: [
             new OA\Response(
                 response: 200,
@@ -365,6 +376,9 @@ class SermonTameemEndpoints
         summary: 'Get all sermons',
         description: 'Returns a list of all sermons.',
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
         responses: [
             new OA\Response(
                 response: 200,
@@ -397,6 +411,7 @@ class SermonTameemEndpoints
         description: 'Returns a paginated, filtered list of sermons. Results are automatically scoped by the authenticated user\'s role: mosque managers see only their own sermons.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'status',
                 in: 'query',
@@ -527,6 +542,7 @@ class SermonTameemEndpoints
         description: 'Allows a super admin to approve a pending sermon.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'id',
                 in: 'path',
@@ -568,6 +584,7 @@ class SermonTameemEndpoints
         description: 'Allows a super admin to reject a sermon and provide notes.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'id',
                 in: 'path',
@@ -626,6 +643,9 @@ class SermonTameemEndpoints
         summary: 'List all circulars',
         description: 'Returns all tameems visible to the authenticated user.',
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
         responses: [
             new OA\Response(
                 response: 200,
@@ -662,6 +682,9 @@ class SermonTameemEndpoints
         - Passing a non-mosque-manager ID returns a `422` validation error.
         DESC,
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -722,6 +745,7 @@ class SermonTameemEndpoints
         DESC,
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'id',
                 in: 'path',
@@ -790,6 +814,7 @@ class SermonTameemEndpoints
         DESC,
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'id',
                 in: 'path',
@@ -826,6 +851,9 @@ class SermonTameemEndpoints
         summary: 'Get received circulars',
         description: 'Returns all tameems received by the authenticated mosque manager.',
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
         responses: [
             new OA\Response(
                 response: 200,
@@ -858,6 +886,7 @@ class SermonTameemEndpoints
         description: 'Marks the tameem as read for the authenticated mosque manager.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 10),
         ],
         responses: [
@@ -884,6 +913,7 @@ class SermonTameemEndpoints
         description: 'Returns the details of a specific tameem by its ID.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 10),
         ],
         responses: [
@@ -913,6 +943,9 @@ class SermonTameemEndpoints
         summary: 'Select an archived sermon for a specific Friday',
         description: 'Allows a mosque manager to select an approved sermon to be delivered on a specific Friday.',
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\MediaType(
@@ -988,6 +1021,7 @@ class SermonTameemEndpoints
         description: 'Returns all sermon selections made by the authenticated mosque manager.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'friday_date_from',
                 in: 'query',
@@ -1044,6 +1078,9 @@ class SermonTameemEndpoints
         summary: 'Get upcoming sermon selections per mosque',
         description: 'Returns the selected sermon for each mosque for the upcoming Friday.',
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
         responses: [
             new OA\Response(
                 response: 200,
@@ -1076,6 +1113,7 @@ class SermonTameemEndpoints
         description: 'Returns a paginated list of all sermon selections. Admins can see all selections.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'mosque_manager_id',
                 in: 'query',
@@ -1148,6 +1186,7 @@ class SermonTameemEndpoints
         description: 'Allows a mosque manager to cancel their sermon selection for a Friday.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'id',
                 in: 'path',

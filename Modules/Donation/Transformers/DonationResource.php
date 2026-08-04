@@ -20,7 +20,7 @@ class DonationResource extends JsonResource
             'payment_method'   => $this->payment_method,          // cash | stripe
 
             // ── Amounts ───────────────────────────────────────────────────
-            'amount'           => (float) $this->amount,
+            'amount' => $this->amount !== null ? (float) $this->amount : null,
             'item_description' => $this->item_description,
 
             // ── Donor ─────────────────────────────────────────────────────

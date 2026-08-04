@@ -24,7 +24,7 @@ class MosqueNeedController extends Controller
 
         return ApiResponse::success(
             $needs->items(),
-            'Needs retrieved successfully',
+            __('messages.mosque.needs_retrieved'),
             ApiResponse::pagination($needs)
         );
     }
@@ -59,7 +59,7 @@ class MosqueNeedController extends Controller
 
         return ApiResponse::success(
             $needs->items(),
-            'Needs across all mosques retrieved successfully',
+            __('messages.mosque.all_needs_retrieved'),
             ApiResponse::pagination($needs)
         );
     }
@@ -91,7 +91,7 @@ class MosqueNeedController extends Controller
             $need = $this->service->getNeedForMosque($mosqueId, $needId);
             return ApiResponse::success(
                 $need,
-                'Need retrieved successfully'
+                __('messages.mosque.need_retrieved')
             );
         } catch (\Exception $e) {
             return ApiResponse::error(
@@ -106,13 +106,13 @@ class MosqueNeedController extends Controller
 
         if (!$need) {
             return ApiResponse::error(
-                'Need not found',
+                __('messages.mosque.need_not_found'),
                 404
             );
         }
         return ApiResponse::success(
             $need,
-            'Need retrieved successfully'
+            __('messages.mosque.need_retrieved')
         );
     }
 
@@ -130,7 +130,7 @@ class MosqueNeedController extends Controller
 
         return ApiResponse::success(
             $need,
-            'Need created successfully'
+            __('messages.mosque.need_created')
         );
     }
 
@@ -144,7 +144,7 @@ class MosqueNeedController extends Controller
 
             return ApiResponse::success(
                 $need,
-                'Need updated successfully'
+                __('messages.mosque.need_updated')
             );
         } catch (\Exception $e) {
             return ApiResponse::error(
@@ -161,7 +161,7 @@ class MosqueNeedController extends Controller
 
             return ApiResponse::success(
                 null,
-                'Need deleted successfully'
+                __('messages.mosque.need_deleted')
             );
         } catch (\Exception $e) {
             return ApiResponse::error(

@@ -4460,6 +4460,9 @@
                 "operationId": "getAllDawahPrograms",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "per_page",
                         "in": "query",
                         "description": "Number of programs per page (default: 10)",
@@ -4600,6 +4603,9 @@
                 "operationId": "getMosqueDawahPrograms",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "mosque",
                         "in": "path",
                         "description": "The ID of the mosque",
@@ -4694,6 +4700,9 @@
                 "summary": "Create Dawah program (multipart)",
                 "operationId": "createDawahProgram",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "mosque",
                         "in": "path",
@@ -4836,6 +4845,9 @@
                 "operationId": "getSingleDawahProgram",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "mosque",
                         "in": "path",
                         "description": "The ID of the mosque",
@@ -4938,6 +4950,9 @@
                 "description": "Updates an existing Dawah program. Send as `multipart/form-data` with `_method=PUT`. If `schedules` is provided, it **replaces** all existing schedules. Requires `mosque_manager` role.",
                 "operationId": "updateDawahProgram",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "mosque",
                         "in": "path",
@@ -5268,6 +5283,9 @@
                 "operationId": "deleteDawahProgram",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "mosque",
                         "in": "path",
                         "description": "The ID of the mosque",
@@ -5426,6 +5444,9 @@
                 "description": "Returns a paginated list of schedule entries (sessions) for one Dawah program, ordered by date and start time.\n\n**Auth:** Not required.\n**Filters:** `date`, `from_date`, `to_date` (query string).",
                 "operationId": "getProgramSchedules",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "program",
                         "in": "path",
@@ -5597,6 +5618,9 @@
                 "operationId": "getSingleProgramSchedule",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "program",
                         "in": "path",
                         "description": "Program ID",
@@ -5701,6 +5725,9 @@
                 "description": "Creates a single schedule entry for the given program. **Auth:** `Bearer token` · **Role:** `mosque_manager`",
                 "operationId": "createProgramSchedule",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "mosque",
                         "in": "path",
@@ -5889,6 +5916,9 @@
                 "operationId": "updateProgramSchedule",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "mosque",
                         "in": "path",
                         "description": "Mosque ID",
@@ -6075,6 +6105,9 @@
                 "description": "Permanently removes a single session from a program without affecting other sessions. **Auth:** `Bearer token` · **Role:** `mosque_manager`",
                 "operationId": "deleteProgramSchedule",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "mosque",
                         "in": "path",
@@ -11220,6 +11253,9 @@
                 "operationId": "getMosques",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "required": false,
@@ -11526,6 +11562,11 @@
                 "summary": "Create a new mosque",
                 "description": "Creates a new mosque record. Requires authentication.",
                 "operationId": "createMosque",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -11817,6 +11858,9 @@
                 "operationId": "getNearbyMosques",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "latitude",
                         "in": "query",
                         "required": true,
@@ -12009,6 +12053,9 @@
                 "description": "Search mosques by name, city, or district.",
                 "operationId": "searchMosques",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "q",
                         "in": "query",
@@ -12274,6 +12321,11 @@
                 "summary": "List featured mosques",
                 "description": "Returns a list of mosques marked as featured.",
                 "operationId": "getFeaturedMosques",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Featured mosques retrieved successfully",
@@ -12404,6 +12456,9 @@
                 "description": "Returns all mosques located in the specified city, matched by legacy free-text value. Prefer filtering GET /mosques with city_id where possible.",
                 "operationId": "getMosquesByCity",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "city",
                         "in": "path",
@@ -12575,6 +12630,9 @@
                 "description": "Returns the details of a specific mosque by its ID.",
                 "operationId": "getMosque",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -12755,6 +12813,9 @@
                 "description": "Updates an existing mosque record. Requires authentication.",
                 "operationId": "updateMosque",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "mosque",
                         "in": "path",
@@ -13002,6 +13063,9 @@
                 "operationId": "deleteMosque",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "mosque",
                         "in": "path",
                         "required": true,
@@ -13063,6 +13127,9 @@
                 "description": "Updates only the status of a mosque (active/inactive). Requires authentication.",
                 "operationId": "updateMosqueStatus",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "mosque",
                         "in": "path",
@@ -13162,6 +13229,9 @@
                 "operationId": "toggleMosqueFeatured",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "mosque",
                         "in": "path",
                         "required": true,
@@ -13232,6 +13302,9 @@
                 "description": "Updates the rating of a mosque. Requires authentication.",
                 "operationId": "updateMosqueRating",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "mosque",
                         "in": "path",
@@ -13328,6 +13401,11 @@
                 "summary": "List all facilities /{public endpoint}",
                 "description": "Returns a list of all available facilities. Public endpoint.",
                 "operationId": "getFacilities",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Facilities retrieved successfully",
@@ -13386,6 +13464,11 @@
                 "summary": "Create a new facility / {Region Manager Only}",
                 "description": "Creates a new standalone facility. Requires authentication.",
                 "operationId": "createFacility",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -13507,6 +13590,9 @@
                 "operationId": "updateFacility",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "facility",
                         "in": "path",
                         "required": true,
@@ -13601,6 +13687,9 @@
                 "operationId": "deleteFacility",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "facility",
                         "in": "path",
                         "required": true,
@@ -13662,6 +13751,9 @@
                 "description": "Returns all facilities associated with a specific mosque. Public endpoint.",
                 "operationId": "getMosqueFacilities",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "mosque",
                         "in": "path",
@@ -13728,6 +13820,9 @@
                 "description": "Adds one or more facilities to a mosque without removing existing ones. Requires authentication.",
                 "operationId": "attachMosqueFacilities",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "mosque",
                         "in": "path",
@@ -13831,6 +13926,9 @@
                 "operationId": "detachMosqueFacilities",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "mosque",
                         "in": "path",
                         "required": true,
@@ -13920,6 +14018,9 @@
                 "description": "Replaces all existing facility associations with the provided list. Requires authentication.",
                 "operationId": "syncMosqueFacilities",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "mosque",
                         "in": "path",
@@ -14023,6 +14124,9 @@
                 "description": "Returns all needs for a specific mosque.",
                 "operationId": "getMosqueNeeds",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "mosque",
                         "in": "path",
@@ -14140,6 +14244,11 @@
                 ],
                 "summary": "Create a new mosque need",
                 "operationId": "createMosqueNeed",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -14256,6 +14365,9 @@
                 "description": "Returns a paginated list of needs from all mosques with optional filtering, search, sorting, and proximity search.",
                 "operationId": "getAllMosquesNeeds",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "page",
                         "in": "query",
@@ -14543,6 +14655,9 @@
                 "operationId": "getMosqueNeed",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "mosque",
                         "in": "path",
                         "required": true,
@@ -14625,6 +14740,9 @@
                 "summary": "Update mosque need",
                 "operationId": "updateMosqueNeed",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "mosque",
                         "in": "path",
@@ -14724,6 +14842,9 @@
                 "operationId": "deleteMosqueNeed",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "mosque",
                         "in": "path",
                         "description": "Mosque ID",
@@ -14789,6 +14910,9 @@
                 "description": "Returns a single need by its ID. Public endpoint.",
                 "operationId": "getNeedById",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -14872,6 +14996,9 @@
                 "operationId": "getMosqueSpaces",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "mosque",
                         "in": "path",
                         "description": "Mosque ID",
@@ -14946,6 +15073,9 @@
                 "summary": "Create new space",
                 "operationId": "createSpace",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "mosque",
                         "in": "path",
@@ -15026,6 +15156,9 @@
                 "operationId": "getSingleSpace",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "mosque",
                         "in": "path",
                         "required": true,
@@ -15093,6 +15226,9 @@
                 "operationId": "updateSpace",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "mosque",
                         "in": "path",
                         "required": true,
@@ -15152,6 +15288,9 @@
                 "summary": "Delete space",
                 "operationId": "deleteSpace",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "mosque",
                         "in": "path",
@@ -15490,6 +15629,11 @@
                 "summary": "Get all sermons",
                 "description": "Returns a list of all sermons.",
                 "operationId": "indexSermons",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Success",
@@ -15530,6 +15674,11 @@
                 "summary": "Submit a sermon",
                 "description": "Allows mosque managers to submit a sermon for approval. Multiple attachments are supported. Allowed file types: PDF, DOC, DOCX, JPG, JPEG and PNG. Maximum size: 5MB per file.",
                 "operationId": "storeSermon",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -15636,6 +15785,9 @@
                 "operationId": "mostSelectedSermons",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "limit",
                         "in": "query",
                         "required": false,
@@ -15720,6 +15872,9 @@
                 "operationId": "getSermonById",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "id",
                         "in": "path",
                         "description": "Sermon ID",
@@ -15785,6 +15940,11 @@
                 "summary": "Get pending sermons",
                 "description": "Returns all sermons awaiting approval.",
                 "operationId": "pendingSermons",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Success",
@@ -15827,6 +15987,11 @@
                 "summary": "Get archived sermons",
                 "description": "Returns approved, rejected, or completed sermons.",
                 "operationId": "archivedSermons",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Success",
@@ -15870,6 +16035,9 @@
                 "description": "Returns a paginated, filtered list of sermons. Results are automatically scoped by the authenticated user's role: mosque managers see only their own sermons.",
                 "operationId": "searchSermons",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "status",
                         "in": "query",
@@ -16073,6 +16241,9 @@
                 "operationId": "approveSermon",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "id",
                         "in": "path",
                         "required": true,
@@ -16128,6 +16299,9 @@
                 "description": "Allows a super admin to reject a sermon and provide notes.",
                 "operationId": "rejectSermon",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -16205,6 +16379,11 @@
                 "summary": "List all circulars",
                 "description": "Returns all tameems visible to the authenticated user.",
                 "operationId": "listTameems",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Success",
@@ -16245,6 +16424,11 @@
                 "summary": "Send a circular",
                 "description": "Sends a tameem to one or more mosque managers.\n- `sender_id` is resolved automatically from the auth token.\n- All IDs in `recipient_ids` must belong to users with `role = mosque_manager`.\n- Passing a non-mosque-manager ID returns a `422` validation error.",
                 "operationId": "storeTameem",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -16339,6 +16523,9 @@
                 "operationId": "getTameemById",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "id",
                         "in": "path",
                         "required": true,
@@ -16389,6 +16576,9 @@
                 "description": "Updates an existing tameem. Only the original sender may update.\n- All fields are optional; only provided fields will be changed.\n- `recipient_ids` must all belong to users with `role = mosque_manager`.\n- Providing `recipient_ids` replaces the entire recipient list (sync).\n- Returns `403` if the authenticated user is not the sender.",
                 "operationId": "updateTameem",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -16494,6 +16684,9 @@
                 "operationId": "deleteTameem",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "id",
                         "in": "path",
                         "required": true,
@@ -16545,6 +16738,11 @@
                 "summary": "Get received circulars",
                 "description": "Returns all tameems received by the authenticated mosque manager.",
                 "operationId": "myTameems",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Success",
@@ -16588,6 +16786,9 @@
                 "description": "Marks the tameem as read for the authenticated mosque manager.",
                 "operationId": "markTameemAsRead",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -16638,6 +16839,9 @@
                 "description": "Returns a paginated list of all sermon selections. Admins can see all selections.",
                 "operationId": "indexSermonSelections",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "mosque_manager_id",
                         "in": "query",
@@ -16745,6 +16949,11 @@
                 "summary": "Select an archived sermon for a specific Friday",
                 "description": "Allows a mosque manager to select an approved sermon to be delivered on a specific Friday.",
                 "operationId": "storeSermonSelection",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -16854,6 +17063,9 @@
                 "operationId": "mySermonSelections",
                 "parameters": [
                     {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
                         "name": "friday_date_from",
                         "in": "query",
                         "description": "Filter by Friday date, on or after",
@@ -16939,6 +17151,11 @@
                 "summary": "Get upcoming sermon selections per mosque",
                 "description": "Returns the selected sermon for each mosque for the upcoming Friday.",
                 "operationId": "upcomingSermonSelections",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Success",
@@ -16982,6 +17199,9 @@
                 "description": "Allows a mosque manager to cancel their sermon selection for a Friday.",
                 "operationId": "deleteSermonSelection",
                 "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -20739,7 +20959,7 @@
                         "type": "integer",
                         "example": 5
                     },
-                    "type": {
+                    "donation_type": {
                         "type": "string",
                         "example": "cash",
                         "enum": [

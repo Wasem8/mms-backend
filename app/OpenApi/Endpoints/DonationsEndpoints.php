@@ -22,9 +22,8 @@ class DonationsEndpoints
             new OA\Property(property: 'reference',        type: 'string',   example: 'REC-4892-2024'),
             new OA\Property(property: 'mosque_id',        type: 'integer',  example: 5),
 
-            // ── Type & payment ────────────────────────────────────────────
             new OA\Property(
-                property: 'type',
+                property: 'donation_type',
                 type: 'string',
                 enum: ['cash', 'in_kind'],
                 example: 'cash'

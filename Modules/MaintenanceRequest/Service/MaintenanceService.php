@@ -66,7 +66,7 @@ class MaintenanceService
         $maintenance = $this->repository->find($id);
 
         if (isset($filters['mosque_id']) && $maintenance->mosque_id !== $filters['mosque_id']) {
-            abort(403, 'You are not authorized to access this maintenance request.');
+            abort(403, __('messages.maintenance.unauthorized'));
         }
 
         return $maintenance;

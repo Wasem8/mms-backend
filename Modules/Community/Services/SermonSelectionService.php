@@ -24,13 +24,13 @@ class SermonSelectionService
 
         if (!$sermon) {
             throw ValidationException::withMessages([
-                'sermon_id' => 'الخطبة غير موجودة.',
+                'sermon_id' => __('messages.community.sermon_not_found'),
             ]);
         }
 
         if ($sermon->status !== 'Archived') {
             throw ValidationException::withMessages([
-                'sermon_id' => 'يمكن اختيار خطبة معتمدة (مؤرشفة) فقط.',
+                'sermon_id' => __('messages.community.only_archived_sermon'),
             ]);
         }
 
@@ -58,13 +58,13 @@ class SermonSelectionService
 
         if (!$selection || $selection->mosque_manager_id !== $mosqueManager->id) {
             throw ValidationException::withMessages([
-                'id' => 'الاختيار غير موجود أو لا تملك صلاحية إلغائه.',
+                'id' => __('messages.community.selection_not_found_or_unauthorized'),
             ]);
         }
 
         if ($selection->friday_date->isPast()) {
             throw ValidationException::withMessages([
-                'id' => 'لا يمكن إلغاء اختيار خطبة تاريخها قد مضى.',
+                'id' => __('messages.community.cannot_cancel_past_selection'),
             ]);
         }
 

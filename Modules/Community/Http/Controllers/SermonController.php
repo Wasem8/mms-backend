@@ -27,7 +27,7 @@ class SermonController extends Controller
 
         $sermon = $this->sermonService->createSermon($validatedData, auth()->id(), $files);
 
-        return ApiResponse::success($sermon, 'Sermon submitted successfully with its attachments and is pending approval.');
+        return ApiResponse::success($sermon, __('messages.community.sermon_submitted'));
     }
 
     public function show($id)
@@ -35,36 +35,36 @@ class SermonController extends Controller
         $sermon = $this->sermonService->getSermonById($id);
 
         if (!$sermon) {
-            return ApiResponse::error('Sermon not found.', 404);
+            return ApiResponse::error(__('messages.community.sermon_not_found'), 404);
         }
 
-        return ApiResponse::success($sermon, 'Sermon details retrieved successfully.');
+        return ApiResponse::success($sermon, __('messages.community.sermon_retrieved'));
     }
 
     public function approve($id)
     {
         $sermon = $this->sermonService->approveSermon($id, auth()->id());
-        return ApiResponse::success($sermon, 'Sermon approved and archived for public mosque use.');
+        return ApiResponse::success($sermon, __('messages.community.sermon_approved'));
     }
 
     public function reject($id)
     {
         $this->sermonService->rejectAndDestroySermon($id);
-        return ApiResponse::success(null, 'Sermon has been rejected and deleted from the system.');
+        return ApiResponse::success(null, __('messages.community.sermon_rejected'));
     }
     public function index()
     {
         $sermons = $this->sermonService->getAllSermons(auth()->user());
-        return ApiResponse::success($sermons, 'All sermons retrieved successfully.');
+        return ApiResponse::success($sermons, __('messages.community.sermons_retrieved'));
     }
     public function pending() {
         $sermons = $this->sermonService->getPendingSermons();
-        return ApiResponse::success($sermons, 'Pending sermons retrieved successfully.');
+        return ApiResponse::success($sermons, __('messages.community.pending_sermons_retrieved'));
     }
 
     public function archived() {
         $sermons = $this->sermonService->getArchivedSermons();
-        return ApiResponse::success($sermons, 'Archived sermons retrieved successfully.');
+        return ApiResponse::success($sermons, __('messages.community.archived_sermons_retrieved'));
     }
 
     public function search(SearchSermonRequest $request)
@@ -74,7 +74,7 @@ class SermonController extends Controller
 
         $sermons = $this->sermonService->searchSermons($filters, auth()->user(), $perPage);
 
-        return ApiResponse::success($sermons, 'Sermons filtered successfully.');
+        return ApiResponse::success($sermons, __('messages.community.sermons_filtered'));
     }
 
     public function mostSelected(Request $request)
@@ -91,6 +91,6 @@ class SermonController extends Controller
             $filters['friday_date_to'] ?? null,
         );
 
-        return ApiResponse::success($sermons, 'تم جلب الخطب الأكثر اختيارًا بنجاح.');
+        return ApiResponse::success($sermons, __('messages.community.most_selected_sermons_retrieved'));
     }
 }

@@ -28,7 +28,7 @@ class MaintenanceRequestController extends Controller
         $mosque = Mosque::where('manager_id', $user->id)->first();
 
         if (!$mosque) {
-            abort(403, 'No mosque is assigned to your account.');
+            abort(403, __('messages.maintenance.no_mosque_assigned'));
         }
 
         return $mosque->id;
@@ -64,7 +64,7 @@ class MaintenanceRequestController extends Controller
                 'last_page'    => $paginator->lastPage(),
                 'has_more'     => $paginator->hasMorePages(),
             ]
-        ], 'Search results retrieved successfully.');
+        ], __('messages.maintenance.search_retrieved'));
     }
 
     public function index(Request $request)
@@ -87,7 +87,7 @@ class MaintenanceRequestController extends Controller
                 'last_page'    => $paginator->lastPage(),
                 'has_more'     => $paginator->hasMorePages(),
             ]
-        ], 'All maintenance requests retrieved successfully.');
+        ], __('messages.maintenance.all_retrieved'));
 
     }
 
@@ -102,7 +102,7 @@ class MaintenanceRequestController extends Controller
 
         $maintenance = $this->service->submitRequest($validated, $files);
 
-        return ApiResponse::success($maintenance->loadMissing(['files', 'statusLogs', 'mosque']), 'Maintenance request submitted successfully.', 201);
+        return ApiResponse::success($maintenance->loadMissing(['files', 'statusLogs', 'mosque']), __('messages.maintenance.created'), 201);
     }
 
     public function show(Request $request, int $id)
@@ -114,7 +114,7 @@ class MaintenanceRequestController extends Controller
         }
         $maintenance = $this->service->getDetails($id, $filters);
 
-        return ApiResponse::success($maintenance->loadMissing(['files', 'statusLogs', 'mosque']), 'Maintenance request retrieved successfully.');
+        return ApiResponse::success($maintenance->loadMissing(['files', 'statusLogs', 'mosque']), __('messages.maintenance.retrieved'));
     }
 
     /**
@@ -138,7 +138,7 @@ class MaintenanceRequestController extends Controller
         // Refetch updated data
         $maintenance = $this->service->getDetails($id, $filters);
 
-        return ApiResponse::success($maintenance->loadMissing(['files', 'statusLogs', 'mosque']), 'Maintenance request updated successfully.');
+        return ApiResponse::success($maintenance->loadMissing(['files', 'statusLogs', 'mosque']), __('messages.maintenance.updated'));
     }
 
     public function destroy(Request $request, int $id)
@@ -152,7 +152,7 @@ class MaintenanceRequestController extends Controller
 
         $this->service->delete($id);
 
-        return ApiResponse::success(null, 'Maintenance request deleted successfully.');
+        return ApiResponse::success(null, __('messages.maintenance.deleted'));
     }
 
     public function track(string $maintenanceNumber)
@@ -160,10 +160,10 @@ class MaintenanceRequestController extends Controller
         $maintenance = $this->service->trackRequest($maintenanceNumber);
 
         if (!$maintenance) {
-            return ApiResponse::error('Resource not found.', 404);
+            return ApiResponse::error(__('messages.maintenance.not_found'), 404);
         }
 
-        return ApiResponse::success($maintenance->loadMissing(['files', 'statusLogs', 'mosque']), 'Maintenance request retrieved successfully.');
+        return ApiResponse::success($maintenance->loadMissing(['files', 'statusLogs', 'mosque']), __('messages.maintenance.retrieved'));
     }
 
     // =========================================================================
@@ -196,7 +196,7 @@ class MaintenanceRequestController extends Controller
 
         return response()->json([
             'status'  => true,
-            'message' => 'Success',
+            'message' => __('messages.maintenance.success'),
             'data'    => $data,
         ]);
     }
@@ -208,7 +208,7 @@ class MaintenanceRequestController extends Controller
 
         return response()->json([
             'status'  => true,
-            'message' => 'Success',
+            'message' => __('messages.maintenance.success'),
             'data'    => $data,
         ]);
     }
@@ -228,6 +228,6 @@ class MaintenanceRequestController extends Controller
             $validated['notes'] ?? null
         );
 
-        return ApiResponse::success($maintenance->loadMissing(['files', 'statusLogs', 'mosque']), 'Maintenance request processed successfully.');
+        return ApiResponse::success($maintenance->loadMissing(['files', 'statusLogs', 'mosque']), __('messages.maintenance.processed'));
     }
 }

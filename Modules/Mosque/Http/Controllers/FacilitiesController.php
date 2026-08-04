@@ -21,7 +21,7 @@ class FacilitiesController extends Controller
     {
         return ApiResponse::success(
             $this->facilityService->getAllFacilities(),
-            'Facilities retrieved successfully'
+            __('messages.mosque.facilities_retrieved')
         );
     }
 
@@ -33,7 +33,7 @@ class FacilitiesController extends Controller
 
         return ApiResponse::success(
             $facility,
-            'Facility created and attached to the mosque successfully.'
+            __('messages.mosque.facility_created')
         );
     }
 
@@ -44,7 +44,7 @@ class FacilitiesController extends Controller
 
         return ApiResponse::success(
             $facility,
-            'Facility updated successfully.'
+            __('messages.mosque.facility_updated')
         );
     }
 
@@ -52,14 +52,14 @@ class FacilitiesController extends Controller
     {
         $this->facilityService->deleteFacility($facility);
 
-        return ApiResponse::success([], 'Facility deleted successfully.');
+        return ApiResponse::success([], __('messages.mosque.facility_deleted'));
     }
 
     public function byMosque(int $mosqueId)
     {
         return ApiResponse::success(
             $this->facilityService->getFacilitiesByMosque($mosqueId),
-            'Mosque facilities retrieved successfully'
+            __('messages.mosque.mosque_facilities_retrieved')
         );
     }
 
@@ -72,7 +72,7 @@ class FacilitiesController extends Controller
 
         $this->facilityService->syncMosqueFacilities($mosque, $data['facility_ids']);
 
-        return ApiResponse::success(null, 'Facilities synced successfully');
+        return ApiResponse::success(null, __('messages.mosque.facilities_synced'));
     }
     public function attach(Request $request, Mosque $mosque)
     {
@@ -85,7 +85,7 @@ class FacilitiesController extends Controller
 
         return ApiResponse::success(
             null,
-            'تم ربط المرافق بالمسجد بنجاح.'
+            __('messages.mosque.facilities_attached')
         );
     }
     public function detach(Request $request, Mosque $mosque)
@@ -99,7 +99,7 @@ class FacilitiesController extends Controller
 
         return ApiResponse::success(
             null,
-            'تم فك ارتباط المرافق بالمسجد بنجاح.'
+            __('messages.mosque.facilities_detached')
         );
     }
 }

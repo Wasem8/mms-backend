@@ -51,7 +51,7 @@ class UpdateMosqueRequest extends FormRequest
     public function messages(): array
     {
         return [
-            '*.prohibited' => 'هذا الحقل خاص بالإدارة العليا فقط.',
+            '*.prohibited' => __('messages.mosque.privileged_field'),
         ];
     }
     /**
