@@ -48,7 +48,7 @@ class ParentDashboardService
             return [
                 'id' => $student->id,
                 'name' => "{$student->first_name} {$student->last_name}",
-                'halaqa' => $student->halaqats->first()?->name ?? 'غير محدد',
+                'halaqa' => $student->halaqats?->name ?? 'غير محدد',
                 'today_attendance' => $todayAttendance,
                 'month_progress' => $monthAyahsCount . ' آية المجموع التراكمي',
                 'last_evaluation' => $lastEvaluation ? [
@@ -254,7 +254,7 @@ class ParentDashboardService
 
                 'name' => "{$student->first_name} {$student->last_name}",
 
-                'halaqa' => $student->halaqats->first()?->name ?? 'غير محدد',
+                'halaqa' => $student->halaqats?->name ?? 'غير محدد',
 
                 'attendance' => $todayAttendance,
 

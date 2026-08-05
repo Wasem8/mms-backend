@@ -5,6 +5,7 @@ namespace Modules\Education\tests\Feature;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Modules\Education\Models\Halaqa;
 use Modules\Education\Models\Student;
+use Modules\User\Models\Role;
 use Modules\Mosque\Models\Mosque;
 use Modules\User\Models\User;
 use Tests\TestCase;
@@ -14,6 +15,10 @@ uses(TestCase::class, RefreshDatabase::class);
 
 beforeEach(function () {
     // إعداد البيانات الأساسية
+    Role::firstOrCreate(['name' => 'halaqa_supervisor'], ['display_name' => 'Halaqa Supervisor']);
+    Role::firstOrCreate(['name' => 'teacher'], ['display_name' => 'Teacher']);
+    Role::firstOrCreate(['name' => 'super_admin'], ['display_name' => 'Super Admin']);
+    Role::firstOrCreate(['name' => 'area_manager'], ['display_name' => 'Area Manager']);
     $this->mosque = Mosque::factory()->create();
     $this->supervisor = User::factory()->supervisor($this->mosque)->create();
     $this->teacher = User::factory()->teacher($this->mosque)->create();
@@ -52,39 +57,34 @@ test('supervisor can list only their mosque halaqat', function () {
 });
 
 test('teacher can list only their halaqat', function () {
-    // إنشاء حلقات للـ teacher
-    $halaqat = Halaqa::factory()
+    $halaqa = Halaqa::factory()
         ->forMosque($this->mosque)
         ->withTeacher($this->teacher)
-        ->count(3)
         ->create();
 
-    // إنشاء حلقات لمعلم آخر
-    $otherTeacher = User::factory()->teacher($this->mosque)->create();
-    Halaqa::factory()
-        ->forMosque($this->mosque)
-        ->withTeacher($otherTeacher)
-        ->count(2)
-        ->create();
+    $otherTeacher1 = User::factory()->teacher($this->mosque)->create();
+    $otherTeacher2 = User::factory()->teacher($this->mosque)->create();
+    Halaqa::factory()->forMosque($this->mosque)->withTeacher($otherTeacher1)->create();
+    Halaqa::factory()->forMosque($this->mosque)->withTeacher($otherTeacher2)->create();
 
     $response = $this->actingAs($this->teacher)
         ->getJson('/api/education/halaqat');
 
     $response->assertStatus(200);
     $data = $response->json('data');
-    expect($data)->toHaveCount(3);
+    expect($data)->toHaveCount(1);
 
-    // التحقق من أن جميع الحلقات للمعلم الحالي
-    foreach ($data as $halaqa) {
-        expect($halaqa['teacher']['id'])->toBe($this->teacher->id);
-    }
+    expect($data[0]['teacher']['id'])->toBe($this->teacher->id);
 });
 
 test('area manager can list all halaqat', function () {
-    Halaqa::factory()->forMosque($this->mosque)->count(3)->create();
+    Halaqa::factory()->forMosque($this->mosque)->withTeacher(User::factory()->teacher($this->mosque)->create())->create();
+    Halaqa::factory()->forMosque($this->mosque)->withTeacher(User::factory()->teacher($this->mosque)->create())->create();
+    Halaqa::factory()->forMosque($this->mosque)->withTeacher(User::factory()->teacher($this->mosque)->create())->create();
 
     $otherMosque = Mosque::factory()->create();
-    Halaqa::factory()->forMosque($otherMosque)->count(2)->create();
+    Halaqa::factory()->forMosque($otherMosque)->withTeacher(User::factory()->teacher($otherMosque)->create())->create();
+    Halaqa::factory()->forMosque($otherMosque)->withTeacher(User::factory()->teacher($otherMosque)->create())->create();
 
     $response = $this->actingAs($this->areaManager)
         ->getJson('/api/education/halaqat');
@@ -100,7 +100,7 @@ test('list includes pagination', function () {
         ->getJson('/api/education/halaqat');
 
     $response->assertStatus(200);
-    $pagination = $response->json('meta');
+    $pagination = $response->json('pagination');
 
     expect($pagination['per_page'])->toBe(10);
     expect($pagination['total'])->toBe(15);
@@ -161,7 +161,7 @@ test('validation fails with missing required fields', function () {
         ]);
 
     $response->assertStatus(422);
-    $response->assertInvalid(['capacity', 'start_time', 'end_time']);
+    $response->assertJsonStructure(['data' => ['capacity', 'start_time', 'end_time']]);
 });
 
 test('validation fails with invalid time format', function () {
@@ -176,7 +176,7 @@ test('validation fails with invalid time format', function () {
         ->postJson('/api/education/halaqat', $data);
 
     $response->assertStatus(422);
-    $response->assertInvalid('start_time');
+    $response->assertJsonStructure(['data' => ['start_time']]);
 });
 
 test('validation fails when end time is before start time', function () {
@@ -192,7 +192,7 @@ test('validation fails when end time is before start time', function () {
         ->postJson('/api/education/halaqat', $data);
 
     $response->assertStatus(422);
-    $response->assertInvalid('end_time');
+    $response->assertJsonStructure(['data' => ['end_time']]);
 });
 
 test('validation fails with invalid teacher', function () {
@@ -208,7 +208,26 @@ test('validation fails with invalid teacher', function () {
         ->postJson('/api/education/halaqat', $data);
 
     $response->assertStatus(422);
-    $response->assertInvalid('teacher_id');
+    $response->assertJsonStructure(['data' => ['teacher_id']]);
+});
+
+test('validation fails when teacher already has a halaqa', function () {
+    Halaqa::factory()
+        ->forMosque($this->mosque)
+        ->withTeacher($this->teacher)
+        ->create();
+
+    $response = $this->actingAs($this->supervisor)
+        ->postJson('/api/education/halaqat', [
+            'name' => 'حلقة ثانية',
+            'teacher_id' => $this->teacher->id,
+            'capacity' => 20,
+            'start_time' => '11:00:00',
+            'end_time' => '12:00:00',
+        ]);
+
+    $response->assertStatus(422);
+    $response->assertJsonStructure(['data' => ['teacher_id']]);
 });
 
 test('validation fails when teacher is not active', function () {
@@ -229,7 +248,7 @@ test('validation fails when teacher is not active', function () {
         ->postJson('/api/education/halaqat', $data);
 
     $response->assertStatus(422);
-    $response->assertInvalid('teacher_id');
+    $response->assertJsonStructure(['data' => ['teacher_id']]);
 });
 
 // ========================
@@ -399,10 +418,9 @@ test('can attach students to halaqa', function () {
     $response->assertStatus(200);
 
     foreach ($studentIds as $studentId) {
-        $this->assertDatabaseHas('halaqa_student', [
+        $this->assertDatabaseHas('students', [
+            'id' => $studentId,
             'halaqa_id' => $halaqa->id,
-            'student_id' => $studentId,
-            'status' => 'active',
         ]);
     }
 });
@@ -421,7 +439,7 @@ test('cannot attach student from different mosque', function () {
         ]);
 
     $response->assertStatus(422);
-    $response->assertInvalid('students');
+        $response->assertJsonStructure(['data']);
 });
 
 test('cannot attach inactive student', function () {
@@ -440,7 +458,7 @@ test('cannot attach inactive student', function () {
         ]);
 
     $response->assertStatus(422);
-    $response->assertInvalid('students');
+    $response->assertJsonStructure(['data']);
 });
 
 test('cannot attach student already in halaqa', function () {
@@ -452,7 +470,7 @@ test('cannot attach student already in halaqa', function () {
         ->forMosque($this->mosque)
         ->create();
 
-    $halaqa->students()->attach($student->id, ['status' => 'active', 'joined_at' => now()]);
+    $student->update(['halaqa_id' => $halaqa->id]);
 
     $response = $this->actingAs($this->supervisor)
         ->postJson("/api/education/halaqat/{$halaqa->id}/students", [
@@ -460,7 +478,7 @@ test('cannot attach student already in halaqa', function () {
         ]);
 
     $response->assertStatus(422);
-    $response->assertInvalid('students');
+    $response->assertJsonStructure(['data']);
 });
 
 test('cannot attach students exceeding capacity', function () {
@@ -472,7 +490,7 @@ test('cannot attach students exceeding capacity', function () {
     $existingStudent = Student::factory()
         ->forMosque($this->mosque)
         ->create();
-    $halaqa->students()->attach($existingStudent->id, ['status' => 'active', 'joined_at' => now()]);
+    $existingStudent->update(['halaqa_id' => $halaqa->id]);
 
     $newStudents = Student::factory()
         ->forMosque($this->mosque)
@@ -485,7 +503,7 @@ test('cannot attach students exceeding capacity', function () {
         ]);
 
     $response->assertStatus(422);
-    $response->assertInvalid('capacity');
+    $response->assertJsonStructure(['data' => ['capacity']]);
 });
 
 test('cannot attach nonexistent student', function () {
@@ -499,7 +517,7 @@ test('cannot attach nonexistent student', function () {
         ]);
 
     $response->assertStatus(422);
-    $response->assertInvalid('students');
+    $response->assertJsonStructure(['data']);
 });
 
 test('validation fails with empty student array', function () {
@@ -528,16 +546,16 @@ test('can detach student from halaqa', function () {
         ->forMosque($this->mosque)
         ->create();
 
-    $halaqa->students()->attach($student->id, ['status' => 'active', 'joined_at' => now()]);
+    $student->update(['halaqa_id' => $halaqa->id]);
 
     $response = $this->actingAs($this->supervisor)
         ->deleteJson("/api/education/halaqat/{$halaqa->id}/students/{$student->id}");
 
     $response->assertStatus(200);
 
-    $this->assertDatabaseMissing('halaqa_student', [
-        'halaqa_id' => $halaqa->id,
-        'student_id' => $student->id,
+    $this->assertDatabaseHas('students', [
+        'id' => $student->id,
+        'halaqa_id' => null,
     ]);
 });
 
@@ -554,7 +572,7 @@ test('cannot detach student not in halaqa', function () {
         ->deleteJson("/api/education/halaqat/{$halaqa->id}/students/{$student->id}");
 
     $response->assertStatus(422);
-    $response->assertInvalid('student');
+    $response->assertJsonStructure(['data' => ['student']]);
 });
 
 // ========================

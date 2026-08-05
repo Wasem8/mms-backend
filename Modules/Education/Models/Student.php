@@ -16,6 +16,7 @@ class Student extends Model
         'first_name',
         'last_name',
         'mosque_id',
+        'halaqa_id',
         'date_of_birth',
         'gender',
         'status',
@@ -23,8 +24,7 @@ class Student extends Model
 
     public function halaqats()
     {
-        return $this->belongsToMany(Halaqa::class, 'halaqa_student', 'student_id', 'halaqa_id')
-            ->withPivot(['status', 'joined_at']);
+        return $this->belongsTo(Halaqa::class, 'halaqa_id');
     }
 
     public function parent()

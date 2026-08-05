@@ -38,6 +38,10 @@ return [
     'student_already_exists' => 'Student (:name) is already registered in this halaqa.',
     'capacity_full' => 'Sorry, the halaqa cannot accommodate this number. Remaining seats: :remaining',
     'student_not_in_halaqa' => 'This student is not registered in this halaqa.',
+    'teacher_already_has_halaqa' => 'This teacher is already assigned to another halaqa.',
+    'user_not_teacher' => 'The selected user is not a teacher.',
+    'teacher_another_mosque' => 'The selected teacher belongs to another mosque.',
+    'teacher_not_active' => 'The selected teacher is not active.',
 
     // --- Evaluations Section ---
     'evaluation_stored' => 'Student evaluated successfully.',

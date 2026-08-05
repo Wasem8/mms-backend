@@ -71,6 +71,15 @@ class UpdateHalaqaRequest extends FormRequest
                     if ($teacher->status !== 'active') {
                         $fail(__('messages.teacher_not_active'));
                     }
+
+                    $halaqaId = $this->route('id') ?? $this->route('halaqa');
+                    $assignedElsewhere = Halaqa::where('teacher_id', $value)
+                        ->when($halaqaId, fn($q) => $q->where('id', '!=', $halaqaId))
+                        ->exists();
+
+                    if ($assignedElsewhere) {
+                        $fail(__('messages.teacher_already_has_halaqa'));
+                    }
                 },
             ],
 

@@ -200,4 +200,9 @@ class User extends Authentication implements JWTSubject
             $this->roles()->attach($role->id);
         }
     }
+
+    protected static function newFactory()
+    {
+        return \Database\Factories\UserFactory::new();
+    }
 }
