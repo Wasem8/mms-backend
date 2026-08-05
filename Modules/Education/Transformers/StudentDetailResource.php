@@ -27,6 +27,7 @@ class StudentDetailResource extends JsonResource
 
         $lastEvaluation = $this->evaluations->first();
         $lastSura = $lastEvaluation?->surah_name ?? null; // §5: null عند عدم وجود تقييم
+        $halaqa = $this->halaqats;
 
         $juzMapping = match ($lastSura) {
             'النبأ', 'النازعات', 'عبس', 'التكوير', 'الانفطار', 'المطففين', 'الانشقاق', 'البروج', 'الطارق', 'الأعلى', 'الغاشية', 'الفجر', 'البلد', 'الشمس', 'الليل', 'الضحى', 'الشرح', 'التين', 'العلق', 'القدر', 'البينة', 'الزلزلة', 'العاديات', 'القارعة', 'التكاثر', 'العصر', 'الهمزة', 'الفيل', 'قريش', 'الماعون', 'الكوثر', 'الكافرون', 'النصر', 'المسد', 'الإخلاص', 'الفلق', 'الناس' => ['number' => 30, 'name' => 'جزء عمّ'],
@@ -57,14 +58,23 @@ class StudentDetailResource extends JsonResource
             ],
 
             // §7: إضافة معلم الحلقة المدمجة
-            'halaqats' => $this->halaqats->map(fn($h) => [
-                'id' => $h->id,
-                'name' => $h->name,
-                'teacher' => $h->teacher ? [
-                    'id' => $h->teacher->id,
-                    'name' => $h->teacher->name,
+            'halaqa' => $halaqa ? [
+                'id' => $halaqa->id,
+                'name' => $halaqa->name,
+                'teacher' => $halaqa->teacher ? [
+                    'id' => $halaqa->teacher->id,
+                    'name' => $halaqa->teacher->name,
                 ] : null,
-            ]),
+            ] : null,
+
+            'halaqats' => $halaqa ? [[
+                'id' => $halaqa->id,
+                'name' => $halaqa->name,
+                'teacher' => $halaqa->teacher ? [
+                    'id' => $halaqa->teacher->id,
+                    'name' => $halaqa->teacher->name,
+                ] : null,
+            ]] : [],
 
             'statistics' => [
                 'total_absent_days' => $this->total_absent ?? 0,

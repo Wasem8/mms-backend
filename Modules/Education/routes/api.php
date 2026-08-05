@@ -12,11 +12,8 @@ use Modules\Education\Http\Controllers\TeacherController;
 
 Route::prefix('education')->group(function () {
 
-    Route::middleware(['auth:api', 'role:halaqa_supervisor'])->group(function () {
+    Route::middleware(['auth:api', 'role:halaqa_supervisor,super_admin'])->group(function () {
         Route::post('halaqat', [HalaqaController::class, 'store']);
-        Route::put('halaqat/{id}', [HalaqaController::class, 'update']);
-        Route::patch('halaqat/{id}', [HalaqaController::class, 'update']);
-        Route::delete('halaqat/{id}', [HalaqaController::class, 'destroy']);
         Route::post('halaqat/{id}/students', [HalaqaController::class, 'attachStudents']);
         Route::delete('halaqat/{id}/students/{studentId}', [HalaqaController::class, 'detachStudent']);
         Route::patch('students/{id}/approve', [StudentController::class, 'approve']);
@@ -87,7 +84,10 @@ Route::prefix('education')->group(function () {
     });
 
 
-        Route::middleware(['auth:api', 'role:teacher,halaqa_supervisor'])->group(function () {
+        Route::middleware(['auth:api', 'role:teacher,halaqa_supervisor,super_admin'])->group(function () {
+            Route::put('halaqat/{id}', [HalaqaController::class, 'update']);
+            Route::patch('halaqat/{id}', [HalaqaController::class, 'update']);
+            Route::delete('halaqat/{id}', [HalaqaController::class, 'destroy']);
             Route::put('evaluations/{id}', [EvaluationController::class, 'update']);
             Route::delete('evaluations/{id}', [EvaluationController::class, 'destroy']);
             Route::get('halaqat', [HalaqaController::class, 'index']);

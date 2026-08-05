@@ -34,14 +34,13 @@ class TeacherDashboardService
         /**
          * 🔥 Load all students in all halaqat (one query)
          */
-        $students = DB::table('halaqa_student')
-            ->join('students', 'students.id', '=', 'halaqa_student.student_id')
-            ->whereIn('halaqa_student.halaqa_id', $halaqaIds)
+        $students = DB::table('students')
+            ->whereIn('students.halaqa_id', $halaqaIds)
             ->select(
                 'students.id',
                 'students.first_name',
                 'students.last_name',
-                'halaqa_student.halaqa_id'
+                'students.halaqa_id'
             )
             ->get()
             ->groupBy('halaqa_id');
@@ -147,7 +146,7 @@ class TeacherDashboardService
         $today = Carbon::today()->toDateString();
         $currentMonth = Carbon::today()->month;
 
-        $totalStudents = Student::whereHas('halaqats', fn($q) => $q->where('halaqats.id', $halaqa->id))->count();
+        $totalStudents = Student::where('halaqa_id', $halaqa->id)->count();
 
         $todayAttendance = Attendance::where('halaqa_id', $halaqa->id)
             ->whereDate('date', $today)
@@ -299,9 +298,7 @@ class TeacherDashboardService
         $currentYear = now()->year;
 
         // جلب طلاب الحلقة
-        $halaqaStudents = Student::whereHas('halaqats', function ($q) use ($halaqa) {
-            $q->where('halaqats.id', $halaqa->id);
-        })->get();
+        $halaqaStudents = Student::where('halaqa_id', $halaqa->id)->get();
 
         // بناء تفاصيل أداء كل طالب
         $students = $halaqaStudents->map(function ($student) use ($today, $halaqa, $currentMonth, $currentYear) {

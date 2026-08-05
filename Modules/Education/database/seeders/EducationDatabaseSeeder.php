@@ -162,29 +162,27 @@ class EducationDatabaseSeeder extends Seeder
                 ]
             );
 
-            // إنشاء حلقتين لكل معلم جديد
+            // إنشاء حلقة واحدة لكل معلم
             $counter = 1;
             foreach ($teachers as $teacher) {
                 if ($teacher->email === 'teacher@test.com') {
                     continue;
                 }
 
-                for ($i = 1; $i <= 2; $i++) {
-                    $startTimes = ['16:00', '18:00', '19:30'];
-                    $startTime = collect($startTimes)->random();
+                $startTimes = ['16:00', '18:00', '19:30'];
+                $startTime = collect($startTimes)->random();
 
-                    Halaqa::create([
-                        'name' => 'حلقة ' . $counter . ' - ' . $teacher->name,
-                        'teacher_id' => $teacher->id,
-                        'mosque_id' => $teacher->mosque_id,
-                        'capacity' => rand(15, 35),
-                        'schedule_days' => collect($this->schedules)->random(),
-                        'start_time' => $startTime,
-                        'end_time' => Carbon::createFromFormat('H:i', $startTime)->addMinutes(90)->format('H:i:s'),
-                        'status' => 'active',
-                    ]);
-                    $counter++;
-                }
+                Halaqa::create([
+                    'name' => 'حلقة ' . $counter . ' - ' . $teacher->name,
+                    'teacher_id' => $teacher->id,
+                    'mosque_id' => $teacher->mosque_id,
+                    'capacity' => rand(15, 35),
+                    'schedule_days' => collect($this->schedules)->random(),
+                    'start_time' => $startTime,
+                    'end_time' => Carbon::createFromFormat('H:i', $startTime)->addMinutes(90)->format('H:i:s'),
+                    'status' => 'active',
+                ]);
+                $counter++;
             }
 
             $halaqat = Halaqa::all();
@@ -207,20 +205,13 @@ class EducationDatabaseSeeder extends Seeder
 
                 if ($student && $student->id) {
                     $studentHalaqaMap[$student->id] = $mainHalaqa->id;
-                    $mainHalaqa->students()->attach([
-                        $student->id => [
-                            'joined_at' => now()->subDays(rand(1, 30)),
-                            'status' => 'active'
-                        ]
-                    ]);
+                    $student->update(['halaqa_id' => $mainHalaqa->id]);
                     $studentCount++;
                 }
             }
             $this->command->info('🎯 تم ربط 15 طالباً بحلقة المعلم الرئيسي بنجاح.');
 
-            $mainStudents = Student::whereHas('halaqats', function ($q) use ($mainHalaqa) {
-                $q->where('halaqats.id', $mainHalaqa->id);
-            })->take(3)->get();
+            $mainStudents = Student::where('halaqa_id', $mainHalaqa->id)->take(3)->get();
 
             foreach ($mainStudents as $student) {
                 AttendanceExcuse::create([
@@ -256,12 +247,7 @@ class EducationDatabaseSeeder extends Seeder
 
                 if ($student && $student->id) {
                     $studentHalaqaMap[$student->id] = $selectedHalaqa->id;
-                    $selectedHalaqa->students()->attach([
-                        $student->id => [
-                            'joined_at' => now()->subDays(rand(1, 30)),
-                            'status' => 'active'
-                        ]
-                    ]);
+                    $student->update(['halaqa_id' => $selectedHalaqa->id]);
                     $studentCount++;
                 }
 

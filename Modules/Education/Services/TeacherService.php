@@ -33,10 +33,10 @@ class TeacherService
             // 🎯 1. إرجاع halaqats_count و students_count
             ->withCount(['halaqats'])
             ->selectSub(
-                DB::table('halaqa_student')
-                    ->join('halaqats','halaqats.id','=','halaqa_student.halaqa_id')
+                DB::table('students')
+                    ->join('halaqats','halaqats.id','=','students.halaqa_id')
                     ->whereColumn('halaqats.teacher_id','users.id')
-                    ->selectRaw('COUNT(DISTINCT halaqa_student.student_id)'),
+                    ->selectRaw('COUNT(*)'),
                 'students_count'
             );
 
@@ -98,11 +98,10 @@ class TeacherService
         $teacher = $query->findOrFail($teacherId);
 
         // حساب عدد الطلاب المرتبطين بالحلقات للمعلم
-        $teacher->students_count = DB::table('halaqa_student')
-            ->join('halaqats','halaqats.id','=','halaqa_student.halaqa_id')
+        $teacher->students_count = DB::table('students')
+            ->join('halaqats','halaqats.id','=','students.halaqa_id')
             ->where('halaqats.teacher_id', $teacher->id)
-            ->distinct()
-            ->count('halaqa_student.student_id');
+            ->count('students.id');
 
         return $teacher;
     }

@@ -37,6 +37,10 @@ return [
     'student_already_exists' => 'الطالب (:name) موجود بالفعل في هذه الحلقة.',
     'capacity_full' => 'عذراً، الحلقة لا تستوعب هذا العدد. المقاعد المتبقية: :remaining',
     'student_not_in_halaqa' => 'هذا الطالب غير مسجل في هذه الحلقة.',
+    'teacher_already_has_halaqa' => 'هذا المعلم مرتبط بالفعل بحلقة أخرى.',
+    'user_not_teacher' => 'المستخدم المحدد ليس معلماً.',
+    'teacher_another_mosque' => 'المعلم المحدد يتبع لمسجد آخر.',
+    'teacher_not_active' => 'المعلم المحدد حالته غير نشطة.',
 
     // --- قسم التقييمات ---
     'evaluation_stored' => 'تم تقييم الطالب بنجاح.',

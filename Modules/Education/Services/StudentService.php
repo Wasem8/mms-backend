@@ -91,7 +91,7 @@ class StudentService
     public function search(array $filters)
     {
         return Student::query()
-            ->with(['mosque', 'parent', 'halaqats'])
+            ->with(['mosque', 'parent', 'halaqats.teacher'])
             ->forUser(auth()->user())
             ->when(!empty($filters['query']), function ($q) use ($filters) {
                 $searchTerm = $filters['query'];
@@ -125,7 +125,7 @@ class StudentService
 
         $student->update($data);
 
-        return $student->load(['mosque', 'parent', 'halaqats']);
+        return $student->load(['mosque', 'parent', 'halaqats.teacher']);
     }
 
     public function delete($id)
@@ -152,12 +152,17 @@ class StudentService
 
             if (!empty($data['halaqa_id'])) {
                 $halaqa = Halaqa::where('mosque_id', $user->mosque_id)->findOrFail($data['halaqa_id']);
-                $student->halaqats()->syncWithoutDetaching([$halaqa->id]);
+
+                if ($halaqa->students()->count() >= $halaqa->capacity) {
+                    return ['error' => true, 'message' => __('messages.capacity_full', ['remaining' => 0])];
+                }
+
+                $student->update(['halaqa_id' => $halaqa->id]);
             }
 
             $student->update(['status' => 'active']);
 
-            $loadedStudent = $student->load(['mosque', 'parent', 'halaqats']);
+            $loadedStudent = $student->load(['mosque', 'parent', 'halaqats.teacher']);
 
             // 🎯 إطلاق حدث الموافقة وإرسال كائن الطالب محمل بالبيانات
             event(new \Modules\Education\Events\StudentApproved($loadedStudent));
@@ -190,6 +195,48 @@ class StudentService
         event(new \Modules\Education\Events\StudentRejected($loadedStudent));
 
         return ['error' => false, 'data' => $loadedStudent];
+    }
+
+    public function transferHalaqa(int $id, array $data)
+    {
+        $user = auth()->user();
+
+        return DB::transaction(function () use ($id, $data, $user) {
+            $student = Student::query()
+                ->forUser($user)
+                ->findOrFail($id);
+
+            $currentHalaqaId = $student->halaqa_id;
+
+            if ((int) $currentHalaqaId !== (int) $data['from_halaqa_id']) {
+                return [
+                    'error' => true,
+                    'message' => __('messages.student_not_in_old_halaqa')
+                ];
+            }
+
+            $toHalaqa = Halaqa::where('mosque_id', $user->mosque_id)
+                ->findOrFail($data['to_halaqa_id']);
+
+            if ($toHalaqa->students()->count() >= $toHalaqa->capacity) {
+                return [
+                    'error' => true,
+                    'message' => __('messages.capacity_full', ['remaining' => 0])
+                ];
+            }
+
+            $student->update([
+                'halaqa_id' => $toHalaqa->id,
+            ]);
+
+            $loadedStudent = $student->load(['mosque', 'parent', 'halaqats.teacher']);
+
+            return [
+                'error' => false,
+                'message' => __('messages.transfer_success', ['name' => $toHalaqa->name]),
+                'data' => $loadedStudent,
+            ];
+        });
     }
 
 }
