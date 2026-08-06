@@ -8,18 +8,23 @@ use Illuminate\Validation\Rule;
 
 class UpdateMosqueRequest extends FormRequest
 {
-    /**
-     * Get the validation rules that apply to the request.
-     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('is_featured')) {
+            $this->merge([
+                'is_featured' => filter_var($this->input('is_featured'), FILTER_VALIDATE_BOOLEAN),
+            ]);
+        }
+    }
+
     public function rules(): array
     {
-        $isPrivileged = $this->user()->hasRole('SUPER_ADMIN')
-            || $this->user()->hasRole('REGIONAL_ADMIN');
+        $isPrivileged = $this->user()->hasRole('super_admin');
 
         $rules = [
             'name'           => 'sometimes|string|max:255',
             'image'          => 'sometimes|image|max:5120',
-            'working_hours'  => 'sometimes|array',
+            'working_hours'  => 'nullable|array',
             'imam'           => 'sometimes|nullable|string|max:255',
             'khatib'         => 'sometimes|nullable|string|max:255',
         ];
@@ -54,9 +59,7 @@ class UpdateMosqueRequest extends FormRequest
             '*.prohibited' => __('messages.mosque.privileged_field'),
         ];
     }
-    /**
-     * Determine if the user is authorized to make this request.
-     */
+
     public function authorize(): bool
     {
         return $this->user()->can('update', $this->route('mosque'));

@@ -20,6 +20,9 @@ interface MosqueRepositoryInterface
 
     public function searchMosques(string $query, array $filters = [], int $perPage = 15): LengthAwarePaginator;
 
+    public function findByManagerId(int $managerId): ?Mosque;
+
+    public function findByIdForListing(int $id): ?Mosque;
 
     public function findById(int $id, array $relations = []): ?Mosque;
 

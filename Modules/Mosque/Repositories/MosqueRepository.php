@@ -55,6 +55,17 @@ class MosqueRepository implements MosqueRepositoryInterface
         return $this->getAllPaginated($searchFilters, $perPage);
     }
 
+    public function findByManagerId(int $managerId): ?Mosque
+    {
+        return $this->buildBaseQuery()
+            ->where('manager_id', $managerId)
+            ->first();
+    }
+
+    public function findByIdForListing(int $id): ?Mosque
+    {
+        return $this->buildBaseQuery()->find($id);
+    }
 
     public function findById(int $id, array $relations = []): ?Mosque
     {

@@ -3,6 +3,12 @@
 use Illuminate\Support\Facades\Route;
 use Modules\MaintenanceRequest\Http\Controllers\MaintenanceRequestController;
 
+
+Route::group(['prefix' => 'maintenance/public'], function () {
+    Route::get('/', [MaintenanceRequestController::class, 'publicIndex']);
+    Route::get('/{id}', [MaintenanceRequestController::class, 'publicShow']);
+});             
+
 Route::middleware(['auth:api', 'role:super_admin'])->prefix('maintenance/admin')->group(function () {
     Route::get('/', [MaintenanceRequestController::class, 'adminIndex']);
     Route::put('/{id}', [MaintenanceRequestController::class, 'process']);

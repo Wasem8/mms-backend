@@ -342,7 +342,7 @@ class MosqueEndpoints
         ]
     )]
     public function search() {}
-    
+
     #[OA\Get(
         path: '/mosques/featured',
         operationId: 'getFeaturedMosques',
@@ -879,6 +879,82 @@ class MosqueEndpoints
         ]
     )]
     public function updateRating() {}
+
+    #[OA\Get(
+        path: '/mosques/mine',
+        operationId: 'getMyMosques',
+        tags: ['Mosques'],
+        summary: 'Get the authenticated user\'s attached mosque(s)',
+        description: 'Returns the mosque(s) the authenticated user is attached to, along with the relation type (manager, halaqa_supervisor, or teacher). Returns an empty array (200) if the user has no mosque attachment.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Current user mosques retrieved successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Current user mosques retrieved successfully.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            description: 'Empty array if the user has no mosque attachment (e.g. parent, guest, region manager).',
+                            items: new OA\Items(
+                                properties: [
+                                    new OA\Property(property: 'id', type: 'integer', example: 1),
+                                    new OA\Property(property: 'name', type: 'string', example: 'Al-Rahma Mosque'),
+                                    new OA\Property(property: 'image', type: 'string', nullable: true, example: 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/images/mosque.jpg'),
+                                    new OA\Property(property: 'working_hours', type: 'string', nullable: true, example: '5:00 AM - 10:00 PM'),
+                                    new OA\Property(property: 'status', type: 'string', enum: ['active', 'maintenance', 'closed'], example: 'active'),
+                                    new OA\Property(property: 'is_featured', type: 'boolean', example: 0),
+                                    new OA\Property(property: 'city_id', type: 'integer', nullable: true, example: 101),
+                                    new OA\Property(property: 'city', type: 'string', nullable: true, example: 'دمشق'),
+                                    new OA\Property(property: 'district_id', type: 'integer', nullable: true, example: 1001),
+                                    new OA\Property(property: 'district', type: 'string', nullable: true, example: 'المزة'),
+                                    new OA\Property(property: 'latitude', type: 'number', format: 'float', nullable: true, example: 30.0444),
+                                    new OA\Property(property: 'longitude', type: 'number', format: 'float', nullable: true, example: 31.2357),
+                                    new OA\Property(property: 'average_rating', type: 'number', format: 'float', example: 4.5),
+                                    new OA\Property(property: 'reviews_count', type: 'integer', example: 10),
+                                    new OA\Property(property: 'open_needs_count', type: 'integer', example: 3),
+                                    new OA\Property(property: 'open_urgent_needs_count', type: 'integer', example: 1),
+                                    new OA\Property(property: 'total_gap', type: 'number', format: 'float', nullable: true, example: 4250.0),
+                                    new OA\Property(property: 'imam', type: 'string', nullable: true, example: 'Sheikh Ahmed'),
+                                    new OA\Property(property: 'khatib', type: 'string', nullable: true, example: 'Sheikh Mohamed'),
+                                    new OA\Property(property: 'manager_id', type: 'integer', nullable: true, example: 2),
+                                    new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
+                                    new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
+                                    new OA\Property(
+                                        property: 'relation',
+                                        type: 'string',
+                                        enum: ['manager', 'halaqa_supervisor', 'teacher'],
+                                        example: 'manager',
+                                        description: 'How the authenticated user is attached to this mosque'
+                                    ),
+                                ]
+                            )
+                        ),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthenticated',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: false),
+                        new OA\Property(property: 'message', type: 'string', example: 'Unauthenticated.'),
+                        new OA\Property(property: 'data', type: 'object', nullable: true, example: null),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function mine() {}
 
     // ─────────────────────────────────────────────
     //  FACILITIES ENDPOINTS
@@ -1759,4 +1835,142 @@ class MosqueEndpoints
         ]
     )]
     public function needById() {}
+
+    #[OA\Get(
+        path: '/mosques/needs/nearby',
+        operationId: 'getNearbyMosquesWithNeeds',
+        tags: ['Needs'],
+        summary: 'List nearby mosques that need help',
+        description: 'Returns a paginated list of mosques near the given coordinates that have at least one open need, including open needs count, urgent flag, funding gap, and distance. Powers the "mosques near me needing help" mobile feature.',
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(
+                name: 'lat',
+                in: 'query',
+                required: true,
+                description: 'User latitude',
+                schema: new OA\Schema(type: 'number', format: 'float', example: 24.7136)
+            ),
+            new OA\Parameter(
+                name: 'lng',
+                in: 'query',
+                required: true,
+                description: 'User longitude',
+                schema: new OA\Schema(type: 'number', format: 'float', example: 46.6753)
+            ),
+            new OA\Parameter(
+                name: 'radius_km',
+                in: 'query',
+                required: false,
+                description: 'Max distance in kilometers from the user location',
+                schema: new OA\Schema(type: 'number', format: 'float', example: 15)
+            ),
+            new OA\Parameter(
+                name: 'urgent_only',
+                in: 'query',
+                required: false,
+                description: 'If true, only returns mosques that have at least one open AND urgent need',
+                schema: new OA\Schema(type: 'boolean', example: true)
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', example: 10)
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Nearby mosques with needs retrieved successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Nearby mosques needing help retrieved successfully.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(
+                                properties: [
+                                    new OA\Property(property: 'id', type: 'integer', example: 15),
+                                    new OA\Property(property: 'name', type: 'string', example: 'جامع الراجحي الكبير'),
+                                    new OA\Property(
+                                        property: 'image',
+                                        type: 'string',
+                                        nullable: true,
+                                        example: 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/images/mosque.jpg'
+                                    ),
+                                    new OA\Property(property: 'status', type: 'string', enum: ['active', 'maintenance', 'closed'], example: 'active'),
+                                    new OA\Property(property: 'city_id', type: 'integer', nullable: true, example: 101),
+                                    new OA\Property(property: 'district_id', type: 'integer', nullable: true, example: 1001),
+                                    new OA\Property(property: 'latitude', type: 'number', format: 'float', nullable: true, example: 24.7136),
+                                    new OA\Property(property: 'longitude', type: 'number', format: 'float', nullable: true, example: 46.6753),
+                                    new OA\Property(
+                                        property: 'distance',
+                                        type: 'number',
+                                        format: 'float',
+                                        example: 3.42,
+                                        description: 'Distance in kilometers from the given lat/lng'
+                                    ),
+                                    new OA\Property(
+                                        property: 'open_needs_count',
+                                        type: 'integer',
+                                        example: 3,
+                                        description: 'Count of needs with status = open for this mosque'
+                                    ),
+                                    new OA\Property(
+                                        property: 'open_urgent_needs_count',
+                                        type: 'integer',
+                                        example: 1,
+                                        description: 'Count of open needs that are also marked urgent'
+                                    ),
+                                    new OA\Property(
+                                        property: 'has_urgent_need',
+                                        type: 'boolean',
+                                        example: true,
+                                        description: 'True if the mosque has at least one open, urgent need'
+                                    ),
+                                    new OA\Property(
+                                        property: 'total_gap',
+                                        type: 'number',
+                                        format: 'float',
+                                        nullable: true,
+                                        example: 4250.0,
+                                        description: 'Sum of (target_amount - collected_amount) across open needs. Null if no open needs.'
+                                    ),
+                                    new OA\Property(property: 'imam', type: 'string', nullable: true, example: 'Sheikh Ahmed'),
+                                    new OA\Property(property: 'khatib', type: 'string', nullable: true, example: 'Sheikh Mohamed'),
+                                ]
+                            )
+                        ),
+                        new OA\Property(
+                            property: 'pagination',
+                            type: 'object',
+                            nullable: true,
+                            properties: [
+                                new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                new OA\Property(property: 'last_page', type: 'integer', example: 3),
+                                new OA\Property(property: 'per_page', type: 'integer', example: 10),
+                                new OA\Property(property: 'total', type: 'integer', example: 27),
+                                new OA\Property(property: 'has_more_pages', type: 'boolean', example: true),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Validation error',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: false),
+                        new OA\Property(property: 'message', type: 'string', example: 'Validation error.'),
+                        new OA\Property(property: 'data', type: 'object', example: ['lat' => ['The lat field is required.']]),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function nearbyNeedsMosques() {}
 }

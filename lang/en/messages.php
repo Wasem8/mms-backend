@@ -211,6 +211,12 @@ return [
     'mosque.need_updated' => 'Need updated successfully.',
     'mosque.need_deleted' => 'Need deleted successfully.',
     'mosque.need_not_in_mosque' => 'Need not found or does not belong to the specified mosque.',
+    'mosque.near_required_for_distance_sort' => 'The "near" parameter is required when sorting by distance.',
+    'mosque.invalid_sort_by' => 'The specified sort parameter is invalid.',
+    'mosque.invalid_near_format' => 'The "near" parameter format is invalid. It must be in the "latitude,longitude" format.',
+    'mosque.invalid_near_coordinates' => 'The "near" coordinates are invalid. They must be within valid latitude and longitude ranges.',
+    'mosque.invalid_radius' => 'The specified search radius is invalid. It must be a positive number.',
+    'mosque.invalid_radius_format' => 'The "radius_km" parameter format is invalid. It must be a numeric value.',
     'mosque.spaces_retrieved' => 'Mosque spaces retrieved successfully.',
     'mosque.spaces_fetch_error' => 'An error occurred while fetching data.',
     'mosque.space_not_in_mosque' => 'This space does not belong to this mosque.',
@@ -230,5 +236,5 @@ return [
     'mosque.facilities_attached' => 'Facilities attached to the mosque successfully.',
     'mosque.facilities_detached' => 'Facilities detached from the mosque successfully.',
     'mosque.privileged_field' => 'This field is restricted to senior management only.',
-
+    'mosque.mine_retrieved' => 'Current user mosques retrieved successfully.',
 ];

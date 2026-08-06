@@ -207,4 +207,14 @@ class MosqueController extends Controller
             __('messages.mosque.rating_updated')
         );
     }
+
+    public function mine(Request $request)
+    {
+        $mosques = $this->mosqueService->getMineForUser($request->user());
+
+        return ApiResponse::success(
+            $mosques,
+            __('messages.mosque.mine_retrieved')
+        );
+    }
 }
