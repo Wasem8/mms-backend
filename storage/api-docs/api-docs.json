@@ -11243,6 +11243,191 @@
                 ]
             }
         },
+        "/maintenance/public": {
+            "get": {
+                "tags": [
+                    "Maintenance Requests — Public"
+                ],
+                "summary": "List maintenance requests (public)",
+                "description": "Returns a paginated list of maintenance requests visible to guests, with sensitive fields (requester identity, internal notes, status change history) excluded. Filterable by status, category, priority, and mosque.",
+                "operationId": "maintenance.public.index",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "pending",
+                            "enum": [
+                                "pending",
+                                "in_progress",
+                                "completed",
+                                "cancelled"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "electrical",
+                            "enum": [
+                                "electrical",
+                                "plumbing",
+                                "carpentry",
+                                "cleaning",
+                                "other"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "priority",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "high",
+                            "enum": [
+                                "low",
+                                "medium",
+                                "high",
+                                "urgent"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "mosque_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 7
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15,
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Maintenance requests retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Maintenance requests retrieved successfully."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/PublicMaintenanceRequest"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 8
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "has_more_pages": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/maintenance/public/{id}": {
+            "get": {
+                "tags": [
+                    "Maintenance Requests — Public"
+                ],
+                "summary": "Get a maintenance request (public)",
+                "description": "Returns the public-safe details of a single maintenance request — sensitive fields excluded.",
+                "operationId": "maintenance.public.show",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 42
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Maintenance request retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Maintenance request retrieved successfully."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/PublicMaintenanceRequest"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            }
+        },
         "/mosques": {
             "get": {
                 "tags": [
@@ -13393,6 +13578,211 @@
                 ]
             }
         },
+        "/mosques/mine": {
+            "get": {
+                "tags": [
+                    "Mosques"
+                ],
+                "summary": "Get the authenticated user's attached mosque(s)",
+                "description": "Returns the mosque(s) the authenticated user is attached to, along with the relation type (manager, halaqa_supervisor, or teacher). Returns an empty array (200) if the user has no mosque attachment.",
+                "operationId": "getMyMosques",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Current user mosques retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Current user mosques retrieved successfully."
+                                        },
+                                        "data": {
+                                            "description": "Empty array if the user has no mosque attachment (e.g. parent, guest, region manager).",
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Al-Rahma Mosque"
+                                                    },
+                                                    "image": {
+                                                        "type": "string",
+                                                        "example": "https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/images/mosque.jpg",
+                                                        "nullable": true
+                                                    },
+                                                    "working_hours": {
+                                                        "type": "string",
+                                                        "example": "5:00 AM - 10:00 PM",
+                                                        "nullable": true
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "active",
+                                                        "enum": [
+                                                            "active",
+                                                            "maintenance",
+                                                            "closed"
+                                                        ]
+                                                    },
+                                                    "is_featured": {
+                                                        "type": "boolean",
+                                                        "example": 0
+                                                    },
+                                                    "city_id": {
+                                                        "type": "integer",
+                                                        "example": 101,
+                                                        "nullable": true
+                                                    },
+                                                    "city": {
+                                                        "type": "string",
+                                                        "example": "دمشق",
+                                                        "nullable": true
+                                                    },
+                                                    "district_id": {
+                                                        "type": "integer",
+                                                        "example": 1001,
+                                                        "nullable": true
+                                                    },
+                                                    "district": {
+                                                        "type": "string",
+                                                        "example": "المزة",
+                                                        "nullable": true
+                                                    },
+                                                    "latitude": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 30.0444,
+                                                        "nullable": true
+                                                    },
+                                                    "longitude": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 31.2357,
+                                                        "nullable": true
+                                                    },
+                                                    "average_rating": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 4.5
+                                                    },
+                                                    "reviews_count": {
+                                                        "type": "integer",
+                                                        "example": 10
+                                                    },
+                                                    "open_needs_count": {
+                                                        "type": "integer",
+                                                        "example": 3
+                                                    },
+                                                    "open_urgent_needs_count": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "total_gap": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 4250,
+                                                        "nullable": true
+                                                    },
+                                                    "imam": {
+                                                        "type": "string",
+                                                        "example": "Sheikh Ahmed",
+                                                        "nullable": true
+                                                    },
+                                                    "khatib": {
+                                                        "type": "string",
+                                                        "example": "Sheikh Mohamed",
+                                                        "nullable": true
+                                                    },
+                                                    "manager_id": {
+                                                        "type": "integer",
+                                                        "example": 2,
+                                                        "nullable": true
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "relation": {
+                                                        "description": "How the authenticated user is attached to this mosque",
+                                                        "type": "string",
+                                                        "example": "manager",
+                                                        "enum": [
+                                                            "manager",
+                                                            "halaqa_supervisor",
+                                                            "teacher"
+                                                        ]
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/facilities": {
             "get": {
                 "tags": [
@@ -14982,6 +15372,244 @@
                     },
                     "404": {
                         "description": "Need not found"
+                    }
+                }
+            }
+        },
+        "/mosques/needs/nearby": {
+            "get": {
+                "tags": [
+                    "Needs"
+                ],
+                "summary": "List nearby mosques that need help",
+                "description": "Returns a paginated list of mosques near the given coordinates that have at least one open need, including open needs count, urgent flag, funding gap, and distance. Powers the \"mosques near me needing help\" mobile feature.",
+                "operationId": "getNearbyMosquesWithNeeds",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "lat",
+                        "in": "query",
+                        "description": "User latitude",
+                        "required": true,
+                        "schema": {
+                            "type": "number",
+                            "format": "float",
+                            "example": 24.7136
+                        }
+                    },
+                    {
+                        "name": "lng",
+                        "in": "query",
+                        "description": "User longitude",
+                        "required": true,
+                        "schema": {
+                            "type": "number",
+                            "format": "float",
+                            "example": 46.6753
+                        }
+                    },
+                    {
+                        "name": "radius_km",
+                        "in": "query",
+                        "description": "Max distance in kilometers from the user location",
+                        "required": false,
+                        "schema": {
+                            "type": "number",
+                            "format": "float",
+                            "example": 15
+                        }
+                    },
+                    {
+                        "name": "urgent_only",
+                        "in": "query",
+                        "description": "If true, only returns mosques that have at least one open AND urgent need",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "example": true
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Nearby mosques with needs retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Nearby mosques needing help retrieved successfully."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 15
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "جامع الراجحي الكبير"
+                                                    },
+                                                    "image": {
+                                                        "type": "string",
+                                                        "example": "https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/images/mosque.jpg",
+                                                        "nullable": true
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "active",
+                                                        "enum": [
+                                                            "active",
+                                                            "maintenance",
+                                                            "closed"
+                                                        ]
+                                                    },
+                                                    "city_id": {
+                                                        "type": "integer",
+                                                        "example": 101,
+                                                        "nullable": true
+                                                    },
+                                                    "district_id": {
+                                                        "type": "integer",
+                                                        "example": 1001,
+                                                        "nullable": true
+                                                    },
+                                                    "latitude": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 24.7136,
+                                                        "nullable": true
+                                                    },
+                                                    "longitude": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 46.6753,
+                                                        "nullable": true
+                                                    },
+                                                    "distance": {
+                                                        "description": "Distance in kilometers from the given lat/lng",
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 3.42
+                                                    },
+                                                    "open_needs_count": {
+                                                        "description": "Count of needs with status = open for this mosque",
+                                                        "type": "integer",
+                                                        "example": 3
+                                                    },
+                                                    "open_urgent_needs_count": {
+                                                        "description": "Count of open needs that are also marked urgent",
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "has_urgent_need": {
+                                                        "description": "True if the mosque has at least one open, urgent need",
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "total_gap": {
+                                                        "description": "Sum of (target_amount - collected_amount) across open needs. Null if no open needs.",
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 4250,
+                                                        "nullable": true
+                                                    },
+                                                    "imam": {
+                                                        "type": "string",
+                                                        "example": "Sheikh Ahmed",
+                                                        "nullable": true
+                                                    },
+                                                    "khatib": {
+                                                        "type": "string",
+                                                        "example": "Sheikh Mohamed",
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 27
+                                                },
+                                                "has_more_pages": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                }
+                                            },
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation error."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": {
+                                                "lat": [
+                                                    "The lat field is required."
+                                                ]
+                                            }
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -21231,6 +21859,103 @@
                 },
                 "type": "object"
             },
+            "PublicMaintenanceRequest": {
+                "description": "Reduced-visibility version of MaintenanceRequest for guest/public access — excludes requester identity, internal notes, and status change history.",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 42
+                    },
+                    "maintenance_number": {
+                        "type": "string",
+                        "example": "MR-2026-AB1C2D"
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "AC unit not cooling"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "The main hall AC has stopped cooling since yesterday."
+                    },
+                    "category": {
+                        "type": "string",
+                        "example": "electrical",
+                        "enum": [
+                            "electrical",
+                            "plumbing",
+                            "carpentry",
+                            "cleaning",
+                            "other"
+                        ]
+                    },
+                    "priority": {
+                        "type": "string",
+                        "example": "high",
+                        "enum": [
+                            "low",
+                            "medium",
+                            "high",
+                            "urgent"
+                        ]
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "pending",
+                        "enum": [
+                            "pending",
+                            "in_progress",
+                            "completed",
+                            "cancelled"
+                        ]
+                    },
+                    "scheduled_at": {
+                        "type": "string",
+                        "example": "01 Jun 2026, 09:00 AM",
+                        "nullable": true
+                    },
+                    "completed_at": {
+                        "type": "string",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "files": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "file_path": {
+                                    "type": "string",
+                                    "example": "https://xyz.supabase.co/storage/v1/object/public/maintenance/ac-photo.jpg"
+                                },
+                                "file_name": {
+                                    "type": "string",
+                                    "example": "ac-photo.jpg"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "mosque": {
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 7
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "Al-Noor Mosque"
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "example": "21 May 2026, 10:30 AM"
+                    }
+                },
+                "type": "object"
+            },
             "Sermon": {
                 "properties": {
                     "id": {
@@ -22451,6 +23176,10 @@
         {
             "name": "Maintenance Requests — Admin",
             "description": "Maintenance Requests — Admin"
+        },
+        {
+            "name": "Maintenance Requests — Public",
+            "description": "Maintenance Requests — Public"
         },
         {
             "name": "Mosques",

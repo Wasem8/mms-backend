@@ -3,6 +3,7 @@
 namespace Modules\Mosque\Repositories;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Modules\Mosque\Models\Mosque;
 use Modules\Mosque\Models\MosqueNeed;
 
 class MosqueNeedRepository implements MosqueNeedRepositoryInterface
@@ -15,7 +16,7 @@ class MosqueNeedRepository implements MosqueNeedRepositoryInterface
     public function getAllPaginated(array $filters, int $perPage = 10): LengthAwarePaginator
     {
         $query = MosqueNeed::query()
-            ->with('mosque')
+            ->with('mosque:id,name,city,latitude,longitude')
             ->select('mosque_needs.*')
             ->selectRaw('(target_amount - collected_amount) as funding_gap');
 
@@ -104,5 +105,40 @@ class MosqueNeedRepository implements MosqueNeedRepositoryInterface
     public function delete(MosqueNeed $need): bool
     {
         return $need->delete();
+    }
+
+    public function getNearbyMosquesWithNeeds(
+        float $lat,
+        float $lng,
+        ?float $radiusKm,
+        bool $urgentOnly,
+        int $perPage
+    ): LengthAwarePaginator {
+        $query = Mosque::query()
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->scopeNearby($lat, $lng)
+            ->whereHas('needs', fn($q) => $q->where('status', 'open'));
+
+        if ($urgentOnly) {
+            $query->whereHas('needs', fn($q) => $q->where('status', 'open')->where('is_urgent', true));
+        }
+
+        $query->withCount([
+            'needs as open_needs_count'        => fn($q) => $q->where('status', 'open'),
+            'needs as open_urgent_needs_count' => fn($q) => $q->where('status', 'open')->where('is_urgent', true),
+        ]);
+
+        if ($radiusKm) {
+            $query->whereRaw('
+            (6371 * acos(
+                cos(radians(?)) * cos(radians(latitude))
+                * cos(radians(longitude) - radians(?))
+                + sin(radians(?)) * sin(radians(latitude))
+            )) <= ?
+        ', [$lat, $lng, $lat, $radiusKm]);
+        }
+
+        return $query->paginate($perPage);
     }
 }

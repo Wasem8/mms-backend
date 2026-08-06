@@ -110,4 +110,14 @@ class MosqueNeedsService
 
         return $baseUrl . '/storage/v1/object/public/' . $path;
     }
+
+    public function listNearbyMosquesWithNeeds(
+        float $lat,
+        float $lng,
+        ?float $radiusKm = null,
+        bool $urgentOnly = false,
+        int $perPage = 15
+    ): LengthAwarePaginator {
+        return $this->repository->getNearbyMosquesWithNeeds($lat, $lng, $radiusKm, $urgentOnly, $perPage);
+    }
 }

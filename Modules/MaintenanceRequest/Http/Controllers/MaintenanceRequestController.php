@@ -11,6 +11,7 @@ use Modules\MaintenanceRequest\Http\Requests\UpdateMaintenanceRequest;
 use Modules\MaintenanceRequest\Http\Requests\ProcessMaintenanceRequest;
 use Modules\Mosque\Models\Mosque;
 use App\Support\ApiResponse;
+use Modules\MaintenanceRequest\Http\Resources\PublicMaintenanceResource;
 
 class MaintenanceRequestController extends Controller
 {
@@ -229,5 +230,27 @@ class MaintenanceRequestController extends Controller
         );
 
         return ApiResponse::success($maintenance->loadMissing(['files', 'statusLogs', 'mosque']), __('messages.maintenance.processed'));
+    }
+
+    public function publicIndex(Request $request)
+    {
+        $filters = $request->only(['status', 'category', 'priority', 'mosque_id', 'per_page']);
+        $paginator = $this->service->getPublicList($filters);
+
+        return ApiResponse::success(
+            PublicMaintenanceResource::collection($paginator->items())->resolve(),
+            __('messages.maintenance.public_retrieved'),
+            ApiResponse::pagination($paginator)
+        );
+    }
+
+    public function publicShow(int $id)
+    {
+        $maintenance = $this->service->getPublicDetails($id);
+
+        return ApiResponse::success(
+            new PublicMaintenanceResource($maintenance),
+            __('messages.maintenance.retrieved')
+        );
     }
 }

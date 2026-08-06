@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Modules\Mosque\Services\MosqueNeedsService;
 use App\Support\ApiResponse;
+use Modules\Mosque\Http\Requests\ListMosqueNeedsRequest;
+use Modules\Mosque\Http\Requests\NearbyMosqueNeedsRequest;
 use Modules\Mosque\Http\Requests\StoreMosqueNeedRequest;
 use Modules\Mosque\Http\Requests\UpdateMosqueNeedRequest;
 
@@ -29,31 +31,11 @@ class MosqueNeedController extends Controller
         );
     }
 
-    public function AllNeeds(Request $request)
+    public function AllNeeds(ListMosqueNeedsRequest $request)
     {
         $perPage = $request->get('per_page', 10);
 
-        $allowedSortFields = ['urgency', 'funding_gap', 'created_at', 'deadline', 'distance'];
-        $sortBy = in_array($request->get('sort_by'), $allowedSortFields)
-            ? $request->get('sort_by')
-            : 'created_at';
-
-        $sortOrder = strtolower($request->get('sort_order', 'desc')) === 'asc' ? 'asc' : 'desc';
-
-        $near = $this->parseNear($request->get('near'));
-
-        $filters = [
-            'status'     => $request->get('status'),
-            'type'       => $request->get('type'),
-            'urgent'     => $request->get('urgent'),
-            'city'       => $request->get('city'),
-            'mosque_id'  => $request->get('mosque_id'),
-            'search'     => $request->get('search'),
-            'sort_by'    => $near && $sortBy === 'created_at' ? 'distance' : $sortBy,
-            'sort_order' => $sortOrder,
-            'near'       => $near,
-            'radius_km'  => $request->get('radius_km'),
-        ];
+        $filters = $request->toFilters();
 
         $needs = $this->service->listAggregate($filters, $perPage);
 
@@ -63,7 +45,6 @@ class MosqueNeedController extends Controller
             ApiResponse::pagination($needs)
         );
     }
-
     private function parseNear(?string $near): ?array
     {
         if (! $near) {
@@ -169,6 +150,24 @@ class MosqueNeedController extends Controller
                 404
             );
         }
+    }
+    public function nearbyWithNeeds(NearbyMosqueNeedsRequest $request)
+    {
+        $data = $request->validated();
+
+        $needs = $this->service->listNearbyMosquesWithNeeds(
+            (float) $data['lat'],
+            (float) $data['lng'],
+            isset($data['radius_km']) ? (float) $data['radius_km'] : null,
+            $data['urgent_only'] ?? false,
+            (int) ($data['per_page'] ?? 10)
+        );
+
+        return ApiResponse::success(
+            $needs->items(),
+            __('messages.mosque.nearby_needs_retrieved'),
+            ApiResponse::pagination($needs)
+        );
     }
 
 }

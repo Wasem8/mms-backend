@@ -208,6 +208,12 @@ return [
     'mosque.need_updated' => 'تم تحديث الحاجة بنجاح.',
     'mosque.need_deleted' => 'تم حذف الحاجة بنجاح.',
     'mosque.need_not_in_mosque' => 'الحاجة غير موجودة أو لا تتبع للمسجد المحدد.',
+    'mosque.near_required_for_distance_sort' => 'عند اختيار الفرز حسب المسافة، يجب تحديد موقع قريب باستخدام معلمة "near".',
+    'mosque.invalid_sort_by' => 'معلمة الفرز المحددة غير صالحة.',
+    'mosque.invalid_near_format' => 'صيغة معلمة "near" غير صالحة. يجب أن تكون بالشكل "latitude,longitude".',
+    'mosque.invalid_near_coordinates' => 'إحداثيات "near" غير صالحة. يجب أن تكون ضمن النطاقات الصحيحة لخطوط الطول والعرض.',
+    'mosque.invalid_radius' => 'نطاق البحث المحدد غير صالح. يجب أن يكون رقماً موجباً.',
+    'mosque.invalid_radius_format' => 'صيغة معلمة "radius_km" غير صالحة. يجب أن تكون رقماً.',                                                                
     'mosque.spaces_retrieved' => 'تم جلب مساحات المسجد بنجاح.',
     'mosque.spaces_fetch_error' => 'حدث خطأ أثناء جلب البيانات.',
     'mosque.space_not_in_mosque' => 'هذه المساحة لا تنتمي لهذا المسجد.',
@@ -227,5 +233,5 @@ return [
     'mosque.facilities_attached' => 'تم ربط المرافق بالمسجد بنجاح.',
     'mosque.facilities_detached' => 'تم فك ارتباط المرافق بالمسجد بنجاح.',
     'mosque.privileged_field' => 'هذا الحقل خاص بالإدارة العليا فقط.',
-
+    'mosque.mine_retrieved' => 'تم استرجاع مساجد المستخدم الحالي بنجاح.',
 ];

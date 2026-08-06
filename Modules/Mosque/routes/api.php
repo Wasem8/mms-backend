@@ -17,14 +17,20 @@ Route::prefix('facilities')->group(function () {
 });
 
 Route::get('/allNeeds', [MosqueNeedController::class, 'AllNeeds']);
-
 Route::prefix('mosques')->group(function () {
 
     Route::get('/',              [MosqueController::class, 'index']);
-    Route::get('/nearby', [MosqueController::class, 'nearby']);
+    Route::get('/nearby',        [MosqueController::class, 'nearby']);
     Route::get('/search',        [MosqueController::class, 'search']);
     Route::get('/featured',      [MosqueController::class, 'featured']);
+    Route::get('/needs/nearby',  [MosqueNeedController::class, 'nearbyWithNeeds']); 
     Route::get('/city/{city}',   [MosqueController::class, 'byCity']);
+
+    // ✅ لازم auth:api middleware هنا فوق، وقبل أي {mosque} route
+    Route::middleware('auth:api')->group(function () {
+        Route::get('/mine', [MosqueController::class, 'mine']);
+    });
+
     Route::get('/{mosque}',      [MosqueController::class, 'show']);
     Route::get('/{mosque}/needs', [MosqueNeedController::class, 'index']);
     Route::get('/{mosque}/needs/{need}', [MosqueNeedController::class, 'show']);
@@ -43,9 +49,7 @@ Route::prefix('mosques')->group(function () {
             Route::patch('/{mosque}/status',       [MosqueController::class, 'updateStatus']);
             Route::patch('/{mosque}/featured',     [MosqueController::class, 'toggleFeatured']);
             Route::patch('/{mosque}/rating',       [MosqueController::class, 'updateRating']);
-
         });
-
 
         Route::middleware('role:mosque_manager')->group(function () {
             Route::post('/{mosque}/facilities/attach', [FacilitiesController::class, 'attach']);

@@ -22,6 +22,7 @@ class CampaignController extends Controller
         $this->campaignService = $campaignService;
         $this->analyticsService = $analyticsService;
     }
+
     public function index()
     {
         $filters = request()->only(['search', 'status', 'priority', 'sort_by', 'sort_order', 'per_page']);
@@ -30,7 +31,7 @@ class CampaignController extends Controller
         return ApiResponse::success(
             CampaignResource::collection($campaigns)->resolve(),
             'Campaigns retrieved successfully',
-            ApiResponse::pagination($campaigns)
+            $campaigns
         );
     }
 
@@ -43,9 +44,10 @@ class CampaignController extends Controller
         return ApiResponse::success(
             CampaignResource::collection($campaigns)->resolve(),
             'Campaigns retrieved successfully',
-            ApiResponse::pagination($campaigns)
+            $campaigns
         );
     }
+
     public function show($id)
     {
         $campaign = $this->campaignService->getCampaignById($id);

@@ -75,4 +75,30 @@ class MaintenanceRepository implements MaintenanceRepositoryInterface
             'notes'      => $logData['note'] ?? null,
         ]);
     }
+    public function getPublicFiltered(array $filters = [])
+    {
+        return Maintenance::query()
+            ->select(['id', 'maintenance_number', 'mosque_id', 'title', 'description', 'category', 'priority', 'status', 'scheduled_at', 'completed_at', 'created_at'])
+            ->with([
+                'mosque:id,name,city_id,latitude,longitude',
+                'files:id,maintenance_id,file_path,file_name,file_type',
+            ])
+            ->when(isset($filters['status']),    fn($q) => $q->where('status', $filters['status']))
+            ->when(isset($filters['category']),  fn($q) => $q->where('category', $filters['category']))
+            ->when(isset($filters['priority']),  fn($q) => $q->where('priority', $filters['priority']))
+            ->when(isset($filters['mosque_id']), fn($q) => $q->where('mosque_id', $filters['mosque_id']))
+            ->latest()
+            ->paginate($filters['per_page'] ?? 15);
+    }
+
+    public function findPublic(int $id): ?Maintenance
+    {
+        return Maintenance::query()
+            ->select(['id', 'maintenance_number', 'mosque_id', 'title', 'description', 'category', 'priority', 'status', 'scheduled_at', 'completed_at', 'created_at'])
+            ->with([
+                'mosque:id,name,city_id,latitude,longitude',
+                'files:id,maintenance_id,file_path,file_name,file_type',
+            ])
+            ->find($id);
+    }
 }

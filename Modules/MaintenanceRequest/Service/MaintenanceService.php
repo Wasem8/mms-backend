@@ -244,4 +244,19 @@ class MaintenanceService
             'Authorization' => 'Bearer ' . $key,
         ])->delete($deleteUrl);
     }
+    public function getPublicList(array $filters = [])
+    {
+        return $this->repository->getPublicFiltered($filters);
+    }
+
+    public function getPublicDetails(int $id)
+    {
+        $maintenance = $this->repository->findPublic($id);
+
+        if (! $maintenance) {
+            abort(404, __('messages.maintenance.not_found'));
+        }
+
+        return $maintenance;
+    }
 }
