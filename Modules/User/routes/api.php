@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\User\Http\Controllers\AuthController;
-
+use Modules\User\Http\Controllers\ProfileController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
@@ -23,4 +23,8 @@ Route::prefix('auth')->group(function () {
     });
 });
 
+Route::middleware(['auth:api'])->group(function () {
+    Route::get('/profile', [ProfileController::class, 'show']);
+    Route::put('/profile', [ProfileController::class, 'update']);
+});
 
