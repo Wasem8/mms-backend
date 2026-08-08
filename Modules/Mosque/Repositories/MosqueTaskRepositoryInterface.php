@@ -23,4 +23,8 @@ interface MosqueTaskRepositoryInterface
     public function toggleComplete(MosqueTask $task): MosqueTask;
 
     public function delete(MosqueTask $task): bool;
+
+    public function findForRange(int $mosqueId, Carbon $from, Carbon $to, ?string $status = null, ?string $category = null): Collection;
+
+    public function countForRange(int $mosqueId, Carbon $from, Carbon $to): int;
 }

@@ -16750,6 +16750,346 @@
                 ]
             }
         },
+        "/mosque/tasks/next-week": {
+            "get": {
+                "tags": [
+                    "Mosque Tasks"
+                ],
+                "summary": "List mosque tasks for the next 7 days / {Mosque Manager Only}",
+                "description": "Returns all tasks due between today and 7 days from now (inclusive) for the authenticated manager's mosque, with an aggregated completion summary. Used by the \"الأسبوع القادم\" tab.",
+                "operationId": "getMosqueTasksNextWeek",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by completion status.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "completed",
+                                "pending"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "description": "Filter by task category.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "prayer_worship",
+                                "cleaning",
+                                "maintenance",
+                                "activity",
+                                "administrative"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Next 7 days tasks retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Tasks retrieved successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "from": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2026-08-08"
+                                                },
+                                                "to": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2026-08-15"
+                                                },
+                                                "tasks": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 20
+                                                            },
+                                                            "title": {
+                                                                "type": "string",
+                                                                "example": "تنظيف السجاد الأسبوعي"
+                                                            },
+                                                            "category": {
+                                                                "type": "string",
+                                                                "example": "cleaning"
+                                                            },
+                                                            "category_label": {
+                                                                "type": "string",
+                                                                "example": "نظافة"
+                                                            },
+                                                            "due_date": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2026-08-12"
+                                                            },
+                                                            "due_time": {
+                                                                "type": "string",
+                                                                "example": "06:00",
+                                                                "nullable": true
+                                                            },
+                                                            "is_completed": {
+                                                                "type": "boolean",
+                                                                "example": false
+                                                            },
+                                                            "completed_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "is_important": {
+                                                                "type": "boolean",
+                                                                "example": false
+                                                            },
+                                                            "notes": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "summary": {
+                                                    "properties": {
+                                                        "total": {
+                                                            "type": "integer",
+                                                            "example": 5
+                                                        },
+                                                        "completed": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "percentage": {
+                                                            "type": "integer",
+                                                            "example": 20
+                                                        },
+                                                        "by_category": {
+                                                            "type": "object",
+                                                            "example": {
+                                                                "cleaning": 2,
+                                                                "maintenance": 3
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — user is not a mosque manager or has no managed mosque"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/mosque/tasks/friday": {
+            "get": {
+                "tags": [
+                    "Mosque Tasks"
+                ],
+                "summary": "List mosque tasks for the upcoming Friday / {Mosque Manager Only}",
+                "description": "Resolves the next Friday date server-side (today itself if today is Friday, otherwise the coming Friday) and returns its tasks with a completion summary. Used by the \"الجمعة\" tab.",
+                "operationId": "getMosqueTasksFriday",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by completion status.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "completed",
+                                "pending"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "description": "Filter by task category.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "prayer_worship",
+                                "cleaning",
+                                "maintenance",
+                                "activity",
+                                "administrative"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Friday tasks retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Tasks retrieved successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2026-08-14"
+                                                },
+                                                "tasks": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 30
+                                                            },
+                                                            "title": {
+                                                                "type": "string",
+                                                                "example": "تحضير وطباعة ملخص خطبة الجمعة"
+                                                            },
+                                                            "category": {
+                                                                "type": "string",
+                                                                "example": "administrative"
+                                                            },
+                                                            "category_label": {
+                                                                "type": "string",
+                                                                "example": "إداري"
+                                                            },
+                                                            "due_date": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2026-08-14"
+                                                            },
+                                                            "due_time": {
+                                                                "type": "string",
+                                                                "example": "13:30",
+                                                                "nullable": true
+                                                            },
+                                                            "is_completed": {
+                                                                "type": "boolean",
+                                                                "example": false
+                                                            },
+                                                            "completed_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "is_important": {
+                                                                "type": "boolean",
+                                                                "example": false
+                                                            },
+                                                            "notes": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "summary": {
+                                                    "properties": {
+                                                        "total": {
+                                                            "type": "integer",
+                                                            "example": 0
+                                                        },
+                                                        "completed": {
+                                                            "type": "integer",
+                                                            "example": 0
+                                                        },
+                                                        "percentage": {
+                                                            "type": "integer",
+                                                            "example": 0
+                                                        },
+                                                        "by_category": {
+                                                            "type": "object",
+                                                            "example": []
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — user is not a mosque manager or has no managed mosque"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/common/notifications": {
             "get": {
                 "tags": [

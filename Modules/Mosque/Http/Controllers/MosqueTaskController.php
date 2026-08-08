@@ -89,4 +89,45 @@ class MosqueTaskController extends Controller
             403
         );
     }
+
+    public function nextWeek(Request $request)
+    {
+        $mosqueId = Mosque::managedBy(Auth::id())->firstOrFail()->id;
+        $status = $request->query('status');
+        $category = $request->query('category');
+
+        $result = $this->service->listForNextWeek($mosqueId, $status, $category);
+
+        return ApiResponse::success([
+            'from'    => $result['from'],
+            'to'      => $result['to'],
+            'tasks'   => MosqueTaskResource::collection($result['tasks']),
+            'summary' => [
+                'total'       => $result['total'],
+                'completed'   => $result['completed'],
+                'percentage'  => $result['percentage'],
+                'by_category' => $result['by_category'],
+            ],
+        ], __('messages.mosque_tasks_retrieved'));
+    }
+
+    public function friday(Request $request)
+    {
+        $mosqueId = Mosque::managedBy(Auth::id())->firstOrFail()->id;
+        $status = $request->query('status');
+        $category = $request->query('category');
+
+        $result = $this->service->listForNextFriday($mosqueId, $status, $category);
+
+        return ApiResponse::success([
+            'date'    => $result['date'],
+            'tasks'   => MosqueTaskResource::collection($result['tasks']),
+            'summary' => [
+                'total'       => $result['total'],
+                'completed'   => $result['completed'],
+                'percentage'  => $result['percentage'],
+                'by_category' => $result['by_category'],
+            ],
+        ], __('messages.mosque_tasks_retrieved'));
+    }
 }
