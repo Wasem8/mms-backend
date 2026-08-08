@@ -40,8 +40,8 @@ class ComplaintServiceProvider extends ModuleServiceProvider
 
     public function register(): void
     {
-        $this->app->register(RouteServiceProvider::class);
-
+        parent::register();
+        
         $this->app->bind(ComplaintRepositoryInterface::class, ComplaintRepository::class);
     }
     /**

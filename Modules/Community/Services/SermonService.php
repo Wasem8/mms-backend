@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\Http;
 use Modules\Community\Models\Sermon;
 use Modules\Community\Repositories\SermonRepositoryInterface;
 use Modules\User\Models\User;
-
+use Modules\Community\Events\SermonApproved;
+use Modules\Community\Events\SermonRejected;
 
 
 class SermonService
@@ -73,6 +74,9 @@ class SermonService
 
         $this->sermonRepo->updateStatus($sermon, 'Archived');
 
+        event(new SermonApproved($sermon, $adminId));
+
+
         return $sermon;
     }
 
@@ -80,9 +84,14 @@ class SermonService
     {
         $sermon = $this->sermonRepo->findById($sermonId);
         $this->sermonRepo->delete($sermon);
-    }
+        event(new SermonRejected(
+            sermonId: $sermon->id,
+            sermonTitle: $sermon->title,
+            mosqueManagerId: $sermon->mosque_manager_id,
+            isHardReject: true,
+        ));
+        }
 
-    // 4. تنظيف النظام التلقائي من الخطب المتروكة التي حل وقتها ولم تُعتمد
     public function purgeExpiredPendingSermons(): int
     {
         $today = Carbon::today()->toDateString();
@@ -124,7 +133,20 @@ class SermonService
 
     public function rejectSermon($sermonId, $regionManagerId, $notes)
     {
-        return $this->sermonRepo->updateStatus($sermonId, 'Rejected', $notes, $regionManagerId);
+        $sermon = $this->sermonRepo->findById($sermonId);
+        $updated = $this->sermonRepo->updateStatus($sermonId, 'Rejected', $notes, $regionManagerId);
+
+        if ($sermon) {
+            event(new SermonRejected(
+                sermonId: $sermon->id,
+                sermonTitle: $sermon->title,
+                mosqueManagerId: $sermon->mosque_manager_id,
+                notes: $notes,
+                isHardReject: false,
+            ));
+        }
+
+        return $updated;
     }
 
     public function searchSermons(array $filters, User $user, int $perPage = 15)

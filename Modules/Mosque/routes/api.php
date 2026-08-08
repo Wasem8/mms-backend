@@ -5,6 +5,7 @@ use Modules\Mosque\Http\Controllers\MosqueController;
 use Modules\Mosque\Http\Controllers\FacilitiesController;
 use Modules\Mosque\Http\Controllers\MosqueNeedController;
 use Modules\Mosque\Http\Controllers\MosqueSpaceController;
+use Modules\Mosque\Http\Controllers\MosqueTaskController;
 
 Route::prefix('facilities')->group(function () {
     Route::get('/', [FacilitiesController::class, 'index']);
@@ -23,7 +24,7 @@ Route::prefix('mosques')->group(function () {
     Route::get('/nearby',        [MosqueController::class, 'nearby']);
     Route::get('/search',        [MosqueController::class, 'search']);
     Route::get('/featured',      [MosqueController::class, 'featured']);
-    Route::get('/needs/nearby',  [MosqueNeedController::class, 'nearbyWithNeeds']); 
+    Route::get('/needs/nearby',  [MosqueNeedController::class, 'nearbyWithNeeds']);
     Route::get('/city/{city}',   [MosqueController::class, 'byCity']);
 
     // ✅ لازم auth:api middleware هنا فوق، وقبل أي {mosque} route
@@ -64,3 +65,14 @@ Route::prefix('mosques')->group(function () {
         });
     });
 });
+
+Route::middleware(['auth:api', 'role:mosque_manager'])
+    ->prefix('mosque/tasks')
+    ->group(function () {
+        Route::get('/date-tabs', [MosqueTaskController::class, 'dateTabs']); // قبل {task} لتفادي تعارض الراوتات
+        Route::get('/', [MosqueTaskController::class, 'index']);
+        Route::post('/', [MosqueTaskController::class, 'store']);
+        Route::patch('/{task}', [MosqueTaskController::class, 'update']);
+        Route::patch('/{task}/toggle-complete', [MosqueTaskController::class, 'toggleComplete']);
+        Route::delete('/{task}', [MosqueTaskController::class, 'destroy']);
+    });

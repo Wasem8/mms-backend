@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Modules\MaintenanceRequest\Models\Maintenance;
 use Modules\MaintenanceRequest\Repositories\MaintenanceRepositoryInterface;
+use Modules\MaintenanceRequest\Events\MaintenanceRequestCreated;
+use Modules\MaintenanceRequest\Events\MaintenanceStatusChanged;
 
 class MaintenanceService
 {
@@ -53,8 +55,12 @@ class MaintenanceService
             'changed_by' => $data['requested_by'],
         ]);
 
-        return $this->repository->find($maintenance->id);
-    }
+        $created = $this->repository->find($maintenance->id);
+
+        event(new MaintenanceRequestCreated($created));
+
+        return $created;
+            }
 
     public function getList(array $filters = [])
     {
@@ -165,8 +171,12 @@ class MaintenanceService
         ]);
 
 
-        return $this->repository->find($id);
-    }
+        $updated = $this->repository->find($id);
+
+        event(new MaintenanceStatusChanged($updated, $oldStatus, $newStatus, $note, $changedBy));
+
+        return $updated;
+            }
 
     public function getStatistics(array $filters = [])
     {

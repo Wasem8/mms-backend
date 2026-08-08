@@ -58,7 +58,7 @@ class Mosque extends Model
     {
         return (int) ($this->open_urgent_needs_count ?? 0) > 0;
     }
-    
+
     public function getImageUrlAttribute(): ?string
     {
         return $this->image
@@ -124,6 +124,11 @@ class Mosque extends Model
     public function district(): BelongsTo
     {
         return $this->belongsTo(District::class);
+    }
+
+    public function scopeManagedBy($query, int $userId)
+    {
+        return $query->where('manager_id', $userId);
     }
 
 

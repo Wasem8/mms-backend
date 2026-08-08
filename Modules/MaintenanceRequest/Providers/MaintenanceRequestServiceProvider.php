@@ -40,8 +40,8 @@ class MaintenanceRequestServiceProvider extends ModuleServiceProvider
 
     public function register(): void
     {
-        $this->app->register(RouteServiceProvider::class);
-
+        parent::register();
+        
         $this->app->bind(
             MaintenanceRepositoryInterface::class,
             MaintenanceRepository::class,
@@ -49,7 +49,7 @@ class MaintenanceRequestServiceProvider extends ModuleServiceProvider
     }
     /**
      * Define module schedules.
-     * 
+     *
      * @param $schedule
      */
     // protected function configureSchedules(Schedule $schedule): void

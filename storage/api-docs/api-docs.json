@@ -15968,6 +15968,788 @@
                 ]
             }
         },
+        "/mosque/tasks": {
+            "get": {
+                "tags": [
+                    "Mosque Tasks"
+                ],
+                "summary": "List mosque tasks for a given date / {Mosque Manager Only}",
+                "description": "Returns the operational tasks (صلاة وعبادة، نظافة، صيانة، فعالية، إداري) for the authenticated manager's mosque, filtered by date, status, and category. Includes a completion summary.",
+                "operationId": "getMosqueTasks",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "description": "Date to filter tasks by (YYYY-MM-DD). Defaults to today.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2026-08-08"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by completion status.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "completed",
+                                "pending"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "description": "Filter by task category.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "prayer_worship",
+                                "cleaning",
+                                "maintenance",
+                                "activity",
+                                "administrative"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mosque tasks retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Mosque tasks retrieved successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "tasks": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 12
+                                                            },
+                                                            "title": {
+                                                                "type": "string",
+                                                                "example": "تأكيد جاهزية المسجد وصلاة الفجر"
+                                                            },
+                                                            "category": {
+                                                                "type": "string",
+                                                                "example": "prayer_worship"
+                                                            },
+                                                            "category_label": {
+                                                                "type": "string",
+                                                                "example": "صلاة وعبادة"
+                                                            },
+                                                            "due_date": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2026-08-08"
+                                                            },
+                                                            "due_time": {
+                                                                "type": "string",
+                                                                "example": "04:15",
+                                                                "nullable": true
+                                                            },
+                                                            "is_completed": {
+                                                                "type": "boolean",
+                                                                "example": true
+                                                            },
+                                                            "completed_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2026-08-08T04:20:00Z",
+                                                                "nullable": true
+                                                            },
+                                                            "is_important": {
+                                                                "type": "boolean",
+                                                                "example": false
+                                                            },
+                                                            "notes": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "summary": {
+                                                    "properties": {
+                                                        "total": {
+                                                            "type": "integer",
+                                                            "example": 8
+                                                        },
+                                                        "completed": {
+                                                            "type": "integer",
+                                                            "example": 2
+                                                        },
+                                                        "percentage": {
+                                                            "type": "integer",
+                                                            "example": 25
+                                                        },
+                                                        "by_category": {
+                                                            "type": "object",
+                                                            "example": {
+                                                                "prayer_worship": 2,
+                                                                "cleaning": 1,
+                                                                "maintenance": 1,
+                                                                "activity": 1,
+                                                                "administrative": 3
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden — user is not a mosque manager or has no managed mosque"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Mosque Tasks"
+                ],
+                "summary": "Create a mosque task (quick add or detailed) / {Mosque Manager Only}",
+                "description": "Creates a new operational task for the manager's mosque. Used by both the \"إضافة فورية\" quick-add bar and the \"إضافة مهمة مفصلة\" modal.",
+                "operationId": "createMosqueTask",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "category"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "فحص التكييف",
+                                        "maxLength": 255,
+                                        "minLength": 2
+                                    },
+                                    "category": {
+                                        "type": "string",
+                                        "example": "maintenance",
+                                        "enum": [
+                                            "prayer_worship",
+                                            "cleaning",
+                                            "maintenance",
+                                            "activity",
+                                            "administrative"
+                                        ]
+                                    },
+                                    "due_date": {
+                                        "description": "Defaults to today if omitted.",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-08-08",
+                                        "nullable": true
+                                    },
+                                    "due_time": {
+                                        "type": "string",
+                                        "example": "10:00",
+                                        "nullable": true
+                                    },
+                                    "is_important": {
+                                        "type": "boolean",
+                                        "example": false,
+                                        "nullable": true
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "example": null,
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Mosque task created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تمت إضافة المهمة بنجاح"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 12
+                                                },
+                                                "title": {
+                                                    "type": "string",
+                                                    "example": "فحص التكييف"
+                                                },
+                                                "category": {
+                                                    "type": "string",
+                                                    "example": "maintenance"
+                                                },
+                                                "category_label": {
+                                                    "type": "string",
+                                                    "example": "صيانة"
+                                                },
+                                                "due_date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2026-08-08"
+                                                },
+                                                "due_time": {
+                                                    "type": "string",
+                                                    "example": "10:00",
+                                                    "nullable": true
+                                                },
+                                                "is_completed": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                },
+                                                "completed_at": {
+                                                    "type": "string",
+                                                    "example": null,
+                                                    "nullable": true
+                                                },
+                                                "is_important": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                },
+                                                "notes": {
+                                                    "type": "string",
+                                                    "example": null,
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation error."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": {
+                                                "category": [
+                                                    "The selected category is invalid."
+                                                ]
+                                            }
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/mosque/tasks/date-tabs": {
+            "get": {
+                "tags": [
+                    "Mosque Tasks"
+                ],
+                "summary": "Get task counts for quick date pills / {Mosque Manager Only}",
+                "description": "Returns the number of tasks scheduled for today, tomorrow, the day after tomorrow, the coming Friday, and next week — used to render the date-selector pills shown at the top of the tasks page.",
+                "operationId": "getMosqueTaskDateTabs",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Date tabs retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Date tabs retrieved successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "today": {
+                                                    "type": "integer",
+                                                    "example": 8
+                                                },
+                                                "tomorrow": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "day_after": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "friday": {
+                                                    "type": "integer",
+                                                    "example": 0
+                                                },
+                                                "next_week": {
+                                                    "type": "integer",
+                                                    "example": 0
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/mosque/tasks/{task}": {
+            "delete": {
+                "tags": [
+                    "Mosque Tasks"
+                ],
+                "summary": "Delete a mosque task / {Mosque Manager Only}",
+                "description": "Permanently deletes a task belonging to the manager's mosque.",
+                "operationId": "deleteMosqueTask",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "task",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 12
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mosque task deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم حذف المهمة"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": []
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Task not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Mosque Tasks"
+                ],
+                "summary": "Update a mosque task / {Mosque Manager Only}",
+                "description": "Partially updates a task belonging to the manager's mosque.",
+                "operationId": "updateMosqueTask",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "task",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 12
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "فحص التكييف المركزي"
+                                    },
+                                    "category": {
+                                        "type": "string",
+                                        "enum": [
+                                            "prayer_worship",
+                                            "cleaning",
+                                            "maintenance",
+                                            "activity",
+                                            "administrative"
+                                        ]
+                                    },
+                                    "due_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-08-09"
+                                    },
+                                    "due_time": {
+                                        "type": "string",
+                                        "example": "11:00",
+                                        "nullable": true
+                                    },
+                                    "is_important": {
+                                        "type": "boolean"
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Mosque task updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم تحديث المهمة بنجاح"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 12
+                                                },
+                                                "title": {
+                                                    "type": "string",
+                                                    "example": "فحص التكييف المركزي"
+                                                },
+                                                "category": {
+                                                    "type": "string",
+                                                    "example": "maintenance"
+                                                },
+                                                "category_label": {
+                                                    "type": "string",
+                                                    "example": "صيانة"
+                                                },
+                                                "due_date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2026-08-09"
+                                                },
+                                                "due_time": {
+                                                    "type": "string",
+                                                    "example": "11:00",
+                                                    "nullable": true
+                                                },
+                                                "is_completed": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                },
+                                                "completed_at": {
+                                                    "type": "string",
+                                                    "example": null,
+                                                    "nullable": true
+                                                },
+                                                "is_important": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "notes": {
+                                                    "type": "string",
+                                                    "example": null,
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — task does not belong to the manager's mosque"
+                    },
+                    "404": {
+                        "description": "Task not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/mosque/tasks/{task}/toggle-complete": {
+            "patch": {
+                "tags": [
+                    "Mosque Tasks"
+                ],
+                "summary": "Toggle task completion / {Mosque Manager Only}",
+                "description": "Flips is_completed for the task (the green checkmark on the task row). Sets or clears completed_at accordingly.",
+                "operationId": "toggleMosqueTaskComplete",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "task",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 12
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Task status toggled successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم تحديث حالة المهمة"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 12
+                                                },
+                                                "is_completed": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "completed_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2026-08-08T10:05:00Z",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Task not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/common/notifications": {
             "get": {
                 "tags": [
@@ -23196,6 +23978,10 @@
         {
             "name": "Spaces",
             "description": "Spaces"
+        },
+        {
+            "name": "Mosque Tasks",
+            "description": "Mosque Tasks"
         },
         {
             "name": "Notifications",

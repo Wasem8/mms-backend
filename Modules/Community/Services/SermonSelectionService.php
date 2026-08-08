@@ -10,6 +10,7 @@ use Modules\User\Models\User;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
+use Modules\Community\Events\SermonSelectedForFriday;
 
 class SermonSelectionService
 {
@@ -34,8 +35,14 @@ class SermonSelectionService
             ]);
         }
 
-        return $this->selectionRepo->upsert($mosqueManager->id, $dto->sermonId, $dto->fridayDate);
-    }
+
+        $selection = $this->selectionRepo->upsert($mosqueManager->id, $dto->sermonId, $dto->fridayDate);
+
+        event(new SermonSelectedForFriday($sermon, $selection, $mosqueManager));
+
+        return $selection;
+        }
+        
     public function getMySelections(User $mosqueManager, array $filters, int $perPage = 15): LengthAwarePaginator
     {
         $filters['mosque_manager_id'] = $mosqueManager->id;
@@ -71,5 +78,5 @@ class SermonSelectionService
         $this->selectionRepo->delete($selection);
     }
 
-    
+
 }
