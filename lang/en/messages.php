@@ -237,4 +237,16 @@ return [
     'mosque.facilities_detached' => 'Facilities detached from the mosque successfully.',
     'mosque.privileged_field' => 'This field is restricted to senior management only.',
     'mosque.mine_retrieved' => 'Current user mosques retrieved successfully.',
+    'mosque_task_category_prayer_worship' => 'Prayer & Worship',
+    'mosque_task_category_cleaning'       => 'Cleaning',
+    'mosque_task_category_maintenance'    => 'Maintenance',
+    'mosque_task_category_activity'       => 'Activity',
+    'mosque_task_category_administrative' => 'Administrative',
+
+    'mosque_task_created'        => 'Task added successfully',
+    'mosque_task_updated'        => 'Task updated successfully',
+    'mosque_task_status_updated' => 'Task status updated successfully',
+    'mosque_task_deleted'        => 'Task deleted successfully',
+    'mosque_tasks_retrieved'          => 'Tasks retrieved successfully',
+    'mosque_task_date_tabs_retrieved' => 'Date tabs retrieved successfully',
 ];

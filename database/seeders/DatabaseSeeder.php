@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-
+use Database\Seeders\SermonSeeder as SeedersSermonSeeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Modules\Education\Database\Seeders\EducationDatabaseSeeder;
@@ -34,6 +34,7 @@ class DatabaseSeeder extends Seeder
             \Modules\Donation\Database\Seeders\DonationDatabaseSeeder::class,
             \Modules\Complaint\Database\Seeders\ComplaintDatabaseSeeder::class,
             \Modules\MaintenanceRequest\Database\Seeders\MaintenanceRequestDatabaseSeeder::class,
+            SeedersSermonSeeder::class,
 
         ]);
 

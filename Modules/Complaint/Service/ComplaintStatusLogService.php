@@ -4,7 +4,7 @@ namespace Modules\Complaint\Service;
 
 use Modules\Complaint\Repositories\ComplaintStatusLogRepository;
 
-class ComplaintService
+class ComplaintStatusLogService
 {
     protected $statusLogRepository;
 

@@ -82,14 +82,14 @@ class DonationController extends Controller
 
     public function receipt($id)
     {
-        $donation = \Modules\Donation\Models\Donation::with(['mosque', 'campaign', 'mosqueNeed'])
-            ->findOrFail($id);
+        $donation = Donation::findOrFail($id);
 
-        $pdf = $this->donationService->generateReceipt($donation);
+        $url = $this->donationService->getReceiptDownloadUrl($donation);
 
-        return response($pdf, 200, [
-            'Content-Type'        => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="receipt-' . $donation->reference . '.pdf"',
+        return response()->json([
+            'status'  => true,
+            'message' => 'Success',
+            'data'    => ['receipt_url' => $url],
         ]);
     }
 

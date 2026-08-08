@@ -66,6 +66,10 @@ class MosqueServiceProvider extends ModuleServiceProvider
             \Modules\Mosque\Repositories\MosqueSpaceRepositoryInterface::class,
             \Modules\Mosque\Repositories\MosqueSpaceRepository::class
         );
+        $this->app->bind(
+            \Modules\Mosque\Repositories\MosqueTaskRepositoryInterface::class,
+            \Modules\Mosque\Repositories\EloquentMosqueTaskRepository::class
+        );
     }
 
     public function boot(): void

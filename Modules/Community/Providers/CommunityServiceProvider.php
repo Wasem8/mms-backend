@@ -42,7 +42,7 @@ class CommunityServiceProvider extends ModuleServiceProvider
 
     public function register(): void
     {
-
+        parent::register();
 
         $this->app->bind(
             SermonRepositoryInterface::class,

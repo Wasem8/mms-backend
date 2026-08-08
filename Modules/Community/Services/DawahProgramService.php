@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Modules\Community\Events\DawahProgramCreated;
 
 class DawahProgramService
 {
@@ -97,6 +98,7 @@ class DawahProgramService
                 $this->dawahProgramRepository
                     ->createSchedules($program, $schedules);
             }
+            event(new DawahProgramCreated($program, Auth::id()));
 
             return $program->load('schedules');
         });
