@@ -360,4 +360,172 @@ class MosqueTaskEndpoints
         ]
     )]
     public function destroy() {}
+
+    #[OA\Get(
+        path: '/mosque/tasks/next-week',
+        operationId: 'getMosqueTasksNextWeek',
+        tags: ['Mosque Tasks'],
+        summary: 'List mosque tasks for the next 7 days / {Mosque Manager Only}',
+        description: 'Returns all tasks due between today and 7 days from now (inclusive) for the authenticated manager\'s mosque, with an aggregated completion summary. Used by the "الأسبوع القادم" tab.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(
+                name: 'status',
+                in: 'query',
+                required: false,
+                description: 'Filter by completion status.',
+                schema: new OA\Schema(type: 'string', enum: ['completed', 'pending'])
+            ),
+            new OA\Parameter(
+                name: 'category',
+                in: 'query',
+                required: false,
+                description: 'Filter by task category.',
+                schema: new OA\Schema(
+                    type: 'string',
+                    enum: ['prayer_worship', 'cleaning', 'maintenance', 'activity', 'administrative']
+                )
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Next 7 days tasks retrieved successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Tasks retrieved successfully.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'from', type: 'string', format: 'date', example: '2026-08-08'),
+                                new OA\Property(property: 'to', type: 'string', format: 'date', example: '2026-08-15'),
+                                new OA\Property(
+                                    property: 'tasks',
+                                    type: 'array',
+                                    items: new OA\Items(
+                                        properties: [
+                                            new OA\Property(property: 'id', type: 'integer', example: 20),
+                                            new OA\Property(property: 'title', type: 'string', example: 'تنظيف السجاد الأسبوعي'),
+                                            new OA\Property(property: 'category', type: 'string', example: 'cleaning'),
+                                            new OA\Property(property: 'category_label', type: 'string', example: 'نظافة'),
+                                            new OA\Property(property: 'due_date', type: 'string', format: 'date', example: '2026-08-12'),
+                                            new OA\Property(property: 'due_time', type: 'string', nullable: true, example: '06:00'),
+                                            new OA\Property(property: 'is_completed', type: 'boolean', example: false),
+                                            new OA\Property(property: 'completed_at', type: 'string', format: 'date-time', nullable: true, example: null),
+                                            new OA\Property(property: 'is_important', type: 'boolean', example: false),
+                                            new OA\Property(property: 'notes', type: 'string', nullable: true, example: null),
+                                        ]
+                                    )
+                                ),
+                                new OA\Property(
+                                    property: 'summary',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'total', type: 'integer', example: 5),
+                                        new OA\Property(property: 'completed', type: 'integer', example: 1),
+                                        new OA\Property(property: 'percentage', type: 'integer', example: 20),
+                                        new OA\Property(
+                                            property: 'by_category',
+                                            type: 'object',
+                                            example: [
+                                                'cleaning' => 2,
+                                                'maintenance' => 3,
+                                            ]
+                                        ),
+                                    ]
+                                ),
+                            ]
+                        ),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — user is not a mosque manager or has no managed mosque'),
+        ]
+    )]
+    public function nextWeek() {}
+
+    #[OA\Get(
+        path: '/mosque/tasks/friday',
+        operationId: 'getMosqueTasksFriday',
+        tags: ['Mosque Tasks'],
+        summary: 'List mosque tasks for the upcoming Friday / {Mosque Manager Only}',
+        description: 'Resolves the next Friday date server-side (today itself if today is Friday, otherwise the coming Friday) and returns its tasks with a completion summary. Used by the "الجمعة" tab.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(
+                name: 'status',
+                in: 'query',
+                required: false,
+                description: 'Filter by completion status.',
+                schema: new OA\Schema(type: 'string', enum: ['completed', 'pending'])
+            ),
+            new OA\Parameter(
+                name: 'category',
+                in: 'query',
+                required: false,
+                description: 'Filter by task category.',
+                schema: new OA\Schema(
+                    type: 'string',
+                    enum: ['prayer_worship', 'cleaning', 'maintenance', 'activity', 'administrative']
+                )
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Friday tasks retrieved successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Tasks retrieved successfully.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'date', type: 'string', format: 'date', example: '2026-08-14'),
+                                new OA\Property(
+                                    property: 'tasks',
+                                    type: 'array',
+                                    items: new OA\Items(
+                                        properties: [
+                                            new OA\Property(property: 'id', type: 'integer', example: 30),
+                                            new OA\Property(property: 'title', type: 'string', example: 'تحضير وطباعة ملخص خطبة الجمعة'),
+                                            new OA\Property(property: 'category', type: 'string', example: 'administrative'),
+                                            new OA\Property(property: 'category_label', type: 'string', example: 'إداري'),
+                                            new OA\Property(property: 'due_date', type: 'string', format: 'date', example: '2026-08-14'),
+                                            new OA\Property(property: 'due_time', type: 'string', nullable: true, example: '13:30'),
+                                            new OA\Property(property: 'is_completed', type: 'boolean', example: false),
+                                            new OA\Property(property: 'completed_at', type: 'string', format: 'date-time', nullable: true, example: null),
+                                            new OA\Property(property: 'is_important', type: 'boolean', example: false),
+                                            new OA\Property(property: 'notes', type: 'string', nullable: true, example: null),
+                                        ]
+                                    )
+                                ),
+                                new OA\Property(
+                                    property: 'summary',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'total', type: 'integer', example: 0),
+                                        new OA\Property(property: 'completed', type: 'integer', example: 0),
+                                        new OA\Property(property: 'percentage', type: 'integer', example: 0),
+                                        new OA\Property(property: 'by_category', type: 'object', example: []),
+                                    ]
+                                ),
+                            ]
+                        ),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — user is not a mosque manager or has no managed mosque'),
+        ]
+    )]
+    public function friday() {}
 }

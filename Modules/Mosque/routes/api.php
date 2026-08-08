@@ -69,7 +69,9 @@ Route::prefix('mosques')->group(function () {
 Route::middleware(['auth:api', 'role:mosque_manager'])
     ->prefix('mosque/tasks')
     ->group(function () {
-        Route::get('/date-tabs', [MosqueTaskController::class, 'dateTabs']); // قبل {task} لتفادي تعارض الراوتات
+        Route::get('/date-tabs', [MosqueTaskController::class, 'dateTabs']);
+        Route::get('/next-week', [MosqueTaskController::class, 'nextWeek']);
+        Route::get('/friday', [MosqueTaskController::class, 'friday']);
         Route::get('/', [MosqueTaskController::class, 'index']);
         Route::post('/', [MosqueTaskController::class, 'store']);
         Route::patch('/{task}', [MosqueTaskController::class, 'update']);

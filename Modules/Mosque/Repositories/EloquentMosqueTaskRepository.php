@@ -91,4 +91,25 @@ class EloquentMosqueTaskRepository implements MosqueTaskRepositoryInterface
     {
         return $task->delete();
     }
+
+    public function findForRange(int $mosqueId, Carbon $from, Carbon $to, ?string $status = null, ?string $category = null): Collection
+    {
+        return $this->model
+            ->where('mosque_id', $mosqueId)
+            ->whereBetween('due_date', [$from->toDateString(), $to->toDateString()])
+            ->when($status === 'completed', fn($q) => $q->where('is_completed', true))
+            ->when($status === 'pending', fn($q) => $q->where('is_completed', false))
+            ->when($category, fn($q) => $q->where('category', $category))
+            ->orderBy('due_date')
+            ->orderBy('due_time')
+            ->get();
+    }
+    
+    public function countForRange(int $mosqueId, Carbon $from, Carbon $to): int
+    {
+        return $this->model
+            ->where('mosque_id', $mosqueId)
+            ->whereBetween('due_date', [$from->toDateString(), $to->toDateString()])
+            ->count();
+    }
 }
