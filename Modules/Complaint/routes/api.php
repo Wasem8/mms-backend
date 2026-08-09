@@ -27,3 +27,4 @@ Route::middleware(['auth:api',])->prefix('complaints/member')->group(function ()
 
 Route::get('complaints/recent', [ComplaintController::class, 'recentComplaints'])->middleware(['auth:api', 'role:mosque_manager']);
 Route::get('complaints/stats', [ComplaintController::class, 'pageStats'])->middleware(['auth:api', 'role:mosque_manager']);
+Route::middleware('auth:api')->get('/complaints/mine', [ComplaintController::class, 'mine']);

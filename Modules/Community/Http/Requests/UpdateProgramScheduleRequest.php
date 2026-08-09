@@ -25,7 +25,7 @@ class UpdateProgramScheduleRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'end_time.after' => 'The end time must be after the start time.',
+            'end_time.after' => __('messages.community.end_time_after_start'),
         ];
     }
 }

@@ -12,6 +12,10 @@ use OpenApi\Attributes as OA;
     name: 'Tameems',
     description: 'Manage circulars/announcements (تعاميم) sent between mosque managers.'
 )]
+#[OA\Tag(
+    name: 'Sermon Selections',
+    description: 'Manage sermon selections for Friday prayers (اختيار خطبة الجمعة).'
+)]
 class SermonTameemEndpoints
 {
 
@@ -69,6 +73,22 @@ class SermonTameemEndpoints
     )]
     public function schemaTameem() {}
 
+    #[OA\Schema(
+        schema: 'SermonSelection',
+        type: 'object',
+        properties: [
+            new OA\Property(property: 'id', type: 'integer', example: 1),
+            new OA\Property(property: 'sermon_id', type: 'integer', example: 5),
+            new OA\Property(property: 'mosque_manager_id', type: 'integer', example: 3),
+            new OA\Property(property: 'friday_date', type: 'string', format: 'date', example: '2026-07-18'),
+            new OA\Property(property: 'sermon', ref: '#/components/schemas/Sermon'),
+            new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
+            new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
+        ]
+    )]
+    public function schemaSermonSelection() {}
+
+
 
     // =========================================================================
     // GET /sermons
@@ -80,6 +100,9 @@ class SermonTameemEndpoints
         summary: 'Submit a sermon',
         description: 'Allows mosque managers to submit a sermon for approval. Multiple attachments are supported. Allowed file types: PDF, DOC, DOCX, JPG, JPEG and PNG. Maximum size: 5MB per file.',
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
 
         requestBody: new OA\RequestBody(
             required: true,
@@ -178,6 +201,46 @@ class SermonTameemEndpoints
     public function storeSermon() {}
 
     #[OA\Get(
+        path: '/sermons/most-selected',
+        operationId: 'mostSelectedSermons',
+        tags: ['Sermons'],
+        summary: 'Get most selected sermons',
+        description: 'Returns archived sermons ranked by how many times they were selected for a Friday sermon, optionally within a date range.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 10)),
+            new OA\Parameter(name: 'friday_date_from', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'friday_date_to', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'تم جلب الخطب الأكثر اختيارًا بنجاح.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(
+                                allOf: [
+                                    new OA\Schema(ref: '#/components/schemas/Sermon'),
+                                    new OA\Schema(properties: [
+                                        new OA\Property(property: 'selections_count', type: 'integer', example: 12),
+                                    ]),
+                                ]
+                            )
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+        ]
+    )]
+    public function mostSelectedSermons() {}
+
+    #[OA\Get(
         path: '/sermons/{id}',
         operationId: 'getSermonById',
         tags: ['Sermons'],
@@ -185,6 +248,7 @@ class SermonTameemEndpoints
         description: 'Returns the details of a specific sermon.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'id',
                 in: 'path',
@@ -243,6 +307,9 @@ class SermonTameemEndpoints
         summary: 'Get pending sermons',
         description: 'Returns all sermons awaiting approval.',
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
         responses: [
             new OA\Response(
                 response: 200,
@@ -274,6 +341,9 @@ class SermonTameemEndpoints
         summary: 'Get archived sermons',
         description: 'Returns approved, rejected, or completed sermons.',
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
         responses: [
             new OA\Response(
                 response: 200,
@@ -306,6 +376,9 @@ class SermonTameemEndpoints
         summary: 'Get all sermons',
         description: 'Returns a list of all sermons.',
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
         responses: [
             new OA\Response(
                 response: 200,
@@ -329,7 +402,138 @@ class SermonTameemEndpoints
         ]
     )]
     public function indexSermons() {}
-    
+
+    #[OA\Get(
+        path: '/sermons/search',
+        operationId: 'searchSermons',
+        tags: ['Sermons'],
+        summary: 'Search and filter sermons',
+        description: 'Returns a paginated, filtered list of sermons. Results are automatically scoped by the authenticated user\'s role: mosque managers see only their own sermons.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(
+                name: 'status',
+                in: 'query',
+                required: false,
+                description: 'Filter by sermon status',
+                schema: new OA\Schema(type: 'string', enum: ['Pending', 'Archived', 'Rejected'])
+            ),
+            new OA\Parameter(
+                name: 'mosque_manager_id',
+                in: 'query',
+                required: false,
+                description: 'Filter by the mosque manager who submitted the sermon',
+                schema: new OA\Schema(type: 'integer', example: 3)
+            ),
+            new OA\Parameter(
+                name: 'region_manager_id',
+                in: 'query',
+                required: false,
+                description: 'Filter by the admin who approved/rejected the sermon',
+                schema: new OA\Schema(type: 'integer', example: 7)
+            ),
+            new OA\Parameter(
+                name: 'speaker_name',
+                in: 'query',
+                required: false,
+                description: 'Partial match on speaker name',
+                schema: new OA\Schema(type: 'string', example: 'أحمد')
+            ),
+            new OA\Parameter(
+                name: 'keyword',
+                in: 'query',
+                required: false,
+                description: 'Full-text style search across title, content, and speaker name',
+                schema: new OA\Schema(type: 'string', example: 'التوبة')
+            ),
+            new OA\Parameter(
+                name: 'sermon_date_from',
+                in: 'query',
+                required: false,
+                description: 'Filter sermons delivered on or after this date',
+                schema: new OA\Schema(type: 'string', format: 'date', example: '2026-01-01')
+            ),
+            new OA\Parameter(
+                name: 'sermon_date_to',
+                in: 'query',
+                required: false,
+                description: 'Filter sermons delivered on or before this date',
+                schema: new OA\Schema(type: 'string', format: 'date', example: '2026-06-30')
+            ),
+            new OA\Parameter(
+                name: 'submitted_from',
+                in: 'query',
+                required: false,
+                description: 'Filter by submission date (created_at), on or after',
+                schema: new OA\Schema(type: 'string', format: 'date', example: '2026-01-01')
+            ),
+            new OA\Parameter(
+                name: 'submitted_to',
+                in: 'query',
+                required: false,
+                description: 'Filter by submission date (created_at), on or before',
+                schema: new OA\Schema(type: 'string', format: 'date', example: '2026-06-30')
+            ),
+            new OA\Parameter(
+                name: 'sort',
+                in: 'query',
+                required: false,
+                description: 'Sort field and direction, format: field:direction. Allowed fields: sermon_date, created_at, title, status.',
+                schema: new OA\Schema(type: 'string', example: 'sermon_date:asc')
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                description: 'Number of results per page (max 100)',
+                schema: new OA\Schema(type: 'integer', example: 15)
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Filtered sermons retrieved successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'Sermons filtered successfully.'
+                        ),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'data',
+                                    type: 'array',
+                                    items: new OA\Items(ref: '#/components/schemas/Sermon')
+                                ),
+                                new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                new OA\Property(property: 'last_page', type: 'integer', example: 4),
+                                new OA\Property(property: 'per_page', type: 'integer', example: 15),
+                                new OA\Property(property: 'total', type: 'integer', example: 52),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(
+                response: 422,
+                description: 'Validation error',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'خطأ في التحقق من البيانات'),
+                        new OA\Property(property: 'errors', type: 'object'),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function searchSermons() {}
+
     #[OA\Put(
         path: '/sermons/{id}/approve',
         operationId: 'approveSermon',
@@ -338,6 +542,7 @@ class SermonTameemEndpoints
         description: 'Allows a super admin to approve a pending sermon.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'id',
                 in: 'path',
@@ -379,6 +584,7 @@ class SermonTameemEndpoints
         description: 'Allows a super admin to reject a sermon and provide notes.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'id',
                 in: 'path',
@@ -437,6 +643,9 @@ class SermonTameemEndpoints
         summary: 'List all circulars',
         description: 'Returns all tameems visible to the authenticated user.',
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
         responses: [
             new OA\Response(
                 response: 200,
@@ -473,6 +682,9 @@ class SermonTameemEndpoints
         - Passing a non-mosque-manager ID returns a `422` validation error.
         DESC,
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -533,6 +745,7 @@ class SermonTameemEndpoints
         DESC,
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'id',
                 in: 'path',
@@ -601,6 +814,7 @@ class SermonTameemEndpoints
         DESC,
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'id',
                 in: 'path',
@@ -637,6 +851,9 @@ class SermonTameemEndpoints
         summary: 'Get received circulars',
         description: 'Returns all tameems received by the authenticated mosque manager.',
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
         responses: [
             new OA\Response(
                 response: 200,
@@ -669,6 +886,7 @@ class SermonTameemEndpoints
         description: 'Marks the tameem as read for the authenticated mosque manager.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 10),
         ],
         responses: [
@@ -695,6 +913,7 @@ class SermonTameemEndpoints
         description: 'Returns the details of a specific tameem by its ID.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 10),
         ],
         responses: [
@@ -713,4 +932,296 @@ class SermonTameemEndpoints
         ]
     )]
     public function getTameemById() {}
+    // =========================================================================
+    // Sermon Selections Endpoints
+    // =========================================================================
+
+    #[OA\Post(
+        path: '/sermon-selections',
+        operationId: 'storeSermonSelection',
+        tags: ['Sermon Selections'],
+        summary: 'Select an archived sermon for a specific Friday',
+        description: 'Allows a mosque manager to select an approved sermon to be delivered on a specific Friday.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    required: ['sermon_id', 'friday_date'],
+                    properties: [
+                        new OA\Property(
+                            property: 'sermon_id',
+                            type: 'integer',
+                            description: 'ID of the approved sermon to select',
+                            example: 5
+                        ),
+                        new OA\Property(
+                            property: 'friday_date',
+                            type: 'string',
+                            format: 'date',
+                            description: 'The Friday date for which the sermon is selected',
+                            example: '2026-07-18'
+                        ),
+                    ]
+                )
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Sermon selected successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'تم اختيار الخطبة بنجاح لإلقائها يوم الجمعة.'
+                        ),
+                        new OA\Property(
+                            property: 'data',
+                            ref: '#/components/schemas/SermonSelection'
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — only mosque managers can select sermons'),
+            new OA\Response(response: 404, description: 'Sermon not found or not approved'),
+            new OA\Response(
+                response: 422,
+                description: 'Validation error',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'خطأ في التحقق من البيانات'),
+                        new OA\Property(property: 'errors', type: 'object'),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 409,
+                description: 'Conflict — sermon already selected for this Friday',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'تم اختيار خطبة لهذا اليوم مسبقاً.'),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function storeSermonSelection() {}
+    #[OA\Get(
+        path: '/sermon-selections/mine',
+        operationId: 'mySermonSelections',
+        tags: ['Sermon Selections'],
+        summary: 'Get my sermon selections',
+        description: 'Returns all sermon selections made by the authenticated mosque manager.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(
+                name: 'friday_date_from',
+                in: 'query',
+                required: false,
+                description: 'Filter by Friday date, on or after',
+                schema: new OA\Schema(type: 'string', format: 'date', example: '2026-01-01')
+            ),
+            new OA\Parameter(
+                name: 'friday_date_to',
+                in: 'query',
+                required: false,
+                description: 'Filter by Friday date, on or before',
+                schema: new OA\Schema(type: 'string', format: 'date', example: '2026-06-30')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'تم جلب اختياراتك بنجاح.'
+                        ),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'data',
+                                    type: 'array',
+                                    items: new OA\Items(ref: '#/components/schemas/SermonSelection')
+                                ),
+                                new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                new OA\Property(property: 'last_page', type: 'integer', example: 3),
+                                new OA\Property(property: 'per_page', type: 'integer', example: 15),
+                                new OA\Property(property: 'total', type: 'integer', example: 30),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+        ]
+    )]
+    public function mySermonSelections() {}
+
+    #[OA\Get(
+        path: '/sermon-selections/upcoming',
+        operationId: 'upcomingSermonSelections',
+        tags: ['Sermon Selections'],
+        summary: 'Get upcoming sermon selections per mosque',
+        description: 'Returns the selected sermon for each mosque for the upcoming Friday.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'تم جلب الخطبة المختارة لكل مسجد بنجاح.'
+                        ),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/SermonSelection')
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+        ]
+    )]
+    public function upcomingSermonSelections() {}
+
+    #[OA\Get(
+        path: '/sermon-selections',
+        operationId: 'indexSermonSelections',
+        tags: ['Sermon Selections'],
+        summary: 'Get all sermon selections',
+        description: 'Returns a paginated list of all sermon selections. Admins can see all selections.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(
+                name: 'mosque_manager_id',
+                in: 'query',
+                required: false,
+                description: 'Filter by mosque manager ID',
+                schema: new OA\Schema(type: 'integer', example: 3)
+            ),
+            new OA\Parameter(
+                name: 'friday_date_from',
+                in: 'query',
+                required: false,
+                description: 'Filter by Friday date, on or after',
+                schema: new OA\Schema(type: 'string', format: 'date', example: '2026-01-01')
+            ),
+            new OA\Parameter(
+                name: 'friday_date_to',
+                in: 'query',
+                required: false,
+                description: 'Filter by Friday date, on or before',
+                schema: new OA\Schema(type: 'string', format: 'date', example: '2026-06-30')
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                description: 'Number of results per page (max 100)',
+                schema: new OA\Schema(type: 'integer', example: 15)
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'تم جلب سجل الاختيارات بنجاح.'
+                        ),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'data',
+                                    type: 'array',
+                                    items: new OA\Items(ref: '#/components/schemas/SermonSelection')
+                                ),
+                                new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                new OA\Property(property: 'last_page', type: 'integer', example: 5),
+                                new OA\Property(property: 'per_page', type: 'integer', example: 15),
+                                new OA\Property(property: 'total', type: 'integer', example: 65),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — only admins can view all selections'),
+        ]
+    )]
+    public function indexSermonSelections() {}
+
+    #[OA\Delete(
+        path: '/sermon-selections/{id}',
+        operationId: 'deleteSermonSelection',
+        tags: ['Sermon Selections'],
+        summary: 'Cancel a sermon selection',
+        description: 'Allows a mosque manager to cancel their sermon selection for a Friday.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                example: 1
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Selection cancelled successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'تم إلغاء اختيار الخطبة بنجاح.'
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — not the owner of the selection'),
+            new OA\Response(response: 404, description: 'Sermon selection not found'),
+            new OA\Response(
+                response: 409,
+                description: 'Conflict — selection cannot be cancelled because the Friday has passed',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'لا يمكن إلغاء اختيار خطبة لتاريخ مضى.'),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function deleteSermonSelection() {}
 }

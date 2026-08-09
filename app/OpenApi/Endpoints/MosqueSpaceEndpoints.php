@@ -16,6 +16,7 @@ class MosqueSpaceEndpoints
         summary: 'List mosque spaces',
         description: 'Retrieve all spaces belonging to a specific mosque.',
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'mosque',
                 in: 'path',
@@ -63,6 +64,7 @@ class MosqueSpaceEndpoints
         tags: ['Spaces'],
         summary: 'Get single space',
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'mosque', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'space', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
         ],
@@ -102,6 +104,7 @@ class MosqueSpaceEndpoints
         summary: 'Create new space',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'mosque', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
         ],
         requestBody: new OA\RequestBody(
@@ -142,6 +145,7 @@ class MosqueSpaceEndpoints
         summary: 'Update space',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'mosque', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'space', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
         ],
@@ -174,6 +178,7 @@ class MosqueSpaceEndpoints
         summary: 'Delete space',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'mosque', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'space', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
         ],

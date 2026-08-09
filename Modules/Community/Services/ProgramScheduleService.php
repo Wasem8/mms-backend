@@ -19,7 +19,7 @@ class ProgramScheduleService
     {
         $schedule = $this->repository->findByProgramAndId($programId, $scheduleId);
 
-        abort_if(!$schedule, 404, 'Schedule not found.');
+        abort_if(!$schedule, 404, __('messages.community.schedule_not_found'));
 
         return $schedule;
     }
@@ -80,7 +80,7 @@ class ProgramScheduleService
         abort_if(
             strtotime($endTime) <= strtotime($startTime),
             422,
-            'End time must be after start time.'
+            __('messages.community.end_time_after_start')
         );
     }
 
@@ -103,7 +103,7 @@ class ProgramScheduleService
         abort_if(
             $hasConflict,
             409,
-            'يوجد تعارض مع جلسة أخرى بنفس الوقت.'
+            __('messages.community.schedule_time_conflict')
         );
     }
 }

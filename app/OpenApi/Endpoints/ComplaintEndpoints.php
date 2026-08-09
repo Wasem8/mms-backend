@@ -569,4 +569,82 @@ class ComplaintEndpoints
     )]
     public function search() {}
 
+
+    #[OA\Get(
+        path: '/complaints/mine',
+        operationId: 'getMyComplaints',
+        tags: ['Complaints'],
+        summary: 'List my complaints',
+        description: 'Returns the authenticated member\'s own complaints, paginated. Guest complaints (submitted via /complaints/guest) never appear here since guests have no account — their only recovery path is the tracking number returned on submission.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(
+                name: 'status',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string', enum: ['pending', 'in_progress', 'resolved', 'canceled']),
+                description: 'Filter by complaint status'
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100, default: 15),
+                description: 'Items per page'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Complaints retrieved successfully.',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Complaints retrieved successfully.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(
+                                type: 'object',
+                                properties: [
+                                    new OA\Property(property: 'id', type: 'integer', example: 41),
+                                    new OA\Property(property: 'complaint_number', type: 'string', example: 'CMP-2026-000123'),
+                                    new OA\Property(property: 'title', type: 'string', example: 'تسريب مياه في دورة المياه'),
+                                    new OA\Property(property: 'status', type: 'string', enum: ['pending', 'in_progress', 'resolved', 'canceled'], example: 'in_progress'),
+                                    new OA\Property(property: 'priority', type: 'string', enum: ['low', 'medium', 'high'], example: 'high'),
+                                    new OA\Property(property: 'complaint_type', type: 'string', enum: ['service_missing', 'power_outage', 'corruption', 'employee_misconduct', 'technical_issue'], example: 'technical_issue'),
+                                    new OA\Property(
+                                        property: 'mosque',
+                                        type: 'object',
+                                        nullable: true,
+                                        properties: [
+                                            new OA\Property(property: 'id', type: 'integer', example: 12),
+                                            new OA\Property(property: 'name', type: 'string', example: 'جامع الرحمن'),
+                                        ]
+                                    ),
+                                    new OA\Property(property: 'created_at', type: 'string', example: '2026-07-20 14:32'),
+                                ]
+                            )
+                        ),
+                        new OA\Property(
+                            property: 'pagination',
+                            type: 'object',
+                            nullable: true,
+                            properties: [
+                                new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                new OA\Property(property: 'last_page', type: 'integer', example: 1),
+                                new OA\Property(property: 'per_page', type: 'integer', example: 15),
+                                new OA\Property(property: 'total', type: 'integer', example: 3),
+                                new OA\Property(property: 'has_more_pages', type: 'boolean', example: false),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+        ]
+    )]
+    public function mine() {}
+
 }

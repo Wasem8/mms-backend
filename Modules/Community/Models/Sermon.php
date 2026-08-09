@@ -31,6 +31,35 @@ class Sermon extends Model
         return $this->belongsTo(User::class, 'region_manager_id');
     }
 
+    public function selections()
+    {
+        return $this->hasMany(SermonSelection::class);
+    }
+
+
+    // app/Modules/Community/Models/Sermon.php
+
+    public function scopeFilter($query, array $filters)
+    {
+        return $query
+            ->when($filters['status'] ?? null, fn($q, $status) => $q->where('status', $status))
+            ->when($filters['mosque_manager_id'] ?? null, fn($q, $id) => $q->where('mosque_manager_id', $id))
+            ->when($filters['region_manager_id'] ?? null, fn($q, $id) => $q->where('region_manager_id', $id))
+            ->when($filters['speaker_name'] ?? null, fn($q, $name) => $q->where('speaker_name', 'like', "%{$name}%"))
+            ->when($filters['keyword'] ?? null, function ($q, $keyword) {
+                $q->where(function ($sub) use ($keyword) {
+                    $sub->where('title', 'like', "%{$keyword}%")
+                        ->orWhere('content', 'like', "%{$keyword}%")
+                        ->orWhere('speaker_name', 'like', "%{$keyword}%");
+                });
+            })
+            // فلترة حسب تاريخ إلقاء الخطبة (sermon_date)
+            ->when($filters['sermon_date_from'] ?? null, fn($q, $date) => $q->whereDate('sermon_date', '>=', $date))
+            ->when($filters['sermon_date_to'] ?? null, fn($q, $date) => $q->whereDate('sermon_date', '<=', $date))
+            // فلترة حسب تاريخ التقديم (created_at)
+            ->when($filters['submitted_from'] ?? null, fn($q, $date) => $q->whereDate('created_at', '>=', $date))
+            ->when($filters['submitted_to'] ?? null, fn($q, $date) => $q->whereDate('created_at', '<=', $date));
+    }
 
 
     // protected static function newFactory(): SermonFactory

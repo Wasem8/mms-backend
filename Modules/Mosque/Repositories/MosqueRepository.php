@@ -7,6 +7,7 @@ namespace Modules\Mosque\Repositories;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 use Modules\Mosque\Filters\MosqueFilters;
 use Modules\Mosque\Models\Mosque;
 
@@ -54,6 +55,17 @@ class MosqueRepository implements MosqueRepositoryInterface
         return $this->getAllPaginated($searchFilters, $perPage);
     }
 
+    public function findByManagerId(int $managerId): ?Mosque
+    {
+        return $this->buildBaseQuery()
+            ->where('manager_id', $managerId)
+            ->first();
+    }
+
+    public function findByIdForListing(int $id): ?Mosque
+    {
+        return $this->buildBaseQuery()->find($id);
+    }
 
     public function findById(int $id, array $relations = []): ?Mosque
     {
@@ -134,10 +146,17 @@ class MosqueRepository implements MosqueRepositoryInterface
                 'facilities:id,name',
                 'manager:id,name',
                 'spaces:id,mosque_id,name,capacity',
-
             ])
+            ->withCount([
+                'needs as open_needs_count' => fn($q) => $q->where('status', 'open'),
+                'needs as open_urgent_needs_count' => fn($q) => $q->where('status', 'open')->where('is_urgent', true),
+            ])
+            ->withSum([
+                'needs as total_gap' => fn($q) => $q->where('status', 'open'),
+            ], DB::raw('(target_amount - collected_amount)'))
             ->latest();
     }
+
     public function getNearbyMosques(float $lat, float $lng, int $perPage = 15, array $filters = []): LengthAwarePaginator
     {
         $query = Mosque::scopeNearby($lat, $lng);

@@ -8,9 +8,13 @@ use Illuminate\Http\Request;
 use Modules\Mosque\Models\Mosque;
 use Modules\Mosque\Models\MosqueSpace;
 use Modules\Mosque\Services\MosqueSpaceService;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+
 
 class MosqueSpaceController extends Controller
 {
+    use AuthorizesRequests;
+
     public function __construct(
         private readonly MosqueSpaceService $spaceService
     ) {}
@@ -23,10 +27,10 @@ class MosqueSpaceController extends Controller
 
             return ApiResponse::success(
                 $spaces,
-                'تم جلب مساحات المسجد بنجاح'
+                __('messages.mosque.spaces_retrieved')
             );
         } catch (\Exception $e) {
-            return ApiResponse::error('حدث خطأ أثناء جلب البيانات', 500, $e->getMessage());
+            return ApiResponse::error(__('messages.mosque.spaces_fetch_error'), 500, $e->getMessage());
         }
     }
 
@@ -37,15 +41,17 @@ class MosqueSpaceController extends Controller
     {
         // التحقق من أن المساحة تابعة للمسجد المطلوب
         if ($space->mosque_id !== $mosque->id) {
-            return ApiResponse::error('هذه المساحة لا تنتمي لهذا المسجد', 404);
+            return ApiResponse::error(__('messages.mosque.space_not_in_mosque'), 404);
         }
 
-        return ApiResponse::success($space, 'تم جلب تفاصيل المساحة بنجاح');
+        return ApiResponse::success($space, __('messages.mosque.space_retrieved'));
     }
 
 
     public function store(Request $request, Mosque $mosque)
     {
+        $this->authorize('manage', $mosque);
+
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'capacity' => 'required|integer|min:1',
@@ -53,21 +59,24 @@ class MosqueSpaceController extends Controller
 
         try {
             $validatedData['mosque_id'] = $mosque->id;
-
             $space = $this->spaceService->createSpace($validatedData);
 
-            return ApiResponse::success($space, 'تمت إضافة المساحة بنجاح', null);
+            return ApiResponse::success($space, __('messages.mosque.space_created'), null);
         } catch (\Exception $e) {
-            return ApiResponse::error('حدث خطأ أثناء إضافة المساحة', 500, $e->getMessage());
+            return ApiResponse::error(__('messages.mosque.space_create_error'), 500, $e->getMessage());
         }
     }
 
-
     public function update(Request $request, Mosque $mosque, MosqueSpace $space)
     {
+
+        $this->authorize('manage', $mosque);
+
         if ($space->mosque_id !== $mosque->id) {
-            return ApiResponse::error('هذه المساحة لا تنتمي لهذا المسجد', 404);
+            return ApiResponse::error(__('messages.mosque.space_not_in_mosque'), 404);
         }
+
+
 
         $validatedData = $request->validate([
             'name' => 'sometimes|required|string|max:255',
@@ -77,9 +86,9 @@ class MosqueSpaceController extends Controller
         try {
             $updatedSpace = $this->spaceService->updateSpace($space, $validatedData);
 
-            return ApiResponse::success($updatedSpace, 'تم تحديث المساحة بنجاح');
+            return ApiResponse::success($updatedSpace, __('messages.mosque.space_updated'));
         } catch (\Exception $e) {
-            return ApiResponse::error('حدث خطأ أثناء تحديث المساحة', 500, $e->getMessage());
+            return ApiResponse::error(__('messages.mosque.space_update_error'), 500, $e->getMessage());
         }
     }
 
@@ -88,16 +97,17 @@ class MosqueSpaceController extends Controller
      */
     public function destroy(Mosque $mosque, MosqueSpace $space)
     {
-        if ($space->mosque_id !== $mosque->id) {
-            return ApiResponse::error('هذه المساحة لا تنتمي لهذا المسجد', 404);
-        }
+        $this->authorize('manage', $mosque);
 
+        if ($space->mosque_id !== $mosque->id) {
+            return ApiResponse::error(__('messages.mosque.space_not_in_mosque'), 404);
+        }
         try {
             $this->spaceService->deleteSpace($space);
 
-            return ApiResponse::success([], 'تم حذف المساحة بنجاح');
+            return ApiResponse::success([], __('messages.mosque.space_deleted'));
         } catch (\Exception $e) {
-            return ApiResponse::error('حدث خطأ أثناء حذف المساحة', 500, $e->getMessage());
+            return ApiResponse::error(__('messages.mosque.space_delete_error'), 500, $e->getMessage());
         }
     }
 }

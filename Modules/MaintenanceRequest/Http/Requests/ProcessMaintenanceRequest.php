@@ -19,7 +19,7 @@ class ProcessMaintenanceRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'notes.required_if' => 'Notes are required when cancelling a maintenance request.',
+            'notes.required_if' => __('messages.maintenance.notes_required_when_cancelling'),
         ];
     }
 

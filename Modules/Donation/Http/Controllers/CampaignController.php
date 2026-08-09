@@ -22,11 +22,30 @@ class CampaignController extends Controller
         $this->campaignService = $campaignService;
         $this->analyticsService = $analyticsService;
     }
+
     public function index()
     {
         $filters = request()->only(['search', 'status', 'priority', 'sort_by', 'sort_order', 'per_page']);
         $campaigns = $this->campaignService->getFilteredCampaigns($filters);
-        return CampaignResource::collection($campaigns);
+
+        return ApiResponse::success(
+            CampaignResource::collection($campaigns)->resolve(),
+            'Campaigns retrieved successfully',
+            $campaigns
+        );
+    }
+
+    public function showByMosque($mosqueId)
+    {
+        $filters = request()->only(['search', 'status', 'priority', 'sort_by', 'sort_order', 'per_page']);
+        $filters['mosque_id'] = $mosqueId;
+        $campaigns = $this->campaignService->getFilteredCampaigns($filters);
+
+        return ApiResponse::success(
+            CampaignResource::collection($campaigns)->resolve(),
+            'Campaigns retrieved successfully',
+            $campaigns
+        );
     }
 
     public function show($id)
@@ -35,13 +54,6 @@ class CampaignController extends Controller
         return ApiResponse::success(new CampaignResource($campaign), 'Campaign retrieved successfully');
     }
 
-    public function showByMosque($mosqueId)
-    {
-        $filters = request()->only(['search', 'status', 'priority', 'sort_by', 'sort_order', 'per_page']);
-        $filters['mosque_id'] = $mosqueId;
-        $campaigns = $this->campaignService->getFilteredCampaigns($filters);
-        return CampaignResource::collection($campaigns);
-    }
 
     public function store(StoreCampaignRequest $request)
     {

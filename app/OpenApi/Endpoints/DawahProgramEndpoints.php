@@ -14,6 +14,7 @@ class DawahProgramEndpoints
         summary: 'List all Dawah programs across all mosques',
         description: 'Returns a paginated list of all Dawah programs across all mosques with their schedules. No authentication required.',
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'per_page',
                 in: 'query',
@@ -100,6 +101,7 @@ class DawahProgramEndpoints
         summary: 'List all Dawah programs for a mosque',
         description: 'Returns all Dawah programs belonging to a specific mosque along with their schedules. No authentication required.',
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'mosque',
                 in: 'path',
@@ -161,6 +163,7 @@ class DawahProgramEndpoints
         summary: 'Get a single Dawah program',
         description: 'Returns a single Dawah program with its full details and all associated schedules.',
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'mosque',
                 in: 'path',
@@ -228,6 +231,7 @@ class DawahProgramEndpoints
         security: [['bearerAuth' => []]],
 
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'mosque',
                 in: 'path',
@@ -335,6 +339,7 @@ class DawahProgramEndpoints
         description: 'Updates an existing Dawah program. Send as `multipart/form-data` with `_method=PUT`. If `schedules` is provided, it **replaces** all existing schedules. Requires `mosque_manager` role.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'mosque',
                 in: 'path',
@@ -518,6 +523,7 @@ class DawahProgramEndpoints
         description: 'Permanently deletes a Dawah program along with all its schedules and uploaded images. Requires `mosque_manager` role.',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
                 name: 'mosque',
                 in: 'path',
@@ -611,6 +617,7 @@ class DawahProgramEndpoints
             **Filters:** `date`, `from_date`, `to_date` (query string).
             MD,
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'program',   in: 'path',  required: true,  description: 'Program ID',            schema: new OA\Schema(type: 'integer', example: 1)),
             new OA\Parameter(name: 'per_page',  in: 'query', required: false, description: 'Items per page',        schema: new OA\Schema(type: 'integer', example: 10)),
             new OA\Parameter(name: 'date',      in: 'query', required: false, description: 'Exact date (Y-m-d), Can be empty',    schema: new OA\Schema(type: 'string', format: 'date', example: '2026-07-01')),
@@ -670,6 +677,7 @@ class DawahProgramEndpoints
         summary: 'Get a single schedule entry',
         description: 'Returns the full details of one schedule (session) entry. **Auth:** Not required.',
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'program',  in: 'path', required: true, description: 'Program ID',  schema: new OA\Schema(type: 'integer', example: 1)),
             new OA\Parameter(name: 'schedule', in: 'path', required: true, description: 'Schedule ID', schema: new OA\Schema(type: 'integer', example: 7)),
         ],
@@ -715,6 +723,7 @@ class DawahProgramEndpoints
         description: 'Creates a single schedule entry for the given program. **Auth:** `Bearer token` · **Role:** `mosque_manager`',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'mosque',  in: 'path', required: true, description: 'Mosque ID',  schema: new OA\Schema(type: 'integer', example: 1)),
             new OA\Parameter(name: 'program', in: 'path', required: true, description: 'Program ID', schema: new OA\Schema(type: 'integer', example: 1)),
         ],
@@ -786,6 +795,7 @@ class DawahProgramEndpoints
         description: 'Partially or fully updates one schedule entry. All fields are optional (`sometimes`). **Auth:** `Bearer token` · **Role:** `mosque_manager`',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'mosque',   in: 'path', required: true, description: 'Mosque ID',   schema: new OA\Schema(type: 'integer', example: 1)),
             new OA\Parameter(name: 'program',  in: 'path', required: true, description: 'Program ID',  schema: new OA\Schema(type: 'integer', example: 1)),
             new OA\Parameter(name: 'schedule', in: 'path', required: true, description: 'Schedule ID', schema: new OA\Schema(type: 'integer', example: 7)),
@@ -854,6 +864,7 @@ class DawahProgramEndpoints
         description: 'Permanently removes a single session from a program without affecting other sessions. **Auth:** `Bearer token` · **Role:** `mosque_manager`',
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'mosque',   in: 'path', required: true, description: 'Mosque ID',   schema: new OA\Schema(type: 'integer', example: 1)),
             new OA\Parameter(name: 'program',  in: 'path', required: true, description: 'Program ID',  schema: new OA\Schema(type: 'integer', example: 1)),
             new OA\Parameter(name: 'schedule', in: 'path', required: true, description: 'Schedule ID', schema: new OA\Schema(type: 'integer', example: 7)),

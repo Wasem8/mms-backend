@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Modules\Complaint\Models\Complaint;
 use Modules\Complaint\Repositories\ComplaintRepositoryInterface;
+use Modules\Complaint\Events\ComplaintSubmitted;
+use Modules\Complaint\Events\ComplaintStatusChanged;
 
 class ComplaintService
 {
@@ -41,6 +43,8 @@ class ComplaintService
             }
         }
 
+        event(new ComplaintSubmitted($complaint));
+
         return $complaint;
     }
 
@@ -72,7 +76,11 @@ class ComplaintService
             'changed_by' => $adminId,
         ]);
 
-        return $this->repository->find($complaintId);
+        $updated = $this->repository->find($complaintId);
+
+        event(new ComplaintStatusChanged($updated, $oldStatus, $newStatus, $note, $adminId));
+
+        return $updated;
     }
 
     public function getComplaintDetails(int $id, array $filters = [])
@@ -211,5 +219,13 @@ class ComplaintService
             'apikey' => env('SUPABASE_KEY'),
             'Authorization' => 'Bearer '.env('SUPABASE_KEY'),
         ])->delete($deleteUrl);
+    }
+
+    public function getMyComplaints(int $userId, array $filters = [])
+    {
+        $filters['user_id'] = $userId;
+        $filters['per_page'] = (int) ($filters['per_page'] ?? 15);
+
+        return $this->repository->getFiltered($filters);
     }
 }

@@ -3,25 +3,23 @@
 namespace Modules\Complaint\Providers;
 
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+use Modules\Complaint\Events\ComplaintSubmitted;
+use Modules\Complaint\Events\ComplaintStatusChanged;
+use Modules\Complaint\Listeners\SendComplaintSubmittedNotification;
+use Modules\Complaint\Listeners\SendComplaintStatusChangedNotification;
 
 class EventServiceProvider extends ServiceProvider
 {
-    /**
-     * The event handler mappings for the application.
-     *
-     * @var array<string, array<int, string>>
-     */
-    protected $listen = [];
+    protected $listen = [
+        ComplaintSubmitted::class => [
+            SendComplaintSubmittedNotification::class,
+        ],
+        ComplaintStatusChanged::class => [
+            SendComplaintStatusChangedNotification::class,
+        ],
+    ];
 
-    /**
-     * Indicates if events should be discovered.
-     *
-     * @var bool
-     */
     protected static $shouldDiscoverEvents = true;
 
-    /**
-     * Configure the proper event listeners for email verification.
-     */
     protected function configureEmailVerification(): void {}
 }

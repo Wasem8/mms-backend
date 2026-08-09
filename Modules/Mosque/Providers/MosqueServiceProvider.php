@@ -11,6 +11,9 @@ use Modules\Mosque\Repositories\FacilityRepositoryInterface;
 use Modules\Mosque\Console\GenerateMosqueInsights;
 use Modules\Mosque\Repositories\MosqueRepository;
 use Modules\Mosque\Repositories\MosqueRepositoryInterface;
+use Illuminate\Support\Facades\Gate;
+use Modules\Mosque\Models\Mosque;
+use Modules\Mosque\Policies\MosquePolicy;
 
 class MosqueServiceProvider extends ModuleServiceProvider
 {
@@ -63,6 +66,10 @@ class MosqueServiceProvider extends ModuleServiceProvider
             \Modules\Mosque\Repositories\MosqueSpaceRepositoryInterface::class,
             \Modules\Mosque\Repositories\MosqueSpaceRepository::class
         );
+        $this->app->bind(
+            \Modules\Mosque\Repositories\MosqueTaskRepositoryInterface::class,
+            \Modules\Mosque\Repositories\EloquentMosqueTaskRepository::class
+        );
     }
 
     public function boot(): void
@@ -72,6 +79,7 @@ class MosqueServiceProvider extends ModuleServiceProvider
         $this->commands([
             GenerateMosqueInsights::class,
         ]);
+        Gate::policy(Mosque::class, MosquePolicy::class);
     }
 
     /**

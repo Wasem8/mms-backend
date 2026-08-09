@@ -85,6 +85,44 @@ class MaintenanceRequestEndpoints
         ],
     )]
     public function schemaRequest() {}
+    #[OA\Schema(
+        schema: 'PublicMaintenanceRequest',
+        type: 'object',
+        description: 'Reduced-visibility version of MaintenanceRequest for guest/public access — excludes requester identity, internal notes, and status change history.',
+        properties: [
+            new OA\Property(property: 'id',                 type: 'integer', example: 42),
+            new OA\Property(property: 'maintenance_number', type: 'string',  example: 'MR-2026-AB1C2D'),
+            new OA\Property(property: 'title',              type: 'string',  example: 'AC unit not cooling'),
+            new OA\Property(property: 'description',        type: 'string',  example: 'The main hall AC has stopped cooling since yesterday.'),
+            new OA\Property(property: 'category',           type: 'string',  enum: ['electrical', 'plumbing', 'carpentry', 'cleaning', 'other'], example: 'electrical'),
+            new OA\Property(property: 'priority',           type: 'string',  enum: ['low', 'medium', 'high', 'urgent'], example: 'high'),
+            new OA\Property(property: 'status',             type: 'string',  enum: ['pending', 'in_progress', 'completed', 'cancelled'], example: 'pending'),
+            new OA\Property(property: 'scheduled_at',       type: 'string',  nullable: true, example: '01 Jun 2026, 09:00 AM'),
+            new OA\Property(property: 'completed_at',       type: 'string',  nullable: true, example: null),
+            new OA\Property(
+                property: 'files',
+                type: 'array',
+                items: new OA\Items(
+                    properties: [
+                        new OA\Property(property: 'file_path', type: 'string', example: 'https://xyz.supabase.co/storage/v1/object/public/maintenance/ac-photo.jpg'),
+                        new OA\Property(property: 'file_name', type: 'string', example: 'ac-photo.jpg'),
+                    ]
+                ),
+            ),
+            new OA\Property(
+                property: 'mosque',
+                type: 'object',
+                nullable: true,
+                properties: [
+                    new OA\Property(property: 'id',   type: 'integer', example: 7),
+                    new OA\Property(property: 'name', type: 'string',  example: 'Al-Noor Mosque'),
+                ],
+            ),
+            new OA\Property(property: 'created_at', type: 'string', example: '21 May 2026, 10:30 AM'),
+        ],
+    )]
+    public function schemaPublicRequest() {}
+
 
     // =========================================================================
     //  MOSQUE MANAGER  —  middleware: auth:api, role:mosque_manager
@@ -658,4 +696,103 @@ class MaintenanceRequestEndpoints
         ],
     )]
     public function process() {}
+
+    #[OA\Get(
+        path: '/maintenance/public',
+        operationId: 'maintenance.public.index',
+        tags: ['Maintenance Requests — Public'],
+        summary: 'List maintenance requests (public)',
+        description: 'Returns a paginated list of maintenance requests visible to guests, with sensitive fields (requester identity, internal notes, status change history) excluded. Filterable by status, category, priority, and mosque.',
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(
+                name: 'status',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string', enum: ['pending', 'in_progress', 'completed', 'cancelled'], example: 'pending'),
+            ),
+            new OA\Parameter(
+                name: 'category',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string', enum: ['electrical', 'plumbing', 'carpentry', 'cleaning', 'other'], example: 'electrical'),
+            ),
+            new OA\Parameter(
+                name: 'priority',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string', enum: ['low', 'medium', 'high', 'urgent'], example: 'high'),
+            ),
+            new OA\Parameter(
+                name: 'mosque_id',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', example: 7),
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 15, example: 15),
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Maintenance requests retrieved successfully.',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Maintenance requests retrieved successfully.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/PublicMaintenanceRequest'),
+                        ),
+                        new OA\Property(
+                            property: 'pagination',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                new OA\Property(property: 'per_page',     type: 'integer', example: 15),
+                                new OA\Property(property: 'total',        type: 'integer', example: 8),
+                                new OA\Property(property: 'last_page',    type: 'integer', example: 1),
+                                new OA\Property(property: 'has_more_pages', type: 'boolean', example: false),
+                            ],
+                        ),
+                    ],
+                ),
+            ),
+        ],
+    )]
+    public function publicIndex() {}
+
+    // ─── GET /maintenance/public/{id} ───────────────────────────────────────
+
+    #[OA\Get(
+        path: '/maintenance/public/{id}',
+        operationId: 'maintenance.public.show',
+        tags: ['Maintenance Requests — Public'],
+        summary: 'Get a maintenance request (public)',
+        description: 'Returns the public-safe details of a single maintenance request — sensitive fields excluded.',
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 42)),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Maintenance request retrieved successfully.',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Maintenance request retrieved successfully.'),
+                        new OA\Property(property: 'data', ref: '#/components/schemas/PublicMaintenanceRequest'),
+                    ],
+                ),
+            ),
+            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+        ],
+    )]
+    public function publicShow() {}
 }

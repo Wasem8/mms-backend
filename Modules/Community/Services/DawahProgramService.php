@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Modules\Community\Events\DawahProgramCreated;
 
 class DawahProgramService
 {
@@ -36,13 +37,13 @@ class DawahProgramService
         abort_if(
             !$mosque,
             404,
-            'Mosque not found.'
+            __('messages.community.mosque_not_found')
         );
 
         abort_if(
             $mosque->manager_id !== Auth::id(),
             403,
-            'Unauthorized.'
+            __('messages.community.unauthorized')
         );
 
         if (
@@ -66,7 +67,7 @@ class DawahProgramService
             abort_if(
                 strtotime($schedule['end_time']) <= strtotime($schedule['start_time']),
                 422,
-                'End time must be after start time.'
+                __('messages.community.end_time_after_start')
             );
 
             // التحقق من التعارض
@@ -81,7 +82,11 @@ class DawahProgramService
             abort_if(
                 $hasConflict,
                 409,
-                "Conflict detected on {$schedule['date']} between {$schedule['start_time']} and {$schedule['end_time']}."
+                __('messages.community.schedule_conflict', [
+                    'date'  => $schedule['date'],
+                    'start' => $schedule['start_time'],
+                    'end'   => $schedule['end_time'],
+                ])
             );
         }
 
@@ -93,6 +98,7 @@ class DawahProgramService
                 $this->dawahProgramRepository
                     ->createSchedules($program, $schedules);
             }
+            event(new DawahProgramCreated($program, Auth::id()));
 
             return $program->load('schedules');
         });
@@ -103,11 +109,11 @@ class DawahProgramService
         $mosque = Mosque::find($program->mosque_id);
 
         if (!$mosque) {
-            throw new \Exception('Mosque not found');
+            throw new \Exception(__('messages.community.mosque_not_found'));
         }
 
         if ($mosque->manager_id !== Auth::id()) {
-            throw new \Exception('Unauthorized');
+            throw new \Exception(__('messages.community.unauthorized'));
         }
 
         // Handle program image
@@ -144,7 +150,11 @@ class DawahProgramService
                 $schedule['end_time'],
                 $program->id  // Exclude current program's schedules from conflict check
             )) {
-                throw new \Exception("Conflict detected on {$schedule['date']} between {$schedule['start_time']} and {$schedule['end_time']}");
+                throw new \Exception(__('messages.community.schedule_conflict', [
+                    'date'  => $schedule['date'],
+                    'start' => $schedule['start_time'],
+                    'end'   => $schedule['end_time'],
+                ]));
             }
         }
 
@@ -161,11 +171,11 @@ class DawahProgramService
     public function deleteProgram(Mosque $mosque, DawahProgram $program): bool
     {
         if ($program->mosque_id !== $mosque->id) {
-            throw new \Exception('البرنامج غير موجود في هذا المسجد');
+            throw new \Exception(__('messages.community.program_not_in_mosque'));
         }
 
         if ($mosque->manager_id !== Auth::id()) {
-            throw new \Exception('Unauthorized');
+            throw new \Exception(__('messages.community.unauthorized'));
         }
 
         if ($program->image) {

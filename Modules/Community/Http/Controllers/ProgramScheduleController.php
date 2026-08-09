@@ -24,7 +24,7 @@ class ProgramScheduleController extends Controller
         $schedules = $this->service->getSchedulesByProgram($program, $filters);
 
         return response()->json([
-            'message' => 'Schedules retrieved successfully.',
+            'message' => __('messages.community.schedules_retrieved'),
             'data'    => $schedules,
         ]);
     }
@@ -38,7 +38,7 @@ class ProgramScheduleController extends Controller
         $schedule = $this->service->getScheduleById($program, $schedule);
 
         return response()->json([
-            'message' => 'Schedule retrieved successfully.',
+            'message' => __('messages.community.schedule_retrieved'),
             'data'    => $schedule,
         ]);
     }
@@ -51,7 +51,7 @@ class ProgramScheduleController extends Controller
     {
         $schedule = $this->service->createSchedule($program, $request->validated());
 
-        return ApiResponse::success($schedule,'تم إضافة محاصرة جديدة للبرنامج');
+        return ApiResponse::success($schedule, __('messages.community.schedule_created'));
     }
 
     /**
@@ -62,7 +62,7 @@ class ProgramScheduleController extends Controller
     {
         $schedule = $this->service->updateSchedule($program, $schedule, $request->validated());
 
-        return ApiResponse::success($schedule,'تم التعديل بنجاح');
+        return ApiResponse::success($schedule, __('messages.community.schedule_updated'));
     }
 
   
@@ -70,6 +70,6 @@ class ProgramScheduleController extends Controller
     {
         $this->service->deleteSchedule($program, $schedule);
 
-        return ApiResponse::success('تم الحذف بنجاح');
+        return ApiResponse::success(__('messages.community.schedule_deleted'));
     }
 }

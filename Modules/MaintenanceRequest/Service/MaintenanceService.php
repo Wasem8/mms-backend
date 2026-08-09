@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Modules\MaintenanceRequest\Models\Maintenance;
 use Modules\MaintenanceRequest\Repositories\MaintenanceRepositoryInterface;
+use Modules\MaintenanceRequest\Events\MaintenanceRequestCreated;
+use Modules\MaintenanceRequest\Events\MaintenanceStatusChanged;
 
 class MaintenanceService
 {
@@ -53,8 +55,12 @@ class MaintenanceService
             'changed_by' => $data['requested_by'],
         ]);
 
-        return $this->repository->find($maintenance->id);
-    }
+        $created = $this->repository->find($maintenance->id);
+
+        event(new MaintenanceRequestCreated($created));
+
+        return $created;
+            }
 
     public function getList(array $filters = [])
     {
@@ -66,7 +72,7 @@ class MaintenanceService
         $maintenance = $this->repository->find($id);
 
         if (isset($filters['mosque_id']) && $maintenance->mosque_id !== $filters['mosque_id']) {
-            abort(403, 'You are not authorized to access this maintenance request.');
+            abort(403, __('messages.maintenance.unauthorized'));
         }
 
         return $maintenance;
@@ -165,8 +171,12 @@ class MaintenanceService
         ]);
 
 
-        return $this->repository->find($id);
-    }
+        $updated = $this->repository->find($id);
+
+        event(new MaintenanceStatusChanged($updated, $oldStatus, $newStatus, $note, $changedBy));
+
+        return $updated;
+            }
 
     public function getStatistics(array $filters = [])
     {
@@ -243,5 +253,20 @@ class MaintenanceService
             'apikey'        => $key,
             'Authorization' => 'Bearer ' . $key,
         ])->delete($deleteUrl);
+    }
+    public function getPublicList(array $filters = [])
+    {
+        return $this->repository->getPublicFiltered($filters);
+    }
+
+    public function getPublicDetails(int $id)
+    {
+        $maintenance = $this->repository->findPublic($id);
+
+        if (! $maintenance) {
+            abort(404, __('messages.maintenance.not_found'));
+        }
+
+        return $maintenance;
     }
 }

@@ -2,12 +2,15 @@
 
 namespace Modules\Community\Services;
 
-use Illuminate\Http\UploadedFile;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Modules\Community\Models\Sermon;
 use Modules\Community\Repositories\SermonRepositoryInterface;
+use Modules\User\Models\User;
+use Modules\Community\Events\SermonApproved;
+use Modules\Community\Events\SermonRejected;
+
 
 class SermonService
 {
@@ -18,9 +21,14 @@ class SermonService
         $this->sermonRepo = $sermonRepo;
     }
 
-    public function getAllSermons()
+    public function getAllSermons(User $user)
     {
-        return Sermon::with('attachments')->get();
+        $filters = $this->applyRoleScope([], $user);
+
+        return Sermon::with('attachments')
+            ->filter($filters)
+            ->latest()
+            ->get();
     }
     public function getPendingSermons()
     {
@@ -66,6 +74,9 @@ class SermonService
 
         $this->sermonRepo->updateStatus($sermon, 'Archived');
 
+        event(new SermonApproved($sermon, $adminId));
+
+
         return $sermon;
     }
 
@@ -73,9 +84,14 @@ class SermonService
     {
         $sermon = $this->sermonRepo->findById($sermonId);
         $this->sermonRepo->delete($sermon);
-    }
+        event(new SermonRejected(
+            sermonId: $sermon->id,
+            sermonTitle: $sermon->title,
+            mosqueManagerId: $sermon->mosque_manager_id,
+            isHardReject: true,
+        ));
+        }
 
-    // 4. تنظيف النظام التلقائي من الخطب المتروكة التي حل وقتها ولم تُعتمد
     public function purgeExpiredPendingSermons(): int
     {
         $today = Carbon::today()->toDateString();
@@ -117,8 +133,45 @@ class SermonService
 
     public function rejectSermon($sermonId, $regionManagerId, $notes)
     {
-        return $this->sermonRepo->updateStatus($sermonId, 'Rejected', $notes, $regionManagerId);
+        $sermon = $this->sermonRepo->findById($sermonId);
+        $updated = $this->sermonRepo->updateStatus($sermonId, 'Rejected', $notes, $regionManagerId);
+
+        if ($sermon) {
+            event(new SermonRejected(
+                sermonId: $sermon->id,
+                sermonTitle: $sermon->title,
+                mosqueManagerId: $sermon->mosque_manager_id,
+                notes: $notes,
+                isHardReject: false,
+            ));
+        }
+
+        return $updated;
     }
 
+    public function searchSermons(array $filters, User $user, int $perPage = 15)
+    {
+        $filters = $this->applyRoleScope($filters, $user);
 
+        return $this->sermonRepo->search($filters, $perPage);
+    }
+
+    private function applyRoleScope(array $filters, User $user): array
+    {
+        if ($user->isMosqueManager()) {
+            $filters['mosque_manager_id'] = $user->id;
+            return $filters;
+        }
+
+        if ($user->isAreaManager()) {
+            return $filters;
+        }
+
+        return $filters;
+    }
+
+    public function getMostSelectedSermons(int $limit = 10, ?string $fridayDateFrom = null, ?string $fridayDateTo = null)
+    {
+        return $this->sermonRepo->mostSelected($limit, $fridayDateFrom, $fridayDateTo);
+    }
 }

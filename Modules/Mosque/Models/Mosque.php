@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 use Modules\Community\Models\DawahProgram;
 use Modules\Donation\Models\Donation;
+use Modules\Geo\Models\City;
+use Modules\Geo\Models\District;
 use Modules\MaintenanceRequest\Models\Maintenance;
 use Modules\User\Models\User;
 
@@ -27,8 +29,8 @@ class Mosque extends Model
         'working_hours',
         'status',
         'is_featured',
-        'city',
-        'district',
+        'city_id',
+        'district_id',
         'latitude',
         'longitude',
         //'place_id',
@@ -47,7 +49,15 @@ class Mosque extends Model
         'average_rating' => 'decimal:2',
     ];
 
-    protected $appends = ['image_url'];
+
+    protected $appends = ['image_url', 'has_urgent_need'];
+
+    protected $hidden = ['open_urgent_needs_count'];
+
+    public function getHasUrgentNeedAttribute(): bool
+    {
+        return (int) ($this->open_urgent_needs_count ?? 0) > 0;
+    }
 
     public function getImageUrlAttribute(): ?string
     {
@@ -104,6 +114,21 @@ class Mosque extends Model
                 [$latitude, $longitude, $latitude]
             )
             ->orderBy('distance', 'asc');
+    }
+
+    public function city(): BelongsTo
+    {
+        return $this->belongsTo(City::class);
+    }
+
+    public function district(): BelongsTo
+    {
+        return $this->belongsTo(District::class);
+    }
+
+    public function scopeManagedBy($query, int $userId)
+    {
+        return $query->where('manager_id', $userId);
     }
 
 

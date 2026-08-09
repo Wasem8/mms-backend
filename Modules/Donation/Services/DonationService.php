@@ -18,16 +18,24 @@ use Modules\Mosque\Models\MosqueNeed;
 use ArPHP\I18N\Arabic;
 use Illuminate\Validation\ValidationException;
 use Spatie\Browsershot\Browsershot;
+use App\Support\Pdf\PdfGeneratorService;
+use App\Support\Storage\SupabaseStorageService;
+use Mpdf\Mpdf;
+use Mpdf\Config\ConfigVariables;
+use Mpdf\Config\FontVariables;
 
 class DonationService
 {
 
+    private const RECEIPT_CACHE_TTL = 60 * 60 * 24 * 30;
     private const RATE_CACHE_KEY = 'setting.usd_to_syp_rate';
     private const RATE_CACHE_TTL = 3600;
 
     public function __construct(
         protected ImageUploadService $imageUploader,
         private readonly SettingRepositoryInterface  $settingRepo,
+        private readonly PdfGeneratorService $pdfGenerator,
+        private readonly SupabaseStorageService $storage
 
     ) {}
 
@@ -167,7 +175,7 @@ class DonationService
 
         $percentage = match (true) {
             $yesterdayTotal > 0 => round((($todayTotal - $yesterdayTotal) / $yesterdayTotal) * 100, 1),
-            $todayTotal   > 0   => 100.0,  
+            $todayTotal   > 0   => 100.0,
             default             => 0.0,
         };
 
@@ -188,7 +196,6 @@ class DonationService
     {
         $rows = Donation::where('mosque_id', $mosqueId)
             ->where('status', 'completed')
-            ->where('donation_type', 'cash')          // ← add this
             ->where(function ($q) {
                 $q->where(
                     fn($q1) => $q1
@@ -202,15 +209,14 @@ class DonationService
                             ->whereMonth('created_at', now()->month)
                     );
             })
-            ->selectRaw('donation_type, COALESCE(SUM(base_amount), 0) as total')
+            ->selectRaw('donation_type, COALESCE(SUM(base_amount), 0) as total, COUNT(*) as count')
             ->groupBy('donation_type')
-            ->pluck('total', 'donation_type');
-
-        $cash = (float) ($rows['cash'] ?? 0);
+            ->get()
+            ->keyBy('donation_type');
 
         return [
-            'cash'          => $cash,
-         //   'monthly_total' => $cash,   // same value now, kept for consistency
+            'cash'    => (float) ($rows['cash']->total ?? 0),
+            'in_kind' => (int) ($rows['in_kind']->count ?? 0), // count, not sum — in-kind has no monetary value
         ];
     }
     public function create(array $data): array
@@ -305,35 +311,57 @@ class DonationService
             'client_secret' => $result->clientSecret ?? null,
         ];
     }
-    public function generateReceipt(Donation $donation): string
+    public function getReceiptDownloadUrl(Donation $donation): string
     {
+        $bucket   = config('services.supabase.bucket');
+        $fileName = "receipt_donation_{$donation->id}.pdf";
 
-        $donationData = Donation::with(['mosque', 'campaign', 'mosqueNeed'])->findOrFail($donation->id);
-        $target = $this->resolveTarget($donationData);
+        $path = Cache::remember(
+            "donation.receipt_path.{$donation->id}",
+            self::RECEIPT_CACHE_TTL,
+            function () use ($donation, $bucket, $fileName) {
+                $donationData = Donation::with(['mosque', 'campaign', 'mosqueNeed'])->findOrFail($donation->id);
+                $target = $this->resolveTarget($donationData);
 
-        $html = view('donation::receipts.donation', [
-            'donation'       => $donationData,
-            'mosque'         => $donationData->mosque,
-            'mosque_name'    => $donationData->mosque?->name ?? 'المسجد الرئيسي',
-            'target'         => $target,
-            'donor_name'     => $donationData->donor_name ?? 'متبرع كريم',
-            'payment_method' => $donationData->payment_method === 'cash' ? 'نقدي' : $donationData->payment_method,
-            'donation_status' => $donationData->status === 'completed' ? 'مكتمل' : $donationData->status,
-            'currency'       => $donationData->currency ?? 'ليرة سورية',
-            'issued_at'      => now()->format('Y-m-d'),
-        ])->render();
+                $html = view('donation::receipts.donation', [
+                    'donation'        => $donationData,
+                    'mosque'          => $donationData->mosque,
+                    'mosque_name'     => $donationData->mosque?->name ?? 'المسجد الرئيسي',
+                    'target'          => $target,
+                    'donor_name'      => $donationData->donor_name ?? 'متبرع كريم',
+                    'payment_method'  => $donationData->payment_method === 'cash' ? 'نقدي' : $donationData->payment_method,
+                    'donation_status' => $donationData->status === 'completed' ? 'مكتمل' : $donationData->status,
+                    'currency'        => $donationData->currency ?? 'ليرة سورية',
+                    'issued_at'       => now()->format('Y-m-d'),
+                ])->render();
 
-        return Browsershot::html($html)
-            ->setNodeBinary('C:\\Program Files\\nodejs\\node.exe')
-            ->setNpmBinary('C:\\Program Files\\nodejs\\npm.cmd')
-            ->noSandbox()
-            ->emulateMedia('print')
-            ->preferCssPageSize()
-            ->scale(1.0)
-            ->margins(0, 0, 0, 0)
-            ->paperSize(210, 297)
-            ->showBackground()
-            ->pdf();
+                /* ═══════════════════════════════════════════════════════════════
+                   ✅ إعدادات mPDF للعربية المُتصلة (مع خط xbriyaz المضمن)
+                   ═══════════════════════════════════════════════════════════════ */
+                $mpdf = new Mpdf([
+                    'mode'              => 'utf-8',
+                    'format'            => 'A4',
+                    'margin_left'       => 12,
+                    'margin_right'      => 12,
+                    'margin_top'        => 12,
+                    'margin_bottom'     => 12,
+                    'default_font'      => 'xbriyaz',
+                    'default_font_size' => 12,
+                    'autoLangToFont'    => true,   // ← يربط الحروف العربية
+                    'autoScriptToLang'  => true,   // ← يكتشف النص العربي
+                    'directionality'    => 'rtl',
+                ]);
+
+                $mpdf->WriteHTML($html);
+                $pdfContent = $mpdf->Output('', 'S');
+
+                $this->storage->uploadPdf($pdfContent, $fileName, $bucket);
+
+                return $fileName;
+            }
+        );
+
+        return $this->storage->createSignedUrl($path, $bucket);
     }
 
     private function resolveTarget(Donation $donation): array
@@ -357,6 +385,7 @@ class DonationService
             'name'  => $donation->mosque?->name ?? 'المسجد الرئيسي',
         ];
     }
+
     private function resolveCurrency(string $paymentMethod): string
     {
         return match ($paymentMethod) {
