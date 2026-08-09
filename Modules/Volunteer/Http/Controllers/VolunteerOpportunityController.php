@@ -16,7 +16,7 @@ class VolunteerOpportunityController extends Controller
         private readonly VolunteerOpportunityService $service,
     ) {}
 
-    /** Manager: list all opportunities for their mosque */
+    /** Volunteer: list all opportunities for their own mosque */
     public function managerIndex()
     {
         $mosque = auth()->user()->managedMosque;
@@ -29,19 +29,16 @@ class VolunteerOpportunityController extends Controller
         return ApiResponse::success($Opportunities, __('messages.opportunities_retrieved'), 200);
     }
 
-    /** Volunteer: list open opportunities */
+    /** Volunteer: list open opportunities for their own mosque */
     public function index()
     {
-        $mosque = auth()->user()->managedMosque;
+        $mosqueId = (int) auth()->user()->mosque_id;
 
-        if (! $mosque) {
-            return ApiResponse::error(__('messages.no_mosque_assigned_to_manager'), 422);
-        }
-
-        $Opportunities = $this->service->listOpen((int) $mosque->id);
+        $Opportunities = $this->service->listOpen($mosqueId);
         return ApiResponse::success($Opportunities, __('messages.opportunities_retrieved'), 200);
     }
 
+    /** Manager: create an opportunity for the mosque they manage (see CreateOpportunityRequest::toDTO) */
     public function store(RequestsCreateOpportunityRequest $request)
     {
         $opportunity = $this->service->create($request->toDTO());
