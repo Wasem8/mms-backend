@@ -16,7 +16,6 @@ class SendInvitationAction
 
         $permissionName = 'invite_' . $role;
 
-
         if (!$user->hasPermission($permissionName)) {
             throw ValidationException::withMessages([
                 'role' => 'غير مصرح لك بإرسال دعوة لهذا الدور الوظيفي.'
@@ -63,8 +62,9 @@ class SendInvitationAction
 
         if (in_array($role, ['mosque_manager', 'halaqa_supervisor'])) {
 
-
+            // 🎯 [التعديل هنا]: إضافة شرط 'status' => 'active' لفحص المستعملين النشطين فقط
             $hasActiveUser = User::where('mosque_id', $mosqueId)
+                ->where('status', 'active') // 👈 يتجاهل الحسابات غير النشطة (inactive)
                 ->whereHas('roles', function($query) use ($role) {
                     $query->where('name', $role);
                 })->exists();

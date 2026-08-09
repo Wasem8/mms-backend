@@ -634,4 +634,87 @@ class AuthEndpoints
     )]
     public function deleteFcmToken() {}
 
+    #[OA\Patch(
+        path: '/users/{user}/status',
+        operationId: 'changeUserStatus',
+        tags: ['Users'],
+        summary: 'تغيير حالة المستخدم (تفعيل / تجميد)',
+        description: 'تغيير حالة المستخدم بين active و inactive. يتطلب وجود صلاحيات مناسبة (الهرمية الوظيفية ونطاق المسجد).',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'user',
+                in: 'path',
+                required: true,
+                description: 'معرف المستخدم (ID)',
+                schema: new OA\Schema(type: 'integer', example: 5)
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['status'],
+                properties: [
+                    new OA\Property(
+                        property: 'status',
+                        type: 'string',
+                        enum: ['active', 'inactive'],
+                        example: 'inactive',
+                        description: 'الحالة الجديدة للمستخدم'
+                    ),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'تم تغيير حالة الحساب بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم تجميد الحساب بنجاح.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'id', type: 'integer', example: 5),
+                                new OA\Property(property: 'name', type: 'string', example: 'محمد العلي'),
+                                new OA\Property(property: 'email', type: 'string', example: 'user@test.com'),
+                                new OA\Property(property: 'status', type: 'string', example: 'inactive'),
+                            ]
+                        ),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'خطأ في التحقق أو عدم استيفاء الشروط والعدم امتلاك الصلاحيات',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: false),
+                        new OA\Property(property: 'message', type: 'string', example: 'لا تملك صلاحية إدارة حالة هذا المستخدم.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            example: ['user' => ['لا يمكنك إدارة مستخدم خارج نطاق صلاحياتك.']]
+                        ),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'غير مصرح (تطلب توكن تسجيل الدخول)',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: false),
+                        new OA\Property(property: 'message', type: 'string', example: 'Unauthenticated.'),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function changeStatus() {}
+
 }

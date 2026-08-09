@@ -12,17 +12,16 @@ use Modules\Education\Http\Controllers\TeacherController;
 
 Route::prefix('education')->group(function () {
 
-    Route::middleware(['auth:api', 'role:halaqa_supervisor,super_admin'])->group(function () {
+    Route::middleware(['auth:api', 'active.user', 'role:halaqa_supervisor,super_admin'])->group(function () {
         Route::post('halaqat', [HalaqaController::class, 'store']);
         Route::post('halaqat/{id}/students', [HalaqaController::class, 'attachStudents']);
         Route::delete('halaqat/{id}/students/{studentId}', [HalaqaController::class, 'detachStudent']);
         Route::patch('students/{id}/approve', [StudentController::class, 'approve']);
         Route::patch('students/{id}/reject', [StudentController::class, 'reject']);
         Route::post('students/{id}/transfer', [StudentController::class, 'transfer']);
-
     });
 
-    Route::middleware('auth:api')->group(function () {
+    Route::middleware(['auth:api', 'active.user'])->group(function () {
         Route::get('students/search', [StudentController::class, 'search']);
         Route::get('students', [StudentController::class, 'index']);
         Route::get('students/{id}', [StudentController::class, 'show']);
@@ -32,66 +31,64 @@ Route::prefix('education')->group(function () {
         Route::get('/evaluation-labels', EvaluationController::class);
     });
 
-    Route::middleware(['auth:api', 'role:parent'])->group(function () {
+    Route::middleware(['auth:api', 'active.user', 'role:parent'])->group(function () {
         Route::post('students', [StudentController::class, 'store']);
-
     });
 
-    Route::middleware(['auth:api', 'role:halaqa_supervisor,mosque_manager,super_admin'])->group(function () {
+    Route::middleware(['auth:api', 'active.user', 'role:halaqa_supervisor,mosque_manager,super_admin'])->group(function () {
         Route::get('teachers', [TeacherController::class, 'index']);
         Route::get('teachers/{id}', [TeacherController::class, 'show']);
         Route::put('teachers/{id}', [TeacherController::class, 'update']);
     });
 
-
-
-    Route::middleware(['auth:api', 'role:teacher'])->group(function () {
+    Route::middleware(['auth:api', 'active.user', 'role:teacher'])->group(function () {
         Route::post('attendance', [AttendanceController::class, 'storeBulk']);
         Route::post('/sync', [SyncController::class, 'sync']);
         Route::post('uploads/audio', [MediaUploadController::class, 'uploadVoice']);
     });
 
-
-    Route::middleware(['auth:api', 'role:parent,halaqa_supervisor,teacher'])->group(function () {
+    Route::middleware(['auth:api', 'active.user', 'role:parent,halaqa_supervisor,teacher'])->group(function () {
         Route::get('attendance', [AttendanceController::class, 'index']);
         Route::get('evaluations/{id}', [EvaluationController::class, 'show']);
-
     });
 
-    Route::middleware(['auth:api', 'role:parent'])->group(function () {
+    Route::middleware(['auth:api', 'active.user', 'role:parent'])->group(function () {
         Route::post('attendance/excuses', [AttendanceExcuseController::class, 'store']);
         Route::get('my-excuses', [AttendanceExcuseController::class, 'myExcuses']);
     });
 
-    Route::middleware(['auth:api', 'role:teacher'])->group(function () {
+    Route::middleware(['auth:api', 'active.user', 'role:teacher'])->group(function () {
         Route::get('teacher/excuses', [AttendanceExcuseController::class, 'indexForTeacher']);
         Route::put('teacher/excuses/{id}/process', [AttendanceExcuseController::class, 'process']);
         Route::post('evaluations', [EvaluationController::class, 'store']);
-
-
     });
 
-    Route::prefix('supervisor')->middleware('role:halaqa_supervisor')->group(function () {
-        Route::get('evaluations', [EvaluationController::class, 'indexForSupervisor']);
-    });
-
-    Route::prefix('teacher')->middleware('role:teacher')->group(function () {
-        Route::get('evaluations', [EvaluationController::class, 'indexForTeacher']);
-    });
-
-    Route::prefix('parent')->middleware('role:parent')->group(function () {
-        Route::get('evaluations', [EvaluationController::class, 'indexForParent']);
-    });
-
-
-        Route::middleware(['auth:api', 'role:teacher,halaqa_supervisor,super_admin'])->group(function () {
-            Route::put('halaqat/{id}', [HalaqaController::class, 'update']);
-            Route::patch('halaqat/{id}', [HalaqaController::class, 'update']);
-            Route::delete('halaqat/{id}', [HalaqaController::class, 'destroy']);
-            Route::put('evaluations/{id}', [EvaluationController::class, 'update']);
-            Route::delete('evaluations/{id}', [EvaluationController::class, 'destroy']);
-            Route::get('halaqat', [HalaqaController::class, 'index']);
-            Route::get('halaqat/{id}', [HalaqaController::class, 'show']);
+    Route::prefix('supervisor')
+        ->middleware(['auth:api', 'active.user', 'role:halaqa_supervisor'])
+        ->group(function () {
+            Route::get('evaluations', [EvaluationController::class, 'indexForSupervisor']);
         });
+
+    Route::prefix('teacher')
+        ->middleware(['auth:api', 'active.user', 'role:teacher'])
+        ->group(function () {
+            Route::get('evaluations', [EvaluationController::class, 'indexForTeacher']);
+        });
+
+    Route::prefix('parent')
+        ->middleware(['auth:api', 'active.user', 'role:parent'])
+        ->group(function () {
+            Route::get('evaluations', [EvaluationController::class, 'indexForParent']);
+        });
+
+    Route::middleware(['auth:api', 'active.user', 'role:teacher,halaqa_supervisor,super_admin'])->group(function () {
+        Route::put('halaqat/{id}', [HalaqaController::class, 'update']);
+        Route::patch('halaqat/{id}', [HalaqaController::class, 'update']);
+        Route::delete('halaqat/{id}', [HalaqaController::class, 'destroy']);
+        Route::put('evaluations/{id}', [EvaluationController::class, 'update']);
+        Route::delete('evaluations/{id}', [EvaluationController::class, 'destroy']);
+        Route::get('halaqat', [HalaqaController::class, 'index']);
+        Route::get('halaqat/{id}', [HalaqaController::class, 'show']);
+    });
 
 });

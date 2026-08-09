@@ -201,8 +201,39 @@ class User extends Authentication implements JWTSubject
         }
     }
 
+    public function managerProfile()
+    {
+        return $this->hasOne(MosqueManagerProfile::class, 'user_id');
+    }
+
     protected static function newFactory()
     {
         return \Database\Factories\UserFactory::new();
+    }
+
+    public function roleLevel(): int
+    {
+        return match (true) {
+            $this->hasRole('super_admin') => 5,
+            $this->hasRole('mosque_manager') => 4,
+            $this->hasRole('halaqa_supervisor') => 3,
+            $this->hasRole('teacher') => 2,
+            $this->hasRole('parent') => 1,
+            default => 0,
+        };
+    }
+
+    public function canManageUser(User $target): bool
+    {
+        if ($this->id === $target->id) {
+            return false;
+        }
+
+        return $this->roleLevel() > $target->roleLevel();
+    }
+
+    public function routeNotificationForMail($notification)
+    {
+        return $this->pending_email ?? $this->email;
     }
 }

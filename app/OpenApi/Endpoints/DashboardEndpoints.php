@@ -459,4 +459,40 @@ class DashboardEndpoints
         ]
     )]
     public function exportPdf() {}
+
+    #[OA\Get(
+        path: '/dashboard/mosque-manager',
+        operationId: 'getMosqueManagerDashboard',
+        tags: ['Dashboard'],
+        summary: 'عرض بيانات لوحة تحكم مدير المسجد بالكامل',
+        description: 'تُرجع المؤشرات الرئيسية، الرسم البياني للحضور، أحدث النشاطات، مهام اليوم، وجدول الشكاوى.',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Dashboard data retrieved successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم جلب بيانات لوحة التحكم بنجاح'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'kpi_cards', type: 'object'),
+                                new OA\Property(property: 'attendance_chart', type: 'object'),
+                                new OA\Property(property: 'recent_activities', type: 'array', items: new OA\Items(type: 'object')),
+                                new OA\Property(property: 'today_tasks', type: 'object'),
+                                new OA\Property(property: 'latest_tickets', type: 'array', items: new OA\Items(type: 'object')),
+                            ]
+                        )
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated')
+        ]
+    )]
+    public function getMosqueManagerDashboard()
+    {
+    }
 }

@@ -3,38 +3,36 @@
 namespace Modules\User\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
-use Modules\User\DTOs\UpdateProfileDTO;
 
 class UpdateProfileRequest extends FormRequest
 {
-public function authorize(): bool
-{
-return true;
-}
+    /**
+     * Get the validation rules that apply to the request.
+     */
+    public function rules(): array
+    {
+        $userId = $this->user()->id;
 
-public function rules(): array
-{
-return [
-'full_name' => ['required', 'string', 'max:150'],
-'phone' => [
-'required', 'string', 'max:20',
-Rule::unique('users', 'phone')->ignore(Auth::id()),
-],
-'email' => [
-'required', 'email', 'max:150',
-Rule::unique('users', 'email')->ignore(Auth::id()),
-],
-];
-}
+        return [
+            'first_name' => ['nullable', 'string', 'max:100'],
+            'last_name'  => ['nullable', 'string', 'max:100'],
+            'name'       => ['required', 'string', 'max:255'],
+            'phone'      => ['nullable', 'string', 'max:20'],
+            'email'      => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($userId),
+            ],
+        ];
+    }
 
-public function toDTO(): UpdateProfileDTO
-{
-return new UpdateProfileDTO(
-fullName: trim($this->validated('full_name')),
-phone: $this->validated('phone'),
-email: $this->validated('email'),
-);
-}
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
 }

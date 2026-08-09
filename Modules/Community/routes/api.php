@@ -21,7 +21,7 @@ Route::prefix('program')->group(function () {
 
 
     // Protected
-    Route::middleware(['auth:api', 'role:mosque_manager'])->group(function () {
+    Route::middleware(['auth:api', 'active.user', 'role:mosque_manager'])->group(function () {
 
         Route::post('/mosques/{mosque}/dawah_programs', [DawahProgramController::class, 'store']);
         Route::Put('/mosques/{mosque}/dawah_programs/{program}', [DawahProgramController::class, 'update']);
@@ -33,44 +33,60 @@ Route::prefix('program')->group(function () {
     });
 });
 
-Route::middleware(['auth:api', 'role:mosque_manager'])->group(function () {
+Route::middleware(['auth:api', 'active.user', 'role:mosque_manager'])->group(function () {
     Route::post('sermon-selections', [SermonSelectionController::class, 'store']);
     Route::get('sermon-selections/mine', [SermonSelectionController::class, 'mine']);
     Route::delete('sermon-selections/{id}', [SermonSelectionController::class, 'destroy']);
 });
 
-Route::middleware(['auth:api', 'role:super_admin'])->group(function () {
-    Route::get('sermon-selections/upcoming', [SermonSelectionController::class, 'upcoming']); // مسار محدد قبل {id}
+Route::middleware(['auth:api', 'active.user', 'role:super_admin'])->group(function () {
+    Route::get('sermon-selections/upcoming', [SermonSelectionController::class, 'upcoming']);
     Route::get('sermon-selections', [SermonSelectionController::class, 'index']);
 });
 
-Route::prefix('sermons')->middleware('auth:api')->group(function () {
+Route::prefix('sermons')
+    ->middleware(['auth:api', 'active.user'])
+    ->group(function () {
 
-    Route::get('/search', [SermonController::class, 'search']);
-    Route::post('/', [SermonController::class, 'store'])->middleware('role:mosque_manager');
-    Route::get('/most-selected', [SermonController::class, 'mostSelected']); // بلا تقييد دور — مفيدة للطرفين
-    Route::get('/{id}', [SermonController::class, 'show'])->whereNumber('id');
-    Route::get('/pending', [SermonController::class, 'pending']);
-    Route::get('/archived', [SermonController::class, 'archived'])->middleware('role:mosque_manager');
-    Route::get('/', [SermonController::class, 'index']);
-    Route::put('/{id}/approve', [SermonController::class, 'approve'])->middleware('role:super_admin');
-    Route::put('/{id}/reject', [SermonController::class, 'reject'])->middleware('role:super_admin');
-});
+        Route::get('/search', [SermonController::class, 'search']);
 
-Route::prefix('tameems')->middleware('auth:api')->group(function () {
+        Route::post('/', [SermonController::class, 'store'])
+            ->middleware('role:mosque_manager');
 
-    Route::get('/my-tameems', [TameemController::class, 'myTameems'])->middleware('role:mosque_manager');
-    Route::patch('/{id}/read', [TameemController::class, 'markAsRead'])->middleware('role:mosque_manager');
+        Route::get('/most-selected', [SermonController::class, 'mostSelected']);
 
-Route::middleware('role:super_admin')->group(function () {
-    Route::post('/', [TameemController::class, 'store']);
-    Route::put('/{id}', [TameemController::class, 'update']);
-    Route::get('/', [TameemController::class, 'index']);
-    Route::delete('/{id}', [TameemController::class, 'destroy']);
-    Route::get('/{id}', [TameemController::class, 'show']);
-});
+        Route::get('/{id}', [SermonController::class, 'show'])
+            ->whereNumber('id');
 
+        Route::get('/pending', [SermonController::class, 'pending']);
 
-});
+        Route::get('/archived', [SermonController::class, 'archived'])
+            ->middleware('role:mosque_manager');
 
+        Route::get('/', [SermonController::class, 'index']);
 
+        Route::put('/{id}/approve', [SermonController::class, 'approve'])
+            ->middleware('role:super_admin');
+
+        Route::put('/{id}/reject', [SermonController::class, 'reject'])
+            ->middleware('role:super_admin');
+    });
+
+Route::prefix('tameems')
+    ->middleware(['auth:api', 'active.user'])
+    ->group(function () {
+
+        Route::get('/my-tameems', [TameemController::class, 'myTameems'])
+            ->middleware('role:mosque_manager');
+
+        Route::patch('/{id}/read', [TameemController::class, 'markAsRead'])
+            ->middleware('role:mosque_manager');
+
+        Route::middleware('role:super_admin')->group(function () {
+            Route::post('/', [TameemController::class, 'store']);
+            Route::put('/{id}', [TameemController::class, 'update']);
+            Route::get('/', [TameemController::class, 'index']);
+            Route::delete('/{id}', [TameemController::class, 'destroy']);
+            Route::get('/{id}', [TameemController::class, 'show']);
+        });
+    });

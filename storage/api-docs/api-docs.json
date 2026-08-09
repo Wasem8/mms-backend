@@ -1581,6 +1581,158 @@
                 ]
             }
         },
+        "/users/{user}/status": {
+            "patch": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "تغيير حالة المستخدم (تفعيل / تجميد)",
+                "description": "تغيير حالة المستخدم بين active و inactive. يتطلب وجود صلاحيات مناسبة (الهرمية الوظيفية ونطاق المسجد).",
+                "operationId": "changeUserStatus",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "description": "معرف المستخدم (ID)",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 5
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "description": "الحالة الجديدة للمستخدم",
+                                        "type": "string",
+                                        "example": "inactive",
+                                        "enum": [
+                                            "active",
+                                            "inactive"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "تم تغيير حالة الحساب بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم تجميد الحساب بنجاح."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "محمد العلي"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "user@test.com"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "inactive"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "خطأ في التحقق أو عدم استيفاء الشروط والعدم امتلاك الصلاحيات",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "لا تملك صلاحية إدارة حالة هذا المستخدم."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": {
+                                                "user": [
+                                                    "لا يمكنك إدارة مستخدم خارج نطاق صلاحياتك."
+                                                ]
+                                            }
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "غير مصرح (تطلب توكن تسجيل الدخول)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/campaigns": {
             "get": {
                 "tags": [
@@ -4441,6 +4593,72 @@
                     },
                     "500": {
                         "description": "حدث خطأ في الخادم أو أثناء توليد ورفع ملف PDF"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/dashboard/mosque-manager": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "عرض بيانات لوحة تحكم مدير المسجد بالكامل",
+                "description": "تُرجع المؤشرات الرئيسية، الرسم البياني للحضور، أحدث النشاطات، مهام اليوم، وجدول الشكاوى.",
+                "operationId": "getMosqueManagerDashboard",
+                "responses": {
+                    "200": {
+                        "description": "Dashboard data retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم جلب بيانات لوحة التحكم بنجاح"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "kpi_cards": {
+                                                    "type": "object"
+                                                },
+                                                "attendance_chart": {
+                                                    "type": "object"
+                                                },
+                                                "recent_activities": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "today_tasks": {
+                                                    "type": "object"
+                                                },
+                                                "latest_tickets": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
                     }
                 },
                 "security": [
@@ -17376,8 +17594,8 @@
                 "tags": [
                     "Profile"
                 ],
-                "summary": "Get authenticated user profile",
-                "description": "Returns the personal profile info of the currently authenticated user (name, email, phone, role, linked mosque if any).",
+                "summary": "عرض بيانات الملف الشخصي",
+                "description": "يُرجع جميع البيانات الخاصة بالبروفايل للمستخدم المسجل دخوله (المعلومات الشخصية، بيانات المسجد المرتبط، وأمان الحساب).",
                 "operationId": "getProfile",
                 "responses": {
                     "200": {
@@ -17392,55 +17610,120 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "تم جلب البيانات بنجاح"
+                                            "example": "تم جلب بيانات الملف الشخصي بنجاح"
                                         },
                                         "data": {
                                             "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "first_name": {
-                                                    "type": "string",
-                                                    "example": "أحمد"
-                                                },
-                                                "last_name": {
-                                                    "type": "string",
-                                                    "example": "الشديد"
-                                                },
-                                                "full_name": {
-                                                    "type": "string",
-                                                    "example": "أحمد الشديد"
-                                                },
-                                                "email": {
-                                                    "type": "string",
-                                                    "example": "manager@test.com"
-                                                },
-                                                "phone": {
-                                                    "type": "string",
-                                                    "example": "0559876543"
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "active"
-                                                },
-                                                "role": {
-                                                    "type": "string",
-                                                    "example": "mosque_manager"
-                                                },
-                                                "mosque": {
+                                                "personal_info": {
                                                     "properties": {
                                                         "id": {
                                                             "type": "integer",
-                                                            "example": 2
+                                                            "example": 1
+                                                        },
+                                                        "first_name": {
+                                                            "type": "string",
+                                                            "example": "أحمد",
+                                                            "nullable": true
+                                                        },
+                                                        "last_name": {
+                                                            "type": "string",
+                                                            "example": "العتيبي",
+                                                            "nullable": true
+                                                        },
+                                                        "full_name": {
+                                                            "type": "string",
+                                                            "example": "Mosque Manager"
+                                                        },
+                                                        "email": {
+                                                            "type": "string",
+                                                            "example": "manager@test.com"
+                                                        },
+                                                        "phone": {
+                                                            "type": "string",
+                                                            "example": "0559876543",
+                                                            "nullable": true
+                                                        },
+                                                        "role": {
+                                                            "type": "string",
+                                                            "example": "mosque_manager"
+                                                        },
+                                                        "role_display": {
+                                                            "type": "string",
+                                                            "example": "مدير مسجد"
+                                                        },
+                                                        "employee_code": {
+                                                            "type": "string",
+                                                            "example": "MNG-2026-001"
+                                                        },
+                                                        "preferred_language": {
+                                                            "type": "string",
+                                                            "example": "العربية (الرئيسية)"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "mosque_info": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 42
                                                         },
                                                         "name": {
                                                             "type": "string",
                                                             "example": "مسجد الرحمة الجامع"
+                                                        },
+                                                        "code": {
+                                                            "type": "string",
+                                                            "example": "MSQ-7049"
+                                                        },
+                                                        "imam_name": {
+                                                            "type": "string",
+                                                            "example": "الشيخ د. عبد العزيز العتيبي"
+                                                        },
+                                                        "khatib_name": {
+                                                            "type": "string",
+                                                            "example": "الشيخ د. محمد آل الشيخ"
+                                                        },
+                                                        "city_district": {
+                                                            "type": "string",
+                                                            "example": "الرياض - حي النزهة"
+                                                        },
+                                                        "status": {
+                                                            "type": "string",
+                                                            "example": "نشط"
                                                         }
                                                     },
                                                     "type": "object",
                                                     "nullable": true
+                                                },
+                                                "account_security": {
+                                                    "properties": {
+                                                        "status": {
+                                                            "type": "string",
+                                                            "example": "active"
+                                                        },
+                                                        "status_display": {
+                                                            "type": "string",
+                                                            "example": "نشط"
+                                                        },
+                                                        "verification_level": {
+                                                            "type": "string",
+                                                            "example": "موثّق بالكامل"
+                                                        },
+                                                        "is_email_verified": {
+                                                            "type": "boolean",
+                                                            "example": true
+                                                        },
+                                                        "has_fcm_token": {
+                                                            "type": "boolean",
+                                                            "example": false
+                                                        },
+                                                        "created_at": {
+                                                            "type": "string",
+                                                            "example": "2026-08-08"
+                                                        }
+                                                    },
+                                                    "type": "object"
                                                 }
                                             },
                                             "type": "object"
@@ -17457,7 +17740,34 @@
                         }
                     },
                     "401": {
-                        "$ref": "#/components/responses/Unauthenticated"
+                        "description": "Unauthenticated - Missing or invalid token",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -17470,8 +17780,8 @@
                 "tags": [
                     "Profile"
                 ],
-                "summary": "Update authenticated user profile",
-                "description": "Updates the editable personal fields of the authenticated user: full name, email, and phone. Other fields (status, role, mosque) are read-only from this endpoint.",
+                "summary": "تحديث البيانات الشخصية للمستخدم",
+                "description": "تحديث الاسم الأول، اسم العائلة، الاسم الكامل، البريد الإلكتروني، ورقم الهاتف للحساب الحالي.",
                 "operationId": "updateProfile",
                 "requestBody": {
                     "required": true,
@@ -17479,25 +17789,39 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "full_name",
-                                    "email",
-                                    "phone"
+                                    "name",
+                                    "email"
                                 ],
                                 "properties": {
-                                    "full_name": {
+                                    "first_name": {
                                         "type": "string",
-                                        "example": "أحمد الشديد",
-                                        "maxLength": 150
+                                        "example": "أحمد",
+                                        "nullable": true,
+                                        "maxLength": 100,
+                                        "minLength": 2
+                                    },
+                                    "last_name": {
+                                        "type": "string",
+                                        "example": "العتيبي",
+                                        "nullable": true,
+                                        "maxLength": 100,
+                                        "minLength": 2
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "example": "أحمد العتيبي",
+                                        "maxLength": 255,
+                                        "minLength": 2
                                     },
                                     "email": {
                                         "type": "string",
                                         "format": "email",
-                                        "example": "manager@test.com",
-                                        "maxLength": 150
+                                        "example": "manager@test.com"
                                     },
                                     "phone": {
                                         "type": "string",
                                         "example": "0559876543",
+                                        "nullable": true,
                                         "maxLength": 20
                                     }
                                 },
@@ -17519,41 +17843,117 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "تم تحديث البيانات بنجاح"
+                                            "example": "تم تحديث الملف الشخصي بنجاح"
                                         },
                                         "data": {
                                             "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 1
+                                                "personal_info": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "first_name": {
+                                                            "type": "string",
+                                                            "example": "أحمد"
+                                                        },
+                                                        "last_name": {
+                                                            "type": "string",
+                                                            "example": "العتيبي"
+                                                        },
+                                                        "full_name": {
+                                                            "type": "string",
+                                                            "example": "أحمد العتيبي"
+                                                        },
+                                                        "email": {
+                                                            "type": "string",
+                                                            "example": "manager@test.com"
+                                                        },
+                                                        "phone": {
+                                                            "type": "string",
+                                                            "example": "0559876543"
+                                                        },
+                                                        "role": {
+                                                            "type": "string",
+                                                            "example": "mosque_manager"
+                                                        },
+                                                        "role_display": {
+                                                            "type": "string",
+                                                            "example": "مدير مسجد"
+                                                        },
+                                                        "employee_code": {
+                                                            "type": "string",
+                                                            "example": "MNG-2026-001"
+                                                        },
+                                                        "preferred_language": {
+                                                            "type": "string",
+                                                            "example": "العربية (الرئيسية)"
+                                                        }
+                                                    },
+                                                    "type": "object"
                                                 },
-                                                "first_name": {
-                                                    "type": "string",
-                                                    "example": "أحمد"
+                                                "mosque_info": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 42
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "مسجد الرحمة الجامع"
+                                                        },
+                                                        "code": {
+                                                            "type": "string",
+                                                            "example": "MSQ-7049"
+                                                        },
+                                                        "imam_name": {
+                                                            "type": "string",
+                                                            "example": "الشيخ د. عبد العزيز العتيبي"
+                                                        },
+                                                        "khatib_name": {
+                                                            "type": "string",
+                                                            "example": "الشيخ د. محمد آل الشيخ"
+                                                        },
+                                                        "city_district": {
+                                                            "type": "string",
+                                                            "example": "الرياض - حي النزهة"
+                                                        },
+                                                        "status": {
+                                                            "type": "string",
+                                                            "example": "نشط"
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
                                                 },
-                                                "last_name": {
-                                                    "type": "string",
-                                                    "example": "الشديد"
-                                                },
-                                                "full_name": {
-                                                    "type": "string",
-                                                    "example": "أحمد الشديد"
-                                                },
-                                                "email": {
-                                                    "type": "string",
-                                                    "example": "manager@test.com"
-                                                },
-                                                "phone": {
-                                                    "type": "string",
-                                                    "example": "0559876543"
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "active"
-                                                },
-                                                "role": {
-                                                    "type": "string",
-                                                    "example": "mosque_manager"
+                                                "account_security": {
+                                                    "properties": {
+                                                        "status": {
+                                                            "type": "string",
+                                                            "example": "active"
+                                                        },
+                                                        "status_display": {
+                                                            "type": "string",
+                                                            "example": "نشط"
+                                                        },
+                                                        "verification_level": {
+                                                            "type": "string",
+                                                            "example": "موثّق بالكامل"
+                                                        },
+                                                        "is_email_verified": {
+                                                            "type": "boolean",
+                                                            "example": true
+                                                        },
+                                                        "has_fcm_token": {
+                                                            "type": "boolean",
+                                                            "example": false
+                                                        },
+                                                        "created_at": {
+                                                            "type": "string",
+                                                            "example": "2026-08-08"
+                                                        }
+                                                    },
+                                                    "type": "object"
                                                 }
                                             },
                                             "type": "object"
@@ -17603,7 +18003,214 @@
                         }
                     },
                     "401": {
-                        "$ref": "#/components/responses/Unauthenticated"
+                        "description": "Unauthenticated - Missing or invalid token",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/profile/confirm-email": {
+            "post": {
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "تأكيد تغيير البريد الإلكتروني بواسطة OTP",
+                "description": "يتم إرسال رمز OTP المكون من 6 أرقام لتأكيد البريد الجديد المعلق (pending_email).",
+                "operationId": "confirmEmailChange",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "otp"
+                                ],
+                                "properties": {
+                                    "otp": {
+                                        "type": "string",
+                                        "example": "123456",
+                                        "maxLength": 6
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Email changed and verified successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم تغيير البريد الإلكتروني وتأكيده بنجاح."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "personal_info": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "first_name": {
+                                                            "type": "string",
+                                                            "example": "أحمد"
+                                                        },
+                                                        "last_name": {
+                                                            "type": "string",
+                                                            "example": "العتيبي"
+                                                        },
+                                                        "full_name": {
+                                                            "type": "string",
+                                                            "example": "أحمد العتيبي"
+                                                        },
+                                                        "email": {
+                                                            "type": "string",
+                                                            "example": "new_manager@test.com"
+                                                        },
+                                                        "phone": {
+                                                            "type": "string",
+                                                            "example": "0559876543"
+                                                        },
+                                                        "role": {
+                                                            "type": "string",
+                                                            "example": "mosque_manager"
+                                                        },
+                                                        "role_display": {
+                                                            "type": "string",
+                                                            "example": "مدير مسجد"
+                                                        },
+                                                        "employee_code": {
+                                                            "type": "string",
+                                                            "example": "MNG-2026-001"
+                                                        },
+                                                        "preferred_language": {
+                                                            "type": "string",
+                                                            "example": "العربية (الرئيسية)"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "mosque_info": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 42
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "مسجد الرحمة الجامع"
+                                                        },
+                                                        "code": {
+                                                            "type": "string",
+                                                            "example": "MSQ-7049"
+                                                        },
+                                                        "imam_name": {
+                                                            "type": "string",
+                                                            "example": "الشيخ د. عبد العزيز العتيبي"
+                                                        },
+                                                        "khatib_name": {
+                                                            "type": "string",
+                                                            "example": "الشيخ د. محمد آل الشيخ"
+                                                        },
+                                                        "city_district": {
+                                                            "type": "string",
+                                                            "example": "الرياض - حي النزهة"
+                                                        },
+                                                        "status": {
+                                                            "type": "string",
+                                                            "example": "نشط"
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
+                                                },
+                                                "account_security": {
+                                                    "properties": {
+                                                        "status": {
+                                                            "type": "string",
+                                                            "example": "active"
+                                                        },
+                                                        "status_display": {
+                                                            "type": "string",
+                                                            "example": "نشط"
+                                                        },
+                                                        "verification_level": {
+                                                            "type": "string",
+                                                            "example": "موثّق بالكامل"
+                                                        },
+                                                        "is_email_verified": {
+                                                            "type": "boolean",
+                                                            "example": true
+                                                        },
+                                                        "has_fcm_token": {
+                                                            "type": "boolean",
+                                                            "example": false
+                                                        },
+                                                        "created_at": {
+                                                            "type": "string",
+                                                            "example": "2026-08-08"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid OTP code",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "رمز التحقق غير صحيح أو منتهي الصلاحية."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -24484,6 +25091,10 @@
         {
             "name": "Auth",
             "description": "Auth"
+        },
+        {
+            "name": "Users",
+            "description": "Users"
         },
         {
             "name": "Campaigns",

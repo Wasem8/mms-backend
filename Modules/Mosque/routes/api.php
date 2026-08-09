@@ -10,7 +10,7 @@ use Modules\Mosque\Http\Controllers\MosqueTaskController;
 Route::prefix('facilities')->group(function () {
     Route::get('/', [FacilitiesController::class, 'index']);
 
-    Route::middleware(['auth:api', 'role:super_admin'])->group(function () {
+    Route::middleware(['auth:api', 'active.user', 'role:super_admin'])->group(function () {
         Route::post('/',             [FacilitiesController::class, 'store']);
         Route::put('/{facility}',    [FacilitiesController::class, 'update']);
         Route::delete('/{facility}', [FacilitiesController::class, 'destroy']);
@@ -18,6 +18,7 @@ Route::prefix('facilities')->group(function () {
 });
 
 Route::get('/allNeeds', [MosqueNeedController::class, 'AllNeeds']);
+
 Route::prefix('mosques')->group(function () {
 
     Route::get('/',              [MosqueController::class, 'index']);
@@ -27,8 +28,8 @@ Route::prefix('mosques')->group(function () {
     Route::get('/needs/nearby',  [MosqueNeedController::class, 'nearbyWithNeeds']);
     Route::get('/city/{city}',   [MosqueController::class, 'byCity']);
 
-    // ✅ لازم auth:api middleware هنا فوق، وقبل أي {mosque} route
-    Route::middleware('auth:api')->group(function () {
+    // Authenticated user
+    Route::middleware(['auth:api', 'active.user'])->group(function () {
         Route::get('/mine', [MosqueController::class, 'mine']);
     });
 
@@ -41,24 +42,28 @@ Route::prefix('mosques')->group(function () {
     Route::get('/{mosque}/spaces', [MosqueSpaceController::class, 'index']);
     Route::get('/{mosque}/spaces/{space}', [MosqueSpaceController::class, 'show']);
 
-    Route::middleware('auth:api')->group(function () {
+    Route::middleware(['auth:api', 'active.user'])->group(function () {
+
         // ── Mosque Management ──
-        Route::put('/{mosque}',                [MosqueController::class, 'update']);
+        Route::put('/{mosque}', [MosqueController::class, 'update']);
+
         Route::middleware('role:super_admin')->group(function () {
-            Route::post('/',                       [MosqueController::class, 'store']);
-            Route::delete('/{mosque}',             [MosqueController::class, 'destroy']);
-            Route::patch('/{mosque}/status',       [MosqueController::class, 'updateStatus']);
-            Route::patch('/{mosque}/featured',     [MosqueController::class, 'toggleFeatured']);
-            Route::patch('/{mosque}/rating',       [MosqueController::class, 'updateRating']);
+            Route::post('/',                   [MosqueController::class, 'store']);
+            Route::delete('/{mosque}',         [MosqueController::class, 'destroy']);
+            Route::patch('/{mosque}/status',   [MosqueController::class, 'updateStatus']);
+            Route::patch('/{mosque}/featured', [MosqueController::class, 'toggleFeatured']);
+            Route::patch('/{mosque}/rating',   [MosqueController::class, 'updateRating']);
         });
 
         Route::middleware('role:mosque_manager')->group(function () {
             Route::post('/{mosque}/facilities/attach', [FacilitiesController::class, 'attach']);
             Route::post('/{mosque}/facilities/detach', [FacilitiesController::class, 'detach']);
             Route::post('/{mosque}/facilities/sync',   [FacilitiesController::class, 'sync']);
+
             Route::post('/{mosque}/needs', [MosqueNeedController::class, 'store']);
             Route::put('/{mosque}/needs/{need}', [MosqueNeedController::class, 'update']);
             Route::delete('/{mosque}/needs/{need}', [MosqueNeedController::class, 'destroy']);
+
             Route::post('/{mosque}/spaces', [MosqueSpaceController::class, 'store']);
             Route::put('/{mosque}/spaces/{space}', [MosqueSpaceController::class, 'update']);
             Route::delete('/{mosque}/spaces/{space}', [MosqueSpaceController::class, 'destroy']);
@@ -66,9 +71,10 @@ Route::prefix('mosques')->group(function () {
     });
 });
 
-Route::middleware(['auth:api', 'role:mosque_manager'])
+Route::middleware(['auth:api', 'active.user', 'role:mosque_manager'])
     ->prefix('mosque/tasks')
     ->group(function () {
+
         Route::get('/date-tabs', [MosqueTaskController::class, 'dateTabs']);
         Route::get('/next-week', [MosqueTaskController::class, 'nextWeek']);
         Route::get('/friday', [MosqueTaskController::class, 'friday']);
