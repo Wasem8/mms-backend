@@ -19,18 +19,26 @@ class VolunteerOpportunityController extends Controller
     /** Manager: list all opportunities for their mosque */
     public function managerIndex()
     {
+        $mosque = auth()->user()->managedMosque;
 
-        $mosqueId = (int) auth()->user()->mosque_id;
+        if (! $mosque) {
+            return ApiResponse::error(__('messages.no_mosque_assigned_to_manager'), 422);
+        }
 
-        $Opportunities = $this->service->listForManager($mosqueId);
+        $Opportunities = $this->service->listForManager((int) $mosque->id);
         return ApiResponse::success($Opportunities, __('messages.opportunities_retrieved'), 200);
     }
 
     /** Volunteer: list open opportunities */
     public function index()
     {
-        $mosqueId = (int) auth()->user()->mosque_id;
-        $Opportunities = $this->service->listOpen($mosqueId);
+        $mosque = auth()->user()->managedMosque;
+
+        if (! $mosque) {
+            return ApiResponse::error(__('messages.no_mosque_assigned_to_manager'), 422);
+        }
+
+        $Opportunities = $this->service->listOpen((int) $mosque->id);
         return ApiResponse::success($Opportunities, __('messages.opportunities_retrieved'), 200);
     }
 

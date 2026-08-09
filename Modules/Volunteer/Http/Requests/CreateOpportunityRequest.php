@@ -24,8 +24,14 @@ class CreateOpportunityRequest extends FormRequest
 
     public function toDTO(): CreateOpportunityDTO
     {
+        $mosque = $this->user()->managedMosque;
+
+        if (! $mosque) {
+            abort(422, __('messages.no_mosque_assigned_to_manager'));
+        }
+
         return new CreateOpportunityDTO(
-            mosqueId: (int) auth()->user()->mosque_id,
+            mosqueId: (int) $mosque->id,
             title: $this->string('title'),
             description: $this->string('description'),
             requiredVolunteers: (int) $this->input('required_volunteers'),
