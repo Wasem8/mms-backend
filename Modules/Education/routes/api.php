@@ -22,7 +22,7 @@ Route::prefix('education')->group(function () {
 
     });
 
-    Route::middleware('auth:api')->group(function () {
+    Route::middleware(['auth:api', 'active.user'])->group(function () {
         Route::get('students/search', [StudentController::class, 'search']);
         Route::get('students', [StudentController::class, 'index']);
         Route::get('students/{id}', [StudentController::class, 'show']);

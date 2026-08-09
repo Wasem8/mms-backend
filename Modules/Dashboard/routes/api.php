@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Dashboard\Http\Controllers\DashboardController;
+use Modules\Dashboard\Http\Controllers\MosqueManagerDashboardController;
 use Modules\Dashboard\Http\Controllers\ParentDashboardController;
 use Modules\Dashboard\Http\Controllers\SupervisorDashboardController;
 use Modules\Dashboard\Http\Controllers\TeacherDashboardController;
@@ -32,3 +33,8 @@ Route::prefix('dashboard')->group(function () {
 });
 
 
+Route::prefix('dashboard/mosque-manager')->middleware(['auth:api'])->group(function () {
+    // 1. Endpoint شامل يعيد كافة بيانات اللوحة في Request واحد (الأسرع للـ Frontend)
+    Route::get('/', [MosqueManagerDashboardController::class, 'index']);
+
+});

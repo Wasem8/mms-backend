@@ -101,6 +101,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $mosqueManager->permissions()->sync(
             Permission::whereIn('name', [
                 'invite_halaqa_supervisor',
+                'invite_teacher',
                 'view_mosques',
                 'create_mosque',
                 'update_mosque',

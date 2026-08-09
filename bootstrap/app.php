@@ -10,6 +10,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Validation\ValidationException;
+use Modules\User\Http\Middleware\EnsureUserIsActive;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Illuminate\Console\Scheduling\Schedule; // 👈 1. إضافة الـ Schedule هنا
@@ -32,6 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'auth' => Authenticate::class, // 🔥 override
             'role' => RoleMiddleware::class,
+            'active.user' => EnsureUserIsActive::class,
         ]);
     })
     // 👇 2. إضافة بلوك الجدولة هنا 👇
