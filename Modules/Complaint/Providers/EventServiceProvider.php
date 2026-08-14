@@ -5,6 +5,7 @@ namespace Modules\Complaint\Providers;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Modules\Complaint\Events\ComplaintSubmitted;
 use Modules\Complaint\Events\ComplaintStatusChanged;
+use Modules\Complaint\Listeners\SendComplaintAssignmentNotification;
 use Modules\Complaint\Listeners\SendComplaintSubmittedNotification;
 use Modules\Complaint\Listeners\SendComplaintStatusChangedNotification;
 
@@ -16,6 +17,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         ComplaintStatusChanged::class => [
             SendComplaintStatusChangedNotification::class,
+        ],
+        \Modules\Complaint\Events\ComplaintAssigned::class => [
+            SendComplaintAssignmentNotification::class,
         ],
     ];
 
