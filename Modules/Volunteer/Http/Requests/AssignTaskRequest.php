@@ -7,22 +7,19 @@ use Modules\Volunteer\DTOs\AssignTaskDTO;
 
 class AssignTaskRequest extends FormRequest
 {
-    /**
-     * Get the validation rules that apply to the request.
-     */
+    
     public function rules(): array
     {
         return [
-            'application_id'   => ['required', 'integer', 'exists:volunteer_applications,id'],
-            'task_description' => ['required', 'string'],
+            'application_id' => ['required', 'integer', 'exists:volunteer_applications,id'],
         ];
     }
 
-    public function toDTO(): AssignTaskDTO
+    public function toDTO(int $taskId): AssignTaskDTO
     {
         return new AssignTaskDTO(
+            taskId: $taskId,
             applicationId: (int) $this->input('application_id'),
-            taskDescription: $this->string('task_description'),
         );
     }
 

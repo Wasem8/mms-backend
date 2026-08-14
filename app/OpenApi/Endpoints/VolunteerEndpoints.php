@@ -453,10 +453,156 @@ class VolunteerEndpoints
     // ─────────────────────────────────────────────
 
     #[OA\Get(
-        path: '/volunteer/applications/{applicationId}/tasks',
-        operationId: 'getVolunteerTasks',
+        path: '/volunteer/opportunities/{opportunityId}/tasks',
+        operationId: 'getOpportunityTasks',
         tags: ['Volunteer Tasks'],
-        summary: 'List tasks for an approved application',
+        summary: 'List all tasks for an opportunity',
+        description: 'Returns every task on the opportunity, both unassigned and already distributed to volunteers. Requires `mosque_manager` role.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'opportunityId', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1)),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Tasks retrieved successfully',
+                content: new OA\JsonContent(properties: [
+                    new OA\Property(property: 'status',  type: 'boolean', example: true),
+                    new OA\Property(property: 'message', type: 'string',  example: 'Tasks retrieved successfully'),
+                    new OA\Property(
+                        property: 'data',
+                        type: 'array',
+                        items: new OA\Items(properties: [
+                            new OA\Property(property: 'id',               type: 'integer', example: 3),
+                            new OA\Property(property: 'opportunity_id',   type: 'integer', example: 1),
+                            new OA\Property(property: 'application_id',   type: 'integer', nullable: true, example: null),
+                            new OA\Property(property: 'task_description', type: 'string',  example: 'ترتيب صفوف المصلى قبل صلاة الجمعة'),
+                            new OA\Property(property: 'status',           type: 'string',  enum: ['unassigned', 'assigned', 'completed'], example: 'unassigned'),
+                            new OA\Property(property: 'created_at',       type: 'string',  format: 'date-time'),
+                        ])
+                    ),
+                ])
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden'),
+            new OA\Response(response: 404, description: 'Opportunity not found'),
+            new OA\Response(response: 500, description: 'Internal server error'),
+        ]
+    )]
+    public function taskIndex() {}
+
+    // ─────────────────────────────────────────────
+
+    #[OA\Post(
+        path: '/volunteer/opportunities/{opportunityId}/tasks',
+        operationId: 'createVolunteerTask',
+        tags: ['Volunteer Tasks'],
+        summary: 'Create a general task on an opportunity',
+        description: 'Creates a task not yet assigned to any volunteer. Use the assign endpoint to distribute it afterwards. Requires `mosque_manager` role.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'opportunityId', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1)),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['task_description'],
+                properties: [
+                    new OA\Property(property: 'task_description', type: 'string', example: 'ترتيب صفوف المصلى قبل صلاة الجمعة'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Task created successfully',
+                content: new OA\JsonContent(properties: [
+                    new OA\Property(property: 'status',  type: 'boolean', example: true),
+                    new OA\Property(property: 'message', type: 'string',  example: 'Task created successfully'),
+                    new OA\Property(
+                        property: 'data',
+                        type: 'object',
+                        properties: [
+                            new OA\Property(property: 'id',               type: 'integer', example: 3),
+                            new OA\Property(property: 'opportunity_id',   type: 'integer', example: 1),
+                            new OA\Property(property: 'application_id',   type: 'integer', nullable: true, example: null),
+                            new OA\Property(property: 'task_description', type: 'string',  example: 'ترتيب صفوف المصلى قبل صلاة الجمعة'),
+                            new OA\Property(property: 'status',           type: 'string',  example: 'unassigned'),
+                            new OA\Property(property: 'created_at',       type: 'string',  format: 'date-time'),
+                        ]
+                    ),
+                ])
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden'),
+            new OA\Response(response: 404, description: 'Opportunity not found'),
+            new OA\Response(response: 422, description: 'Validation error'),
+            new OA\Response(response: 500, description: 'Internal server error'),
+        ]
+    )]
+    public function taskStore() {}
+
+    // ─────────────────────────────────────────────
+
+    #[OA\Post(
+        path: '/volunteer/tasks/{taskId}/assign',
+        operationId: 'assignVolunteerTask',
+        tags: ['Volunteer Tasks'],
+        summary: 'Assign an existing task to an approved volunteer',
+        description: 'The target application must belong to the same opportunity as the task and be approved. Requires `mosque_manager` role.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'taskId', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 3)),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['application_id'],
+                properties: [
+                    new OA\Property(property: 'application_id', type: 'integer', example: 5),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Task assigned successfully',
+                content: new OA\JsonContent(properties: [
+                    new OA\Property(property: 'status',  type: 'boolean', example: true),
+                    new OA\Property(property: 'message', type: 'string',  example: 'Task assigned successfully'),
+                    new OA\Property(
+                        property: 'data',
+                        type: 'object',
+                        properties: [
+                            new OA\Property(property: 'id',               type: 'integer', example: 3),
+                            new OA\Property(property: 'opportunity_id',   type: 'integer', example: 1),
+                            new OA\Property(property: 'application_id',   type: 'integer', example: 5),
+                            new OA\Property(property: 'task_description', type: 'string',  example: 'ترتيب صفوف المصلى قبل صلاة الجمعة'),
+                            new OA\Property(property: 'status',           type: 'string',  example: 'assigned'),
+                        ]
+                    ),
+                ])
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden'),
+            new OA\Response(response: 404, description: 'Task or application not found'),
+            new OA\Response(response: 422, description: 'Application does not belong to this opportunity or is not approved'),
+            new OA\Response(response: 500, description: 'Internal server error'),
+        ]
+    )]
+    public function taskAssign() {}
+
+    // ─────────────────────────────────────────────
+
+    #[OA\Get(
+        path: '/volunteer/applications/{applicationId}/tasks',
+        operationId: 'getMyApplicationTasks',
+        tags: ['Volunteer Tasks'],
+        summary: 'List tasks assigned to my approved application',
+        description: 'Returns only tasks distributed to the caller\'s own application. Requires `volunteer` role and ownership of the application.',
         security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
@@ -476,68 +622,19 @@ class VolunteerEndpoints
                             new OA\Property(property: 'id',               type: 'integer', example: 3),
                             new OA\Property(property: 'application_id',   type: 'integer', example: 5),
                             new OA\Property(property: 'task_description', type: 'string',  example: 'ترتيب صفوف المصلى قبل صلاة الجمعة'),
-                            new OA\Property(property: 'status',           type: 'string',  enum: ['pending', 'completed'], example: 'pending'),
+                            new OA\Property(property: 'status',           type: 'string',  enum: ['assigned', 'completed'], example: 'assigned'),
                             new OA\Property(property: 'created_at',       type: 'string',  format: 'date-time'),
                         ])
                     ),
                 ])
             ),
             new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — not your application'),
             new OA\Response(response: 404, description: 'Application not found'),
             new OA\Response(response: 500, description: 'Internal server error'),
         ]
     )]
-    public function taskIndex() {}
-
-    // ─────────────────────────────────────────────
-
-    #[OA\Post(
-        path: '/volunteer/tasks',
-        operationId: 'createVolunteerTask',
-        tags: ['Volunteer Tasks'],
-        summary: 'Assign a task to a volunteer',
-        description: 'Requires `mosque_manager` role.',
-        security: [['bearerAuth' => []]],
-        parameters: [
-            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
-        ],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(
-                required: ['application_id', 'task_description'],
-                properties: [
-                    new OA\Property(property: 'application_id',   type: 'integer', example: 5),
-                    new OA\Property(property: 'task_description', type: 'string',  example: 'ترتيب صفوف المصلى قبل صلاة الجمعة'),
-                ]
-            )
-        ),
-        responses: [
-            new OA\Response(
-                response: 201,
-                description: 'Task created successfully',
-                content: new OA\JsonContent(properties: [
-                    new OA\Property(property: 'status',  type: 'boolean', example: true),
-                    new OA\Property(property: 'message', type: 'string',  example: 'Task created successfully'),
-                    new OA\Property(
-                        property: 'data',
-                        type: 'object',
-                        properties: [
-                            new OA\Property(property: 'id',               type: 'integer', example: 3),
-                            new OA\Property(property: 'application_id',   type: 'integer', example: 5),
-                            new OA\Property(property: 'task_description', type: 'string',  example: 'ترتيب صفوف المصلى قبل صلاة الجمعة'),
-                            new OA\Property(property: 'status',           type: 'string',  example: 'pending'),
-                            new OA\Property(property: 'created_at',       type: 'string',  format: 'date-time'),
-                        ]
-                    ),
-                ])
-            ),
-            new OA\Response(response: 401, description: 'Unauthenticated'),
-            new OA\Response(response: 403, description: 'Forbidden'),
-            new OA\Response(response: 422, description: 'Validation error'),
-            new OA\Response(response: 500, description: 'Internal server error'),
-        ]
-    )]
-    public function taskStore() {}
+    public function applicationTasks() {}
 
     // ─────────────────────────────────────────────
 
@@ -545,7 +642,8 @@ class VolunteerEndpoints
         path: '/volunteer/tasks/{taskId}/complete',
         operationId: 'completeVolunteerTask',
         tags: ['Volunteer Tasks'],
-        summary: 'Mark a task as completed',
+        summary: 'Mark my own task as completed',
+        description: 'Only the volunteer the task is assigned to can complete it. Requires `volunteer` role.',
         security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
@@ -562,6 +660,7 @@ class VolunteerEndpoints
                 ])
             ),
             new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — not your task'),
             new OA\Response(response: 404, description: 'Task not found'),
             new OA\Response(response: 500, description: 'Internal server error'),
         ]

@@ -205,7 +205,7 @@ class MaintenanceRequestEndpoints
         operationId: 'maintenance.store',
         tags: ['Maintenance Requests'],
         summary: 'Submit a new maintenance request',
-        description: 'Creates a maintenance request. A unique `maintenance_number` (MR-YYYY-XXXXXX) is auto-generated. Status defaults to `pending`. `requested_by` is automatically resolved from the authenticated user\'s token.',
+        description: 'Creates a maintenance request for the authenticated mosque manager\'s mosque. `mosque_id` is automatically resolved from the manager\'s token and cannot be set manually. A unique `maintenance_number` (MR-YYYY-XXXXXX) is auto-generated. Status defaults to `pending`. `requested_by` is automatically resolved from the authenticated user\'s token.',
         security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
@@ -215,9 +215,8 @@ class MaintenanceRequestEndpoints
             content: new OA\MediaType(
                 mediaType: 'multipart/form-data',
                 schema: new OA\Schema(
-                    required: ['mosque_id', 'title', 'description', 'category'],
+                    required: ['title', 'description', 'category'],
                     properties: [
-                        new OA\Property(property: 'mosque_id',    type: 'integer', example: 7),
                         new OA\Property(property: 'title',        type: 'string',  maxLength: 255,  example: 'AC unit not cooling'),
                         new OA\Property(property: 'description',  type: 'string',  maxLength: 5000, example: 'The main hall AC has stopped cooling since yesterday.'),
                         new OA\Property(property: 'category',     type: 'string',  enum: ['electrical', 'plumbing', 'carpentry', 'cleaning', 'other'], example: 'electrical'),
@@ -252,7 +251,6 @@ class MaintenanceRequestEndpoints
         ],
     )]
     public function store() {}
-
     // ─── GET /maintenance/{id} ────────────────────────────────────────────────
 
     #[OA\Get(
