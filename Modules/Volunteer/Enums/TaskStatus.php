@@ -4,6 +4,7 @@ namespace Modules\Volunteer\Enums;
 
 enum TaskStatus: string
 {
-    case Assigned  = 'assigned';
-    case Completed = 'completed';
+    case Unassigned = 'unassigned';
+    case Assigned   = 'assigned';
+    case Completed  = 'completed';
 }

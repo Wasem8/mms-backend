@@ -35,7 +35,12 @@ class UpdateMosqueRequest extends FormRequest
                 'is_featured' => 'sometimes|boolean',
                 'city_id'     => 'sometimes|exists:cities,id',
                 'district_id' => 'sometimes|exists:districts,id',
-                'manager_id'  => 'sometimes|exists:users,id',
+                'manager_id'  => [
+                    'sometimes',
+                    'exists:users,id',
+                    Rule::unique('mosques', 'manager_id')
+                        ->ignore($this->route('mosque')),
+                ],
             ];
         } else {
             $rules += [
@@ -56,7 +61,8 @@ class UpdateMosqueRequest extends FormRequest
     public function messages(): array
     {
         return [
-            '*.prohibited' => __('messages.mosque.privileged_field'),
+            '*.prohibited'      => __('messages.mosque.privileged_field'),
+            'manager_id.unique' => __('messages.mosque.manager_already_assigned'),
         ];
     }
 

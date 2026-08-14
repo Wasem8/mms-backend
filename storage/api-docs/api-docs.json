@@ -10502,7 +10502,7 @@
                     "Maintenance Requests"
                 ],
                 "summary": "Submit a new maintenance request",
-                "description": "Creates a maintenance request. A unique `maintenance_number` (MR-YYYY-XXXXXX) is auto-generated. Status defaults to `pending`. `requested_by` is automatically resolved from the authenticated user's token.",
+                "description": "Creates a maintenance request for the authenticated mosque manager's mosque. `mosque_id` is automatically resolved from the manager's token and cannot be set manually. A unique `maintenance_number` (MR-YYYY-XXXXXX) is auto-generated. Status defaults to `pending`. `requested_by` is automatically resolved from the authenticated user's token.",
                 "operationId": "maintenance.store",
                 "parameters": [
                     {
@@ -10515,16 +10515,11 @@
                         "multipart/form-data": {
                             "schema": {
                                 "required": [
-                                    "mosque_id",
                                     "title",
                                     "description",
                                     "category"
                                 ],
                                 "properties": {
-                                    "mosque_id": {
-                                        "type": "integer",
-                                        "example": 7
-                                    },
                                     "title": {
                                         "type": "string",
                                         "example": "AC unit not cooling",
@@ -22356,13 +22351,338 @@
                 ]
             }
         },
+        "/volunteer/opportunities/{opportunityId}/tasks": {
+            "get": {
+                "tags": [
+                    "Volunteer Tasks"
+                ],
+                "summary": "List all tasks for an opportunity",
+                "description": "Returns every task on the opportunity, both unassigned and already distributed to volunteers. Requires `mosque_manager` role.",
+                "operationId": "getOpportunityTasks",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "opportunityId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tasks retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Tasks retrieved successfully"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 3
+                                                    },
+                                                    "opportunity_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "application_id": {
+                                                        "type": "integer",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "task_description": {
+                                                        "type": "string",
+                                                        "example": "ترتيب صفوف المصلى قبل صلاة الجمعة"
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "unassigned",
+                                                        "enum": [
+                                                            "unassigned",
+                                                            "assigned",
+                                                            "completed"
+                                                        ]
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Opportunity not found"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Volunteer Tasks"
+                ],
+                "summary": "Create a general task on an opportunity",
+                "description": "Creates a task not yet assigned to any volunteer. Use the assign endpoint to distribute it afterwards. Requires `mosque_manager` role.",
+                "operationId": "createVolunteerTask",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "opportunityId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "task_description"
+                                ],
+                                "properties": {
+                                    "task_description": {
+                                        "type": "string",
+                                        "example": "ترتيب صفوف المصلى قبل صلاة الجمعة"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Task created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Task created successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "opportunity_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "application_id": {
+                                                    "type": "integer",
+                                                    "example": null,
+                                                    "nullable": true
+                                                },
+                                                "task_description": {
+                                                    "type": "string",
+                                                    "example": "ترتيب صفوف المصلى قبل صلاة الجمعة"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "unassigned"
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Opportunity not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/volunteer/tasks/{taskId}/assign": {
+            "post": {
+                "tags": [
+                    "Volunteer Tasks"
+                ],
+                "summary": "Assign an existing task to an approved volunteer",
+                "description": "The target application must belong to the same opportunity as the task and be approved. Requires `mosque_manager` role.",
+                "operationId": "assignVolunteerTask",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "taskId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 3
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "application_id"
+                                ],
+                                "properties": {
+                                    "application_id": {
+                                        "type": "integer",
+                                        "example": 5
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Task assigned successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Task assigned successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "opportunity_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "application_id": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "task_description": {
+                                                    "type": "string",
+                                                    "example": "ترتيب صفوف المصلى قبل صلاة الجمعة"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "assigned"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Task or application not found"
+                    },
+                    "422": {
+                        "description": "Application does not belong to this opportunity or is not approved"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/volunteer/applications/{applicationId}/tasks": {
             "get": {
                 "tags": [
                     "Volunteer Tasks"
                 ],
-                "summary": "List tasks for an approved application",
-                "operationId": "getVolunteerTasks",
+                "summary": "List tasks assigned to my approved application",
+                "description": "Returns only tasks distributed to the caller's own application. Requires `volunteer` role and ownership of the application.",
+                "operationId": "getMyApplicationTasks",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/AcceptLanguageHeader"
@@ -22410,9 +22730,9 @@
                                                     },
                                                     "status": {
                                                         "type": "string",
-                                                        "example": "pending",
+                                                        "example": "assigned",
                                                         "enum": [
-                                                            "pending",
+                                                            "assigned",
                                                             "completed"
                                                         ]
                                                     },
@@ -22433,111 +22753,11 @@
                     "401": {
                         "description": "Unauthenticated"
                     },
+                    "403": {
+                        "description": "Forbidden — not your application"
+                    },
                     "404": {
                         "description": "Application not found"
-                    },
-                    "500": {
-                        "description": "Internal server error"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/volunteer/tasks": {
-            "post": {
-                "tags": [
-                    "Volunteer Tasks"
-                ],
-                "summary": "Assign a task to a volunteer",
-                "description": "Requires `mosque_manager` role.",
-                "operationId": "createVolunteerTask",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/AcceptLanguageHeader"
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "application_id",
-                                    "task_description"
-                                ],
-                                "properties": {
-                                    "application_id": {
-                                        "type": "integer",
-                                        "example": 5
-                                    },
-                                    "task_description": {
-                                        "type": "string",
-                                        "example": "ترتيب صفوف المصلى قبل صلاة الجمعة"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Task created successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Task created successfully"
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 3
-                                                },
-                                                "application_id": {
-                                                    "type": "integer",
-                                                    "example": 5
-                                                },
-                                                "task_description": {
-                                                    "type": "string",
-                                                    "example": "ترتيب صفوف المصلى قبل صلاة الجمعة"
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "pending"
-                                                },
-                                                "created_at": {
-                                                    "type": "string",
-                                                    "format": "date-time"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "422": {
-                        "description": "Validation error"
                     },
                     "500": {
                         "description": "Internal server error"
@@ -22555,7 +22775,8 @@
                 "tags": [
                     "Volunteer Tasks"
                 ],
-                "summary": "Mark a task as completed",
+                "summary": "Mark my own task as completed",
+                "description": "Only the volunteer the task is assigned to can complete it. Requires `volunteer` role.",
                 "operationId": "completeVolunteerTask",
                 "parameters": [
                     {
@@ -22598,6 +22819,9 @@
                     },
                     "401": {
                         "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — not your task"
                     },
                     "404": {
                         "description": "Task not found"

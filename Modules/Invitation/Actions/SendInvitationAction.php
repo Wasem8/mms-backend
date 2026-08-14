@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 use Modules\Invitation\Models\Invitation;
 use Modules\Invitation\Notifications\InvitationNotification;
+use Modules\Mosque\Models\Mosque;
 use Modules\User\Models\User;
 
 class SendInvitationAction
@@ -22,7 +23,6 @@ class SendInvitationAction
             ]);
         }
 
-        // 2. تطبيق التراتبية بدقة ومنع التلاعب عبر الـ API
         if ($user->hasRole('super_admin') && $role !== 'mosque_manager') {
             throw ValidationException::withMessages([
                 'role' => 'بصفتك مديراً للمنطقة (Super Admin)، يمكنك فقط دعوة مدير مسجد (Mosque Manager).'
@@ -59,21 +59,30 @@ class SendInvitationAction
             ]);
         }
 
-
         if (in_array($role, ['mosque_manager', 'halaqa_supervisor'])) {
 
-            // 🎯 [التعديل هنا]: إضافة شرط 'status' => 'active' لفحص المستعملين النشطين فقط
-            $hasActiveUser = User::where('mosque_id', $mosqueId)
-                ->where('status', 'active') // 👈 يتجاهل الحسابات غير النشطة (inactive)
-                ->whereHas('roles', function($query) use ($role) {
-                    $query->where('name', $role);
-                })->exists();
+            if ($role === 'mosque_manager') {
+                $hasActiveManager = Mosque::where('id', $mosqueId)
+                    ->whereNotNull('manager_id')
+                    ->exists();
 
-            if ($hasActiveUser) {
-                $roleTitle = $role === 'mosque_manager' ? 'مدير مسجد' : 'مشرف حلقات';
-                throw ValidationException::withMessages([
-                    'role' => "لا يمكن إرسال الدعوة. هذا المسجد يمتلك ($roleTitle) نشط بالفعل."
-                ]);
+                if ($hasActiveManager) {
+                    throw ValidationException::withMessages([
+                        'role' => 'لا يمكن إرسال الدعوة. هذا المسجد يمتلك مدير مسجد نشط بالفعل.'
+                    ]);
+                }
+            } else {
+                $hasActiveUser = User::where('mosque_id', $mosqueId)
+                    ->where('status', 'active')
+                    ->whereHas('roles', function ($query) use ($role) {
+                        $query->where('name', $role);
+                    })->exists();
+
+                if ($hasActiveUser) {
+                    throw ValidationException::withMessages([
+                        'role' => 'لا يمكن إرسال الدعوة. هذا المسجد يمتلك مشرف حلقات نشط بالفعل.'
+                    ]);
+                }
             }
 
             $hasPendingInvitation = Invitation::where('mosque_id', $mosqueId)
