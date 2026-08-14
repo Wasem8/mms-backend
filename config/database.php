@@ -102,6 +102,7 @@ return [
 
             'options' => extension_loaded('pdo_pgsql') ? [
                 PDO::ATTR_TIMEOUT => 15,
+                \PDO::ATTR_EMULATE_PREPARES => true,
             ] : [],
         ],
 

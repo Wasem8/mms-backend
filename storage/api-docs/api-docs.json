@@ -3832,6 +3832,101 @@
                 ]
             }
         },
+        "/admin/complaints/{id}/assign": {
+            "patch": {
+                "tags": [
+                    "Complaints"
+                ],
+                "summary": "Assign complaint to a super admin",
+                "description": "Allows a mosque_manager to assign a complaint to a super_admin user for escalated handling.",
+                "operationId": "assignComplaintToAdmin",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "admin_id"
+                                ],
+                                "properties": {
+                                    "admin_id": {
+                                        "description": "ID of the super_admin user receiving the complaint",
+                                        "type": "integer",
+                                        "example": 3
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "example": "Needs regional office review — recurring issue across branches.",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Complaint assigned successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Complaint assigned successfully."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Complaint"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/dashboard/supervisor/stats": {
             "get": {
                 "tags": [
@@ -23705,6 +23800,25 @@
                     "admin_notes": {
                         "type": "string",
                         "example": null,
+                        "nullable": true
+                    },
+                    "assigned_admin_id": {
+                        "type": "integer",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "assigned_admin": {
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 3
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "Khalid Al-Otaibi"
+                            }
+                        },
+                        "type": "object",
                         "nullable": true
                     },
                     "mosque_id": {

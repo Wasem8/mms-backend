@@ -28,7 +28,8 @@ class Complaint extends Model
         'complaint_type',
         'priority',
         'email',
-        'is_anonymous'
+        'is_anonymous',
+        'assigned_admin_id'
     ];
     // protected static function newFactory(): ComplaintFactory
     // {
@@ -48,6 +49,11 @@ class Complaint extends Model
 
     public function files() {
         return $this->hasMany(ComplaintFile::class);
+    }
+
+    public function assignedAdmin()
+    {
+        return $this->belongsTo(User::class, 'assigned_admin_id');
     }
 
 }
