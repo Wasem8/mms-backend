@@ -512,8 +512,13 @@ public function getRecentDonations() {}
                                 new OA\Property(property: 'amount',           type: 'number',  example: 500),
                                 new OA\Property(property: 'item_description', type: 'string',  nullable: true, example: 'string'),
                                 new OA\Property(property: 'donor_name',       type: 'string',  example: 'فاعل خير'),
-                                new OA\Property(property: 'user_id',          type: 'integer', nullable: true, example: null),
-                                new OA\Property(property: 'user',             type: 'object',  nullable: true, example: null, description: 'Registered donor user object if user_id is set, otherwise null', properties: [
+                                new OA\Property(property: 'user_id',          type: 'integer', nullable: true, example: 8),
+                                new OA\Property(property: 'user',             type: 'object',  nullable: true, description: 'Registered donor user object if user_id is set, otherwise null', example: [
+                                    'id'    => 8,
+                                    'name'  => 'أحمد عبد الله المحمود',
+                                    'email' => 'ahmad@example.com',
+                                    'phone' => '+966501234567',
+                                ], properties: [
                                     new OA\Property(property: 'id',    type: 'integer', example: 8),
                                     new OA\Property(property: 'name',  type: 'string',  example: 'أحمد عبد الله المحمود'),
                                     new OA\Property(property: 'email', type: 'string',  format: 'email', example: 'ahmad@example.com'),
@@ -526,6 +531,30 @@ public function getRecentDonations() {}
                                 new OA\Property(property: 'status',           type: 'string',  enum: ['pending', 'completed'], example: 'completed'),
                                 new OA\Property(property: 'created_at',       type: 'string',  example: '2026-08-15 09:05:23'),
                                 new OA\Property(property: 'updated_at',       type: 'string',  example: '2026-08-15 09:05:23'),
+                            ],
+                            example: [
+                                'id'               => 23,
+                                'reference'        => 'REC-1645-2026',
+                                'mosque_id'        => 5,
+                                'donation_type'    => 'cash',
+                                'payment_method'   => 'cash',
+                                'amount'           => 500,
+                                'item_description' => null,
+                                'donor_name'       => 'فاعل خير',
+                                'user_id'          => 8,
+                                'user'             => [
+                                    'id'    => 8,
+                                    'name'  => 'أحمد عبد الله المحمود',
+                                    'email' => 'ahmad@example.com',
+                                    'phone' => '+966501234567',
+                                ],
+                                'campaign_id'      => 12,
+                                'campaign_title'   => 'اخر حملة',
+                                'mosque_need_id'   => null,
+                                'attachment'       => null,
+                                'status'           => 'completed',
+                                'created_at'       => '2026-08-15 09:05:23',
+                                'updated_at'       => '2026-08-15 09:05:23',
                             ]
                         )
                     ]
