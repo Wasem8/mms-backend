@@ -925,6 +925,8 @@ public function getRecentDonations() {}
         operationId: 'downloadDonationReceipt',
         tags: ['Donations'],
         summary: 'تحميل إيصال التبرع (PDF)',
+        description: 'Returns a signed URL to download the donation receipt PDF.',
+        security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -937,15 +939,24 @@ public function getRecentDonations() {}
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'ملف PDF جاهز للتحميل',
-                headers: [
-                    new OA\Header(
-                        header: 'Content-Disposition',
-                        description: 'attachment; filename="receipt-REC-4892-2024.pdf"',
-                        schema: new OA\Schema(type: 'string')
-                    ),
-                ],
-                content: new OA\MediaType(mediaType: 'application/pdf')
+                description: 'تم إنشاء رابط الإيصال بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string',  example: 'Success'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'receipt_url',
+                                    type: 'string',
+                                    example: 'https://supabase-bucket-url/receipts/receipt_donation_101.pdf?token=xxxx'
+                                ),
+                            ]
+                        ),
+                    ]
+                )
             ),
             new OA\Response(response: 401, description: 'Unauthenticated'),
             new OA\Response(response: 404, description: 'التبرع غير موجود'),
