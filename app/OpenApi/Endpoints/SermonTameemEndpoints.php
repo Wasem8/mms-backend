@@ -350,7 +350,33 @@ class SermonTameemEndpoints
                                 new OA\Property(property: 'has_more_pages',  type: 'boolean', example: true),
                             ]
                         ),
-                    ]
+                    ],
+                    example: [
+                        'status'  => true,
+                        'message' => 'تم جلب الخطب المعلقة بنجاح',
+                        'data' => [
+                            [
+                                'id'                 => 1,
+                                'title'              => 'خطبة الجمعة - التوبة والإنابة',
+                                'content'            => 'الحمد لله رب العالمين...',
+                                'category'           => 'occasions_seasons',
+                                'status'             => 'pending',
+                                'notes'              => 'يرجى مراجعة المقدمة',
+                                'mosque_manager_id'  => 3,
+                                'region_manager_id'  => null,
+                                'attachments'        => ['https://storage.example.com/sermons/file.pdf'],
+                                'created_at'         => '2026-08-15 09:05:23',
+                                'updated_at'         => '2026-08-15 09:05:23',
+                            ],
+                        ],
+                        'pagination' => [
+                            'current_page'   => 1,
+                            'last_page'      => 3,
+                            'per_page'       => 15,
+                            'total'          => 32,
+                            'has_more_pages' => true,
+                        ],
+                    ],
                 )
             ),
             new OA\Response(response: 401, description: 'Unauthenticated'),
@@ -401,7 +427,33 @@ class SermonTameemEndpoints
                                 new OA\Property(property: 'has_more_pages',  type: 'boolean', example: true),
                             ]
                         ),
-                    ]
+                    ],
+                    example: [
+                        'status'  => true,
+                        'message' => 'تم جلب أرشيف الخطب بنجاح',
+                        'data' => [
+                            [
+                                'id'                 => 12,
+                                'title'              => 'خطبة الجمعة - بر الوالدين',
+                                'content'            => 'الحمد لله رب العالمين والصلاة والسلام على رسول الله...',
+                                'category'           => 'ethics_conduct',
+                                'status'             => 'Archived',
+                                'notes'              => null,
+                                'mosque_manager_id'  => 3,
+                                'region_manager_id'  => 7,
+                                'attachments'        => ['https://storage.example.com/sermons/archive.pdf'],
+                                'created_at'         => '2026-07-20 12:30:00',
+                                'updated_at'         => '2026-07-21 08:00:00',
+                            ],
+                        ],
+                        'pagination' => [
+                            'current_page'   => 1,
+                            'last_page'      => 5,
+                            'per_page'       => 15,
+                            'total'          => 67,
+                            'has_more_pages' => true,
+                        ],
+                    ],
                 )
             ),
             new OA\Response(response: 401, description: 'Unauthenticated'),
