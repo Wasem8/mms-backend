@@ -93,4 +93,11 @@ class SermonController extends Controller
 
         return ApiResponse::success($sermons, __('messages.community.most_selected_sermons_retrieved'));
     }
+
+    public function destroy($id)
+    {
+        $this->sermonService->deleteSermonIfPending($id, auth()->id());
+
+        return ApiResponse::success(null, __('messages.community.sermon_deleted'));
+    }
 }
