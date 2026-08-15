@@ -717,4 +717,106 @@ class AuthEndpoints
     )]
     public function changeStatus() {}
 
+    #[OA\Get(
+        path: '/users',
+        operationId: 'listUsers',
+        tags: ['Users'],
+        summary: 'جلب قائمة جميع المستخدمين في النظام',
+        description: 'جلب قائمة المستخدمين مع دعم البحث والتصفية حسب الحالة والدور الوظيفي والترقيم (Paginated).',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'search',
+                in: 'query',
+                required: false,
+                description: 'البحث عن طريق الاسم، البريد الإلكتروني، أو رقم الجوال',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'status',
+                in: 'query',
+                required: false,
+                description: 'تصفية حسب حالة الحساب (active أو inactive)',
+                schema: new OA\Schema(type: 'string', enum: ['active', 'inactive'])
+            ),
+            new OA\Parameter(
+                name: 'role',
+                in: 'query',
+                required: false,
+                description: 'تصفية حسب الدور الوظيفي (مثال: super_admin, mosque_manager, halaqa_supervisor, teacher, parent)',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                description: 'رقم الصفحة للترقيم (الصفحة الافتراضية 1)',
+                schema: new OA\Schema(type: 'integer', default: 1)
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'تم جلب قائمة المستخدمين بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم جلب قائمة المستخدمين بنجاح.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(
+                                properties: [
+                                    new OA\Property(property: 'id', type: 'integer', example: 1),
+                                    new OA\Property(property: 'first_name', type: 'string', example: 'أحمد', nullable: true),
+                                    new OA\Property(property: 'last_name', type: 'string', example: 'علي', nullable: true),
+                                    new OA\Property(property: 'name', type: 'string', example: 'أحمد علي'),
+                                    new OA\Property(property: 'email', type: 'string', example: 'user@example.com'),
+                                    new OA\Property(property: 'phone', type: 'string', example: '+963900000000', nullable: true),
+                                    new OA\Property(property: 'status', type: 'string', example: 'active'),
+                                    new OA\Property(property: 'email_verified_at', type: 'string', example: '2026-05-03 14:00:00', nullable: true),
+                                    new OA\Property(
+                                        property: 'roles',
+                                        type: 'array',
+                                        items: new OA\Items(type: 'string', example: 'teacher')
+                                    ),
+                                    new OA\Property(
+                                        property: 'permissions',
+                                        type: 'array',
+                                        items: new OA\Items(type: 'string', example: 'view_students')
+                                    ),
+                                    new OA\Property(property: 'created_at', type: 'string', example: '2026-05-03 12:00:00'),
+                                ]
+                            )
+                        ),
+                        new OA\Property(
+                            property: 'pagination',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                new OA\Property(property: 'last_page', type: 'integer', example: 5),
+                                new OA\Property(property: 'per_page', type: 'integer', example: 15),
+                                new OA\Property(property: 'total', type: 'integer', example: 68),
+                                new OA\Property(property: 'has_more_pages', type: 'boolean', example: true),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'غير مصرح للوصول',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: false),
+                        new OA\Property(property: 'message', type: 'string', example: 'غير مصرح لك بالوصول'),
+                        new OA\Property(property: 'data', type: 'object', nullable: true, example: null),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function index() {}
+
 }

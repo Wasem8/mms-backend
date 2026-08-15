@@ -125,4 +125,62 @@ class InvitationController
             'is_expired' => false
         ]);
     }
+
+    public function resend($id, SendInvitationAction $action)
+    {
+        $invitation = Invitation::findOrFail($id);
+
+        // تحقق من الصلاحيات (أن المستخدم الحالي هو مدير المسجد أو صاحب الدعوة)
+        $user = request()->user();
+        if (!$user->hasRole('super_admin') && $invitation->mosque_id !== $user->mosque_id) {
+            return ApiResponse::error('غير مصرح لك بإعادة إرسال هذه الدعوة', 403);
+        }
+
+        $action->resend($invitation);
+
+        return ApiResponse::success(
+            new InvitationResource($invitation),
+            'تمت إعادة إرسال الدعوة بنجاح وتمديد صلاحيتها.'
+        );
+    }
+
+    public function index(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return ApiResponse::error('غير مصرح لك بالوصول', 401);
+        }
+
+        $query = Invitation::with('mosque')->latest();
+
+        // 🎯 الصلاحيات: مدير المسجد يرى كافة دعوات المسجد، وغيره يرى فقط الدعوات التي أنشأها بنفسه
+        if ($user->hasRole('mosque_manager')) {
+            $query->where('mosque_id', $user->mosque_id);
+        } else {
+            $query->where('created_by', $user->id);
+        }
+
+        // 🔍 فلترة اختيارية حسب حالة الدعوة (pending, accepted, expired)
+        if ($request->filled('status')) {
+            $status = $request->input('status');
+
+            if ($status === 'accepted') {
+                $query->whereNotNull('accepted_at');
+            } elseif ($status === 'expired') {
+                $query->whereNull('accepted_at')->where('expires_at', '<=', now());
+            } elseif ($status === 'pending') {
+                $query->whereNull('accepted_at')->where('expires_at', '>', now());
+            }
+        }
+
+        $invitations = $query->paginate(15);
+
+        // 🎯 تمرير $invitations في البرامتر الثالث ليتكفل ApiResponse بتنسيق Pagination تلقائياً
+        return ApiResponse::success(
+            InvitationResource::collection($invitations),
+            'تم جلب الدعوات بنجاح.',
+            $invitations
+        );
+    }
 }
