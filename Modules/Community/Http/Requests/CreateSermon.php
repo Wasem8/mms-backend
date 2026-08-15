@@ -3,6 +3,8 @@
 namespace Modules\Community\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+use Modules\Community\Models\Sermon;
 
 class CreateSermon extends FormRequest
 {
@@ -15,10 +17,11 @@ class CreateSermon extends FormRequest
             'title' => 'required|string|max:255',
             'content' => 'required|string',
             'speaker_name' => 'required|string',
-            'category'=> 'required|in:, '
             'sermon_date' => 'required|date|after_or_equal:today',
             'attachments'        => ['nullable', 'array', 'max:10'],
             'attachments.*'      => ['file', 'max:10240', 'mimes:jpg,jpeg,png,pdf,doc,docx'],
+            'category' => ['required', 'string', Rule::in(Sermon::CATEGORIES)]
+
         ];
     }
 

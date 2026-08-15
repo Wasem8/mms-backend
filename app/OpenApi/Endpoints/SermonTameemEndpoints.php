@@ -116,7 +116,7 @@ class SermonTameemEndpoints
             content: new OA\MediaType(
                 mediaType: 'multipart/form-data',
                 schema: new OA\Schema(
-                    required: ['title', 'content', 'speaker_name', 'sermon_date'],
+                    required: ['title', 'content', 'speaker_name', 'category', 'sermon_date'],
                     properties: [
                         new OA\Property(
                             property: 'title',
@@ -134,6 +134,14 @@ class SermonTameemEndpoints
                             property: 'speaker_name',
                             type: 'string',
                             example: 'الشيخ أحمد'
+                        ),
+
+                        new OA\Property(
+                            property: 'category',
+                            type: 'string',
+                            enum: ['creed_faith', 'jurisprudence_rulings', 'ethics_conduct', 'contemporary_issues', 'occasions_seasons', 'other'],
+                            example: 'occasions_seasons',
+                            description: 'تصنيف الخطبة'
                         ),
 
                         new OA\Property(
@@ -172,7 +180,23 @@ class SermonTameemEndpoints
                             property: 'data',
                             ref: '#/components/schemas/Sermon'
                         ),
-                    ]
+                    ],
+                    example: [
+                        'message' => 'تم تقديم الخطبة بنجاح',
+                        'data' => [
+                            'id'                 => 1,
+                            'title'              => 'خطبة الجمعة - التوبة والإنابة',
+                            'content'            => 'الحمد لله رب العالمين...',
+                            'category'           => 'occasions_seasons',
+                            'status'             => 'pending',
+                            'notes'              => null,
+                            'mosque_manager_id'  => 3,
+                            'region_manager_id'  => null,
+                            'attachments'        => ['https://storage.example.com/sermons/file.pdf'],
+                            'created_at'         => '2026-08-15 09:05:23',
+                            'updated_at'         => '2026-08-15 09:05:23',
+                        ],
+                    ],
                 )
             ),
 
