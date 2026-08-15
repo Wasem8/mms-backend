@@ -3,6 +3,8 @@
 namespace Modules\Community\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+use Modules\Community\Models\Sermon;
 
 class SearchSermonRequest extends FormRequest
 {
@@ -15,6 +17,7 @@ class SearchSermonRequest extends FormRequest
     {
         return [
             'status'             => 'nullable|in:Pending,Archived,Rejected',
+            'category'           => ['nullable', Rule::in(Sermon::CATEGORIES)],
             'mosque_manager_id'  => 'nullable|integer|exists:users,id',
             'region_manager_id'  => 'nullable|integer|exists:users,id',
             'speaker_name'       => 'nullable|string|max:255',

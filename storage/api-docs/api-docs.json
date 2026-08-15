@@ -19511,6 +19511,24 @@
                         }
                     },
                     {
+                        "name": "category",
+                        "in": "query",
+                        "description": "Filter by sermon category",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "occasions_seasons",
+                            "enum": [
+                                "creed_faith",
+                                "jurisprudence_rulings",
+                                "ethics_conduct",
+                                "contemporary_issues",
+                                "occasions_seasons",
+                                "other"
+                            ]
+                        }
+                    },
+                    {
                         "name": "mosque_manager_id",
                         "in": "query",
                         "description": "Filter by the mosque manager who submitted the sermon",
