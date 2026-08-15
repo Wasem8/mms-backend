@@ -59,6 +59,7 @@ class Sermon extends Model
     {
         return $query
             ->when($filters['status'] ?? null, fn($q, $status) => $q->where('status', $status))
+            ->when($filters['category'] ?? null, fn($q, $category) => $q->where('category', $category))
             ->when($filters['mosque_manager_id'] ?? null, fn($q, $id) => $q->where('mosque_manager_id', $id))
             ->when($filters['region_manager_id'] ?? null, fn($q, $id) => $q->where('region_manager_id', $id))
             ->when($filters['speaker_name'] ?? null, fn($q, $name) => $q->where('speaker_name', 'like', "%{$name}%"))

@@ -611,6 +611,13 @@ class SermonTameemEndpoints
                 schema: new OA\Schema(type: 'string', enum: ['Pending', 'Archived', 'Rejected'])
             ),
             new OA\Parameter(
+                name: 'category',
+                in: 'query',
+                required: false,
+                description: 'Filter by sermon category',
+                schema: new OA\Schema(type: 'string', enum: ['creed_faith', 'jurisprudence_rulings', 'ethics_conduct', 'contemporary_issues', 'occasions_seasons', 'other'], example: 'occasions_seasons')
+            ),
+            new OA\Parameter(
                 name: 'mosque_manager_id',
                 in: 'query',
                 required: false,
