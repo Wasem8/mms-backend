@@ -25,8 +25,8 @@ class EloquentMosqueTaskRepository implements MosqueTaskRepositoryInterface
         return $this->model
             ->where('mosque_id', $mosqueId)
             ->whereDate('due_date', $date)
-            ->when($status === 'completed', fn($q) => $q->where('is_completed', true))
-            ->when($status === 'pending', fn($q) => $q->where('is_completed', false))
+            ->when($status === 'completed', fn($q) => $q->whereRaw('is_completed = true'))
+            ->when($status === 'pending', fn($q) => $q->whereRaw('is_completed = false'))
             ->when($category, fn($q) => $q->where('category', $category))
             ->orderBy('due_time')
             ->get();
@@ -97,8 +97,8 @@ class EloquentMosqueTaskRepository implements MosqueTaskRepositoryInterface
         return $this->model
             ->where('mosque_id', $mosqueId)
             ->whereBetween('due_date', [$from->toDateString(), $to->toDateString()])
-            ->when($status === 'completed', fn($q) => $q->where('is_completed', true))
-            ->when($status === 'pending', fn($q) => $q->where('is_completed', false))
+            ->when($status === 'completed', fn($q) => $q->whereRaw('is_completed = true'))
+            ->when($status === 'pending', fn($q) => $q->whereRaw('is_completed = false'))
             ->when($category, fn($q) => $q->where('category', $category))
             ->orderBy('due_date')
             ->orderBy('due_time')

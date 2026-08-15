@@ -20,7 +20,7 @@ Route::prefix('program')->group(function () {
     Route::get('/dawah_programs/{program}/schedules/{schedule}', [ProgramScheduleController::class, 'show']);
 
 
-    // Protected
+    // Protected — mosque resolved from the authenticated mosque_manager
     Route::middleware(['auth:api', 'active.user', 'role:mosque_manager'])->group(function () {
 
         Route::post('/mosques/{mosque}/dawah_programs', [DawahProgramController::class, 'store']);

@@ -213,6 +213,7 @@ class MosqueService
         if ($user->isMosqueManager()) {
             $mosque = $this->mosqueRepository->findByManagerId($user->id);
             if ($mosque) {
+                $mosque->load('spaces');
                 $attachments->push($this->withRelation($mosque, 'manager'));
             }
         }
@@ -220,6 +221,7 @@ class MosqueService
         if (($user->isSupervisor() || $user->isTeacher()) && $user->mosque_id) {
             $mosque = $this->mosqueRepository->findByIdForListing($user->mosque_id);
             if ($mosque) {
+                $mosque->load('spaces');
                 $attachments->push($this->withRelation(
                     $mosque,
                     $user->isSupervisor() ? 'halaqa_supervisor' : 'teacher'

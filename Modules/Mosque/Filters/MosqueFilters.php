@@ -91,7 +91,7 @@ class MosqueFilters
 
     private function filterByFeatured(Builder $query, bool $isFeatured): void
     {
-        $query->where('is_featured', $isFeatured);
+        $query->whereRaw('is_featured = ' . ($isFeatured ? 'true' : 'false'));
     }
 
 
