@@ -74,6 +74,7 @@ class DonationsEndpoints
         tags: ['Donations'],
         summary: 'List donations for a mosque',
         description: 'Returns a paginated list of donations. Supports filtering by donor name, type, status, and campaign.',
+        security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(name: 'mosqueId', in: 'path', required: true,  schema: new OA\Schema(type: 'integer'), example: 5),
             new OA\Parameter(name: 'search',   in: 'query', required: false, schema: new OA\Schema(type: 'string'),  description: 'Search by donor name'),
@@ -399,11 +400,23 @@ public function getRecentDonations() {}
                             property: 'data',
                             type: 'object',
                             properties: [
-                                new OA\Property(property: 'id', type: 'integer', example: 125),
-                                new OA\Property(property: 'reference', type: 'string', example: 'REC-0000-2026'),
-                                new OA\Property(property: 'amount', type: 'number', example: 150.00),
-                                new OA\Property(property: 'status', type: 'string', example: 'completed'),
-                                // بقية العلاقات (donor, campaign, received_by) تظل كما هي...
+                                new OA\Property(property: 'id',               type: 'integer', example: 23),
+                                new OA\Property(property: 'reference',        type: 'string',  example: 'REC-1645-2026'),
+                                new OA\Property(property: 'mosque_id',        type: 'integer', example: 5),
+                                new OA\Property(property: 'donation_type',    type: 'string',  enum: ['cash', 'in_kind'], example: 'cash'),
+                                new OA\Property(property: 'payment_method',   type: 'string',  enum: ['cash', 'stripe'], example: 'cash'),
+                                new OA\Property(property: 'amount',           type: 'number',  example: 500),
+                                new OA\Property(property: 'item_description', type: 'string',  nullable: true, example: 'string'),
+                                new OA\Property(property: 'donor_name',       type: 'string',  example: 'فاعل خير'),
+                                new OA\Property(property: 'user_id',          type: 'integer', nullable: true, example: null),
+                                new OA\Property(property: 'user',             type: 'object',  nullable: true, example: null, description: 'Registered donor user object if user_id is set, otherwise null'),
+                                new OA\Property(property: 'campaign_id',      type: 'integer', nullable: true, example: 12),
+                                new OA\Property(property: 'campaign_title',   type: 'string',  nullable: true, example: 'اخر حملة'),
+                                new OA\Property(property: 'mosque_need_id',   type: 'integer', nullable: true, example: null),
+                                new OA\Property(property: 'attachment',       type: 'string',  nullable: true, example: null, description: 'URL of the uploaded attachment (receipt photo), otherwise null'),
+                                new OA\Property(property: 'status',           type: 'string',  enum: ['pending', 'completed'], example: 'completed'),
+                                new OA\Property(property: 'created_at',       type: 'string',  example: '2026-08-15 09:05:23'),
+                                new OA\Property(property: 'updated_at',       type: 'string',  example: '2026-08-15 09:05:23'),
                             ]
                         )
                     ]

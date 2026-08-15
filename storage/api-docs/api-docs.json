@@ -6648,7 +6648,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/donations/mine": {
@@ -7166,19 +7171,92 @@
                                             "properties": {
                                                 "id": {
                                                     "type": "integer",
-                                                    "example": 125
+                                                    "example": 23
                                                 },
                                                 "reference": {
                                                     "type": "string",
-                                                    "example": "REC-0000-2026"
+                                                    "example": "REC-1645-2026"
+                                                },
+                                                "mosque_id": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "donation_type": {
+                                                    "type": "string",
+                                                    "example": "cash",
+                                                    "enum": [
+                                                        "cash",
+                                                        "in_kind"
+                                                    ]
+                                                },
+                                                "payment_method": {
+                                                    "type": "string",
+                                                    "example": "cash",
+                                                    "enum": [
+                                                        "cash",
+                                                        "stripe"
+                                                    ]
                                                 },
                                                 "amount": {
                                                     "type": "number",
-                                                    "example": 150
+                                                    "example": 500
+                                                },
+                                                "item_description": {
+                                                    "type": "string",
+                                                    "example": "string",
+                                                    "nullable": true
+                                                },
+                                                "donor_name": {
+                                                    "type": "string",
+                                                    "example": "فاعل خير"
+                                                },
+                                                "user_id": {
+                                                    "type": "integer",
+                                                    "example": null,
+                                                    "nullable": true
+                                                },
+                                                "user": {
+                                                    "description": "Registered donor user object if user_id is set, otherwise null",
+                                                    "type": "object",
+                                                    "example": null,
+                                                    "nullable": true
+                                                },
+                                                "campaign_id": {
+                                                    "type": "integer",
+                                                    "example": 12,
+                                                    "nullable": true
+                                                },
+                                                "campaign_title": {
+                                                    "type": "string",
+                                                    "example": "اخر حملة",
+                                                    "nullable": true
+                                                },
+                                                "mosque_need_id": {
+                                                    "type": "integer",
+                                                    "example": null,
+                                                    "nullable": true
+                                                },
+                                                "attachment": {
+                                                    "description": "URL of the uploaded attachment (receipt photo), otherwise null",
+                                                    "type": "string",
+                                                    "example": null,
+                                                    "nullable": true
                                                 },
                                                 "status": {
                                                     "type": "string",
-                                                    "example": "completed"
+                                                    "example": "completed",
+                                                    "enum": [
+                                                        "pending",
+                                                        "completed"
+                                                    ]
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "example": "2026-08-15 09:05:23"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "example": "2026-08-15 09:05:23"
                                                 }
                                             },
                                             "type": "object"
@@ -11314,6 +11392,185 @@
                 ]
             }
         },
+        "/maintenance/file-requests": {
+            "get": {
+                "tags": [
+                    "Maintenance Requests"
+                ],
+                "summary": "List requests awaiting additional files",
+                "description": "Returns a paginated list of maintenance requests for the authenticated mosque manager's mosque where the region manager (super_admin) has requested additional files that have not been uploaded yet.",
+                "operationId": "maintenance.fileRequests",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "File requests retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "File requests retrieved successfully."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/MaintenanceRequest"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "has_more_pages": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/maintenance/{id}/upload-files": {
+            "post": {
+                "tags": [
+                    "Maintenance Requests"
+                ],
+                "summary": "Upload additional files requested by the region manager",
+                "description": "Uploads the additional files requested by the region manager for a maintenance request. Only allowed when `files_requested` is `true` and the request belongs to the authenticated mosque manager's mosque. Uploading clears the file request.",
+                "operationId": "maintenance.uploadFiles",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 42
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "files"
+                                ],
+                                "properties": {
+                                    "files[]": {
+                                        "description": "Additional attachments. Accepted: jpg, jpeg, png, pdf, doc, docx. Max 10 MB each. Up to 10 files.",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Additional files uploaded successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Additional files uploaded successfully."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MaintenanceRequest"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/maintenance/admin": {
             "get": {
                 "tags": [
@@ -11521,6 +11778,93 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Maintenance request processed successfully."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MaintenanceRequest"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/maintenance/admin/{id}/request-files": {
+            "post": {
+                "tags": [
+                    "Maintenance Requests — Admin"
+                ],
+                "summary": "Request additional files from the mosque manager",
+                "description": "Lets the region manager (super_admin) request additional files from the mosque manager for a maintenance request. Sets `files_requested` to `true`. Cannot be used on `completed` or `cancelled` requests.",
+                "operationId": "admin.maintenance.requestFiles",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 42
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "required": [
+                                    "note"
+                                ],
+                                "properties": {
+                                    "note": {
+                                        "description": "Reason the additional files are required.",
+                                        "type": "string",
+                                        "example": "Please upload photos of the damaged AC unit.",
+                                        "maxLength": 1000
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Additional files requested successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Additional files requested successfully."
                                         },
                                         "data": {
                                             "$ref": "#/components/schemas/MaintenanceRequest"
@@ -24226,6 +24570,38 @@
                     "notes": {
                         "type": "string",
                         "example": "Please come after Fajr prayer.",
+                        "nullable": true
+                    },
+                    "files_requested": {
+                        "description": "Whether the region manager requested additional files from the mosque manager.",
+                        "type": "boolean",
+                        "example": true,
+                        "default": false
+                    },
+                    "files_requested_by": {
+                        "description": "Region manager (super_admin) who requested the additional files.",
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 1
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "Dr. Abdullah"
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "files_requested_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-08-15T10:00:00Z",
+                        "nullable": true
+                    },
+                    "files_request_note": {
+                        "type": "string",
+                        "example": "Please upload photos of the damaged AC unit.",
                         "nullable": true
                     },
                     "files": {

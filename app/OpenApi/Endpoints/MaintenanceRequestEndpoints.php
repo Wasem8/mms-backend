@@ -61,6 +61,19 @@ class MaintenanceRequestEndpoints
             new OA\Property(property: 'scheduled_at', type: 'string',  nullable: true, example: '01 Jun 2026, 09:00 AM'),
             new OA\Property(property: 'completed_at', type: 'string',  nullable: true, example: null),
             new OA\Property(property: 'notes',        type: 'string',  nullable: true, example: 'Please come after Fajr prayer.'),
+            new OA\Property(property: 'files_requested',     type: 'boolean', default: false, example: true, description: 'Whether the region manager requested additional files from the mosque manager.'),
+            new OA\Property(
+                property: 'files_requested_by',
+                type: 'object',
+                nullable: true,
+                description: 'Region manager (super_admin) who requested the additional files.',
+                properties: [
+                    new OA\Property(property: 'id',   type: 'integer', example: 1),
+                    new OA\Property(property: 'name', type: 'string',  example: 'Dr. Abdullah'),
+                ],
+            ),
+            new OA\Property(property: 'files_requested_at',  type: 'string', nullable: true, format: 'date-time', example: '2026-08-15T10:00:00Z'),
+            new OA\Property(property: 'files_request_note',  type: 'string', nullable: true, example: 'Please upload photos of the damaged AC unit.'),
             new OA\Property(
                 property: 'files',
                 type: 'array',
@@ -557,6 +570,107 @@ class MaintenanceRequestEndpoints
     )]
     public function track() {}
 
+    // ─── GET /maintenance/file-requests ───────────────────────────────────────
+
+    #[OA\Get(
+        path: '/maintenance/file-requests',
+        operationId: 'maintenance.fileRequests',
+        tags: ['Maintenance Requests'],
+        summary: 'List requests awaiting additional files',
+        description: 'Returns a paginated list of maintenance requests for the authenticated mosque manager\'s mosque where the region manager (super_admin) has requested additional files that have not been uploaded yet.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 15, minimum: 1, maximum: 100),
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'File requests retrieved successfully.',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'File requests retrieved successfully.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/MaintenanceRequest'),
+                        ),
+                        new OA\Property(
+                            property: 'pagination',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                new OA\Property(property: 'per_page',     type: 'integer', example: 15),
+                                new OA\Property(property: 'total',        type: 'integer', example: 3),
+                                new OA\Property(property: 'last_page',    type: 'integer', example: 1),
+                                new OA\Property(property: 'has_more_pages', type: 'boolean', example: false),
+                            ],
+                        ),
+                    ],
+                ),
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+            new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
+        ],
+    )]
+    public function fileRequests() {}
+
+    // ─── POST /maintenance/{id}/upload-files ──────────────────────────────────
+
+    #[OA\Post(
+        path: '/maintenance/{id}/upload-files',
+        operationId: 'maintenance.uploadFiles',
+        tags: ['Maintenance Requests'],
+        summary: 'Upload additional files requested by the region manager',
+        description: 'Uploads the additional files requested by the region manager for a maintenance request. Only allowed when `files_requested` is `true` and the request belongs to the authenticated mosque manager\'s mosque. Uploading clears the file request.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 42)),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    required: ['files'],
+                    properties: [
+                        new OA\Property(
+                            property: 'files[]',
+                            type: 'array',
+                            description: 'Additional attachments. Accepted: jpg, jpeg, png, pdf, doc, docx. Max 10 MB each. Up to 10 files.',
+                            items: new OA\Items(type: 'string', format: 'binary'),
+                        ),
+                    ],
+                ),
+            ),
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Additional files uploaded successfully.',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Additional files uploaded successfully.'),
+                        new OA\Property(property: 'data', ref: '#/components/schemas/MaintenanceRequest'),
+                    ],
+                ),
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+            new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
+            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+            new OA\Response(response: 422, ref: '#/components/responses/ValidationError'),
+        ],
+    )]
+    public function uploadFiles() {}
+
     // =========================================================================
     //  SUPER ADMIN  —  middleware: auth:api, role:super_admin
     //  Prefix: /maintenance/admin
@@ -694,6 +808,57 @@ class MaintenanceRequestEndpoints
         ],
     )]
     public function process() {}
+
+    // ─── POST /maintenance/admin/{id}/request-files ──────────────────────────
+
+    #[OA\Post(
+        path: '/maintenance/admin/{id}/request-files',
+        operationId: 'admin.maintenance.requestFiles',
+        tags: ['Maintenance Requests — Admin'],
+        summary: 'Request additional files from the mosque manager',
+        description: 'Lets the region manager (super_admin) request additional files from the mosque manager for a maintenance request. Sets `files_requested` to `true`. Cannot be used on `completed` or `cancelled` requests.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 42)),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'application/x-www-form-urlencoded',
+                schema: new OA\Schema(
+                    required: ['note'],
+                    properties: [
+                        new OA\Property(
+                            property: 'note',
+                            type: 'string',
+                            maxLength: 1000,
+                            example: 'Please upload photos of the damaged AC unit.',
+                            description: 'Reason the additional files are required.',
+                        ),
+                    ],
+                ),
+            ),
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Additional files requested successfully.',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Additional files requested successfully.'),
+                        new OA\Property(property: 'data', ref: '#/components/schemas/MaintenanceRequest'),
+                    ],
+                ),
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+            new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
+            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+            new OA\Response(response: 422, ref: '#/components/responses/ValidationError'),
+        ],
+    )]
+    public function adminRequestFiles() {}
 
     #[OA\Get(
         path: '/maintenance/public',

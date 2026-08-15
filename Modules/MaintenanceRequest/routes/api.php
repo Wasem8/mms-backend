@@ -18,6 +18,7 @@ Route::middleware([
 
     Route::get('/', [MaintenanceRequestController::class, 'adminIndex']);
     Route::put('/{id}', [MaintenanceRequestController::class, 'process']);
+    Route::post('/{id}/request-files', [MaintenanceRequestController::class, 'requestFiles']);
 });
 
 
@@ -39,6 +40,10 @@ Route::middleware([
 
     // Remember to put static routes BEFORE dynamic parameter routes!
     Route::get('/track/{maintenance_number}', [MaintenanceRequestController::class, 'track']);
+
+    Route::get('/file-requests', [MaintenanceRequestController::class, 'pendingFileRequests']);
+
+    Route::post('/{id}/upload-files', [MaintenanceRequestController::class, 'uploadFiles']);
 
     Route::get('/{id}', [MaintenanceRequestController::class, 'show']);
 
