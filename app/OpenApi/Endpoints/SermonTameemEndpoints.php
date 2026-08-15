@@ -312,10 +312,16 @@ class SermonTameemEndpoints
         operationId: 'pendingSermons',
         tags: ['Sermons'],
         summary: 'Get pending sermons',
-        description: 'Returns all sermons awaiting approval.',
+        description: 'Returns a paginated list of sermons awaiting approval.',
         security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 15, minimum: 1, maximum: 100),
+            ),
         ],
         responses: [
             new OA\Response(
@@ -333,6 +339,17 @@ class SermonTameemEndpoints
                             type: 'array',
                             items: new OA\Items(ref: '#/components/schemas/Sermon')
                         ),
+                        new OA\Property(
+                            property: 'pagination',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'current_page',    type: 'integer', example: 1),
+                                new OA\Property(property: 'last_page',       type: 'integer', example: 3),
+                                new OA\Property(property: 'per_page',        type: 'integer', example: 15),
+                                new OA\Property(property: 'total',           type: 'integer', example: 32),
+                                new OA\Property(property: 'has_more_pages',  type: 'boolean', example: true),
+                            ]
+                        ),
                     ]
                 )
             ),
@@ -346,10 +363,16 @@ class SermonTameemEndpoints
         operationId: 'archivedSermons',
         tags: ['Sermons'],
         summary: 'Get archived sermons',
-        description: 'Returns approved, rejected, or completed sermons.',
+        description: 'Returns a paginated list of approved, rejected, or completed sermons.',
         security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 15, minimum: 1, maximum: 100),
+            ),
         ],
         responses: [
             new OA\Response(
@@ -366,6 +389,17 @@ class SermonTameemEndpoints
                             property: 'data',
                             type: 'array',
                             items: new OA\Items(ref: '#/components/schemas/Sermon')
+                        ),
+                        new OA\Property(
+                            property: 'pagination',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'current_page',    type: 'integer', example: 1),
+                                new OA\Property(property: 'last_page',       type: 'integer', example: 5),
+                                new OA\Property(property: 'per_page',        type: 'integer', example: 15),
+                                new OA\Property(property: 'total',           type: 'integer', example: 67),
+                                new OA\Property(property: 'has_more_pages',  type: 'boolean', example: true),
+                            ]
                         ),
                     ]
                 )
