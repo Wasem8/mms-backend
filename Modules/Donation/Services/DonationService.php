@@ -41,13 +41,16 @@ class DonationService
 
     public function getByMosque(int $mosqueId, array $filters = [])
     {
+        $perPage = isset($filters['per_page']) ? max(1, min(100, (int) $filters['per_page'])) : 10;
+
         return Donation::where('mosque_id', $mosqueId)
+            ->with(['campaign:id,title'])
             ->when($filters['search']  ?? null, fn($q, $v) => $q->where('donor_name', 'like', "%{$v}%"))
             ->when($filters['type']    ?? null, fn($q, $v) => $q->where('donation_type', $v))
             ->when($filters['status']  ?? null, fn($q, $v) => $q->where('status', $v))
             ->when($filters['campaign'] ?? null, fn($q, $v) => $q->where('campaign_id', $v))
             ->latest()
-            ->paginate(10);
+            ->paginate($perPage);
     }
 
     public function getRecentDonations(int $mosqueId, int $limit = 5): \Illuminate\Database\Eloquent\Collection
@@ -61,13 +64,16 @@ class DonationService
 
     public function getByUser(int $userId, array $filters = [])
     {
+        $perPage = isset($filters['per_page']) ? max(1, min(100, (int) $filters['per_page'])) : 10;
+
         return Donation::where('user_id', $userId)
+            ->with(['campaign:id,title'])
             ->when($filters['search']  ?? null, fn($q, $v) => $q->where('donor_name', 'like', "%{$v}%"))
             ->when($filters['type']    ?? null, fn($q, $v) => $q->where('donation_type', $v))
             ->when($filters['status']  ?? null, fn($q, $v) => $q->where('status', $v))
             ->when($filters['campaign'] ?? null, fn($q, $v) => $q->where('campaign_id', $v))
             ->latest()
-            ->paginate(10);
+            ->paginate($perPage);
     }
 
     public function findByReference(string $reference)

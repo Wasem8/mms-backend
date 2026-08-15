@@ -57,14 +57,23 @@ class SermonController extends Controller
         $sermons = $this->sermonService->getAllSermons(auth()->user());
         return ApiResponse::success($sermons, __('messages.community.sermons_retrieved'));
     }
-    public function pending() {
-        $sermons = $this->sermonService->getPendingSermons();
-        return ApiResponse::success($sermons, __('messages.community.pending_sermons_retrieved'));
+    public function pending(Request $request) {
+        $perPage = $this->perPage($request);
+        $sermons = $this->sermonService->getPendingSermons($perPage);
+
+        return ApiResponse::success($sermons->items(), __('messages.community.pending_sermons_retrieved'), $sermons);
     }
 
-    public function archived() {
-        $sermons = $this->sermonService->getArchivedSermons();
-        return ApiResponse::success($sermons, __('messages.community.archived_sermons_retrieved'));
+    public function archived(Request $request) {
+        $perPage = $this->perPage($request);
+        $sermons = $this->sermonService->getArchivedSermons($perPage);
+
+        return ApiResponse::success($sermons->items(), __('messages.community.archived_sermons_retrieved'), $sermons);
+    }
+
+    private function perPage(Request $request): int
+    {
+        return (int) $request->query('per_page', 15);
     }
 
     public function search(SearchSermonRequest $request)

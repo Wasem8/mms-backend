@@ -81,6 +81,7 @@ class DonationsEndpoints
             new OA\Parameter(name: 'type',     in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['cash', 'in_kind'])),
             new OA\Parameter(name: 'status',   in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['pending', 'completed'])),
             new OA\Parameter(name: 'campaign', in: 'query', required: false, schema: new OA\Schema(type: 'integer'), description: 'Filter by campaign ID'),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 10, minimum: 1, maximum: 100), description: 'Items per page'),
         ],
         responses: [
             new OA\Response(
@@ -103,6 +104,18 @@ class DonationsEndpoints
                                 new OA\Property(property: 'last_page',    type: 'integer', example: 12),
                                 new OA\Property(property: 'per_page',     type: 'integer', example: 10),
                                 new OA\Property(property: 'total',        type: 'integer', example: 120),
+                                new OA\Property(property: 'from',         type: 'integer', example: 1),
+                                new OA\Property(property: 'to',           type: 'integer', example: 10),
+                            ]
+                        ),
+                        new OA\Property(
+                            property: 'links',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'first', type: 'string', example: 'http://localhost:8000/api/mosques/5/donations?page=1'),
+                                new OA\Property(property: 'last',  type: 'string', example: 'http://localhost:8000/api/mosques/5/donations?page=12'),
+                                new OA\Property(property: 'prev',  type: 'string', nullable: true, example: null),
+                                new OA\Property(property: 'next',  type: 'string', nullable: true, example: 'http://localhost:8000/api/mosques/5/donations?page=2'),
                             ]
                         ),
                     ]
@@ -124,6 +137,7 @@ class DonationsEndpoints
             new OA\Parameter(name: 'type',     in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['cash', 'in_kind'])),
             new OA\Parameter(name: 'status',   in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['pending', 'completed'])),
             new OA\Parameter(name: 'campaign', in: 'query', required: false, schema: new OA\Schema(type: 'integer'), description: 'Filter by campaign ID'),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 10, minimum: 1, maximum: 100), description: 'Items per page'),
         ],
         responses: [
             new OA\Response(
@@ -146,6 +160,18 @@ class DonationsEndpoints
                                 new OA\Property(property: 'last_page',    type: 'integer', example: 4),
                                 new OA\Property(property: 'per_page',     type: 'integer', example: 10),
                                 new OA\Property(property: 'total',        type: 'integer', example: 27),
+                                new OA\Property(property: 'from',         type: 'integer', example: 1),
+                                new OA\Property(property: 'to',           type: 'integer', example: 10),
+                            ]
+                        ),
+                        new OA\Property(
+                            property: 'links',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'first', type: 'string', example: 'http://localhost:8000/api/donations/mine?page=1'),
+                                new OA\Property(property: 'last',  type: 'string', example: 'http://localhost:8000/api/donations/mine?page=3'),
+                                new OA\Property(property: 'prev',  type: 'string', nullable: true, example: null),
+                                new OA\Property(property: 'next',  type: 'string', nullable: true, example: 'http://localhost:8000/api/donations/mine?page=2'),
                             ]
                         ),
                     ]

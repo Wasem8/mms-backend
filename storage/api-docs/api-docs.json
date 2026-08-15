@@ -6598,6 +6598,18 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
                     }
                 ],
                 "responses": {
@@ -6638,6 +6650,37 @@
                                                 "total": {
                                                     "type": "integer",
                                                     "example": 120
+                                                },
+                                                "from": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "to": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "links": {
+                                            "properties": {
+                                                "first": {
+                                                    "type": "string",
+                                                    "example": "http://localhost:8000/api/mosques/5/donations?page=1"
+                                                },
+                                                "last": {
+                                                    "type": "string",
+                                                    "example": "http://localhost:8000/api/mosques/5/donations?page=12"
+                                                },
+                                                "prev": {
+                                                    "type": "string",
+                                                    "example": null,
+                                                    "nullable": true
+                                                },
+                                                "next": {
+                                                    "type": "string",
+                                                    "example": "http://localhost:8000/api/mosques/5/donations?page=2",
+                                                    "nullable": true
                                                 }
                                             },
                                             "type": "object"
@@ -6706,6 +6749,18 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
                     }
                 ],
                 "responses": {
@@ -6746,6 +6801,37 @@
                                                 "total": {
                                                     "type": "integer",
                                                     "example": 27
+                                                },
+                                                "from": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "to": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "links": {
+                                            "properties": {
+                                                "first": {
+                                                    "type": "string",
+                                                    "example": "http://localhost:8000/api/donations/mine?page=1"
+                                                },
+                                                "last": {
+                                                    "type": "string",
+                                                    "example": "http://localhost:8000/api/donations/mine?page=3"
+                                                },
+                                                "prev": {
+                                                    "type": "string",
+                                                    "example": null,
+                                                    "nullable": true
+                                                },
+                                                "next": {
+                                                    "type": "string",
+                                                    "example": "http://localhost:8000/api/donations/mine?page=2",
+                                                    "nullable": true
                                                 }
                                             },
                                             "type": "object"
@@ -19068,11 +19154,22 @@
                     "Sermons"
                 ],
                 "summary": "Get pending sermons",
-                "description": "Returns all sermons awaiting approval.",
+                "description": "Returns a paginated list of sermons awaiting approval.",
                 "operationId": "pendingSermons",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
                     }
                 ],
                 "responses": {
@@ -19091,6 +19188,31 @@
                                             "items": {
                                                 "$ref": "#/components/schemas/Sermon"
                                             }
+                                        },
+                                        "pagination": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 32
+                                                },
+                                                "has_more_pages": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -19115,11 +19237,22 @@
                     "Sermons"
                 ],
                 "summary": "Get archived sermons",
-                "description": "Returns approved, rejected, or completed sermons.",
+                "description": "Returns a paginated list of approved, rejected, or completed sermons.",
                 "operationId": "archivedSermons",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
                     }
                 ],
                 "responses": {
@@ -19138,6 +19271,31 @@
                                             "items": {
                                                 "$ref": "#/components/schemas/Sermon"
                                             }
+                                        },
+                                        "pagination": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 67
+                                                },
+                                                "has_more_pages": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"

@@ -32,14 +32,20 @@ class SermonService
             ->latest()
             ->get();
     }
-    public function getPendingSermons()
+    public function getPendingSermons(int $perPage = 15)
     {
-        return Sermon::with('attachments')->where('status', 'Pending')->get();
+        return Sermon::with('attachments')
+            ->where('status', 'Pending')
+            ->latest()
+            ->paginate($perPage);
     }
 
-    public function getArchivedSermons()
+    public function getArchivedSermons(int $perPage = 15)
     {
-        return Sermon::with('attachments')->where('status', 'Archived')->get();
+        return Sermon::with('attachments')
+            ->where('status', 'Archived')
+            ->latest()
+            ->paginate($perPage);
     }
 
     public function createSermon(array $data, int $mosqueManagerId, array $files = []): Sermon
