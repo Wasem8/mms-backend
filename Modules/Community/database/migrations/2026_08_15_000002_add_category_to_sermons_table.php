@@ -9,13 +9,15 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
-    {
+    public function up(): void {
         Schema::table('sermons', function (Blueprint $table) {
-            $table->string('category')->nullable()->after('sermon_date');
+            $table->string('category')->nullable()->after('speaker_name');
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::table('sermons', function (Blueprint $table) {
