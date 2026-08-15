@@ -2,315 +2,218 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>إيصال تبرع</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إيصال تبرع - {{ $donation->reference }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <style>
+        * {
+            box-sizing: border-box;
+        }
         body {
-            font-family: 'xbriyaz', sans-serif;
-            direction: rtl;
+            font-family: 'Tajawal', sans-serif;
+            background-color: #f2f5f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
             margin: 0;
-            padding: 0;
-            color: #1e293b;
-            background: #ffffff;
+            padding: 20px;
         }
-
-        .page {
-            padding: 10mm 12mm;
+        .receipt-card {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 420px;
+            border-radius: 20px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+            border: 1px solid #eaeaea;
         }
-
-        /* ── الإطار الخارجي ── */
-        .receipt-box {
-            border: 3px solid #15803d;
-            padding: 6px;
-            background: #f8fdf9;
+        .receipt-header {
+            background-color: #129c6f;
+            color: #ffffff;
+            text-align: center;
+            padding: 30px 20px 20px;
         }
-
-        .receipt-inner {
-            border: 1px solid #86efac;
+        .icon-circle {
+            width: 50px;
+            height: 50px;
+            background-color: #129c6f;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 15px;
+            box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.15);
+        }
+        .icon-circle svg {
+            fill: #ffffff;
+            width: 24px;
+            height: 24px;
+        }
+        .receipt-title {
+            margin: 0 0 6px;
+            font-size: 22px;
+            font-weight: 800;
+        }
+        .receipt-subtitle {
+            margin: 0;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+        }
+        .receipt-body {
             padding: 30px 25px;
         }
-
-        /* ── الهيدر ── */
-        .header {
-            text-align: center;
-            margin-bottom: 8px;
-        }
-
-        .mosque-name {
-            font-size: 18px;
-            color: #166534;
-            font-weight: bold;
-            margin: 0 0 10px 0;
-        }
-
-        .basmala {
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid #f0f0f0;
             font-size: 15px;
-            color: #15803d;
-            margin: 0 0 8px 0;
         }
-
-        .title {
-            font-size: 32px;
-            color: #14532d;
-            font-weight: bold;
-            margin: 0 0 4px 0;
+        .info-row:last-of-type {
+            border-bottom: none;
         }
-
-        .subtitle {
-            font-size: 13px;
-            color: #64748b;
-            margin: 0 0 16px 0;
+        .info-label {
+            color: #777;
+            font-weight: 500;
         }
-
-        /* ── الخط المنقط ── */
-        .dashed-line {
-            border: none;
-            border-top: 2px dashed #15803d;
-            margin: 0 0 16px 0;
-        }
-
-        /* ── شريط المعلومات ── */
-        .info-bar {
-            background: #f0fdf4;
-            border-right: 4px solid #15803d;
-            padding: 10px 16px;
-            margin-bottom: 24px;
-        }
-
-        .info-bar table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .info-bar td {
-            font-size: 13px;
-            color: #166534;
-            font-weight: bold;
-        }
-
-        .info-bar td:first-child {
-            text-align: right;
-        }
-
-        .info-bar td:last-child {
+        .info-value {
+            color: #111;
+            font-weight: 700;
             text-align: left;
         }
-
-        /* ── المحتوى الرئيسي ── */
-        .content {
+        .amount-container {
+            background-color: #fdfdfd;
+            border: 1.5px dashed #dcdcdc;
+            border-radius: 24px;
             text-align: center;
-            margin-bottom: 24px;
+            padding: 22px;
+            margin: 15px 0 25px;
         }
-
-        .content p {
-            font-size: 15px;
-            color: #475569;
-            margin: 6px 0;
-            line-height: 1.8;
-        }
-
-        .donor-name {
-            font-size: 26px;
-            color: #15803d;
-            font-weight: bold;
-            margin: 10px auto;
-            padding-bottom: 4px;
-            border-bottom: 2px solid #bbf7d0;
-            display: inline-block;
-        }
-
-        .target-info {
-            font-size: 17px;
-            color: #14532d;
-            font-weight: bold;
-            margin: 8px auto;
-            padding-bottom: 4px;
-            border-bottom: 1px solid #86efac;
-            display: inline-block;
-        }
-
-        /* ── صندوق المبلغ ── */
-        .amount-box {
-            background: #f0fdf4;
-            border: 2px dashed #22c55e;
-            padding: 20px;
-            text-align: center;
-            margin: 0 auto 28px;
-            width: 70%;
-        }
-
         .amount-label {
-            font-size: 14px;
-            color: #166534;
-            font-weight: bold;
+            color: #888;
+            font-size: 13px;
+            font-weight: 500;
             margin-bottom: 8px;
         }
-
         .amount-value {
-            font-size: 34px;
-            font-weight: bold;
-            color: #15803d;
+            color: #129c6f;
+            font-size: 38px;
+            font-weight: 800;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            gap: 6px;
+            direction: ltr;
         }
-
         .amount-currency {
-            font-size: 18px;
-            color: #166534;
-            font-weight: bold;
-            margin-left: 6px;
+            font-size: 20px;
+            font-weight: 700;
         }
-
-        /* ── جدول التفاصيل ── */
-        .details-table {
-            width: 85%;
-            margin: 0 auto 30px;
-            border-collapse: collapse;
-        }
-
-        .details-table tr {
-            border-bottom: 1px solid #dcfce7;
-        }
-
-        .details-table td {
-            padding: 10px 12px;
-            font-size: 14px;
-        }
-
-        .details-table td:first-child {
-            text-align: right;
-            color: #64748b;
-            width: 50%;
-        }
-
-        .details-table td:last-child {
-            text-align: left;
-            color: #0f172a;
-            font-weight: bold;
-        }
-
-        /* ── التوقيع والختم ── */
-        .signatures {
-            width: 100%;
-            margin-top: 40px;
-            border-collapse: collapse;
-        }
-
-        .signatures td {
-            width: 50%;
+        .footer-message {
             text-align: center;
-            vertical-align: bottom;
-            padding-top: 20px;
-        }
-
-        .stamp-box {
-            border: 2px solid #15803d;
-            padding: 8px 16px;
-            display: inline-block;
-            color: #15803d;
-            font-weight: bold;
-            font-size: 14px;
-        }
-
-        .sig-line {
-            border-top: 1px solid #94a3b8;
-            width: 120px;
-            margin: 0 auto 6px;
-            padding-top: 6px;
-            color: #64748b;
+            color: #666;
             font-size: 13px;
-            font-weight: bold;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            font-weight: 500;
+        }
+        .download-btn {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            background-color: #e6f6ee;
+            color: #129c6f;
+            text-decoration: none;
+            padding: 14px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 15px;
+            transition: all 0.2s ease;
+            border: 1px solid #d1efe0;
+        }
+        .download-btn:hover {
+            background-color: #d1efe0;
+        }
+        .download-btn svg {
+            fill: currentColor;
+            width: 20px;
+            height: 20px;
         }
 
-        /* ── التذييل ── */
-        .footer {
-            text-align: center;
-            font-size: 11px;
-            color: #94a3b8;
-            border-top: 1px solid #dcfce7;
-            padding-top: 12px;
-            margin-top: 35px;
+        /* Optional Print Styles for PDF generators */
+        @media print {
+            body { background-color: white; }
+            .receipt-card { box-shadow: none; border: none; }
+            .download-btn { display: none; }
         }
     </style>
 </head>
 <body>
 
-    <div class="page">
-        <div class="receipt-box">
-            <div class="receipt-inner">
-
-                <!-- الهيدر -->
-                <div class="header">
-                    <div class="mosque-name">{{ $mosque_name }}</div>
-                    <div class="basmala">بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ</div>
-                    <div class="title">إيصال تبرع</div>
-                    <div class="subtitle">Donation Receipt</div>
-                </div>
-
-                <hr class="dashed-line">
-
-                <!-- شريط المعلومات -->
-                <div class="info-bar">
-                    <table>
-                        <tr>
-                            <td>رقم الإيصال: {{ $donation->reference }}</td>
-                            <td>تاريخ الإصدار: {{ $issued_at }}</td>
-                        </tr>
-                    </table>
-                </div>
-
-                <!-- المحتوى -->
-                <div class="content">
-                    <p>نُقَرُّ بِمُوجَبِ هَذَا الْإِيصَالِ بِاسْتِلامِ تَبَرُّعٍ كَرِيمٍ مِنْ</p>
-                    <div class="donor-name">{{ $donor_name }}</div>
-                    <p>تَمَّ تَخْصِيصُهُ لِصَالِحِ</p>
-                    <div class="target-info">{{ $target['label'] }}: {{ $target['name'] }}</div>
-                </div>
-
-                <!-- المبلغ -->
-                <div class="amount-box">
-                    @if($donation->donation_type === 'in_kind')
-                        <div class="amount-label">المواد المتبرع بها (عيني)</div>
-                        <div class="amount-value" style="font-size: 22px;">
-                            {{ number_format((float) ($donation->amount ?? 0), 2) }}
-                            {{ $donation->item_description ?? 'مواد عينية' }}
-                        </div>
-                    @else
-                        <div class="amount-label">المبلغ المتبرع به</div>
-                        <div>
-                            <span class="amount-currency">{{ $currency }}</span>
-                            <span class="amount-value">{{ number_format((float) ($donation->amount ?? 0), 2) }}</span>
-                        </div>
-                    @endif
-                </div>
-
-                <!-- التفاصيل -->
-                <table class="details-table">
-                    <tr>
-                        <td>طريقة الدفع</td>
-                        <td>{{ $payment_method }}</td>
-                    </tr>
-                    <tr>
-                        <td>حالة الدفع</td>
-                        <td>{{ $donation_status }}</td>
-                    </tr>
-                </table>
-
-                <!-- التوقيع والختم -->
-                <table class="signatures">
-                    <tr>
-                        <td>
-                            <div class="stamp-box">ختم المسجد</div>
-                        </td>
-                        <td>
-                            <div class="sig-line">توقيع المسؤول</div>
-                        </td>
-                    </tr>
-                </table>
-
-                <!-- التذييل -->
-                <div class="footer">
-                    تم إصدار هذا الإيصال إلكترونياً عبر نظام إدارة المساجد — يُرجى الاحتفاظ به للرجوع إليه عند الحاجة.
-                </div>
-
+    <div class="receipt-card">
+        <div class="receipt-header">
+            <div class="icon-circle">
+                <svg viewBox="0 0 24 24">
+                    <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/>
+                </svg>
             </div>
+            <h2 class="receipt-title">إيصال تبرع معتمد</h2>
+            <p class="receipt-subtitle">نظام إدارة المساجد والشؤون الدينية</p>
+        </div>
+
+        <div class="receipt-body">
+
+            <div class="info-row">
+                <span class="info-label">رقم الإيصال:</span>
+                <span class="info-value">{{ $donation->reference }}</span>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">التاريخ:</span>
+                <span class="info-value">
+                    {{-- Uses Carbon to format the date correctly in Arabic --}}
+                    {{ \Carbon\Carbon::parse($donation->created_at)->locale('ar')->translatedFormat('d F Y في h:i a') }}
+                </span>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">اسم المتبرع:</span>
+                <span class="info-value">{{ $donation->donor_name ?? 'فاعل خير' }}</span>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">
+                    @if($donation->campaign_title)
+                        عنوان الحملة: <span style="color:#111; font-weight:700;">{{ $donation->campaign_title }}</span>
+                    @else
+                        نوع التبرع:
+                    @endif
+                </span>
+                <span class="info-value">
+                    {{ $donation->donation_type === 'cash' ? 'تبرع نقدي' : __('receipt.' . $donation->donation_type) }}
+                </span>
+            </div>
+
+            <div class="amount-container">
+                <div class="amount-label">المبلغ المستلم</div>
+                <div class="amount-value">
+                    <span class="amount-currency">ل.س</span>
+                    {{-- Formats the amount with commas (e.g., 2,500) --}}
+                    <span>{{ number_format($donation->amount) }}</span>
+                </div>
+            </div>
+
+            <div class="footer-message">
+                جزاكم الله خيراً وبارك في أموالكم، تقبل الله منا ومنكم صالح الأعمال.
+            </div>
+
+            {{-- Generates the download route dynamically based on the donation ID --}}
         </div>
     </div>
 
