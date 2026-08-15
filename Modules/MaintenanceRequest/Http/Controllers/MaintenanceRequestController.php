@@ -9,6 +9,8 @@ use Modules\MaintenanceRequest\Service\MaintenanceService;
 use Modules\MaintenanceRequest\Http\Requests\StoreMaintenanceRequest;
 use Modules\MaintenanceRequest\Http\Requests\UpdateMaintenanceRequest;
 use Modules\MaintenanceRequest\Http\Requests\ProcessMaintenanceRequest;
+use Modules\MaintenanceRequest\Http\Requests\RequestMaintenanceFilesRequest;
+use Modules\MaintenanceRequest\Http\Requests\UploadMaintenanceFilesRequest;
 use Modules\Mosque\Models\Mosque;
 use App\Support\ApiResponse;
 use Modules\MaintenanceRequest\Http\Resources\PublicMaintenanceResource;
@@ -167,6 +169,42 @@ class MaintenanceRequestController extends Controller
         return ApiResponse::success($maintenance->loadMissing(['files', 'statusLogs', 'mosque']), __('messages.maintenance.retrieved'));
     }
 
+    /**
+     * GET /maintenance/file-requests
+     * Requests awaiting additional files (scope: mosque manager).
+     */
+    public function pendingFileRequests(Request $request)
+    {
+        $perPage = (int) $request->query('per_page', 15);
+        $mosqueId = $this->getManagerMosqueId();
+
+        $paginator = $this->service->getPendingFileRequests($mosqueId, $perPage);
+
+        return ApiResponse::success(
+            $paginator->items(),
+            __('messages.maintenance.file_requests_retrieved'),
+            $paginator
+        );
+    }
+
+    /**
+     * POST /maintenance/{id}/upload-files
+     * Mosque manager uploads the additional files requested by the region manager.
+     */
+    public function uploadFiles(UploadMaintenanceFilesRequest $request, int $id)
+    {
+        $mosqueId = $this->getManagerMosqueId();
+
+        $maintenance = $this->service->uploadFiles(
+            $id,
+            $request->file('files'),
+            $mosqueId,
+            $request->user()->name
+        );
+
+        return ApiResponse::success($maintenance->loadMissing(['files', 'statusLogs', 'mosque']), __('messages.maintenance.files_uploaded'));
+    }
+
     // =========================================================================
     //  SUPER ADMIN ENDPOINTS
     // =========================================================================
@@ -230,6 +268,24 @@ class MaintenanceRequestController extends Controller
         );
 
         return ApiResponse::success($maintenance->loadMissing(['files', 'statusLogs', 'mosque']), __('messages.maintenance.processed'));
+    }
+
+    /**
+     * POST /maintenance/admin/{id}/request-files
+     * Region manager requests additional files from the mosque manager.
+     */
+    public function requestFiles(RequestMaintenanceFilesRequest $request, int $id)
+    {
+        $validated = $request->validated();
+
+        $maintenance = $this->service->requestFiles(
+            $id,
+            $request->user()->name,
+            $validated['note'],
+            $request->user()->id
+        );
+
+        return ApiResponse::success($maintenance->loadMissing(['files', 'statusLogs', 'mosque']), __('messages.maintenance.files_requested'));
     }
 
     public function publicIndex(Request $request)
