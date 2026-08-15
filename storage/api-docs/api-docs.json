@@ -6687,6 +6687,45 @@
                                         }
                                     },
                                     "type": "object"
+                                },
+                                "example": {
+                                    "status": true,
+                                    "message": "Success",
+                                    "data": [
+                                        {
+                                            "id": 23,
+                                            "reference": "REC-1645-2026",
+                                            "mosque_id": 5,
+                                            "donation_type": "cash",
+                                            "payment_method": "cash",
+                                            "amount": 500,
+                                            "item_description": null,
+                                            "donor_name": "فاعل خير",
+                                            "user_id": null,
+                                            "user": null,
+                                            "campaign_id": 12,
+                                            "campaign_title": "اخر حملة",
+                                            "mosque_need_id": null,
+                                            "attachment": null,
+                                            "status": "completed",
+                                            "created_at": "2026-08-15 09:05:23",
+                                            "updated_at": "2026-08-15 09:05:23"
+                                        }
+                                    ],
+                                    "meta": {
+                                        "current_page": 1,
+                                        "last_page": 12,
+                                        "per_page": 10,
+                                        "total": 120,
+                                        "from": 1,
+                                        "to": 10
+                                    },
+                                    "links": {
+                                        "first": "http://localhost:8000/api/mosques/5/donations?page=1",
+                                        "last": "http://localhost:8000/api/mosques/5/donations?page=12",
+                                        "prev": null,
+                                        "next": "http://localhost:8000/api/mosques/5/donations?page=2"
+                                    }
                                 }
                             }
                         }
@@ -6838,6 +6877,49 @@
                                         }
                                     },
                                     "type": "object"
+                                },
+                                "example": {
+                                    "status": true,
+                                    "message": "Success",
+                                    "data": [
+                                        {
+                                            "id": 23,
+                                            "reference": "REC-1645-2026",
+                                            "mosque_id": 5,
+                                            "donation_type": "cash",
+                                            "payment_method": "cash",
+                                            "amount": 500,
+                                            "item_description": null,
+                                            "donor_name": "فاعل خير",
+                                            "user_id": 8,
+                                            "user": {
+                                                "id": 8,
+                                                "name": "أحمد عبد الله المحمود",
+                                                "email": "ahmad@example.com"
+                                            },
+                                            "campaign_id": 12,
+                                            "campaign_title": "اخر حملة",
+                                            "mosque_need_id": null,
+                                            "attachment": null,
+                                            "status": "completed",
+                                            "created_at": "2026-08-15 09:05:23",
+                                            "updated_at": "2026-08-15 09:05:23"
+                                        }
+                                    ],
+                                    "meta": {
+                                        "current_page": 1,
+                                        "last_page": 3,
+                                        "per_page": 10,
+                                        "total": 27,
+                                        "from": 1,
+                                        "to": 10
+                                    },
+                                    "links": {
+                                        "first": "http://localhost:8000/api/donations/mine?page=1",
+                                        "last": "http://localhost:8000/api/donations/mine?page=3",
+                                        "prev": null,
+                                        "next": "http://localhost:8000/api/donations/mine?page=2"
+                                    }
                                 }
                             }
                         }
@@ -19216,6 +19298,34 @@
                                         }
                                     },
                                     "type": "object"
+                                },
+                                "example": {
+                                    "status": true,
+                                    "message": "تم جلب الخطب المعلقة بنجاح",
+                                    "data": [
+                                        {
+                                            "id": 1,
+                                            "title": "خطبة الجمعة - التوبة والإنابة",
+                                            "content": "الحمد لله رب العالمين...",
+                                            "category": "occasions_seasons",
+                                            "status": "pending",
+                                            "notes": "يرجى مراجعة المقدمة",
+                                            "mosque_manager_id": 3,
+                                            "region_manager_id": null,
+                                            "attachments": [
+                                                "https://storage.example.com/sermons/file.pdf"
+                                            ],
+                                            "created_at": "2026-08-15 09:05:23",
+                                            "updated_at": "2026-08-15 09:05:23"
+                                        }
+                                    ],
+                                    "pagination": {
+                                        "current_page": 1,
+                                        "last_page": 3,
+                                        "per_page": 15,
+                                        "total": 32,
+                                        "has_more_pages": true
+                                    }
                                 }
                             }
                         }
@@ -19299,6 +19409,34 @@
                                         }
                                     },
                                     "type": "object"
+                                },
+                                "example": {
+                                    "status": true,
+                                    "message": "تم جلب أرشيف الخطب بنجاح",
+                                    "data": [
+                                        {
+                                            "id": 12,
+                                            "title": "خطبة الجمعة - بر الوالدين",
+                                            "content": "الحمد لله رب العالمين والصلاة والسلام على رسول الله...",
+                                            "category": "ethics_conduct",
+                                            "status": "Archived",
+                                            "notes": null,
+                                            "mosque_manager_id": 3,
+                                            "region_manager_id": 7,
+                                            "attachments": [
+                                                "https://storage.example.com/sermons/archive.pdf"
+                                            ],
+                                            "created_at": "2026-07-20 12:30:00",
+                                            "updated_at": "2026-07-21 08:00:00"
+                                        }
+                                    ],
+                                    "pagination": {
+                                        "current_page": 1,
+                                        "last_page": 5,
+                                        "per_page": 15,
+                                        "total": 67,
+                                        "has_more_pages": true
+                                    }
                                 }
                             }
                         }
