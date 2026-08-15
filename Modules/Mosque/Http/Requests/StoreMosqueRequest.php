@@ -31,6 +31,7 @@ class StoreMosqueRequest extends FormRequest
             'longitude' => ['required', 'numeric', 'decimal:0,8', 'between:-180,180'],
             'manager_id' => [
                 'required',
+                Rule::unique('mosques', 'manager_id'),
                 'integer',
                 Rule::exists('users', 'id')->where(function ($query) {
                     $query->whereExists(function ($subquery) {
@@ -48,7 +49,7 @@ class StoreMosqueRequest extends FormRequest
             'facility_ids.*' => ['required', 'integer', 'exists:facilities,id'],
             'spaces' => ['nullable', 'array'],
             'spaces.*.name' => ['required', 'string', 'max:255'],
-            'spaces.*.capacity' => ['required', 'integer', 'min:1'], 
+            'spaces.*.capacity' => ['required', 'integer', 'min:1'],
             'spaces.*.type' => ['nullable', 'string'],
         ];
     }

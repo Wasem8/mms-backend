@@ -101,4 +101,21 @@ class MaintenanceRepository implements MaintenanceRepositoryInterface
             ])
             ->find($id);
     }
+
+    public function requestFiles(int $id, array $data): Maintenance
+    {
+        $maintenance = $this->find($id);
+        $maintenance->update($data);
+
+        return $maintenance->fresh(['files', 'statusLogs']);
+    }
+
+    public function getPendingFileRequests(?int $mosqueId = null, int $perPage = 15)
+    {
+        return Maintenance::with(['files', 'statusLogs', 'filesRequestedBy:id,name'])
+            ->where('files_requested', true)
+            ->when($mosqueId, fn($q) => $q->where('mosque_id', $mosqueId))
+            ->latest()
+            ->paginate($perPage);
+    }
 }

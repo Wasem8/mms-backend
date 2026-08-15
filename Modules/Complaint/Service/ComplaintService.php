@@ -6,10 +6,12 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Modules\Complaint\Events\ComplaintAssigned;
 use Modules\Complaint\Models\Complaint;
 use Modules\Complaint\Repositories\ComplaintRepositoryInterface;
 use Modules\Complaint\Events\ComplaintSubmitted;
 use Modules\Complaint\Events\ComplaintStatusChanged;
+use Modules\User\Models\User;
 
 class ComplaintService
 {
@@ -62,6 +64,9 @@ class ComplaintService
     {
         $complaint = $this->repository->find($complaintId);
         $oldStatus = $complaint->status;
+
+        $this->assertStatusTransitionAllowed($oldStatus, $newStatus);
+
 
         $this->repository->update($complaintId, [
             'status' => $newStatus,
@@ -228,4 +233,45 @@ class ComplaintService
 
         return $this->repository->getFiltered($filters);
     }
+
+    public function assignToSuperAdmin(int $complaintId, int $adminId, int $assignedBy, ?string $note = null)
+    {
+        $admin = User::findOrFail($adminId);
+
+        if (! $admin->hasRole('super_admin')) {
+            abort(422, __('messages.complaint.invalid_admin_role'));
+        }
+
+        $complaint = $this->repository->find($complaintId);
+        $oldStatus = $complaint->status;
+
+        $updated = $this->repository->assignToAdmin($complaintId, $adminId);
+
+        $this->repository->logStatusChange($complaint, [
+            'old_status' => $oldStatus,
+            'new_status' => $oldStatus, // الحالة ما تغيرت، بس نسجل الإسناد بالـ note
+            'note' => $note ?? __('messages.complaint.assigned_note', ['admin' => $admin->name]),
+            'changed_at' => now(),
+            'changed_by' => $assignedBy,
+        ]);
+
+        event(new ComplaintAssigned($updated, $admin, $assignedBy, $note));
+
+        return $updated;
+    }
+
+    private function assertStatusTransitionAllowed(string $currentStatus, string $newStatus): void
+    {
+        $finalStatuses = ['resolved', 'canceled'];
+
+        if (in_array($currentStatus, $finalStatuses) && $newStatus !== $currentStatus) {
+            abort(422, __('messages.complaint.status_locked'));
+        }
+
+        if ($currentStatus === 'in_progress' && $newStatus === 'pending') {
+            abort(422, __('messages.complaint.cannot_revert_to_pending'));
+        }
+    }
+
+
 }

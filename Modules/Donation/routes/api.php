@@ -56,4 +56,8 @@ Route::prefix('campaigns')->group(function () {
     });
 });
 
+Route::middleware(['auth:api', 'role:mosque_manager'])->group(function () {
+    Route::get('mosque/campaigns', [CampaignController::class, 'mosqueIndex']);
+});
+
 Route::get('mosques/{mosqueId}/donations/recent', [DonationController::class, 'recentDonations'])->middleware(['auth:api','role:mosque_manager']);

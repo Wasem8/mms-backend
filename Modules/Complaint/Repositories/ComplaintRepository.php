@@ -75,4 +75,16 @@ class ComplaintRepository implements ComplaintRepositoryInterface
     {
         $complaint->statusLogs()->create($logData);
     }
+
+    public function assignToAdmin(int $complaintId, int $adminId): Complaint
+{
+    $complaint = Complaint::findOrFail($complaintId);
+
+    $complaint->update([
+        'assigned_admin_id' => $adminId,
+    ]);
+
+    return $complaint->fresh();
+}
+
 }

@@ -26,4 +26,8 @@ interface MaintenanceRepositoryInterface
     public function getPublicFiltered(array $filters = []);
 
     public function findPublic(int $id): ?Maintenance;
+
+    public function requestFiles(int $id, array $data): Maintenance;
+
+    public function getPendingFileRequests(?int $mosqueId = null, int $perPage = 15);
 }

@@ -17,4 +17,5 @@ interface ComplaintRepositoryInterface
     // Specific to WASL requirements
     public function attachFiles(Complaint $complaint, array $files): void;
     public function logStatusChange(Complaint $complaint, array $logData): void;
+    public function assignToAdmin(int $complaintId, int $adminId): Complaint;
 }

@@ -42,6 +42,9 @@ return [
     'user_not_teacher' => 'The selected user is not a teacher.',
     'teacher_another_mosque' => 'The selected teacher belongs to another mosque.',
     'teacher_not_active' => 'The selected teacher is not active.',
+    'teacher_updated_successfully' => 'Teacher updated successfully.',
+    'capacity_less_than_students' => 'Capacity cannot be less than the current number of students (:count).',
+    'invalid_has_halaqa_value' => 'The has_halaqa parameter must be either 0 or 1.',
 
     // --- Evaluations Section ---
     'evaluation_stored' => 'Student evaluated successfully.',
@@ -94,6 +97,16 @@ return [
     'certificate_already_exists' => 'A certificate has already been issued for this volunteer and opportunity.',
     'no_hours_for_certificate' => 'No logged hours found. Cannot issue a certificate.',
     'upload_failed' => 'Failed to upload certificate: :error',
+    'application_not_approved' => 'This application has not been approved yet.',
+    'application_not_in_opportunity' => 'This application does not belong to this opportunity.',
+    'certificate_not_found' => 'Certificate not found.',
+    'certificate_url_generated' => 'Certificate download link generated successfully.',
+    'task_created' => 'Task created successfully.',
+    'unauthorized_application_access' => 'You are not authorized to access this application.',
+    'unauthorized_task_access' => 'You are not authorized to access this task.',
+    'no_mosque_assigned_to_manager' => 'No mosque is assigned to your manager account.',
+    'volunteer_registered' => 'Volunteer registered successfully.',
+    'login_successful' => 'Login successful.',
 
     // --- Complaints Section ---
     'complaint.submitted_guest' => 'Complaint submitted successfully. You can track it using your complaint number.',
@@ -122,6 +135,11 @@ return [
     'complaint.validation.status.in' => 'The selected status is invalid.',
     'complaint.validation.note.string' => 'The note must be a string.',
     'complaint.upload_failed' => 'Image upload failed: ',
+    'complaint.assigned' => 'Complaint assigned successfully.',
+    'complaint.assigned_note' => 'Complaint assigned to :admin',
+    'complaint.invalid_admin_role' => 'The selected admin must have the super admin role.',
+    'complaint.status_locked' => 'This complaint is in a final state and cannot be modified.',
+    'complaint.cannot_revert_to_pending' => 'An in-progress complaint cannot be reverted to pending.',
 
     // --- Community Module ---
     'community.programs_retrieved' => 'Programs retrieved successfully.',
@@ -172,6 +190,7 @@ return [
     'community.cannot_edit_tameem' => 'You are not authorized to edit this tameem.',
     'community.cannot_delete_tameem' => 'You are not authorized to delete this tameem.',
     'community.friday_date_required' => 'The selected date must be a Friday.',
+    'community.sermon_deleted' => 'Sermon deleted successfully.',
 
     // --- Geo Module ---
     'geo.catalog_retrieved' => 'Geo catalog retrieved successfully.',
@@ -189,6 +208,23 @@ return [
     'maintenance.success' => 'Success',
     'maintenance.unauthorized' => 'You are not authorized to access this maintenance request.',
     'maintenance.notes_required_when_cancelling' => 'Notes are required when cancelling a maintenance request.',
+    'maintenance.manager_only' => 'Only mosque managers can submit maintenance requests.',
+    'maintenance.mosque_id_required' => 'The mosque field is required.',
+    'maintenance.mosque_id_exists' => 'The selected mosque does not exist.',
+    'maintenance.public_retrieved' => 'Public maintenance requests retrieved successfully.',
+    'maintenance.files_requested' => 'Additional files requested from the mosque manager successfully.',
+    'maintenance.files_uploaded' => 'Additional files uploaded successfully.',
+    'maintenance.file_requests_retrieved' => 'File requests retrieved successfully.',
+    'maintenance.files_request_note_required' => 'A note explaining why the additional files are required is needed.',
+    'maintenance.files_request_note_max' => 'The note must not exceed 1000 characters.',
+    'maintenance.files_required' => 'At least one file is required.',
+    'maintenance.files_min' => 'At least one file is required.',
+    'maintenance.files_mimes' => 'Files must be of type: jpg, jpeg, png, pdf, doc, docx.',
+    'maintenance.files_max' => 'Each file must not exceed 10 MB.',
+    'maintenance.files_requested_log' => 'Additional files requested: :note',
+    'maintenance.files_uploaded_log' => 'Additional files uploaded by the mosque manager.',
+    'maintenance.cannot_request_files_final' => 'Cannot request additional files for a completed or cancelled request.',
+    'maintenance.files_not_requested' => 'No additional files were requested for this request.',
 
     // --- Mosque Module ---
     'mosque.nearby_retrieved' => 'Nearby mosques retrieved successfully.',
@@ -237,6 +273,8 @@ return [
     'mosque.facilities_detached' => 'Facilities detached from the mosque successfully.',
     'mosque.privileged_field' => 'This field is restricted to senior management only.',
     'mosque.mine_retrieved' => 'Current user mosques retrieved successfully.',
+    'mosque.nearby_needs_retrieved' => 'Nearby mosque needs retrieved successfully.',
+    'mosque.manager_already_assigned' => 'This manager is already assigned to another mosque.',
     'mosque_task_category_prayer_worship' => 'Prayer & Worship',
     'mosque_task_category_cleaning'       => 'Cleaning',
     'mosque_task_category_maintenance'    => 'Maintenance',

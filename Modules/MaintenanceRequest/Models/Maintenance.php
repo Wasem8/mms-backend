@@ -18,12 +18,17 @@ class Maintenance extends Model
 
 
     protected $table = 'maintenances';
-    protected $fillable = ['maintenance_number','mosque_id','title','description','category','priority','status','requested_by','scheduled_at','completed_at','notes'];
+    protected $fillable = ['maintenance_number','mosque_id','title','description','category','priority','status','requested_by','scheduled_at','completed_at','notes','files_requested','files_requested_by','files_requested_at','files_request_note'];
 
 
     public function files(): HasMany
     {
         return $this->hasMany(MaintenanceFile::class, 'maintenance_id');
+    }
+
+    public function filesRequestedBy()
+    {
+        return $this->belongsTo(\Modules\User\Models\User::class, 'files_requested_by');
     }
 
     public function statusLogs(): HasMany

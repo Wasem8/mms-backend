@@ -8,9 +8,19 @@ use Modules\User\Models\User;
 use Modules\Complaint\Models\Complaint;
 use Modules\Donation\Models\Donation;
 use Modules\Education\Models\Attendance;
+use Modules\Complaint\Service\ComplaintService;
+use Modules\MaintenanceRequest\Service\MaintenanceService;
+use Modules\Mosque\Services\MosqueTaskService;
 
 class MosqueDashboardService
 {
+
+    public function __construct(
+        private readonly ComplaintService $complaintService,
+        private readonly MaintenanceService $maintenanceService,
+        private readonly MosqueTaskService $taskService,
+    ) {}
+    
     public function getDashboardData(User $user): array
     {
         $mosqueId = $user->mosque_id;
@@ -25,6 +35,8 @@ class MosqueDashboardService
             'kpi_cards'         => $this->getKpiCards($mosqueId, $today, $startOfMonth, $previousMonthStart, $previousMonthEnd),
             'attendance_chart'  => $this->getAttendanceChart($mosqueId),
             'recent_activities' => $this->getRecentActivities($mosqueId),
+            'today_tasks'        => $this->getTodayTasksWidget($mosqueId),
+            'latest_requests'    => $this->getLatestComplaintsAndRequests($mosqueId),
         ];
     }
 
@@ -182,5 +194,47 @@ class MosqueDashboardService
                 unset($item['created_at']);
                 return $item;
             });
+    }
+
+    private function getTodayTasksWidget(int $mosqueId): array
+    {
+        $todayDate = Carbon::today()->toDateString();
+
+        return [
+            'date_tabs' => $this->taskService->dateTabs($mosqueId),
+            'selected'  => $this->taskService->listForDate($mosqueId, $todayDate, null, null),
+        ];
+    }
+
+    private function getLatestComplaintsAndRequests(int $mosqueId, int $limit = 5): array
+    {
+        $complaints = collect($this->complaintService->getRecentComplaints($mosqueId, $limit))
+            ->map(fn($c) => [
+                'id'         => 'cmp_' . $c['id'],
+                'title'      => $c['title'],
+                'department' => $c['complaint_type'] ?? null,
+                'priority'   => $c['priority'],
+                'status'     => $c['status'],
+                'type'       => 'complaint',
+                'created_at' => $c['created_at'],
+            ]);
+
+        $maintenanceRequests = collect($this->maintenanceService->getRecentRequests($mosqueId, $limit))
+            ->map(fn($m) => [
+                'id'         => 'mnt_' . $m['id'],
+                'title'      => $m['title'],
+                'department' => $m['category'] ?? null,
+                'priority'   => $m['priority'],
+                'status'     => $m['status'],
+                'type'       => 'maintenance',
+                'created_at' => $m['created_at'],
+            ]);
+
+        return $complaints
+            ->concat($maintenanceRequests)
+            ->sortByDesc('created_at')
+            ->take($limit)
+            ->values()
+            ->all();
     }
 }

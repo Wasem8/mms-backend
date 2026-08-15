@@ -74,12 +74,14 @@ class DonationsEndpoints
         tags: ['Donations'],
         summary: 'List donations for a mosque',
         description: 'Returns a paginated list of donations. Supports filtering by donor name, type, status, and campaign.',
+        security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(name: 'mosqueId', in: 'path', required: true,  schema: new OA\Schema(type: 'integer'), example: 5),
             new OA\Parameter(name: 'search',   in: 'query', required: false, schema: new OA\Schema(type: 'string'),  description: 'Search by donor name'),
             new OA\Parameter(name: 'type',     in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['cash', 'in_kind'])),
             new OA\Parameter(name: 'status',   in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['pending', 'completed'])),
             new OA\Parameter(name: 'campaign', in: 'query', required: false, schema: new OA\Schema(type: 'integer'), description: 'Filter by campaign ID'),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 10, minimum: 1, maximum: 100), description: 'Items per page'),
         ],
         responses: [
             new OA\Response(
@@ -102,9 +104,60 @@ class DonationsEndpoints
                                 new OA\Property(property: 'last_page',    type: 'integer', example: 12),
                                 new OA\Property(property: 'per_page',     type: 'integer', example: 10),
                                 new OA\Property(property: 'total',        type: 'integer', example: 120),
+                                new OA\Property(property: 'from',         type: 'integer', example: 1),
+                                new OA\Property(property: 'to',           type: 'integer', example: 10),
                             ]
                         ),
-                    ]
+                        new OA\Property(
+                            property: 'links',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'first', type: 'string', example: 'http://localhost:8000/api/mosques/5/donations?page=1'),
+                                new OA\Property(property: 'last',  type: 'string', example: 'http://localhost:8000/api/mosques/5/donations?page=12'),
+                                new OA\Property(property: 'prev',  type: 'string', nullable: true, example: null),
+                                new OA\Property(property: 'next',  type: 'string', nullable: true, example: 'http://localhost:8000/api/mosques/5/donations?page=2'),
+                            ]
+                        ),
+                    ],
+                    example: [
+                        'status'  => true,
+                        'message' => 'Success',
+                        'data' => [
+                            [
+                                'id'               => 23,
+                                'reference'        => 'REC-1645-2026',
+                                'mosque_id'        => 5,
+                                'donation_type'    => 'cash',
+                                'payment_method'   => 'cash',
+                                'amount'           => 500,
+                                'item_description' => null,
+                                'donor_name'       => 'فاعل خير',
+                                'user_id'          => null,
+                                'user'             => null,
+                                'campaign_id'      => 12,
+                                'campaign_title'   => 'اخر حملة',
+                                'mosque_need_id'   => null,
+                                'attachment'       => null,
+                                'status'           => 'completed',
+                                'created_at'       => '2026-08-15 09:05:23',
+                                'updated_at'       => '2026-08-15 09:05:23',
+                            ],
+                        ],
+                        'meta' => [
+                            'current_page' => 1,
+                            'last_page'    => 12,
+                            'per_page'     => 10,
+                            'total'        => 120,
+                            'from'         => 1,
+                            'to'           => 10,
+                        ],
+                        'links' => [
+                            'first' => 'http://localhost:8000/api/mosques/5/donations?page=1',
+                            'last'  => 'http://localhost:8000/api/mosques/5/donations?page=12',
+                            'prev'  => null,
+                            'next'  => 'http://localhost:8000/api/mosques/5/donations?page=2',
+                        ],
+                    ],
                 )
             ),
         ]
@@ -123,6 +176,7 @@ class DonationsEndpoints
             new OA\Parameter(name: 'type',     in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['cash', 'in_kind'])),
             new OA\Parameter(name: 'status',   in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['pending', 'completed'])),
             new OA\Parameter(name: 'campaign', in: 'query', required: false, schema: new OA\Schema(type: 'integer'), description: 'Filter by campaign ID'),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 10, minimum: 1, maximum: 100), description: 'Items per page'),
         ],
         responses: [
             new OA\Response(
@@ -145,9 +199,60 @@ class DonationsEndpoints
                                 new OA\Property(property: 'last_page',    type: 'integer', example: 4),
                                 new OA\Property(property: 'per_page',     type: 'integer', example: 10),
                                 new OA\Property(property: 'total',        type: 'integer', example: 27),
+                                new OA\Property(property: 'from',         type: 'integer', example: 1),
+                                new OA\Property(property: 'to',           type: 'integer', example: 10),
                             ]
                         ),
-                    ]
+                        new OA\Property(
+                            property: 'links',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'first', type: 'string', example: 'http://localhost:8000/api/donations/mine?page=1'),
+                                new OA\Property(property: 'last',  type: 'string', example: 'http://localhost:8000/api/donations/mine?page=3'),
+                                new OA\Property(property: 'prev',  type: 'string', nullable: true, example: null),
+                                new OA\Property(property: 'next',  type: 'string', nullable: true, example: 'http://localhost:8000/api/donations/mine?page=2'),
+                            ]
+                        ),
+                    ],
+                    example: [
+                        'status'  => true,
+                        'message' => 'Success',
+                        'data' => [
+                            [
+                                'id'               => 23,
+                                'reference'        => 'REC-1645-2026',
+                                'mosque_id'        => 5,
+                                'donation_type'    => 'cash',
+                                'payment_method'   => 'cash',
+                                'amount'           => 500,
+                                'item_description' => null,
+                                'donor_name'       => 'فاعل خير',
+                                'user_id'          => 8,
+                                'user'             => ['id' => 8, 'name' => 'أحمد عبد الله المحمود', 'email' => 'ahmad@example.com'],
+                                'campaign_id'      => 12,
+                                'campaign_title'   => 'اخر حملة',
+                                'mosque_need_id'   => null,
+                                'attachment'       => null,
+                                'status'           => 'completed',
+                                'created_at'       => '2026-08-15 09:05:23',
+                                'updated_at'       => '2026-08-15 09:05:23',
+                            ],
+                        ],
+                        'meta' => [
+                            'current_page' => 1,
+                            'last_page'    => 3,
+                            'per_page'     => 10,
+                            'total'        => 27,
+                            'from'         => 1,
+                            'to'           => 10,
+                        ],
+                        'links' => [
+                            'first' => 'http://localhost:8000/api/donations/mine?page=1',
+                            'last'  => 'http://localhost:8000/api/donations/mine?page=3',
+                            'prev'  => null,
+                            'next'  => 'http://localhost:8000/api/donations/mine?page=2',
+                        ],
+                    ],
                 )
             ),
         ]
@@ -399,11 +504,57 @@ public function getRecentDonations() {}
                             property: 'data',
                             type: 'object',
                             properties: [
-                                new OA\Property(property: 'id', type: 'integer', example: 125),
-                                new OA\Property(property: 'reference', type: 'string', example: 'REC-0000-2026'),
-                                new OA\Property(property: 'amount', type: 'number', example: 150.00),
-                                new OA\Property(property: 'status', type: 'string', example: 'completed'),
-                                // بقية العلاقات (donor, campaign, received_by) تظل كما هي...
+                                new OA\Property(property: 'id',               type: 'integer', example: 23),
+                                new OA\Property(property: 'reference',        type: 'string',  example: 'REC-1645-2026'),
+                                new OA\Property(property: 'mosque_id',        type: 'integer', example: 5),
+                                new OA\Property(property: 'donation_type',    type: 'string',  enum: ['cash', 'in_kind'], example: 'cash'),
+                                new OA\Property(property: 'payment_method',   type: 'string',  enum: ['cash', 'stripe'], example: 'cash'),
+                                new OA\Property(property: 'amount',           type: 'number',  example: 500),
+                                new OA\Property(property: 'item_description', type: 'string',  nullable: true, example: 'string'),
+                                new OA\Property(property: 'donor_name',       type: 'string',  example: 'فاعل خير'),
+                                new OA\Property(property: 'user_id',          type: 'integer', nullable: true, example: 8),
+                                new OA\Property(property: 'user',             type: 'object',  nullable: true, description: 'Registered donor user object if user_id is set, otherwise null', example: [
+                                    'id'    => 8,
+                                    'name'  => 'أحمد عبد الله المحمود',
+                                    'email' => 'ahmad@example.com',
+                                    'phone' => '+966501234567',
+                                ], properties: [
+                                    new OA\Property(property: 'id',    type: 'integer', example: 8),
+                                    new OA\Property(property: 'name',  type: 'string',  example: 'أحمد عبد الله المحمود'),
+                                    new OA\Property(property: 'email', type: 'string',  format: 'email', example: 'ahmad@example.com'),
+                                    new OA\Property(property: 'phone', type: 'string',  nullable: true, example: '+966501234567'),
+                                ]),
+                                new OA\Property(property: 'campaign_id',      type: 'integer', nullable: true, example: 12),
+                                new OA\Property(property: 'campaign_title',   type: 'string',  nullable: true, example: 'اخر حملة'),
+                                new OA\Property(property: 'mosque_need_id',   type: 'integer', nullable: true, example: null),
+                                new OA\Property(property: 'attachment',       type: 'string',  nullable: true, example: null, description: 'URL of the uploaded attachment (receipt photo), otherwise null'),
+                                new OA\Property(property: 'status',           type: 'string',  enum: ['pending', 'completed'], example: 'completed'),
+                                new OA\Property(property: 'created_at',       type: 'string',  example: '2026-08-15 09:05:23'),
+                                new OA\Property(property: 'updated_at',       type: 'string',  example: '2026-08-15 09:05:23'),
+                            ],
+                            example: [
+                                'id'               => 23,
+                                'reference'        => 'REC-1645-2026',
+                                'mosque_id'        => 5,
+                                'donation_type'    => 'cash',
+                                'payment_method'   => 'cash',
+                                'amount'           => 500,
+                                'item_description' => null,
+                                'donor_name'       => 'فاعل خير',
+                                'user_id'          => 8,
+                                'user'             => [
+                                    'id'    => 8,
+                                    'name'  => 'أحمد عبد الله المحمود',
+                                    'email' => 'ahmad@example.com',
+                                    'phone' => '+966501234567',
+                                ],
+                                'campaign_id'      => 12,
+                                'campaign_title'   => 'اخر حملة',
+                                'mosque_need_id'   => null,
+                                'attachment'       => null,
+                                'status'           => 'completed',
+                                'created_at'       => '2026-08-15 09:05:23',
+                                'updated_at'       => '2026-08-15 09:05:23',
                             ]
                         )
                     ]
@@ -803,6 +954,8 @@ public function getRecentDonations() {}
         operationId: 'downloadDonationReceipt',
         tags: ['Donations'],
         summary: 'تحميل إيصال التبرع (PDF)',
+        description: 'Returns a signed URL to download the donation receipt PDF.',
+        security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -815,15 +968,24 @@ public function getRecentDonations() {}
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'ملف PDF جاهز للتحميل',
-                headers: [
-                    new OA\Header(
-                        header: 'Content-Disposition',
-                        description: 'attachment; filename="receipt-REC-4892-2024.pdf"',
-                        schema: new OA\Schema(type: 'string')
-                    ),
-                ],
-                content: new OA\MediaType(mediaType: 'application/pdf')
+                description: 'تم إنشاء رابط الإيصال بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string',  example: 'Success'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'receipt_url',
+                                    type: 'string',
+                                    example: 'https://supabase-bucket-url/receipts/receipt_donation_101.pdf?token=xxxx'
+                                ),
+                            ]
+                        ),
+                    ]
+                )
             ),
             new OA\Response(response: 401, description: 'Unauthenticated'),
             new OA\Response(response: 404, description: 'التبرع غير موجود'),

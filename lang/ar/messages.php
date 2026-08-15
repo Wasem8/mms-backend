@@ -41,6 +41,9 @@ return [
     'user_not_teacher' => 'المستخدم المحدد ليس معلماً.',
     'teacher_another_mosque' => 'المعلم المحدد يتبع لمسجد آخر.',
     'teacher_not_active' => 'المعلم المحدد حالته غير نشطة.',
+    'teacher_updated_successfully' => 'تم تحديث بيانات المعلم بنجاح.',
+    'capacity_less_than_students' => 'لا يمكن أن تكون السعة أقل من عدد الطلاب الحالي (:count).',
+    'invalid_has_halaqa_value' => 'قيمة معلمة has_halaqa يجب أن تكون 0 أو 1.',
 
     // --- قسم التقييمات ---
     'evaluation_stored' => 'تم تقييم الطالب بنجاح.',
@@ -91,6 +94,16 @@ return [
     'certificate_already_exists' => 'تم إصدار شهادة لهذا المتطوع والفرصة مسبقاً.',
     'no_hours_for_certificate' => 'لا توجد ساعات مسجلة. لا يمكن إصدار شهادة.',
     'upload_failed' => 'فشل رفع الشهادة: :error',
+    'application_not_approved' => 'لم يتم قبول هذا الطلب بعد.',
+    'application_not_in_opportunity' => 'هذا الطلب لا يتبع لفرصة التطوع هذه.',
+    'certificate_not_found' => 'الشهادة غير موجودة.',
+    'certificate_url_generated' => 'تم إنشاء رابط تحميل الشهادة بنجاح.',
+    'task_created' => 'تم إنشاء المهمة بنجاح.',
+    'unauthorized_application_access' => 'غير مصرح لك بالوصول إلى هذا الطلب.',
+    'unauthorized_task_access' => 'غير مصرح لك بالوصول إلى هذه المهمة.',
+    'no_mosque_assigned_to_manager' => 'لا يوجد مسجد مرتبط بحسابك كمدير.',
+    'volunteer_registered' => 'تم تسجيل المتطوع بنجاح.',
+    'login_successful' => 'تم تسجيل الدخول بنجاح.',
 
     // --- قسم الشكاوى ---
     'complaint.submitted_guest' => 'تم تقديم الشكوى بنجاح. يمكنك تتبعها باستخدام رقم الشكوى الخاص بك.',
@@ -119,6 +132,11 @@ return [
     'complaint.validation.status.in' => 'الحالة المحددة غير صالحة.',
     'complaint.validation.note.string' => 'الملاحظة يجب أن تكون نصاً.',
     'complaint.upload_failed' => 'فشل رفع الصورة: ',
+    'complaint.assigned' => 'تم إسناد الشكوى بنجاح.',
+    'complaint.assigned_note' => 'تم إسناد الشكوى إلى :admin',
+    'complaint.invalid_admin_role' => 'يجب أن يكون المشرف المحدد بصلاحية مدير النظام.',
+    'complaint.status_locked' => 'هذه الشكوى في حالة نهائية ولا يمكن تعديلها.',
+    'complaint.cannot_revert_to_pending' => 'لا يمكن إرجاع شكوى قيد المعالجة إلى حالة معلقة.',
 
     // --- قسم وحدة المجتمع ---
     'community.programs_retrieved' => 'تم جلب البرامج بنجاح.',
@@ -169,6 +187,7 @@ return [
     'community.cannot_edit_tameem' => 'غير مصرح لك بتعديل هذا التعميم.',
     'community.cannot_delete_tameem' => 'غير مصرح لك بحذف هذا التعميم.',
     'community.friday_date_required' => 'التاريخ المحدد يجب أن يكون يوم جمعة.',
+    'community.sermon_deleted' => 'تم حذف الخطبة بنجاح.',
 
     // --- قسم وحدة الجغرافيا ---
     'geo.catalog_retrieved' => 'تم جلب كتالوج المواقع الجغرافية بنجاح.',
@@ -186,6 +205,23 @@ return [
     'maintenance.success' => 'تم بنجاح',
     'maintenance.unauthorized' => 'غير مصرح لك بالوصول إلى طلب الصيانة هذا.',
     'maintenance.notes_required_when_cancelling' => 'الملاحظات مطلوبة عند إلغاء طلب الصيانة.',
+    'maintenance.manager_only' => 'فقط مديرو المساجد يمكنهم إرسال طلبات الصيانة.',
+    'maintenance.mosque_id_required' => 'حقل المسجد مطلوب.',
+    'maintenance.mosque_id_exists' => 'المسجد المحدد غير موجود.',
+    'maintenance.public_retrieved' => 'تم جلب طلبات الصيانة العامة بنجاح.',
+    'maintenance.files_requested' => 'تم طلب ملفات إضافية من مدير المسجد بنجاح.',
+    'maintenance.files_uploaded' => 'تم رفع الملفات الإضافية بنجاح.',
+    'maintenance.file_requests_retrieved' => 'تم جلب طلبات الملفات بنجاح.',
+    'maintenance.files_request_note_required' => 'ملاحظة توضح سبب طلب الملفات الإضافية مطلوبة.',
+    'maintenance.files_request_note_max' => 'يجب ألا تتجاوز الملاحظة 1000 حرف.',
+    'maintenance.files_required' => 'مطلوب ملف واحد على الأقل.',
+    'maintenance.files_min' => 'مطلوب ملف واحد على الأقل.',
+    'maintenance.files_mimes' => 'الملفات يجب أن تكون من نوع: jpg, jpeg, png, pdf, doc, docx.',
+    'maintenance.files_max' => 'حجم كل ملف يجب ألا يتجاوز 10 ميجابايت.',
+    'maintenance.files_requested_log' => 'تم طلب ملفات إضافية: :note',
+    'maintenance.files_uploaded_log' => 'قام مدير المسجد برفع الملفات الإضافية.',
+    'maintenance.cannot_request_files_final' => 'لا يمكن طلب ملفات إضافية لطلب مكتمل أو ملغي.',
+    'maintenance.files_not_requested' => 'لم يتم طلب ملفات إضافية لهذا الطلب.',
 
     // --- قسم وحدة المساجد ---
     'mosque.nearby_retrieved' => 'تم جلب المساجد الأقرب لموقعك بنجاح.',
@@ -234,6 +270,8 @@ return [
     'mosque.facilities_detached' => 'تم فك ارتباط المرافق بالمسجد بنجاح.',
     'mosque.privileged_field' => 'هذا الحقل خاص بالإدارة العليا فقط.',
     'mosque.mine_retrieved' => 'تم استرجاع مساجد المستخدم الحالي بنجاح.',
+    'mosque.nearby_needs_retrieved' => 'تم جلب احتياجات المساجد القريبة بنجاح.',
+    'mosque.manager_already_assigned' => 'هذا المدير مرتبط بالفعل بمسجد آخر.',
     'mosque_task_category_prayer_worship' => 'صلاة وعبادة',
     'mosque_task_category_cleaning'       => 'نظافة',
     'mosque_task_category_maintenance'    => 'صيانة',

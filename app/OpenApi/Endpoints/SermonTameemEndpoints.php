@@ -27,6 +27,13 @@ class SermonTameemEndpoints
             new OA\Property(property: 'title',        type: 'string',  example: 'خطبة الجمعة - التوبة والإنابة'),
             new OA\Property(property: 'content',      type: 'string',  example: 'الحمد لله رب العالمين...'),
             new OA\Property(
+                property: 'category',
+                type: 'string',
+                enum: ['creed_faith', 'jurisprudence_rulings', 'ethics_conduct', 'contemporary_issues', 'occasions_seasons','other'],
+                nullable: true,
+                example: 'occasions_seasons'
+            ),
+            new OA\Property(
                 property: 'status',
                 type: 'string',
                 enum: ['pending', 'Scheduled', 'rejected','completed'],
@@ -109,7 +116,7 @@ class SermonTameemEndpoints
             content: new OA\MediaType(
                 mediaType: 'multipart/form-data',
                 schema: new OA\Schema(
-                    required: ['title', 'content', 'speaker_name', 'sermon_date'],
+                    required: ['title', 'content', 'speaker_name', 'category', 'sermon_date'],
                     properties: [
                         new OA\Property(
                             property: 'title',
@@ -127,6 +134,14 @@ class SermonTameemEndpoints
                             property: 'speaker_name',
                             type: 'string',
                             example: 'الشيخ أحمد'
+                        ),
+
+                        new OA\Property(
+                            property: 'category',
+                            type: 'string',
+                            enum: ['creed_faith', 'jurisprudence_rulings', 'ethics_conduct', 'contemporary_issues', 'occasions_seasons', 'other'],
+                            example: 'occasions_seasons',
+                            description: 'تصنيف الخطبة'
                         ),
 
                         new OA\Property(
@@ -165,7 +180,23 @@ class SermonTameemEndpoints
                             property: 'data',
                             ref: '#/components/schemas/Sermon'
                         ),
-                    ]
+                    ],
+                    example: [
+                        'message' => 'تم تقديم الخطبة بنجاح',
+                        'data' => [
+                            'id'                 => 1,
+                            'title'              => 'خطبة الجمعة - التوبة والإنابة',
+                            'content'            => 'الحمد لله رب العالمين...',
+                            'category'           => 'occasions_seasons',
+                            'status'             => 'pending',
+                            'notes'              => null,
+                            'mosque_manager_id'  => 3,
+                            'region_manager_id'  => null,
+                            'attachments'        => ['https://storage.example.com/sermons/file.pdf'],
+                            'created_at'         => '2026-08-15 09:05:23',
+                            'updated_at'         => '2026-08-15 09:05:23',
+                        ],
+                    ],
                 )
             ),
 
@@ -305,10 +336,16 @@ class SermonTameemEndpoints
         operationId: 'pendingSermons',
         tags: ['Sermons'],
         summary: 'Get pending sermons',
-        description: 'Returns all sermons awaiting approval.',
+        description: 'Returns a paginated list of sermons awaiting approval.',
         security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 15, minimum: 1, maximum: 100),
+            ),
         ],
         responses: [
             new OA\Response(
@@ -326,7 +363,44 @@ class SermonTameemEndpoints
                             type: 'array',
                             items: new OA\Items(ref: '#/components/schemas/Sermon')
                         ),
-                    ]
+                        new OA\Property(
+                            property: 'pagination',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'current_page',    type: 'integer', example: 1),
+                                new OA\Property(property: 'last_page',       type: 'integer', example: 3),
+                                new OA\Property(property: 'per_page',        type: 'integer', example: 15),
+                                new OA\Property(property: 'total',           type: 'integer', example: 32),
+                                new OA\Property(property: 'has_more_pages',  type: 'boolean', example: true),
+                            ]
+                        ),
+                    ],
+                    example: [
+                        'status'  => true,
+                        'message' => 'تم جلب الخطب المعلقة بنجاح',
+                        'data' => [
+                            [
+                                'id'                 => 1,
+                                'title'              => 'خطبة الجمعة - التوبة والإنابة',
+                                'content'            => 'الحمد لله رب العالمين...',
+                                'category'           => 'occasions_seasons',
+                                'status'             => 'pending',
+                                'notes'              => 'يرجى مراجعة المقدمة',
+                                'mosque_manager_id'  => 3,
+                                'region_manager_id'  => null,
+                                'attachments'        => ['https://storage.example.com/sermons/file.pdf'],
+                                'created_at'         => '2026-08-15 09:05:23',
+                                'updated_at'         => '2026-08-15 09:05:23',
+                            ],
+                        ],
+                        'pagination' => [
+                            'current_page'   => 1,
+                            'last_page'      => 3,
+                            'per_page'       => 15,
+                            'total'          => 32,
+                            'has_more_pages' => true,
+                        ],
+                    ],
                 )
             ),
             new OA\Response(response: 401, description: 'Unauthenticated'),
@@ -339,10 +413,16 @@ class SermonTameemEndpoints
         operationId: 'archivedSermons',
         tags: ['Sermons'],
         summary: 'Get archived sermons',
-        description: 'Returns approved, rejected, or completed sermons.',
+        description: 'Returns a paginated list of approved, rejected, or completed sermons.',
         security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 15, minimum: 1, maximum: 100),
+            ),
         ],
         responses: [
             new OA\Response(
@@ -360,7 +440,44 @@ class SermonTameemEndpoints
                             type: 'array',
                             items: new OA\Items(ref: '#/components/schemas/Sermon')
                         ),
-                    ]
+                        new OA\Property(
+                            property: 'pagination',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'current_page',    type: 'integer', example: 1),
+                                new OA\Property(property: 'last_page',       type: 'integer', example: 5),
+                                new OA\Property(property: 'per_page',        type: 'integer', example: 15),
+                                new OA\Property(property: 'total',           type: 'integer', example: 67),
+                                new OA\Property(property: 'has_more_pages',  type: 'boolean', example: true),
+                            ]
+                        ),
+                    ],
+                    example: [
+                        'status'  => true,
+                        'message' => 'تم جلب أرشيف الخطب بنجاح',
+                        'data' => [
+                            [
+                                'id'                 => 12,
+                                'title'              => 'خطبة الجمعة - بر الوالدين',
+                                'content'            => 'الحمد لله رب العالمين والصلاة والسلام على رسول الله...',
+                                'category'           => 'ethics_conduct',
+                                'status'             => 'Archived',
+                                'notes'              => null,
+                                'mosque_manager_id'  => 3,
+                                'region_manager_id'  => 7,
+                                'attachments'        => ['https://storage.example.com/sermons/archive.pdf'],
+                                'created_at'         => '2026-07-20 12:30:00',
+                                'updated_at'         => '2026-07-21 08:00:00',
+                            ],
+                        ],
+                        'pagination' => [
+                            'current_page'   => 1,
+                            'last_page'      => 5,
+                            'per_page'       => 15,
+                            'total'          => 67,
+                            'has_more_pages' => true,
+                        ],
+                    ],
                 )
             ),
             new OA\Response(response: 401, description: 'Unauthenticated'),
@@ -403,6 +520,80 @@ class SermonTameemEndpoints
     )]
     public function indexSermons() {}
 
+    // =========================================================================
+    // DELETE /sermons/{id}
+    // =========================================================================
+    #[OA\Delete(
+        path: '/sermons/{id}',
+        operationId: 'deleteSermon',
+        tags: ['Sermons'],
+        summary: 'Delete a pending sermon',
+        description: <<<DESC
+        Allows a mosque manager to permanently delete their own sermon submission,
+        but only while it is still `Pending`. Once a sermon has been approved or
+        rejected by a region manager, it can no longer be deleted through this endpoint.
+        - Only the mosque manager who submitted the sermon may delete it.
+        - Returns `403` if the authenticated user is not the original submitter.
+        - Returns `409` if the sermon is no longer `Pending`.
+        DESC,
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'Sermon ID',
+                schema: new OA\Schema(type: 'integer'),
+                example: 1
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Sermon deleted successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'تم حذف الخطبة بنجاح'
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(
+                response: 403,
+                description: 'Forbidden — not the original submitter',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'غير مصرح لك بحذف هذه الخطبة'),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Sermon not found',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'الخطبة غير موجودة'),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 409,
+                description: 'Conflict — sermon is no longer pending',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'لا يمكن حذف خطبة تمت مراجعتها بالفعل'),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function deleteSermon() {}
+
     #[OA\Get(
         path: '/sermons/search',
         operationId: 'searchSermons',
@@ -418,6 +609,13 @@ class SermonTameemEndpoints
                 required: false,
                 description: 'Filter by sermon status',
                 schema: new OA\Schema(type: 'string', enum: ['Pending', 'Archived', 'Rejected'])
+            ),
+            new OA\Parameter(
+                name: 'category',
+                in: 'query',
+                required: false,
+                description: 'Filter by sermon category',
+                schema: new OA\Schema(type: 'string', enum: ['creed_faith', 'jurisprudence_rulings', 'ethics_conduct', 'contemporary_issues', 'occasions_seasons', 'other'], example: 'occasions_seasons')
             ),
             new OA\Parameter(
                 name: 'mosque_manager_id',

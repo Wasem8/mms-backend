@@ -7,6 +7,7 @@ use Modules\Volunteer\Enums\TaskStatus;
 use Modules\Volunteer\Models\VolunteerTask;
 use Modules\Volunteer\Repositories\Contracts\VolunteerTaskRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
+use Modules\Volunteer\DTOs\CreateTaskDTO;
 
 class EloquentVolunteerTaskRepository implements VolunteerTaskRepositoryInterface
 {
@@ -20,6 +21,14 @@ class EloquentVolunteerTaskRepository implements VolunteerTaskRepositoryInterfac
         return $this->model->with('application')->find($id);
     }
 
+    public function findByOpportunity(int $opportunityId): Collection
+    {
+        return VolunteerTask::where('opportunity_id', $opportunityId)
+            ->with('application.volunteer')
+            ->latest()
+            ->get();
+    }
+    
     #[\Override]
     public function findByApplication(int $applicationId): Collection
     {
@@ -29,14 +38,23 @@ class EloquentVolunteerTaskRepository implements VolunteerTaskRepositoryInterfac
             ->get();
     }
 
-    #[\Override]
-    public function create(AssignTaskDTO $dto): VolunteerTask
+    public function create(CreateTaskDTO $dto): VolunteerTask
     {
-        return $this->model->create([
-            'application_id'   => $dto->applicationId,
+        return VolunteerTask::create([
+            'opportunity_id'   => $dto->opportunityId,
+            'application_id'   => null,
             'task_description' => $dto->taskDescription,
-            'status'           => TaskStatus::Assigned,
+            'status'           => TaskStatus::Unassigned,
         ]);
+    }
+    public function assign(VolunteerTask $task, int $applicationId): VolunteerTask
+    {
+        $task->update([
+            'application_id' => $applicationId,
+            'status'         => TaskStatus::Assigned,
+        ]);
+
+        return $task->fresh('application.volunteer');
     }
 
     #[\Override]

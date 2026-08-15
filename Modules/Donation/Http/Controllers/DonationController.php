@@ -20,7 +20,7 @@ class DonationController extends Controller
 
     public function index(int $mosqueId)
     {
-        $filters   = request()->only(['search', 'type', 'status', 'campaign']);
+        $filters   = request()->only(['search', 'type', 'status', 'campaign', 'per_page']);
         $donations = $this->donationService->getByMosque($mosqueId, $filters);
 
         return DonationResource::collection($donations)->response();
@@ -29,7 +29,7 @@ class DonationController extends Controller
     public function mine()
     {
         $userId    = auth()->guard('api')->id();
-        $filters   = request()->only(['search', 'type', 'status', 'campaign']);
+        $filters   = request()->only(['search', 'type', 'status', 'campaign', 'per_page']);
         $donations = $this->donationService->getByUser($userId, $filters);
 
         return DonationResource::collection($donations)->response();

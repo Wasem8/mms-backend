@@ -48,6 +48,11 @@ class ComplaintEndpoints
             new OA\Property(property: 'email',            type: 'string',  nullable: true, example: 'user@example.com'),
             new OA\Property(property: 'is_anonymous',     type: 'boolean', example: false),
             new OA\Property(property: 'admin_notes',      type: 'string',  nullable: true, example: null),
+            new OA\Property(property: 'assigned_admin_id', type: 'integer', nullable: true, example: null),
+            new OA\Property(property: 'assigned_admin',    type: 'object',  nullable: true, properties: [
+                new OA\Property(property: 'id',   type: 'integer', example: 3),
+                new OA\Property(property: 'name', type: 'string',  example: 'Khalid Al-Otaibi'),
+            ]),
             new OA\Property(property: 'mosque_id',        type: 'integer', example: 1),
             new OA\Property(property: 'mosque',           type: 'object',  nullable: true, properties: [
                 new OA\Property(property: 'id',   type: 'integer', example: 1),
@@ -646,5 +651,47 @@ class ComplaintEndpoints
         ]
     )]
     public function mine() {}
+
+    #[OA\Patch(
+        path: '/admin/complaints/{id}/assign',
+        operationId: 'assignComplaintToAdmin',
+        tags: ['Complaints'],
+        summary: 'Assign complaint to a super admin',
+        description: 'Allows a mosque_manager to assign a complaint to a super_admin user for escalated handling.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['admin_id'],
+                properties: [
+                    new OA\Property(property: 'admin_id', type: 'integer', example: 3, description: 'ID of the super_admin user receiving the complaint'),
+                    new OA\Property(property: 'note', type: 'string', nullable: true, example: 'Needs regional office review — recurring issue across branches.'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Complaint assigned successfully.',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Complaint assigned successfully.'),
+                        new OA\Property(property: 'data', ref: '#/components/schemas/Complaint'),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+            new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
+            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+            new OA\Response(response: 422, ref: '#/components/responses/ValidationError'),
+        ]
+    )]
+    public function assignToAdmin() {}
 
 }

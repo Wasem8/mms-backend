@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Support\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Modules\Complaint\Http\Requests\AssignComplaintRequest;
 use Modules\Complaint\Http\Requests\SubmitComplaintRequest as RequestsSubmitComplaintRequest;
 use Modules\Complaint\Service\ComplaintService;
 use Modules\Complaint\Http\Requests\UpdateComplaintRequest;
@@ -247,5 +248,19 @@ class ComplaintController extends Controller
             __('messages.complaint.retrieved'),
             $complaints
         );
+    }
+
+    public function assignToAdmin(AssignComplaintRequest $request, $id)
+    {
+        $validated = $request->validated();
+
+        $complaint = $this->service->assignToSuperAdmin(
+            (int) $id,
+            $validated['admin_id'],
+            auth()->id(),
+            $validated['note'] ?? null
+        );
+
+        return ApiResponse::success($complaint, __('messages.complaint.assigned'));
     }
 }

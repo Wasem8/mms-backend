@@ -16,8 +16,24 @@ class Sermon extends Model
      * The attributes that are mass assignable.
      */
 
+    const CATEGORY_CREED          = 'creed_faith';
+    const CATEGORY_JURISPRUDENCE  = 'jurisprudence_rulings';
+    const CATEGORY_ETHICS         = 'ethics_conduct';
+    const CATEGORY_CONTEMPORARY   = 'contemporary_issues';
+    const CATEGORY_OCCASIONS      = 'occasions_seasons';
+    const CATEGORY_OTHER          = 'other';
+
+    const CATEGORIES = [
+        self::CATEGORY_CREED,
+        self::CATEGORY_JURISPRUDENCE,
+        self::CATEGORY_ETHICS,
+        self::CATEGORY_CONTEMPORARY,
+        self::CATEGORY_OCCASIONS,
+        self::CATEGORY_OTHER,
+    ];
+
     protected $table = 'sermons';
-    protected $fillable = ['title', 'content', 'speaker_name', 'sermon_date', 'status', 'notes', 'mosque_manager_id', 'region_manager_id'];
+    protected $fillable = ['title', 'content', 'speaker_name', 'sermon_date', 'status', 'notes', 'mosque_manager_id', 'region_manager_id','category'];
 
     public function attachments() {
         return $this->hasMany(SermonAttachement::class);
@@ -43,6 +59,7 @@ class Sermon extends Model
     {
         return $query
             ->when($filters['status'] ?? null, fn($q, $status) => $q->where('status', $status))
+            ->when($filters['category'] ?? null, fn($q, $category) => $q->where('category', $category))
             ->when($filters['mosque_manager_id'] ?? null, fn($q, $id) => $q->where('mosque_manager_id', $id))
             ->when($filters['region_manager_id'] ?? null, fn($q, $id) => $q->where('region_manager_id', $id))
             ->when($filters['speaker_name'] ?? null, fn($q, $name) => $q->where('speaker_name', 'like', "%{$name}%"))

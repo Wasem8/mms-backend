@@ -124,6 +124,11 @@ class User extends Authentication implements JWTSubject
         return $this->belongsTo(Mosque::class);
     }
 
+    public function managedMosque()
+    {
+        return $this->hasOne(Mosque::class, 'manager_id');
+    }
+
     public function children()
     {
         return $this->hasMany(Student::class, 'parent_id');
