@@ -113,4 +113,42 @@ class SendInvitationAction
 
         return $invitation;
     }
+
+    public function resend(Invitation $invitation): Invitation
+    {
+        // 1️⃣ يمنع إعادة الإرسال إذا كانت الدعوة مقبولة بالفعل
+        if ($invitation->accepted_at !== null) {
+            throw ValidationException::withMessages([
+                'invitation' => 'لا يمكن إعادة إرسال الدعوة لأن المستخدم قَبِلها بالفعل.'
+            ]);
+        }
+
+        // 2️⃣ حظر تجاوز الحد الأقصى لإعادة الإرسال (مثلاً 3 مرات)
+        if (($invitation->resend_count ?? 0) >= 3) {
+            throw ValidationException::withMessages([
+                'invitation' => 'لقد وصلت للحد الأقصى المسموح به لإعادة إرسال هذه الدعوة (3 مرات).'
+            ]);
+        }
+
+        // 3️⃣ مهلة زمنية بين كل إرسال والآخر (مثلاً دقيقتان)
+        if ($invitation->updated_at && $invitation->updated_at->addMinutes(2)->isFuture()) {
+            $secondsLeft = now()->diffInSeconds($invitation->updated_at->addMinutes(2));
+            throw ValidationException::withMessages([
+                'invitation' => "يرجى الانتظار {$secondsLeft} ثانية قبل محاولة إعادة الإرسال مجدداً."
+            ]);
+        }
+
+        // 🟢 تجديد البيانات وتمديد الصلاحية لـ 7 أيام إضافية وزيادة العداد
+        $invitation->update([
+            'token'        => Str::random(40),
+            'expires_at'   => now()->addDays(7),
+            'resend_count' => ($invitation->resend_count ?? 0) + 1,
+        ]);
+
+        // إعادة إرسال الإشعار عبر البريد
+        Notification::route('mail', $invitation->email)
+            ->notify(new InvitationNotification($invitation));
+
+        return $invitation;
+    }
 }

@@ -49,4 +49,5 @@ Route::prefix('profile')->middleware(['auth:api'])->group(function () {
 */
 Route::prefix('users')->middleware(['auth:api'])->group(function () {
     Route::patch('/{user}/status', [UserController::class, 'changeStatus']);
+    Route::get('/', [UserController::class, 'index']);
 });

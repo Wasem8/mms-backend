@@ -8,6 +8,94 @@ class InvitationEndpoints
 {
     private const AVAILABLE_ROLES = ['super_admin', 'mosque_manager', 'halaqa_supervisor', 'teacher', 'parent'];
 
+
+    #[OA\Get(
+        path: '/invitations',
+        operationId: 'listInvitations',
+        tags: ['Invitations'],
+        summary: 'Get list of invitations',
+        description: 'Fetch paginated invitations for the current mosque. Supports optional filtering by invitation status.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'status',
+                in: 'query',
+                required: false,
+                description: 'Filter invitations by status (pending, accepted, expired)',
+                schema: new OA\Schema(
+                    type: 'string',
+                    enum: ['pending', 'accepted', 'expired']
+                )
+            ),
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                description: 'Page number for pagination',
+                schema: new OA\Schema(type: 'integer', default: 1)
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Invitations fetched successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم جلب الدعوات بنجاح.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(
+                                properties: [
+                                    new OA\Property(property: 'id', type: 'integer', example: 1),
+                                    new OA\Property(property: 'email', type: 'string', example: 'teacher@example.com'),
+                                    new OA\Property(property: 'role', type: 'string', example: 'teacher'),
+                                    new OA\Property(property: 'status', type: 'string', enum: ['pending', 'accepted', 'expired'], example: 'pending'),
+                                    new OA\Property(property: 'status_label', type: 'string', example: 'معلقة'),
+                                    new OA\Property(property: 'expires_at', type: 'string', format: 'date-time', nullable: true),
+                                    new OA\Property(property: 'accepted_at', type: 'string', format: 'date-time', nullable: true),
+                                    new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
+                                    new OA\Property(
+                                        property: 'mosque',
+                                        type: 'object',
+                                        properties: [
+                                            new OA\Property(property: 'id', type: 'integer', example: 5),
+                                            new OA\Property(property: 'name', type: 'string', example: 'جامع القبلتين')
+                                        ]
+                                    )
+                                ]
+                            )
+                        ),
+                        new OA\Property(
+                            property: 'pagination',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                new OA\Property(property: 'last_page', type: 'integer', example: 3),
+                                new OA\Property(property: 'per_page', type: 'integer', example: 15),
+                                new OA\Property(property: 'total', type: 'integer', example: 42),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthenticated',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: false),
+                        new OA\Property(property: 'message', type: 'string', example: 'Unauthenticated.'),
+                        new OA\Property(property: 'data', type: 'object', nullable: true, example: null),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
+                    ]
+                )
+            )
+        ]
+    )]
+    public function listInvitations() {}
+
     #[OA\Post(
         path: '/invitations/send',
         operationId: 'sendInvitation',
@@ -96,6 +184,79 @@ class InvitationEndpoints
         ]
     )]
     public function sendInvitation() {}
+
+    #[OA\Post(
+        path: '/invitations/{id}/resend',
+        operationId: 'resendInvitation',
+        tags: ['Invitations'],
+        summary: 'Resend an existing invitation',
+        description: 'Regenerates token, extends expiration time by 7 days, and resends the notification email for an unaccepted invitation.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'Invitation ID',
+                schema: new OA\Schema(type: 'integer', example: 1)
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Invitation resent successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تمت إعادة إرسال الدعوة بنجاح وتمديد صلاحيتها.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'id', type: 'integer', example: 1),
+                                new OA\Property(property: 'email', type: 'string', example: 'teacher@example.com'),
+                                new OA\Property(property: 'role', type: 'string', example: 'teacher'),
+                                new OA\Property(property: 'status', type: 'string', example: 'pending'),
+                                new OA\Property(property: 'status_label', type: 'string', example: 'معلقة'),
+                                new OA\Property(property: 'expires_at', type: 'string', format: 'date-time'),
+                                new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
+                            ]
+                        ),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Unauthorized to resend this invitation',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: false),
+                        new OA\Property(property: 'message', type: 'string', example: 'غير مصرح لك بإعادة إرسال هذه الدعوة'),
+                        new OA\Property(property: 'data', type: 'object', nullable: true, example: null),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Validation Error - E.g. Cannot resend an already accepted invitation',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: false),
+                        new OA\Property(property: 'message', type: 'string', example: 'Validation error.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            example: ['invitation' => ['لا يمكن إعادة إرسال دعوة مقبولة بالفعل.']]
+                        ),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null),
+                    ]
+                )
+            )
+        ]
+    )]
+    public function resendInvitation() {}
 
     #[OA\Post(
         path: '/invitations/accept',
