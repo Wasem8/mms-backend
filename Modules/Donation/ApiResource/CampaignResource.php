@@ -23,6 +23,7 @@ class CampaignResource extends JsonResource
             'collected_amount' => $collected,
             'percentage'       => $target > 0 ? round(($collected / $target) * 100, 1) . '%' : '0%',
             'status'           => $this->status,
+            'priority'         => $this->priority,
             'start_date'       => $this->start_date,
             'end_date'         => $this->end_date,
             'cover_image'      => $this->cover_image,
