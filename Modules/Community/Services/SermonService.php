@@ -10,6 +10,8 @@ use Modules\Community\Repositories\SermonRepositoryInterface;
 use Modules\User\Models\User;
 use Modules\Community\Events\SermonApproved;
 use Modules\Community\Events\SermonRejected;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Auth\Access\AuthorizationException;
 
 
 class SermonService
@@ -173,5 +175,24 @@ class SermonService
     public function getMostSelectedSermons(int $limit = 10, ?string $fridayDateFrom = null, ?string $fridayDateTo = null)
     {
         return $this->sermonRepo->mostSelected($limit, $fridayDateFrom, $fridayDateTo);
+    }
+
+    public function deleteSermonIfPending(int $sermonId, int $mosqueManagerId): void
+    {
+        $sermon = $this->sermonRepo->findById($sermonId);
+
+        if (!$sermon) {
+            throw new ModelNotFoundException('Sermon not found.');
+        }
+
+        if ($sermon->mosque_manager_id !== $mosqueManagerId) {
+            throw new AuthorizationException('You are not authorized to delete this sermon.');
+        }
+
+        if ($sermon->status !== 'Pending') {
+            throw new \RuntimeException('Only pending sermons can be deleted.');
+        }
+
+        $this->sermonRepo->delete($sermon);
     }
 }

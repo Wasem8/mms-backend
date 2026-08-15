@@ -18619,6 +18619,103 @@
                         "bearerAuth": []
                     }
                 ]
+            },
+            "delete": {
+                "tags": [
+                    "Sermons"
+                ],
+                "summary": "Delete a pending sermon",
+                "description": "Allows a mosque manager to permanently delete their own sermon submission,\nbut only while it is still `Pending`. Once a sermon has been approved or\nrejected by a region manager, it can no longer be deleted through this endpoint.\n- Only the mosque manager who submitted the sermon may delete it.\n- Returns `403` if the authenticated user is not the original submitter.\n- Returns `409` if the sermon is no longer `Pending`.",
+                "operationId": "deleteSermon",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Sermon ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Sermon deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم حذف الخطبة بنجاح"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — not the original submitter",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "غير مصرح لك بحذف هذه الخطبة"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Sermon not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "الخطبة غير موجودة"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict — sermon is no longer pending",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "لا يمكن حذف خطبة تمت مراجعتها بالفعل"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/sermons/pending": {
@@ -24278,6 +24375,19 @@
                     "content": {
                         "type": "string",
                         "example": "الحمد لله رب العالمين..."
+                    },
+                    "category": {
+                        "type": "string",
+                        "example": "occasions_seasons",
+                        "nullable": true,
+                        "enum": [
+                            "creed_faith",
+                            "jurisprudence_rulings",
+                            "ethics_conduct",
+                            "contemporary_issues",
+                            "occasions_seasons",
+                            "other"
+                        ]
                     },
                     "status": {
                         "type": "string",

@@ -48,6 +48,8 @@ Route::prefix('sermons')
     ->middleware(['auth:api', 'active.user'])
     ->group(function () {
 
+    Route::delete('/{id}', [SermonController::class, 'destroy'])->middleware('role:mosque_manager');
+
         Route::get('/search', [SermonController::class, 'search']);
 
         Route::post('/', [SermonController::class, 'store'])

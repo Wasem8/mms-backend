@@ -65,6 +65,9 @@ class ComplaintService
         $complaint = $this->repository->find($complaintId);
         $oldStatus = $complaint->status;
 
+        $this->assertStatusTransitionAllowed($oldStatus, $newStatus);
+
+
         $this->repository->update($complaintId, [
             'status' => $newStatus,
             'admin_notes' => $note,
@@ -255,5 +258,18 @@ class ComplaintService
         event(new ComplaintAssigned($updated, $admin, $assignedBy, $note));
 
         return $updated;
+    }
+
+    private function assertStatusTransitionAllowed(string $currentStatus, string $newStatus): void
+    {
+        $finalStatuses = ['resolved', 'canceled'];
+
+        if (in_array($currentStatus, $finalStatuses) && $newStatus !== $currentStatus) {
+            abort(422, __('messages.complaint.status_locked'));
+        }
+
+        if ($currentStatus === 'in_progress' && $newStatus === 'pending') {
+            abort(422, __('messages.complaint.cannot_revert_to_pending'));
+        }
     }
 }

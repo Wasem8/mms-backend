@@ -27,6 +27,13 @@ class SermonTameemEndpoints
             new OA\Property(property: 'title',        type: 'string',  example: 'خطبة الجمعة - التوبة والإنابة'),
             new OA\Property(property: 'content',      type: 'string',  example: 'الحمد لله رب العالمين...'),
             new OA\Property(
+                property: 'category',
+                type: 'string',
+                enum: ['creed_faith', 'jurisprudence_rulings', 'ethics_conduct', 'contemporary_issues', 'occasions_seasons','other'],
+                nullable: true,
+                example: 'occasions_seasons'
+            ),
+            new OA\Property(
                 property: 'status',
                 type: 'string',
                 enum: ['pending', 'Scheduled', 'rejected','completed'],
@@ -402,6 +409,80 @@ class SermonTameemEndpoints
         ]
     )]
     public function indexSermons() {}
+
+    // =========================================================================
+    // DELETE /sermons/{id}
+    // =========================================================================
+    #[OA\Delete(
+        path: '/sermons/{id}',
+        operationId: 'deleteSermon',
+        tags: ['Sermons'],
+        summary: 'Delete a pending sermon',
+        description: <<<DESC
+        Allows a mosque manager to permanently delete their own sermon submission,
+        but only while it is still `Pending`. Once a sermon has been approved or
+        rejected by a region manager, it can no longer be deleted through this endpoint.
+        - Only the mosque manager who submitted the sermon may delete it.
+        - Returns `403` if the authenticated user is not the original submitter.
+        - Returns `409` if the sermon is no longer `Pending`.
+        DESC,
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'Sermon ID',
+                schema: new OA\Schema(type: 'integer'),
+                example: 1
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Sermon deleted successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'تم حذف الخطبة بنجاح'
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(
+                response: 403,
+                description: 'Forbidden — not the original submitter',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'غير مصرح لك بحذف هذه الخطبة'),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Sermon not found',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'الخطبة غير موجودة'),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 409,
+                description: 'Conflict — sermon is no longer pending',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'لا يمكن حذف خطبة تمت مراجعتها بالفعل'),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function deleteSermon() {}
 
     #[OA\Get(
         path: '/sermons/search',
