@@ -32,6 +32,7 @@ class DonationResource extends JsonResource
                 'id'    => $this->user->id,
                 'name'  => $this->user->name,
                 'email' => $this->user->email,
+                'phone' => $this->user->phone,
             ]),
 
             // ── Relations ─────────────────────────────────────────────────

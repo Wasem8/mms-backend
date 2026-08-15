@@ -7385,6 +7385,26 @@
                                                 },
                                                 "user": {
                                                     "description": "Registered donor user object if user_id is set, otherwise null",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 8
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "أحمد عبد الله المحمود"
+                                                        },
+                                                        "email": {
+                                                            "type": "string",
+                                                            "format": "email",
+                                                            "example": "ahmad@example.com"
+                                                        },
+                                                        "phone": {
+                                                            "type": "string",
+                                                            "example": "+966501234567",
+                                                            "nullable": true
+                                                        }
+                                                    },
                                                     "type": "object",
                                                     "example": null,
                                                     "nullable": true

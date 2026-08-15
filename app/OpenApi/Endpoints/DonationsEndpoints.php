@@ -513,7 +513,12 @@ public function getRecentDonations() {}
                                 new OA\Property(property: 'item_description', type: 'string',  nullable: true, example: 'string'),
                                 new OA\Property(property: 'donor_name',       type: 'string',  example: 'فاعل خير'),
                                 new OA\Property(property: 'user_id',          type: 'integer', nullable: true, example: null),
-                                new OA\Property(property: 'user',             type: 'object',  nullable: true, example: null, description: 'Registered donor user object if user_id is set, otherwise null'),
+                                new OA\Property(property: 'user',             type: 'object',  nullable: true, example: null, description: 'Registered donor user object if user_id is set, otherwise null', properties: [
+                                    new OA\Property(property: 'id',    type: 'integer', example: 8),
+                                    new OA\Property(property: 'name',  type: 'string',  example: 'أحمد عبد الله المحمود'),
+                                    new OA\Property(property: 'email', type: 'string',  format: 'email', example: 'ahmad@example.com'),
+                                    new OA\Property(property: 'phone', type: 'string',  nullable: true, example: '+966501234567'),
+                                ]),
                                 new OA\Property(property: 'campaign_id',      type: 'integer', nullable: true, example: 12),
                                 new OA\Property(property: 'campaign_title',   type: 'string',  nullable: true, example: 'اخر حملة'),
                                 new OA\Property(property: 'mosque_need_id',   type: 'integer', nullable: true, example: null),
