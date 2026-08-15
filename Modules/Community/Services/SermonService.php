@@ -70,7 +70,7 @@ class SermonService
 
     public function getSermonById(int $sermonId): ?Sermon
     {
-        return $this->sermonRepo->findById($sermonId);
+        return $this->sermonRepo->findById($sermonId)->load('attachments');
     }
 
     public function approveSermon(int $sermonId, int $adminId): Sermon
