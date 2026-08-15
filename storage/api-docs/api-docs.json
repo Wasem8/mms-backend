@@ -2146,7 +2146,6 @@
                                         "enum": [
                                             "active",
                                             "paused",
-                                            "completed",
                                             "cancelled"
                                         ]
                                     },

@@ -224,20 +224,19 @@ class DawahProgramEndpoints
     //  CREATE PROGRAM
     // ─────────────────────────────────────────────
     #[OA\Post(
-        path: '/program/mosques/{mosque}/dawah_programs',
-        operationId: 'createDawahProgram',
+        path: '/program/mosques/{mosque}/dawah_programs',        operationId: 'createDawahProgram',
         tags: ['Dawah Programs'],
         summary: 'Create Dawah program (multipart)',
         security: [['bearerAuth' => []]],
 
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
-            new OA\Parameter(
-                name: 'mosque',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'integer', example: 1)
-            )
+                new OA\Parameter(
+                    name: 'mosque',
+                    in: 'path',
+                    required: true,
+                    schema: new OA\Schema(type: 'integer', example: 1)
+                )
         ],
 
         requestBody: new OA\RequestBody(
@@ -336,8 +335,7 @@ class DawahProgramEndpoints
         operationId: 'updateDawahProgram',
         tags: ['Dawah Programs'],
         summary: 'Update a Dawah program',
-        description: 'Updates an existing Dawah program. Send as `multipart/form-data` with `_method=PUT`. If `schedules` is provided, it **replaces** all existing schedules. Requires `mosque_manager` role.',
-        security: [['bearerAuth' => []]],
+        description: 'Updates an existing Dawah program. Send as `multipart/form-data` with `_method=PUT`. If `schedules` is provided, it **replaces** all existing schedules. Requires `mosque_manager` role.',        security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(
@@ -520,8 +518,7 @@ class DawahProgramEndpoints
         operationId: 'deleteDawahProgram',
         tags: ['Dawah Programs'],
         summary: 'Delete a Dawah program',
-        description: 'Permanently deletes a Dawah program along with all its schedules and uploaded images. Requires `mosque_manager` role.',
-        security: [['bearerAuth' => []]],
+        description: 'Permanently deletes a Dawah program along with all its schedules and uploaded images. Requires `mosque_manager` role.',        security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(

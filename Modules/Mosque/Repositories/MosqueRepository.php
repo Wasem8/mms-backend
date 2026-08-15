@@ -123,7 +123,7 @@ class MosqueRepository implements MosqueRepositoryInterface
     {
         return $this->model->newQuery()
             ->with(['facilities', 'manager:id,name'])
-            ->where('is_featured', true)
+            ->whereRaw('is_featured = true')
             ->where('status', 'active')
             ->orderBy('average_rating', 'desc')
             ->limit($limit)
@@ -149,7 +149,7 @@ class MosqueRepository implements MosqueRepositoryInterface
             ])
             ->withCount([
                 'needs as open_needs_count' => fn($q) => $q->where('status', 'open'),
-                'needs as open_urgent_needs_count' => fn($q) => $q->where('status', 'open')->where('is_urgent', true),
+                'needs as open_urgent_needs_count' => fn($q) => $q->where('status', 'open')->whereRaw('is_urgent = true'),
             ])
             ->withSum([
                 'needs as total_gap' => fn($q) => $q->where('status', 'open'),

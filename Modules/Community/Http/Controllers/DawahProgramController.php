@@ -20,6 +20,8 @@ class DawahProgramController extends Controller
         $this->dawahProgramService = $dawahProgramService;
     }
 
+
+
     public function index(Request $request)
     {
         $validated = $request->validate([
@@ -47,6 +49,7 @@ class DawahProgramController extends Controller
     public function store(StoreDawahProgramRequest $request, Mosque $mosque)
     {
         try {
+
             $data = $request->validated();
             $data['mosque_id'] = $mosque->id;
 
@@ -66,7 +69,7 @@ class DawahProgramController extends Controller
         }
     }
 
-    public function update(UpdateDawahProgramRequest $request, Mosque $mosque, DawahProgram $program)
+    public function update(UpdateDawahProgramRequest $request,Mosque $mosque, DawahProgram $program)
     {
         try {
             $data = $request->validated();
@@ -87,10 +90,10 @@ class DawahProgramController extends Controller
         }
     }
 
-    public function destroy(Mosque $mosque, DawahProgram $program)
+    public function destroy(DawahProgram $program, Mosque $mosque)
     {
         try {
-            $this->dawahProgramService->deleteProgram($mosque, $program);
+            $this->dawahProgramService->deleteProgram($program,$mosque);
             return ApiResponse::success(null, __('messages.community.program_deleted'));
         } catch (\Exception $e) {
             return ApiResponse::error($e->getMessage(), 400);
