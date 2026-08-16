@@ -8,11 +8,33 @@ use Mpdf\Mpdf;
 class PdfGeneratorService
 {
     /**
+     * سجل الخطوط المدعومة. كل خط له ملفات Regular/Bold مستضافة على Supabase
+     * ويُنزَّل لـ /tmp عند أول استخدام في كل cold start.
+     */
+    private const FONTS = [
+        'cairo' => [
+            'R' => 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/assets/Cairo-Regular.ttf',
+            'B' => 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/assets/Cairo-Bold.ttf',
+        ],
+        'xbriyaz' => [
+            // 📝 عدّل الروابط لتطابق مسار ملفات xbriyaz الفعلي على Supabase
+            'R' => 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/assets/xbriyaz-Regular.ttf',
+            'B' => 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/assets/xbriyaz-Bold.ttf',
+        ],
+    ];
+
+    /**
      * توليد PDF من HTML باستخدام mPDF مع إعدادات معزولة تماماً
      * (متوافقة مع بيئة Vercel serverless — كل حاجة بتتكتب في /tmp)
+     *
+     * @param string $fontKey مفتاح الخط من self::FONTS (مثلاً 'cairo' أو 'xbriyaz')
      */
-    public function generate(string $html, string $cacheKey = 'default'): string
+    public function generate(string $html, string $cacheKey = 'default', string $fontKey = 'cairo'): string
     {
+        if (!isset(self::FONTS[$fontKey])) {
+            throw new \InvalidArgumentException("Unknown PDF font key: {$fontKey}");
+        }
+
         $tempDir = "/tmp/mpdf_cache_{$cacheKey}";
 
         if (!file_exists($tempDir)) {
@@ -24,15 +46,12 @@ class PdfGeneratorService
         }
 
         try {
-            // تحميل خطوط Cairo لمجلد /tmp المؤقت (يشتغل مرة واحدة فقط لكل cold start)
-            $this->ensureFont(
-                'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/assets/Cairo-Regular.ttf',
-                '/tmp/Cairo-Regular.ttf'
-            );
-            $this->ensureFont(
-                'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/assets/Cairo-Bold.ttf',
-                '/tmp/Cairo-Bold.ttf'
-            );
+            $regularFile = "{$fontKey}-Regular.ttf";
+            $boldFile    = "{$fontKey}-Bold.ttf";
+
+            // تحميل ملفات الخط لمجلد /tmp المؤقت (يشتغل مرة واحدة فقط لكل cold start)
+            $this->ensureFont(self::FONTS[$fontKey]['R'], "/tmp/{$regularFile}");
+            $this->ensureFont(self::FONTS[$fontKey]['B'], "/tmp/{$boldFile}");
 
             $mpdf = new Mpdf([
                 'mode'          => 'utf-8',
@@ -44,13 +63,13 @@ class PdfGeneratorService
                 'tempDir'       => $tempDir,
                 'fontDir'       => ['/tmp'],
                 'fontdata'      => [
-                    'cairo' => [
-                        'R'      => 'Cairo-Regular.ttf',
-                        'B'      => 'Cairo-Bold.ttf',
+                    $fontKey => [
+                        'R'      => $regularFile,
+                        'B'      => $boldFile,
                         'useOTL' => 0xFF,
                     ],
                 ],
-                'default_font' => 'cairo',
+                'default_font' => $fontKey,
             ]);
 
             $mpdf->WriteHTML($html);
@@ -59,6 +78,7 @@ class PdfGeneratorService
         } catch (\Throwable $e) {
             Log::error('mPDF generation failed', [
                 'cacheKey' => $cacheKey,
+                'fontKey'  => $fontKey,
                 'message'  => $e->getMessage(),
                 'trace'    => $e->getTraceAsString(),
             ]);

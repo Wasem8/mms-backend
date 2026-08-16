@@ -2,8 +2,7 @@
 
 namespace Modules\Donation\Services;
 
-use Dompdf\Dompdf;
-use Dompdf\Options;
+
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
@@ -15,14 +14,10 @@ use Modules\Donation\Strategies\PaymentStrategyFactory;
 use Modules\Donation\Repositories\SettingRepositoryInterface;
 use Modules\Donation\Models\Campaign;
 use Modules\Mosque\Models\MosqueNeed;
-use ArPHP\I18N\Arabic;
 use Illuminate\Validation\ValidationException;
-use Spatie\Browsershot\Browsershot;
 use App\Support\Pdf\PdfGeneratorService;
 use App\Support\Storage\SupabaseStorageService;
-use Mpdf\Mpdf;
-use Mpdf\Config\ConfigVariables;
-use Mpdf\Config\FontVariables;
+
 
 class DonationService
 {
@@ -341,25 +336,11 @@ class DonationService
                     'issued_at'       => now()->format('Y-m-d'),
                 ])->render();
 
-                /* ═══════════════════════════════════════════════════════════════
-                   ✅ إعدادات mPDF للعربية المُتصلة (مع خط xbriyaz المضمن)
-                   ═══════════════════════════════════════════════════════════════ */
-                $mpdf = new Mpdf([
-                    'mode'              => 'utf-8',
-                    'format'            => 'A4',
-                    'margin_left'       => 12,
-                    'margin_right'      => 12,
-                    'margin_top'        => 12,
-                    'margin_bottom'     => 12,
-                    'default_font'      => 'xbriyaz',
-                    'default_font_size' => 12,
-                    'autoLangToFont'    => true,   // ← يربط الحروف العربية
-                    'autoScriptToLang'  => true,   // ← يكتشف النص العربي
-                    'directionality'    => 'rtl',
-                ]);
-
-                $mpdf->WriteHTML($html);
-                $pdfContent = $mpdf->Output('', 'S');
+                $pdfContent = $this->pdfGenerator->generate(
+                    $html,
+                    "donation_receipt_{$donation->id}",
+                    'cairo'
+                );
 
                 $this->storage->uploadPdf($pdfContent, $fileName, $bucket);
 
