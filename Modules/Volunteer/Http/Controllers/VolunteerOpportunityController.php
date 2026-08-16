@@ -48,12 +48,14 @@ class VolunteerOpportunityController extends Controller
     public function show(string $id)
     {
         $opportunity = $this->service->findOrFail((int) $id);
+        $this->ensureManagerOwnsOpportunity($opportunity);
         return ApiResponse::success($opportunity, __('messages.opportunity_retrieved'), 200);
     }
 
     public function update(UpdateOpportunityRequest $request, string $id)
     {
         $opportunity = $this->service->findOrFail((int) $id);
+        $this->ensureManagerOwnsOpportunity($opportunity);
         $updated     = $this->service->update($opportunity, $request->toDTO());
         return ApiResponse::success($updated, __('messages.opportunity_updated'), 200);
     }
@@ -61,8 +63,28 @@ class VolunteerOpportunityController extends Controller
     public function close(string $id)
     {
         $opportunity = $this->service->findOrFail((int) $id);
+        $this->ensureManagerOwnsOpportunity($opportunity);
         $closed      = $this->service->close($opportunity);
         return ApiResponse::success($closed, __('messages.opportunity_closed'), 200);
+    }
+
+    /**
+     * A mosque_manager may only access opportunities of the mosque they manage.
+     * Volunteers (and other roles) are not restricted here.
+     */
+    private function ensureManagerOwnsOpportunity(VolunteerOpportunity $opportunity): void
+    {
+        $user = auth()->user();
+
+        if (! $user || ! $user->isMosqueManager()) {
+            return;
+        }
+
+        $mosque = $user->managedMosque;
+
+        if (! $mosque || $opportunity->mosque_id !== $mosque->id) {
+            abort(403, __('messages.unauthorized_opportunity_access'));
+        }
     }
 
     /** Manager: list applications for an opportunity */

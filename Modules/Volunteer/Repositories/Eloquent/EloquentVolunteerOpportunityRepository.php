@@ -38,6 +38,7 @@ class EloquentVolunteerOpportunityRepository implements VolunteerOpportunityRepo
     {
         return $this->model
             ->withCount(['applications' => fn($q) => $q->where('status', 'approved')])
+            ->with('tasks')
             ->where('mosque_id', $mosqueId)
             ->latest()
             ->paginate($perPage);

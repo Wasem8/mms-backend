@@ -210,9 +210,23 @@ class VolunteerEndpoints
                             new OA\Property(property: 'required_volunteers', type: 'integer', example: 10),
                             new OA\Property(property: 'status',              type: 'string',  enum: ['open', 'closed'], example: 'open'),
                             new OA\Property(property: 'start_date',          type: 'string',  format: 'date', example: '2026-07-01'),
-                            new OA\Property(property: 'end_date',            type: 'string',  format: 'date', nullable: true),
+                            new OA\Property(property: 'end_date',             type: 'string',  format: 'date', nullable: true),
                             new OA\Property(property: 'created_at',          type: 'string',  format: 'date-time'),
                             new OA\Property(property: 'updated_at',          type: 'string',  format: 'date-time'),
+                            new OA\Property(
+                                property: 'tasks',
+                                type: 'array',
+                                description: 'Tasks created for this opportunity (each becomes an unassigned/assigned task).',
+                                items: new OA\Items(properties: [
+                                    new OA\Property(property: 'id',                type: 'integer', example: 1),
+                                    new OA\Property(property: 'opportunity_id',    type: 'integer', example: 1),
+                                    new OA\Property(property: 'application_id',    type: 'integer', nullable: true, example: null),
+                                    new OA\Property(property: 'task_description',  type: 'string',  example: 'تنظيف المسجد'),
+                                    new OA\Property(property: 'status',            type: 'string',  enum: ['unassigned', 'assigned', 'completed'], example: 'unassigned'),
+                                    new OA\Property(property: 'created_at',       type: 'string',  format: 'date-time'),
+                                    new OA\Property(property: 'updated_at',       type: 'string',  format: 'date-time'),
+                                ])
+                            ),
                         ])
                     ),
                 ])
