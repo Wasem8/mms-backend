@@ -10,5 +10,6 @@ readonly class UpdateOpportunityDTO
         public ?int    $requiredVolunteers   = null,
         public ?string $startDate           = null,
         public ?string $endDate             = null,
+        public ?array  $tasks                = null,
     ) {}
 }

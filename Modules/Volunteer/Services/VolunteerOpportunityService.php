@@ -5,6 +5,7 @@ namespace Modules\Volunteer\Services;
 use Modules\Volunteer\DTOs\CreateOpportunityDTO;
 use Modules\Volunteer\DTOs\CreateTaskDTO;
 use Modules\Volunteer\DTOs\UpdateOpportunityDTO;
+use Modules\Volunteer\Enums\TaskStatus;
 use Modules\Volunteer\Events\ApplicationStatusChanged;
 use Modules\Volunteer\Events\OpportunityCreated;
 use Modules\Volunteer\Models\VolunteerApplication;
@@ -62,7 +63,48 @@ class VolunteerOpportunityService
 
     public function update(VolunteerOpportunity $opportunity, UpdateOpportunityDTO $dto): VolunteerOpportunity
     {
-        return DB::transaction(fn() => $this->opportunityRepo->update($opportunity, $dto));
+        return DB::transaction(function () use ($opportunity, $dto): VolunteerOpportunity {
+            $updated = $this->opportunityRepo->update($opportunity, $dto);
+
+            if ($dto->tasks !== null) {
+                $this->syncTasks($updated, $dto->tasks);
+            }
+
+            return $updated->load('tasks');
+        });
+    }
+
+    /**
+     * Reconcile the opportunity's task list with the provided descriptions.
+     * - Creates unassigned tasks for new descriptions.
+     * - Removes only still-unassigned tasks whose description is no longer present
+     *   (assigned/completed tasks are preserved to avoid losing assignment data).
+     */
+    private function syncTasks(VolunteerOpportunity $opportunity, array $descriptions): void
+    {
+        $newSet = array_values(array_unique(
+            array_filter($descriptions, fn($d) => is_string($d) && trim($d) !== '')
+        ));
+
+        $existing = $this->taskRepo->findByOpportunity($opportunity->id);
+        $existingByDesc = $existing->keyBy('task_description');
+
+        foreach ($newSet as $desc) {
+            if (! $existingByDesc->has($desc)) {
+                $this->taskRepo->create(new CreateTaskDTO(
+                    opportunityId: $opportunity->id,
+                    taskDescription: $desc,
+                ));
+            }
+        }
+
+        foreach ($existing as $task) {
+            if ($task->status === TaskStatus::Unassigned
+                && ! in_array($task->task_description, $newSet, true)
+            ) {
+                $task->delete();
+            }
+        }
     }
 
     public function close(VolunteerOpportunity $opportunity): VolunteerOpportunity

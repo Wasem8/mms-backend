@@ -4,6 +4,7 @@ namespace Modules\Volunteer\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Support\ApiResponse;
+use Modules\Volunteer\Models\VolunteerOpportunity;
 use Modules\Volunteer\Services\VolunteerOpportunityService;
 use Modules\Volunteer\Http\Requests\CreateOpportunityRequest as RequestsCreateOpportunityRequest;
 use Modules\Volunteer\Http\Requests\UpdateOpportunityRequest;

@@ -240,6 +240,101 @@ class VolunteerEndpoints
 
     // ─────────────────────────────────────────────
 
+    #[OA\Get(
+        path: '/volunteer/volunteers',
+        operationId: 'getVolunteers',
+        tags: ['Volunteer Opportunities'],
+        summary: 'List all volunteers',
+        description: 'Returns a paginated list of users with the `volunteer` role. `super_admin` sees all volunteers; `mosque_manager` sees only volunteers of their mosque. Supports `search` and `status` filters.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'page',      in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 1)),
+            new OA\Parameter(name: 'per_page',  in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 15)),
+            new OA\Parameter(name: 'search',    in: 'query', required: false, schema: new OA\Schema(type: 'string', example: 'ahmad')),
+            new OA\Parameter(name: 'status',    in: 'query', required: false, schema: new OA\Schema(type: 'string', example: 'active')),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Volunteers retrieved successfully',
+                content: new OA\JsonContent(properties: [
+                    new OA\Property(property: 'status',  type: 'boolean', example: true),
+                    new OA\Property(property: 'message', type: 'string',  example: 'Volunteers retrieved successfully.'),
+                    new OA\Property(
+                        property: 'data',
+                        type: 'array',
+                        items: new OA\Items(properties: [
+                            new OA\Property(property: 'id',                type: 'integer', example: 12),
+                            new OA\Property(property: 'first_name',        type: 'string',  example: 'أحمد'),
+                            new OA\Property(property: 'last_name',         type: 'string',  example: 'محمد'),
+                            new OA\Property(property: 'name',              type: 'string',  example: 'أحمد محمد'),
+                            new OA\Property(property: 'email',             type: 'string',  example: 'ahmad@example.com'),
+                            new OA\Property(property: 'phone',             type: 'string',  nullable: true, example: '0999999999'),
+                            new OA\Property(property: 'status',            type: 'string',  example: 'active'),
+                            new OA\Property(property: 'roles',             type: 'array',   items: new OA\Items(type: 'string'), example: ['volunteer']),
+                            new OA\Property(property: 'created_at',        type: 'string',  format: 'date-time'),
+                        ])
+                    ),
+                    new OA\Property(
+                        property: 'pagination',
+                        type: 'object',
+                        properties: [
+                            new OA\Property(property: 'current_page',  type: 'integer', example: 1),
+                            new OA\Property(property: 'last_page',     type: 'integer', example: 3),
+                            new OA\Property(property: 'per_page',      type: 'integer', example: 15),
+                            new OA\Property(property: 'total',         type: 'integer', example: 40),
+                            new OA\Property(property: 'has_more_pages', type: 'boolean', example: true),
+                        ]
+                    ),
+                ])
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — super_admin or mosque_manager role required'),
+            new OA\Response(response: 500, description: 'Internal server error'),
+        ]
+    )]
+    public function volunteers() {}
+
+    // ─────────────────────────────────────────────
+
+    #[OA\Get(
+        path: '/volunteer/stats',
+        operationId: 'getVolunteerStats',
+        tags: ['Volunteer Opportunities'],
+        summary: 'Mosque-manager volunteer dashboard stats',
+        description: 'Returns card stats scoped to the authenticated manager\'s mosque: total opportunities, pending applications, and volunteers count. Requires `mosque_manager` role.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Stats retrieved successfully',
+                content: new OA\JsonContent(properties: [
+                    new OA\Property(property: 'status',  type: 'boolean', example: true),
+                    new OA\Property(property: 'message', type: 'string',  example: 'Volunteer stats retrieved successfully.'),
+                    new OA\Property(
+                        property: 'data',
+                        type: 'object',
+                        properties: [
+                            new OA\Property(property: 'opportunities_total',  type: 'integer', example: 12, description: 'Total opportunities for the manager\'s mosque'),
+                            new OA\Property(property: 'pending_applications', type: 'integer', example: 5,  description: 'Pending (قائمة) applications for the mosque\'s opportunities'),
+                            new OA\Property(property: 'volunteers_count',     type: 'integer', example: 30, description: 'Volunteers belonging to the mosque'),
+                        ]
+                    ),
+                ])
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — mosque_manager role required'),
+            new OA\Response(response: 500, description: 'Internal server error'),
+        ]
+    )]
+    public function stats() {}
+
+    // ─────────────────────────────────────────────
+
     #[OA\Post(
         path: '/volunteer/opportunities',
         operationId: 'createVolunteerOpportunity',
@@ -313,13 +408,30 @@ class VolunteerEndpoints
         ],
         requestBody: new OA\RequestBody(
             required: true,
-            content: new OA\JsonContent(properties: [
+            content: new OA\JsonContent(
+                example: [
+                    'title'               => 'تنظيم الصفوف - محدّث',
+                    'description'         => 'تحديث تفاصيل التنظيم',
+                    'required_volunteers' => 15,
+                    'start_date'          => '2026-07-05',
+                    'end_date'            => '2026-07-30',
+                    'tasks'               => ['تنظيف المسجد', 'تجهيز القاعة', 'استقبال الضيوف'],
+                ],
+                properties: [
                 new OA\Property(property: 'title',               type: 'string',  example: 'تنظيم الصفوف - محدّث'),
                 new OA\Property(property: 'description',         type: 'string',  nullable: true),
                 new OA\Property(property: 'required_volunteers', type: 'integer', example: 15),
                 new OA\Property(property: 'start_date',          type: 'string',  format: 'date', example: '2026-07-05'),
                 new OA\Property(property: 'end_date',            type: 'string',  format: 'date', nullable: true),
-            ])
+                new OA\Property(
+                    property: 'tasks',
+                    type: 'array',
+                    nullable: true,
+                    description: 'Optional. Send the full desired list of task descriptions to sync. New descriptions are added as unassigned tasks; unassigned tasks no longer in the list are removed. Assigned/completed tasks are preserved. Omit this key to leave tasks unchanged.',
+                    items: new OA\Items(type: 'string', example: 'تنظيف المسجد')
+                ),
+                ]
+            )
         ),
         responses: [
             new OA\Response(

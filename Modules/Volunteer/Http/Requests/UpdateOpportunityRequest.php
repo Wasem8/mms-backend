@@ -18,6 +18,8 @@ class UpdateOpportunityRequest extends FormRequest
             'required_volunteers' => ['sometimes', 'integer', 'min:1'],
             'start_date'          => ['sometimes', 'date'],
             'end_date'            => ['sometimes', 'date', 'after:start_date'],
+            'tasks'               => ['sometimes', 'array'],
+            'tasks.*'             => ['string', 'max:1000'],
         ];
     }
 
@@ -29,6 +31,7 @@ class UpdateOpportunityRequest extends FormRequest
             requiredVolunteers: $this->has('required_volunteers') ? (int) $this->input('required_volunteers')    : null,
             startDate: $this->has('start_date')          ? $this->string('start_date')                  : null,
             endDate: $this->has('end_date')            ? $this->string('end_date')                    : null,
+            tasks: $this->has('tasks')                ? $this->input('tasks')                       : null,
         );
     }
 
