@@ -23618,6 +23618,30 @@
                             "type": "integer",
                             "example": 15
                         }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Filter by title or description.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "تنظيم"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by opportunity status.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "open",
+                            "enum": [
+                                "open",
+                                "closed"
+                            ]
+                        }
                     }
                 ],
                 "responses": {

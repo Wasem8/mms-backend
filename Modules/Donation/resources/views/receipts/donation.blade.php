@@ -97,9 +97,9 @@
         |--------------------------------------------------------------------------
         */
 
-        .icon-wrapper {
-            width: 58px;
-            height: 58px;
+       .icon-wrapper {
+            width: 68px;
+            height: 68px;
 
             margin: 0 auto 16px;
 
@@ -109,18 +109,19 @@
 
             border-radius: 50%;
 
-            background: rgba(255, 255, 255, 0.07);
+            /* لون خلفية شفاف أكثر نعومة */
+            background: rgba(255, 255, 255, 0.15);
 
-            box-shadow:
-                0 0 0 1px rgba(255, 255, 255, 0.20),
-                inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            /* ظل خفيف لإعطاء عمق للتصميم */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         .icon-circle {
-            width: 40px;
-            height: 40px;
+            width: 48px;
+            height: 48px;
 
-            border: 2px solid rgba(255, 255, 255, 0.92);
+            /* إطار أبيض واضح ونقي */
+            border: 2px solid #ffffff;
 
             border-radius: 50%;
 
@@ -130,19 +131,18 @@
         }
 
         .icon-circle svg {
-            width: 21px;
-            height: 21px;
+            width: 24px;
+            height: 24px;
 
+            /* إزالة التعبئة واستخدام لون النص للحدود */
             fill: none;
-
-            stroke: #ffffff;
+            stroke: currentColor;
+            color: #ffffff;
 
             stroke-width: 2.5;
-
             stroke-linecap: round;
             stroke-linejoin: round;
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -506,29 +506,18 @@
              Header
         ============================================================= --}}
 
-        <div class="receipt-header">
-
-            <div class="icon-wrapper">
-
-                <div class="icon-circle">
-
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M7 12.5L10.2 15.5L17 8.5" />
-                    </svg>
-
-                </div>
-
-            </div>
-
-            <h1 class="receipt-title">
-                إيصال تبرع معتمد
-            </h1>
-
-            <p class="receipt-subtitle">
-                نظام إدارة المساجد والشؤون الدينية
-            </p>
-
+      <div class="receipt-header">
+    <div class="icon-wrapper">
+        <div class="icon-circle">
+            <svg viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                <path d="M7 12.5L10.2 15.5L17 8.5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
         </div>
+    </div>
+
+    <h1 class="receipt-title">إيصال تبرع معتمد</h1>
+    <p class="receipt-subtitle">نظام إدارة المساجد والشؤون الدينية</p>
+</div>
 
 
         {{-- ============================================================
@@ -548,6 +537,21 @@
 
                 <span class="info-value reference-value">
                     {{ $donation->reference ?? '—' }}
+                </span>
+
+            </div>
+
+
+            {{-- Mosque --}}
+
+            <div class="info-row">
+
+                <span class="info-label">
+                    اسم المسجد:
+                </span>
+
+                <span class="info-value">
+                    {{ $mosque_name ?? ($mosque->name ?? '—') }}
                 </span>
 
             </div>

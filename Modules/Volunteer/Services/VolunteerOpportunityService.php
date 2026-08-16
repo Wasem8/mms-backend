@@ -28,9 +28,9 @@ class VolunteerOpportunityService
 
     // ─── Opportunities ────────────────────────────────────────────────────────
 
-    public function listForManager(int $mosqueId, int $perPage = 15): LengthAwarePaginator
+    public function listForManager(int $mosqueId, int $perPage = 15, ?string $search = null, ?string $status = null): LengthAwarePaginator
     {
-        return $this->opportunityRepo->findAllForManager($mosqueId, $perPage);
+        return $this->opportunityRepo->findAllForManager($mosqueId, $perPage, $search, $status);
     }
 
     public function listOpen(int $mosqueId, int $perPage = 15): LengthAwarePaginator

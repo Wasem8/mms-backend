@@ -4,6 +4,7 @@ namespace Modules\Volunteer\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Support\ApiResponse;
+use Illuminate\Http\Request;
 use Modules\Volunteer\Models\VolunteerOpportunity;
 use Modules\Volunteer\Services\VolunteerOpportunityService;
 use Modules\Volunteer\Http\Requests\CreateOpportunityRequest as RequestsCreateOpportunityRequest;
@@ -17,8 +18,8 @@ class VolunteerOpportunityController extends Controller
         private readonly VolunteerOpportunityService $service,
     ) {}
 
-    /** Volunteer: list all opportunities for their own mosque */
-    public function managerIndex()
+    /** Manager: list opportunities for their own mosque, with optional search + status filter */
+    public function managerIndex(Request $request)
     {
         $mosque = auth()->user()->managedMosque;
 
@@ -26,8 +27,22 @@ class VolunteerOpportunityController extends Controller
             return ApiResponse::error(__('messages.no_mosque_assigned_to_manager'), 422);
         }
 
-        $Opportunities = $this->service->listForManager((int) $mosque->id);
-        return ApiResponse::success($Opportunities, __('messages.opportunities_retrieved'), 200);
+        $perPage = $request->integer('per_page', 15);
+        $search  = $request->input('search');
+        $status  = $request->input('status');
+
+        $opportunities = $this->service->listForManager(
+            (int) $mosque->id,
+            $perPage,
+            $search,
+            $status
+        );
+
+        return ApiResponse::success(
+            $opportunities->items(),
+            __('messages.opportunities_retrieved'),
+            $opportunities
+        );
     }
 
     /** Volunteer: list open opportunities for their own mosque */
