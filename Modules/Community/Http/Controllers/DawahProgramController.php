@@ -90,20 +90,27 @@ class DawahProgramController extends Controller
         }
     }
 
-    public function destroy(DawahProgram $program, Mosque $mosque)
+    public function destroy(Mosque $mosque ,DawahProgram $program)
     {
         try {
-            $this->dawahProgramService->deleteProgram($program,$mosque);
+            $this->dawahProgramService->deleteProgram($mosque,$program);
             return ApiResponse::success(null, __('messages.community.program_deleted'));
         } catch (\Exception $e) {
             return ApiResponse::error($e->getMessage(), 400);
         }
     }
 
-    public function getProgramsByMosque(Mosque $mosque)
+    public function getProgramsByMosque(Request $request, Mosque $mosque)
     {
-        $programs = $this->dawahProgramService->getProgramsByMosque($mosque->id);
+        $validated = $request->validate([
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
 
-        return ApiResponse::success($programs->load('schedules'), __('messages.community.mosque_programs_retrieved'));
+        $programs = $this->dawahProgramService->getProgramsByMosque(
+            $mosque->id,
+            (int) ($validated['per_page'] ?? 10)
+        );
+
+        return ApiResponse::success($programs->items(), __('messages.community.mosque_programs_retrieved'), $programs);
     }
 }
