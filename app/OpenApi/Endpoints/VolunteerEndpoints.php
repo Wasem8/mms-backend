@@ -191,6 +191,8 @@ class VolunteerEndpoints
             new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'page',     in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 1)),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 15)),
+            new OA\Parameter(name: 'search',   in: 'query', required: false, schema: new OA\Schema(type: 'string', example: 'تنظيم'), description: 'Filter by title or description.'),
+            new OA\Parameter(name: 'status',    in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['open', 'closed'], example: 'open'), description: 'Filter by opportunity status.'),
         ],
         responses: [
             new OA\Response(
