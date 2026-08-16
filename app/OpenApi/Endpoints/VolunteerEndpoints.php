@@ -240,6 +240,15 @@ class VolunteerEndpoints
             required: true,
             content: new OA\JsonContent(
                 required: ['mosque_id', 'title', 'required_volunteers', 'start_date'],
+                example: [
+                    'mosque_id'            => 1,
+                    'title'                => 'تنظيم الصفوف',
+                    'description'          => 'نحتاج متطوعين لتنظيم صفوف المصلى',
+                    'required_volunteers'  => 10,
+                    'start_date'           => '2026-07-01',
+                    'end_date'             => '2026-07-30',
+                    'tasks'                => ['تنظيف المسجد', 'تجهيز القاعة', 'استقبال الضيوف'],
+                ],
                 properties: [
                     new OA\Property(property: 'mosque_id',            type: 'integer', example: 1),
                     new OA\Property(property: 'title',                type: 'string',  example: 'تنظيم الصفوف'),
@@ -247,6 +256,13 @@ class VolunteerEndpoints
                     new OA\Property(property: 'required_volunteers',  type: 'integer', example: 10),
                     new OA\Property(property: 'start_date',           type: 'string',  format: 'date', example: '2026-07-01'),
                     new OA\Property(property: 'end_date',             type: 'string',  format: 'date', nullable: true, example: '2026-07-30'),
+                    new OA\Property(
+                        property: 'tasks',
+                        type: 'array',
+                        nullable: true,
+                        description: 'Optional list of task descriptions to create for this opportunity (each becomes an unassigned task).',
+                        items: new OA\Items(type: 'string', example: 'تنظيف المسجد')
+                    ),
                 ]
             )
         ),

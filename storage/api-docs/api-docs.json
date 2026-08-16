@@ -23120,9 +23120,31 @@
                                         "format": "date",
                                         "example": "2026-07-30",
                                         "nullable": true
+                                    },
+                                    "tasks": {
+                                        "description": "Optional list of task descriptions to create for this opportunity (each becomes an unassigned task).",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "example": "تنظيف المسجد"
+                                        },
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
+                            },
+                            "example": {
+                                "mosque_id": 1,
+                                "title": "تنظيم الصفوف",
+                                "description": "نحتاج متطوعين لتنظيم صفوف المصلى",
+                                "required_volunteers": 10,
+                                "start_date": "2026-07-01",
+                                "end_date": "2026-07-30",
+                                "tasks": [
+                                    "تنظيف المسجد",
+                                    "تجهيز القاعة",
+                                    "استقبال الضيوف"
+                                ]
                             }
                         }
                     }

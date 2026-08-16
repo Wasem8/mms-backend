@@ -50,6 +50,11 @@ class VolunteerOpportunity extends Model
         return $this->hasMany(VolunteerApplication::class, 'opportunity_id');
     }
 
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(VolunteerTask::class, 'opportunity_id');
+    }
+
     public function logs(): HasMany
     {
         return $this->hasMany(VolunteerLog::class, 'opportunity_id');
