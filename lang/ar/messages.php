@@ -67,6 +67,7 @@ return [
     'campaign_already_completed' => 'لقد بلغت هذه الحملة هدفها ولم تعد تقبل التبرعات.',
     'exceeds_remaining'          => 'مبلغ تبرعك يتجاوز المبلغ المتبقي وهو :remaining :currency لهذه الحملة.',
     'mosque_need_already_fulfilled' => 'تم استيفاء هذه الحاجة بالكامل ولم تعد تقبل التبرعات.',
+    'max_receipts_reached' => 'الحد الأقصى لعدد الإيصالات لتبرع واحد هو 2.',
 
     // --- قسم التطوع ---
     'opportunity_created' => 'تم إنشاء فرصة التطوع بنجاح.',

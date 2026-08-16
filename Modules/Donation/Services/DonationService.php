@@ -15,6 +15,7 @@ use Modules\Donation\Repositories\SettingRepositoryInterface;
 use Modules\Donation\Models\Campaign;
 use Modules\Mosque\Models\MosqueNeed;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use App\Support\Pdf\PdfGeneratorService;
 use App\Support\Storage\SupabaseStorageService;
 
@@ -314,41 +315,54 @@ class DonationService
     }
     public function getReceiptDownloadUrl(Donation $donation): string
     {
-        $bucket   = config('services.supabase.bucket');
-        $fileName = "receipt_donation_{$donation->id}.pdf";
+        $bucket = config('services.supabase.bucket');
+        $base   = "receipt_donation_{$donation->id}";
 
-        $path = Cache::remember(
-            "donation.receipt_path.{$donation->id}",
-            self::RECEIPT_CACHE_TTL,
-            function () use ($donation, $bucket, $fileName) {
-                $donationData = Donation::with(['mosque', 'campaign', 'mosqueNeed'])->findOrFail($donation->id);
-                $target = $this->resolveTarget($donationData);
-
-                $html = view('donation::receipts.donation', [
-                    'donation'        => $donationData,
-                    'mosque'          => $donationData->mosque,
-                    'mosque_name'     => $donationData->mosque?->name ?? 'المسجد الرئيسي',
-                    'target'          => $target,
-                    'donor_name'      => $donationData->donor_name ?? 'متبرع كريم',
-                    'payment_method'  => $donationData->payment_method === 'cash' ? 'نقدي' : $donationData->payment_method,
-                    'donation_status' => $donationData->status === 'completed' ? 'مكتمل' : $donationData->status,
-                    'currency'        => $donationData->currency ?? 'ليرة سورية',
-                    'issued_at'       => now()->format('Y-m-d'),
-                ])->render();
-
-                $pdfContent = $this->pdfGenerator->generate(
-                    $html,
-                    "donation_receipt_{$donation->id}",
-                    'cairo'
-                );
-
-                $this->storage->uploadPdf($pdfContent, $fileName, $bucket);
-
-                return $fileName;
+        // عدّ الإيصالات الموجودة فعلاً لهذا التبرع (القديم بلا رقم + المرقّمة)
+        $objects = $this->storage->listObjects($bucket, $base);
+        $count   = 0;
+        foreach ($objects as $object) {
+            $name = $object['name'] ?? null;
+            if ($name !== null
+                && str_ends_with($name, '.pdf')
+                && (str_starts_with($name, "{$base}_") || $name === "{$base}.pdf")
+            ) {
+                $count++;
             }
+        }
+
+        // الحد الأقصى: إيصالان لتبرع واحد
+        if ($count >= 2) {
+            throw new ConflictHttpException(__('messages.max_receipts_reached'));
+        }
+
+        $index    = $count + 1;
+        $fileName = "{$base}_{$index}.pdf";
+
+        $donationData = Donation::with(['mosque', 'campaign', 'mosqueNeed'])->findOrFail($donation->id);
+        $target = $this->resolveTarget($donationData);
+
+        $html = view('donation::receipts.donation', [
+            'donation'        => $donationData,
+            'mosque'          => $donationData->mosque,
+            'mosque_name'     => $donationData->mosque?->name ?? 'المسجد الرئيسي',
+            'target'          => $target,
+            'donor_name'      => $donationData->donor_name ?? 'متبرع كريم',
+            'payment_method'  => $donationData->payment_method === 'cash' ? 'نقدي' : $donationData->payment_method,
+            'donation_status' => $donationData->status === 'completed' ? 'مكتمل' : $donationData->status,
+            'currency'        => $donationData->currency ?? 'ليرة سورية',
+            'issued_at'       => now()->format('Y-m-d'),
+        ])->render();
+
+        $pdfContent = $this->pdfGenerator->generate(
+            $html,
+            "donation_receipt_{$donation->id}_{$index}",
+            'cairo'
         );
 
-        return $this->storage->createSignedUrl($path, $bucket);
+        $this->storage->uploadPdf($pdfContent, $fileName, $bucket, true);
+
+        return $this->storage->createSignedUrl($fileName, $bucket);
     }
 
     private function resolveTarget(Donation $donation): array
