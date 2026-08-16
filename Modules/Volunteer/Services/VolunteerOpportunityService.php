@@ -3,6 +3,7 @@
 namespace Modules\Volunteer\Services;
 
 use Modules\Volunteer\DTOs\CreateOpportunityDTO;
+use Modules\Volunteer\DTOs\CreateTaskDTO;
 use Modules\Volunteer\DTOs\UpdateOpportunityDTO;
 use Modules\Volunteer\Events\ApplicationStatusChanged;
 use Modules\Volunteer\Events\OpportunityCreated;
@@ -10,6 +11,7 @@ use Modules\Volunteer\Models\VolunteerApplication;
 use Modules\Volunteer\Models\VolunteerOpportunity;
 use Modules\Volunteer\Repositories\Contracts\VolunteerApplicationRepositoryInterface;
 use Modules\Volunteer\Repositories\Contracts\VolunteerOpportunityRepositoryInterface;
+use Modules\Volunteer\Repositories\Contracts\VolunteerTaskRepositoryInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +22,7 @@ class VolunteerOpportunityService
     public function __construct(
         private readonly VolunteerOpportunityRepositoryInterface $opportunityRepo,
         private readonly VolunteerApplicationRepositoryInterface  $applicationRepo,
+        private readonly VolunteerTaskRepositoryInterface         $taskRepo,
     ) {}
 
     // ─── Opportunities ────────────────────────────────────────────────────────
@@ -44,8 +47,16 @@ class VolunteerOpportunityService
     {
         return DB::transaction(function () use ($dto): VolunteerOpportunity {
             $opportunity = $this->opportunityRepo->create($dto);
+
+            foreach ($dto->tasks as $taskDescription) {
+                $this->taskRepo->create(new CreateTaskDTO(
+                    opportunityId: $opportunity->id,
+                    taskDescription: $taskDescription,
+                ));
+            }
+
             event(new OpportunityCreated($opportunity));
-            return $opportunity;
+            return $opportunity->load('tasks');
         });
     }
 
