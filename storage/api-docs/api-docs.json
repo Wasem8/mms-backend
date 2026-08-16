@@ -2146,7 +2146,6 @@
                                         "enum": [
                                             "active",
                                             "paused",
-                                            "completed",
                                             "cancelled"
                                         ]
                                     },
@@ -5112,6 +5111,82 @@
                     },
                     "401": {
                         "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/dashboard/mosque-manager/statistics": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "إحصائيات المسجد لمدير المسجد",
+                "description": "يعيد الإحصائيات الأساسية الخاصة بالمسجد الذي ينتمي إليه مدير المسجد، وتشمل إجمالي طلاب الحلقات، المعلمين والمقرئين، المتطوعين، ودعوات التسجيل المعلقة التي لم يتم قبولها ولم تنتهِ صلاحيتها.",
+                "operationId": "getMosqueManagerStatistics",
+                "responses": {
+                    "200": {
+                        "description": "تم جلب إحصائيات المسجد بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم جلب إحصائيات المسجد بنجاح"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "total_students": {
+                                                    "description": "إجمالي الطلاب المسجلين في حلقات المسجد",
+                                                    "type": "integer",
+                                                    "example": 120
+                                                },
+                                                "total_teachers": {
+                                                    "description": "إجمالي المعلمين والمقرئين في المسجد",
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "total_volunteers": {
+                                                    "description": "إجمالي المتطوعين المسجلين في المسجد",
+                                                    "type": "integer",
+                                                    "example": 8
+                                                },
+                                                "pending_invitations": {
+                                                    "description": "إجمالي دعوات التسجيل المعلقة وغير منتهية الصلاحية",
+                                                    "type": "integer",
+                                                    "example": 3
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated - المستخدم غير مسجل الدخول"
+                    },
+                    "403": {
+                        "description": "Forbidden - ليس لديك صلاحية الوصول إلى إحصائيات المسجد"
+                    },
+                    "500": {
+                        "description": "Server error - خطأ داخلي في السيرفر"
                     }
                 },
                 "security": [

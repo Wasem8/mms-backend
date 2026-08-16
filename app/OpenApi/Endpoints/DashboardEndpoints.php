@@ -495,4 +495,94 @@ class DashboardEndpoints
     public function getMosqueManagerDashboard()
     {
     }
+
+    #[OA\Get(
+        path: '/dashboard/mosque-manager/statistics',
+        operationId: 'getMosqueManagerStatistics',
+        tags: ['Dashboard'],
+        summary: 'إحصائيات المسجد لمدير المسجد',
+        description: 'يعيد الإحصائيات الأساسية الخاصة بالمسجد الذي ينتمي إليه مدير المسجد، وتشمل إجمالي طلاب الحلقات، المعلمين والمقرئين، المتطوعين، ودعوات التسجيل المعلقة التي لم يتم قبولها ولم تنتهِ صلاحيتها.',
+        security: [['bearerAuth' => []]],
+
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'تم جلب إحصائيات المسجد بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'status',
+                            type: 'boolean',
+                            example: true
+                        ),
+
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'تم جلب إحصائيات المسجد بنجاح'
+                        ),
+
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+
+                                new OA\Property(
+                                    property: 'total_students',
+                                    type: 'integer',
+                                    example: 120,
+                                    description: 'إجمالي الطلاب المسجلين في حلقات المسجد'
+                                ),
+
+                                new OA\Property(
+                                    property: 'total_teachers',
+                                    type: 'integer',
+                                    example: 15,
+                                    description: 'إجمالي المعلمين والمقرئين في المسجد'
+                                ),
+
+                                new OA\Property(
+                                    property: 'total_volunteers',
+                                    type: 'integer',
+                                    example: 8,
+                                    description: 'إجمالي المتطوعين المسجلين في المسجد'
+                                ),
+
+                                new OA\Property(
+                                    property: 'pending_invitations',
+                                    type: 'integer',
+                                    example: 3,
+                                    description: 'إجمالي دعوات التسجيل المعلقة وغير منتهية الصلاحية'
+                                ),
+
+                            ]
+                        ),
+
+                        new OA\Property(
+                            property: 'pagination',
+                            type: 'object',
+                            nullable: true,
+                            example: null
+                        ),
+                    ]
+                )
+            ),
+
+            new OA\Response(
+                response: 401,
+                description: 'Unauthenticated - المستخدم غير مسجل الدخول'
+            ),
+
+            new OA\Response(
+                response: 403,
+                description: 'Forbidden - ليس لديك صلاحية الوصول إلى إحصائيات المسجد'
+            ),
+
+            new OA\Response(
+                response: 500,
+                description: 'Server error - خطأ داخلي في السيرفر'
+            )
+        ]
+    )]
+    public function getMosqueManagerStatistics() {}
 }

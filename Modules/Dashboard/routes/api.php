@@ -40,4 +40,8 @@ Route::prefix('dashboard/mosque-manager')
         // 1. Endpoint شامل يعيد كافة بيانات اللوحة في Request واحد
         // (الأسرع للـ Frontend)
         Route::get('/', [MosqueManagerDashboardController::class, 'index']);
+        Route::get('/statistics', [
+            MosqueManagerDashboardController::class,
+            'statistics'
+        ]);
     });
