@@ -71,6 +71,7 @@ return [
     'exceeds_remaining'          => 'Your donation amount exceeds the remaining balance of :remaining :currency for this campaign.',
     'mosque_need_already_fulfilled' => 'This mosque need has already been fulfilled and is no longer accepting donations.',
     'max_receipts_reached' => 'Maximum of 2 receipts allowed per donation.',
+    'unauthorized_opportunity_access' => 'You are not authorized to access this opportunity.',
 
     // --- Volunteer Section ---
     'opportunity_created' => 'Volunteer opportunity created successfully.',
