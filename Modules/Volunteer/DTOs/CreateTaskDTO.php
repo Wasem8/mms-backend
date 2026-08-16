@@ -3,7 +3,7 @@
 namespace Modules\Volunteer\DTOs;
 
 
-readonly class CreateTaskDto
+readonly class CreateTaskDTO
 {
     public function __construct(
         public int    $opportunityId,
