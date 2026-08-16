@@ -55,7 +55,6 @@ Route::middleware('auth:api')->group(function () {
     Route::middleware('role:volunteer')->group(function () {
         // Browse open opportunities
         Route::get('volunteer/opportunities',                  [VolunteerOpportunityController::class, 'index']);
-        Route::get('volunteer/opportunities/{id}',             [VolunteerOpportunityController::class, 'show']);
 
         // Apply & track own applications
         Route::post('volunteer/opportunities/{opportunityId}/apply', [VolunteerOpportunityController::class, 'apply']);
@@ -70,4 +69,5 @@ Route::middleware('auth:api')->group(function () {
         Route::get('volunteer/my-certificates', [VolunteerEvaluationController::class, 'myCertificates']);
         Route::get('volunteer/my-certificates/{certificateId}/download', [VolunteerEvaluationController::class, 'myCertificateDownload']);
     });
+    Route::get('volunteer/opportunities/{id}',             [VolunteerOpportunityController::class, 'show'])->middleware('role:volunteer,mosque_manager');
 });
