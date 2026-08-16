@@ -23350,9 +23350,30 @@
                                         "type": "string",
                                         "format": "date",
                                         "nullable": true
+                                    },
+                                    "tasks": {
+                                        "description": "Optional. Send the full desired list of task descriptions to sync. New descriptions are added as unassigned tasks; unassigned tasks no longer in the list are removed. Assigned/completed tasks are preserved. Omit this key to leave tasks unchanged.",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "example": "تنظيف المسجد"
+                                        },
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
+                            },
+                            "example": {
+                                "title": "تنظيم الصفوف - محدّث",
+                                "description": "تحديث تفاصيل التنظيم",
+                                "required_volunteers": 15,
+                                "start_date": "2026-07-05",
+                                "end_date": "2026-07-30",
+                                "tasks": [
+                                    "تنظيف المسجد",
+                                    "تجهيز القاعة",
+                                    "استقبال الضيوف"
+                                ]
                             }
                         }
                     }
@@ -23663,10 +23684,286 @@
                                                     "updated_at": {
                                                         "type": "string",
                                                         "format": "date-time"
+                                                    },
+                                                    "tasks": {
+                                                        "description": "Tasks created for this opportunity (each becomes an unassigned/assigned task).",
+                                                        "type": "array",
+                                                        "items": {
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "integer",
+                                                                    "example": 1
+                                                                },
+                                                                "opportunity_id": {
+                                                                    "type": "integer",
+                                                                    "example": 1
+                                                                },
+                                                                "application_id": {
+                                                                    "type": "integer",
+                                                                    "example": null,
+                                                                    "nullable": true
+                                                                },
+                                                                "task_description": {
+                                                                    "type": "string",
+                                                                    "example": "تنظيف المسجد"
+                                                                },
+                                                                "status": {
+                                                                    "type": "string",
+                                                                    "example": "unassigned",
+                                                                    "enum": [
+                                                                        "unassigned",
+                                                                        "assigned",
+                                                                        "completed"
+                                                                    ]
+                                                                },
+                                                                "created_at": {
+                                                                    "type": "string",
+                                                                    "format": "date-time"
+                                                                },
+                                                                "updated_at": {
+                                                                    "type": "string",
+                                                                    "format": "date-time"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
                                                     }
                                                 },
                                                 "type": "object"
                                             }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — mosque_manager role required"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/volunteer/volunteers": {
+            "get": {
+                "tags": [
+                    "Volunteer Opportunities"
+                ],
+                "summary": "List all volunteers",
+                "description": "Returns a paginated list of users with the `volunteer` role. `super_admin` sees all volunteers; `mosque_manager` sees only volunteers of their mosque. Supports `search` and `status` filters.",
+                "operationId": "getVolunteers",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "ahmad"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "active"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Volunteers retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Volunteers retrieved successfully."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 12
+                                                    },
+                                                    "first_name": {
+                                                        "type": "string",
+                                                        "example": "أحمد"
+                                                    },
+                                                    "last_name": {
+                                                        "type": "string",
+                                                        "example": "محمد"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "أحمد محمد"
+                                                    },
+                                                    "email": {
+                                                        "type": "string",
+                                                        "example": "ahmad@example.com"
+                                                    },
+                                                    "phone": {
+                                                        "type": "string",
+                                                        "example": "0999999999",
+                                                        "nullable": true
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "active"
+                                                    },
+                                                    "roles": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        },
+                                                        "example": [
+                                                            "volunteer"
+                                                        ]
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 40
+                                                },
+                                                "has_more_pages": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — super_admin or mosque_manager role required"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/volunteer/stats": {
+            "get": {
+                "tags": [
+                    "Volunteer Opportunities"
+                ],
+                "summary": "Mosque-manager volunteer dashboard stats",
+                "description": "Returns card stats scoped to the authenticated manager's mosque: total opportunities, pending applications, and volunteers count. Requires `mosque_manager` role.",
+                "operationId": "getVolunteerStats",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stats retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Volunteer stats retrieved successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "opportunities_total": {
+                                                    "description": "Total opportunities for the manager's mosque",
+                                                    "type": "integer",
+                                                    "example": 12
+                                                },
+                                                "pending_applications": {
+                                                    "description": "Pending (قائمة) applications for the mosque's opportunities",
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "volunteers_count": {
+                                                    "description": "Volunteers belonging to the mosque",
+                                                    "type": "integer",
+                                                    "example": 30
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"

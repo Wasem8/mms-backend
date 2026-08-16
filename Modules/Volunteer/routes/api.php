@@ -4,6 +4,7 @@ use Modules\Volunteer\Http\Controllers\VolunteerAuthController;
 use Modules\Volunteer\Http\Controllers\VolunteerOpportunityController;
 use Modules\Volunteer\Http\Controllers\VolunteerTaskController;
 use Modules\Volunteer\Http\Controllers\VolunteerEvaluationController;
+use Modules\Volunteer\Http\Controllers\VolunteerController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -70,4 +71,12 @@ Route::middleware('auth:api')->group(function () {
         Route::get('volunteer/my-certificates/{certificateId}/download', [VolunteerEvaluationController::class, 'myCertificateDownload']);
     });
     Route::get('volunteer/opportunities/{id}',             [VolunteerOpportunityController::class, 'show'])->middleware('role:volunteer,mosque_manager');
+
+    // List all volunteers (super_admin: all; mosque_manager: scoped to their mosque)
+    Route::get('volunteer/volunteers', [VolunteerController::class, 'index'])
+        ->middleware('role:super_admin,mosque_manager');
+
+    // Mosque-manager dashboard stats cards (scoped to their mosque)
+    Route::get('volunteer/stats', [VolunteerController::class, 'stats'])
+        ->middleware('role:mosque_manager');
 });

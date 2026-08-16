@@ -69,6 +69,8 @@ return [
     'mosque_need_already_fulfilled' => 'تم استيفاء هذه الحاجة بالكامل ولم تعد تقبل التبرعات.',
     'max_receipts_reached' => 'الحد الأقصى لعدد الإيصالات لتبرع واحد هو 2.',
     'unauthorized_opportunity_access' => 'غير مصرّح لك بالوصول إلى هذه الفرصة.',
+    'volunteers_retrieved' => 'تم جلب المتطوعين بنجاح.',
+    'volunteer_stats_retrieved' => 'تم جلب إحصائيات المتطوعين بنجاح.',
 
     // --- قسم التطوع ---
     'opportunity_created' => 'تم إنشاء فرصة التطوع بنجاح.',
