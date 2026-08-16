@@ -12,6 +12,7 @@ use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Validation\ValidationException;
 use Modules\User\Http\Middleware\EnsureUserIsActive;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Illuminate\Console\Scheduling\Schedule; // 👈 1. إضافة الـ Schedule هنا
 
@@ -84,5 +85,14 @@ return Application::configure(basePath: dirname(__DIR__))
                 422,
                 $e->errors()
             );
+        });
+
+        // 🧾 Receipt limit (max 2 per donation)
+        $exceptions->render(function (ConflictHttpException $e, $request) {
+            return response()->json([
+                'statusCode' => 409,
+                'error'      => 'Conflict',
+                'message'    => $e->getMessage(),
+            ], 409);
         });
     })->create();
