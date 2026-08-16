@@ -4,6 +4,7 @@ namespace Modules\Dashboard\Services;
 
 use Carbon\Carbon;
 use Modules\Education\Models\Student;
+use Modules\Invitation\Models\Invitation;
 use Modules\User\Models\User;
 use Modules\Complaint\Models\Complaint;
 use Modules\Donation\Models\Donation;
@@ -20,7 +21,7 @@ class MosqueDashboardService
         private readonly MaintenanceService $maintenanceService,
         private readonly MosqueTaskService $taskService,
     ) {}
-    
+
     public function getDashboardData(User $user): array
     {
         $mosqueId = $user->mosque_id;
@@ -236,5 +237,42 @@ class MosqueDashboardService
             ->take($limit)
             ->values()
             ->all();
+    }
+
+
+    public function getMosqueStatistics(User $user): array
+    {
+        $mosqueId = $user->mosque_id;
+
+        // 1. إجمالي طلاب الحلقات
+        $totalStudents = Student::whereHas('halaqats', function ($query) use ($mosqueId) {
+            $query->where('mosque_id', $mosqueId);
+        })->count();
+
+        // 2. إجمالي المعلمين والمقرئين
+        $totalTeachers = User::role('teacher')
+            ->where('mosque_id', $mosqueId)
+            ->count();
+
+        // 3. إجمالي المتطوعين
+        $totalVolunteers = User::role('volunteer')
+            ->where('mosque_id', $mosqueId)
+            ->count();
+
+        // 4. الدعوات المعلقة
+        $pendingInvitations = Invitation::where('mosque_id', $mosqueId)
+            ->whereNull('accepted_at')
+            ->where(function ($query) {
+                $query->whereNull('expires_at')
+                    ->orWhere('expires_at', '>', now());
+            })
+            ->count();
+
+        return [
+            'total_students' => $totalStudents,
+            'total_teachers' => $totalTeachers,
+            'total_volunteers' => $totalVolunteers,
+            'pending_invitations' => $pendingInvitations,
+        ];
     }
 }
