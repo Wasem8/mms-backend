@@ -88,18 +88,6 @@ class SermonService
         return $sermon;
     }
 
-    public function rejectAndDestroySermon(int $sermonId): void
-    {
-        $sermon = $this->sermonRepo->findById($sermonId);
-        $this->sermonRepo->delete($sermon);
-        event(new SermonRejected(
-            sermonId: $sermon->id,
-            sermonTitle: $sermon->title,
-            mosqueManagerId: $sermon->mosque_manager_id,
-            isHardReject: true,
-        ));
-        }
-
     public function purgeExpiredPendingSermons(): int
     {
         $today = Carbon::today()->toDateString();
@@ -139,22 +127,21 @@ class SermonService
     }
 
 
-    public function rejectSermon($sermonId, $regionManagerId, $notes)
+    public function rejectSermon($sermonId, $regionManagerId, $notes): Sermon
     {
         $sermon = $this->sermonRepo->findById($sermonId);
-        $updated = $this->sermonRepo->updateStatus($sermonId, 'Rejected', $notes, $regionManagerId);
 
-        if ($sermon) {
-            event(new SermonRejected(
-                sermonId: $sermon->id,
-                sermonTitle: $sermon->title,
-                mosqueManagerId: $sermon->mosque_manager_id,
-                notes: $notes,
-                isHardReject: false,
-            ));
-        }
+        $this->sermonRepo->updateStatus($sermon, 'Rejected', $notes, $regionManagerId);
 
-        return $updated;
+        event(new SermonRejected(
+            sermonId: $sermon->id,
+            sermonTitle: $sermon->title,
+            mosqueManagerId: $sermon->mosque_manager_id,
+            notes: $notes,
+            isHardReject: false,
+        ));
+
+        return $sermon->load('attachments');
     }
 
     public function searchSermons(array $filters, User $user, int $perPage = 15)

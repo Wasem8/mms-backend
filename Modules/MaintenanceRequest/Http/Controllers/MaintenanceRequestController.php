@@ -285,7 +285,11 @@ class MaintenanceRequestController extends Controller
             $request->user()->id
         );
 
-        return ApiResponse::success($maintenance->loadMissing(['files', 'statusLogs', 'mosque']), __('messages.maintenance.files_requested'));
+        $messageKey = $maintenance->files()->exists()
+            ? 'messages.maintenance.files_requested_resend'
+            : 'messages.maintenance.files_requested';
+
+        return ApiResponse::success($maintenance->loadMissing(['files', 'statusLogs', 'mosque']), __($messageKey));
     }
 
     public function publicIndex(Request $request)

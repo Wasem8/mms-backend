@@ -223,6 +223,8 @@ return [
     'maintenance.files_mimes' => 'الملفات يجب أن تكون من نوع: jpg, jpeg, png, pdf, doc, docx.',
     'maintenance.files_max' => 'حجم كل ملف يجب ألا يتجاوز 10 ميجابايت.',
     'maintenance.files_requested_log' => 'تم طلب ملفات إضافية: :note',
+    'maintenance.files_requested_resend' => 'تمت إعادة طلب ملفات إضافية من مدير المسجد بنجاح.',
+    'maintenance.files_requested_log_resend' => 'تمت إعادة طلب ملفات إضافية: :note',
     'maintenance.files_uploaded_log' => 'قام مدير المسجد برفع الملفات الإضافية.',
     'maintenance.cannot_request_files_final' => 'لا يمكن طلب ملفات إضافية لطلب مكتمل أو ملغي.',
     'maintenance.files_not_requested' => 'لم يتم طلب ملفات إضافية لهذا الطلب.',
