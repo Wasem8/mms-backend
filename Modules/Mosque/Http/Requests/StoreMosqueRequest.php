@@ -30,7 +30,7 @@ class StoreMosqueRequest extends FormRequest
             'latitude' => ['required', 'numeric', 'decimal:0,8', 'between:-90,90'],
             'longitude' => ['required', 'numeric', 'decimal:0,8', 'between:-180,180'],
             'manager_id' => [
-                'required',
+                'nullable',
                 Rule::unique('mosques', 'manager_id'),
                 'integer',
                 Rule::exists('users', 'id')->where(function ($query) {

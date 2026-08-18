@@ -10,6 +10,7 @@ use Modules\Mosque\Database\Seeders\FacilitiesSeeder;
 use Modules\Mosque\Database\Seeders\MosqueSeeder;
 use Modules\Mosque\Database\Seeders\MosqueDatabaseSeeder;
 use Modules\Mosque\Database\Seeders\MosqueSpaceSeedSeeder;
+use Modules\Mosque\Database\Seeders\MosqueSpacesForAllSeeder;
 use Modules\User\Database\Seeders\RolesAndPermissionsSeeder;
 use Modules\User\Models\User;
 use Modules\Donation\Database\Seeders\SettingSeeder;
@@ -35,6 +36,8 @@ class DatabaseSeeder extends Seeder
             \Modules\Complaint\Database\Seeders\ComplaintDatabaseSeeder::class,
             \Modules\MaintenanceRequest\Database\Seeders\MaintenanceRequestDatabaseSeeder::class,
             SeedersSermonSeeder::class,
+            MosqueSpacesForAllSeeder::class,
+            \Modules\Community\Database\Seeders\DawahAndCampaignSeeder::class,
 
         ]);
 

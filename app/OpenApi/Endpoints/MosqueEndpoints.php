@@ -559,7 +559,7 @@ class MosqueEndpoints
                         new OA\Property(property: 'longitude', type: 'number', format: 'float', nullable: true, example: 31.2357),
                         new OA\Property(property: 'imam', type: 'string', nullable: true, example: 'Sheikh Ahmed'),
                         new OA\Property(property: 'khatib', type: 'string', nullable: true, example: 'Sheikh Mohamed'),
-                        new OA\Property(property: 'manager_id', type: 'integer', nullable: true, example: 2, description: 'User ID of a mosque_manager role user.'),
+                        new OA\Property(property: 'manager_id', type: 'integer', nullable: true, example: 2, description: 'Optional. User ID of a mosque_manager role user.'),
                     ]
                 )
             )
