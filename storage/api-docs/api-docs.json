@@ -13472,7 +13472,7 @@
                                         "nullable": true
                                     },
                                     "manager_id": {
-                                        "description": "User ID of a mosque_manager role user.",
+                                        "description": "Optional. User ID of a mosque_manager role user.",
                                         "type": "integer",
                                         "example": 2,
                                         "nullable": true
