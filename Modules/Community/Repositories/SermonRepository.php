@@ -19,9 +19,13 @@ class SermonRepository implements SermonRepositoryInterface
         return Sermon::findOrFail($id);
     }
 
-    public function updateStatus(Sermon $sermon, string $status): bool
+    public function updateStatus(Sermon $sermon, string $status, ?string $notes = null, ?int $regionManagerId = null): bool
     {
-        return $sermon->update(['status' => $status]);
+        return $sermon->update(array_filter([
+            'status' => $status,
+            'notes' => $notes,
+            'region_manager_id' => $regionManagerId,
+        ], fn ($value) => $value !== null));
     }
 
     public function delete(Sermon $sermon): bool

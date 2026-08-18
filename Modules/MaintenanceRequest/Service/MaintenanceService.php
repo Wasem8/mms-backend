@@ -212,6 +212,8 @@ class MaintenanceService
             abort(422, __('messages.maintenance.cannot_request_files_final'));
         }
 
+        $isReRequest = $maintenance->files()->exists();
+
         $maintenance = $this->repository->requestFiles($id, [
             'files_requested'     => true,
             'files_requested_by'  => $adminId,
@@ -222,7 +224,7 @@ class MaintenanceService
         $this->repository->logStatusChange($maintenance, [
             'old_status' => $maintenance->status,
             'new_status' => $maintenance->status,
-            'note'       => __('messages.maintenance.files_requested_log', ['note' => $note]),
+            'note'       => __($isReRequest ? 'messages.maintenance.files_requested_log_resend' : 'messages.maintenance.files_requested_log', ['note' => $note]),
             'changed_at' => now(),
             'changed_by' => $changedBy,
         ]);

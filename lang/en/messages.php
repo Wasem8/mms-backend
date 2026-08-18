@@ -226,6 +226,8 @@ return [
     'maintenance.files_mimes' => 'Files must be of type: jpg, jpeg, png, pdf, doc, docx.',
     'maintenance.files_max' => 'Each file must not exceed 10 MB.',
     'maintenance.files_requested_log' => 'Additional files requested: :note',
+    'maintenance.files_requested_resend' => 'Additional files re-requested from the mosque manager successfully.',
+    'maintenance.files_requested_log_resend' => 'Additional files re-requested: :note',
     'maintenance.files_uploaded_log' => 'Additional files uploaded by the mosque manager.',
     'maintenance.cannot_request_files_final' => 'Cannot request additional files for a completed or cancelled request.',
     'maintenance.files_not_requested' => 'No additional files were requested for this request.',

@@ -47,10 +47,15 @@ class SermonController extends Controller
         return ApiResponse::success($sermon, __('messages.community.sermon_approved'));
     }
 
-    public function reject($id)
+    public function reject(Request $request, $id)
     {
-        $this->sermonService->rejectAndDestroySermon($id);
-        return ApiResponse::success(null, __('messages.community.sermon_rejected'));
+        $validated = $request->validate([
+            'notes' => ['required', 'string', 'min:1'],
+        ]);
+
+        $sermon = $this->sermonService->rejectSermon($id, auth()->id(), $validated['notes']);
+
+        return ApiResponse::success($sermon, __('messages.community.sermon_rejected'));
     }
     public function index()
     {
