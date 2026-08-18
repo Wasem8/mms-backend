@@ -3,6 +3,7 @@
 namespace Modules\Community\Repositories;
 
 
+use Illuminate\Support\Facades\DB;
 use Modules\Community\Models\Tameem;
 use Modules\Community\Repositories\TameemRepositoryInterface;
 
@@ -40,7 +41,7 @@ class TameemRepository implements TameemRepositoryInterface
     public function create(array $data, array $recipientIds)
     {
         $tameem = Tameem::create($data);
-        $tameem->recipients()->attach($recipientIds, ['is_read' => false]);
+        $tameem->recipients()->attach($recipientIds);
 
         return $this->findById($tameem->id);
     }
@@ -64,7 +65,7 @@ class TameemRepository implements TameemRepositoryInterface
     {
         $tameem = $this->findById($tameemId);
         $tameem->recipients()->updateExistingPivot($mosqueManagerId, [
-            'is_read' => true,
+            'is_read' => DB::raw('true'),
             'read_at' => now(),
         ]);
 
