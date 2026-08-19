@@ -171,6 +171,7 @@ return [
     'community.selection_cancelled' => 'تم إلغاء اختيار الخطبة بنجاح.',
     'community.tameems_retrieved' => 'تم جلب التعاميم بنجاح.',
     'community.invalid_recipient' => 'أحد المستلمين غير موجود أو ليس من الصلاحيات المسموح إرسال التعميم إليها.',
+    'community.recipients_required' => 'يجب تحديد المستلمين أو تفعيل خيار إرسال الكل لمدراء المساجد.',
     'community.recipient_not_in_mosque' => 'أحد المستلمين غير تابع لمسجدك.',
     'community.manager_without_mosque' => 'حسابك غير مرتبط بأي مسجد.',
     'community.tameem_sent' => 'تم إرسال التعميم بنجاح.',

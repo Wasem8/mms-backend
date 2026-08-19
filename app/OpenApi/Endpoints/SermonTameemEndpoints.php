@@ -878,6 +878,9 @@ class SermonTameemEndpoints
         - `sender_id` is resolved automatically from the auth token.
         - All IDs in `recipient_ids` must belong to users with `role = mosque_manager`.
         - Passing a non-mosque-manager ID returns a `422` validation error.
+        - Alternatively, set `all_mosque_managers = true` to send to every mosque manager
+          without listing their IDs. When true, `recipient_ids` is ignored.
+        - Exactly one of `recipient_ids` or `all_mosque_managers` must be provided.
         DESC,
         security: [['bearerAuth' => []]],
         parameters: [
@@ -886,16 +889,23 @@ class SermonTameemEndpoints
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['title', 'content', 'recipient_ids'],
+                required: ['title', 'content'],
                 properties: [
                     new OA\Property(property: 'title',   type: 'string', example: 'تعميم بشأن صلاة التراويح'),
                     new OA\Property(property: 'content', type: 'string', example: 'يُرجى الالتزام بالمواعيد المحددة...'),
                     new OA\Property(
                         property: 'recipient_ids',
                         type: 'array',
-                        description: 'IDs of mosque managers to receive this tameem.',
+                        description: 'IDs of mosque managers to receive this tameem. Ignored when `all_mosque_managers` is true.',
                         items: new OA\Items(type: 'integer'),
                         example: [3, 5, 8]
+                    ),
+                    new OA\Property(
+                        property: 'all_mosque_managers',
+                        type: 'boolean',
+                        nullable: true,
+                        description: 'When true, the tameem is sent to ALL mosque managers (no need to list IDs).',
+                        example: true
                     ),
                 ]
             )
@@ -936,6 +946,8 @@ class SermonTameemEndpoints
         - The mosque is derived automatically from the authenticated manager (`managedMosque`); no `mosque_id` is required.
         - All IDs in `recipient_ids` must belong to users with `role` = `halaqa_supervisor` or `teacher` who belong to the same mosque as the sender.
         - A recipient from another mosque, or with a different role, returns a `422` validation error.
+        - Alternatively use `all_staff`, `all_teachers`, or `all_supervisors` to target every teacher/supervisor in the mosque without listing IDs. When any is true, `recipient_ids` is ignored.
+        - Exactly one of `recipient_ids` or the "all" flags must be provided.
         DESC,
         security: [['bearerAuth' => []]],
         parameters: [
@@ -944,17 +956,20 @@ class SermonTameemEndpoints
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['title', 'content', 'recipient_ids'],
+                required: ['title', 'content'],
                 properties: [
                     new OA\Property(property: 'title',   type: 'string', example: 'تعميم بشأن جدول الحلقات'),
                     new OA\Property(property: 'content', type: 'string', example: 'يُرجى الالتزام بالمواعيد المحددة...'),
                     new OA\Property(
                         property: 'recipient_ids',
                         type: 'array',
-                        description: 'IDs of supervisors/teachers in the sender\'s mosque to receive this tameem.',
+                        description: 'IDs of supervisors/teachers in the sender\'s mosque. Ignored when an "all" flag is true.',
                         items: new OA\Items(type: 'integer'),
                         example: [12, 15]
                     ),
+                    new OA\Property(property: 'all_staff',        type: 'boolean', nullable: true, description: 'Send to ALL teachers and supervisors in the mosque.', example: true),
+                    new OA\Property(property: 'all_teachers',     type: 'boolean', nullable: true, description: 'Send to all teachers in the mosque.', example: true),
+                    new OA\Property(property: 'all_supervisors',  type: 'boolean', nullable: true, description: 'Send to all supervisors in the mosque.', example: true),
                 ]
             )
         ),

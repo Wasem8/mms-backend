@@ -36,7 +36,7 @@ class TameemController extends Controller
         $validatedData = $request->validate([
             'title'           => 'required|string|max:255',
             'content'         => 'required|string',
-            'recipient_ids'   => 'required|array',
+            'recipient_ids'   => 'nullable|array',
             'recipient_ids.*' => [
                 'integer',
                 'exists:users,id',
@@ -47,9 +47,22 @@ class TameemController extends Controller
                     }
                 },
             ],
+            'all_mosque_managers' => 'nullable|boolean',
         ]);
+
+        if (!empty($validatedData['all_mosque_managers'])) {
+            // إرسال لكل مدراء المساجد دون الحاجة لكتابة المعرّفات
+            $recipientIds = User::role('mosque_manager')->pluck('id')->toArray();
+        } elseif (!empty($validatedData['recipient_ids'])) {
+            $recipientIds = $validatedData['recipient_ids'];
+        } else {
+            return ApiResponse::error(
+                ['message' => __('messages.community.recipients_required')],
+                422
+            );
+        }
+
         $senderId = auth()->id();
-        $recipientIds = $validatedData['recipient_ids'];
 
         $tameem = $this->tameemService->sendTameem($validatedData, $senderId, $recipientIds);
 
@@ -75,7 +88,7 @@ class TameemController extends Controller
         $validatedData = $request->validate([
             'title'           => 'required|string|max:255',
             'content'         => 'required|string',
-            'recipient_ids'   => 'required|array',
+            'recipient_ids'   => 'nullable|array',
             'recipient_ids.*' => [
                 'integer',
                 'exists:users,id',
@@ -92,12 +105,37 @@ class TameemController extends Controller
                     }
                 },
             ],
+            'all_staff'      => 'nullable|boolean',
+            'all_teachers'   => 'nullable|boolean',
+            'all_supervisors' => 'nullable|boolean',
         ]);
+
+        if (!empty($validatedData['all_teachers']) || !empty($validatedData['all_supervisors']) || !empty($validatedData['all_staff'])) {
+            // إرسال لكل المستهدفين في المسجد دون كتابة المعرّفات
+            $roles = [];
+            if (!empty($validatedData['all_staff']) || !empty($validatedData['all_teachers'])) {
+                $roles[] = 'teacher';
+            }
+            if (!empty($validatedData['all_staff']) || !empty($validatedData['all_supervisors'])) {
+                $roles[] = 'halaqa_supervisor';
+            }
+            $recipientIds = User::where('mosque_id', $mosque->id)
+                ->whereHas('roles', fn($q) => $q->whereIn('name', $roles))
+                ->pluck('id')
+                ->all();
+        } elseif (!empty($validatedData['recipient_ids'])) {
+            $recipientIds = $validatedData['recipient_ids'];
+        } else {
+            return ApiResponse::error(
+                ['message' => __('messages.community.recipients_required')],
+                422
+            );
+        }
 
         $tameem = $this->tameemService->sendTameem(
             $validatedData,
             $manager->id,
-            $validatedData['recipient_ids']
+            $recipientIds
         );
 
         return ApiResponse::success($this->transformTameem($tameem), __('messages.community.tameem_sent'));
