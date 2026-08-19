@@ -73,6 +73,17 @@ class DonationService
             ->paginate($perPage);
     }
 
+    /**
+     * Super-admin: paginated donations across ALL mosques.
+     * Supports the same filters as the mosque report plus `mosque_id` and `city`.
+     */
+    public function getAllDonations(array $filters = [])
+    {
+        $perPage = isset($filters['per_page']) ? max(1, min(100, (int) $filters['per_page'])) : 10;
+
+        return $this->reportQuery(null, $filters)->paginate($perPage);
+    }
+
     public function findByReference(string $reference)
     {
         return Donation::with('user')->where('reference', $reference)->firstOrFail();
