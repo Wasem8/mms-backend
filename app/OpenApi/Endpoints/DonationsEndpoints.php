@@ -354,6 +354,73 @@ class DonationsEndpoints
     )]
     public function adminDonationReport() {}
 
+    // =========================================================================
+    // GET /admin/donations
+    // Super-admin: list ALL donations across all mosques
+    // =========================================================================
+
+    #[OA\Get(
+        path: '/admin/donations',
+        operationId: 'adminListDonations',
+        tags: ['Donations'],
+        summary: 'Super-admin list all donations',
+        description: <<<DESC
+        Returns a paginated list of donations across ALL mosques for the super-admin.
+        Supports the same filters as the mosque list plus `mosque_id` and `city`.
+        DESC,
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'search',    in: 'query', required: false, schema: new OA\Schema(type: 'string'),  description: 'Search by donor name'),
+            new OA\Parameter(name: 'type',      in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['cash', 'in_kind'])),
+            new OA\Parameter(name: 'status',    in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['pending', 'completed'])),
+            new OA\Parameter(name: 'campaign',  in: 'query', required: false, schema: new OA\Schema(type: 'integer'), description: 'Filter by campaign ID'),
+            new OA\Parameter(name: 'mosque_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer'), description: 'Filter by a specific mosque ID'),
+            new OA\Parameter(name: 'city',      in: 'query', required: false, schema: new OA\Schema(type: 'string'),  description: 'Filter by mosque city'),
+            new OA\Parameter(name: 'date_from', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date'), description: 'Filter donations created on or after this date'),
+            new OA\Parameter(name: 'date_to',   in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date'), description: 'Filter donations created on or before this date'),
+            new OA\Parameter(name: 'per_page',  in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 10, minimum: 1, maximum: 100)),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/Donation')),
+                        new OA\Property(
+                            property: 'links',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'first', type: 'string', example: 'http://localhost:8000/api/admin/donations?page=1'),
+                                new OA\Property(property: 'last',  type: 'string', example: 'http://localhost:8000/api/admin/donations?page=12'),
+                                new OA\Property(property: 'prev',  type: 'string', nullable: true, example: null),
+                                new OA\Property(property: 'next',  type: 'string', nullable: true, example: 'http://localhost:8000/api/admin/donations?page=2'),
+                            ]
+                        ),
+                        new OA\Property(
+                            property: 'meta',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                new OA\Property(property: 'from',         type: 'integer', example: 1),
+                                new OA\Property(property: 'last_page',    type: 'integer', example: 12),
+                                new OA\Property(property: 'links',       type: 'array', items: new OA\Items(type: 'object')),
+                                new OA\Property(property: 'path',         type: 'string', example: 'http://localhost:8000/api/admin/donations'),
+                                new OA\Property(property: 'per_page',     type: 'integer', example: 10),
+                                new OA\Property(property: 'to',           type: 'integer', example: 10),
+                                new OA\Property(property: 'total',        type: 'integer', example: 120),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — super_admin role required'),
+        ]
+    )]
+    public function adminListDonations() {}
+
     #[OA\Get(
         path: '/donations/mine',
         operationId: 'listMyDonations',

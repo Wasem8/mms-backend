@@ -35,6 +35,17 @@ class DonationController extends Controller
         return DonationResource::collection($donations)->response();
     }
 
+    /**
+     * Super-admin: list all donations across all mosques (paginated).
+     */
+    public function allDonations(\Illuminate\Http\Request $request)
+    {
+        $filters   = $request->only(['search', 'type', 'status', 'campaign', 'mosque_id', 'city', 'date_from', 'date_to', 'per_page']);
+        $donations = $this->donationService->getAllDonations($filters);
+
+        return DonationResource::collection($donations)->response();
+    }
+
 
     public function summary(int $mosqueId)
     {
