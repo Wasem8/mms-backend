@@ -13,6 +13,7 @@ use Modules\Donation\Models\Setting;
 use Modules\Donation\Strategies\PaymentStrategyFactory;
 use Modules\Donation\Repositories\SettingRepositoryInterface;
 use Modules\Donation\Models\Campaign;
+use Modules\Mosque\Models\Mosque;
 use Modules\Mosque\Models\MosqueNeed;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
@@ -313,6 +314,119 @@ class DonationService
             'client_secret' => $result->clientSecret ?? null,
         ];
     }
+    public function getReport(int $mosqueId, array $filters = []): array
+    {
+        $donations = $this->reportQuery($mosqueId, $filters)->get();
+
+        return $this->formatReport($donations, false);
+    }
+
+    /**
+     * Super-admin report across ALL mosques.
+     * Supports the same filters plus `mosque_id` and `city`.
+     */
+    public function getReportForAll(array $filters = []): array
+    {
+        $donations = $this->reportQuery(null, $filters)->get();
+
+        return $this->formatReport($donations, true);
+    }
+
+    private function reportQuery(?int $mosqueId, array $filters): \Illuminate\Database\Eloquent\Builder
+    {
+        return Donation::query()
+            ->with(['campaign:id,title', 'mosque:id,name', 'mosqueNeed:id,description'])
+            ->when($mosqueId !== null, fn($q) => $q->where('mosque_id', $mosqueId))
+            ->when($filters['search'] ?? null, fn($q, $v) => $q->where('donor_name', 'like', "%{$v}%"))
+            ->when($filters['type']   ?? null, fn($q, $v) => $q->where('donation_type', $v))
+            ->when($filters['status'] ?? null, fn($q, $v) => $q->where('status', $v))
+            ->when($filters['campaign'] ?? null, fn($q, $v) => $q->where('campaign_id', $v))
+            ->when($mosqueId === null && ($filters['mosque_id'] ?? null), fn($q, $v) => $q->where('mosque_id', $v))
+            ->when($filters['city'] ?? null, fn($q, $v) => $q->whereHas('mosque', fn($q2) => $q2->where('city', 'like', "%{$v}%")))
+            ->when($filters['date_from'] ?? null, fn($q, $v) => $q->whereDate('created_at', '>=', $v))
+            ->when($filters['date_to']   ?? null, fn($q, $v) => $q->whereDate('created_at', '<=', $v))
+            ->latest();
+    }
+
+    private function formatReport(\Illuminate\Database\Eloquent\Collection $donations, bool $includeMosque): array
+    {
+        $completed = $donations->where('status', 'completed');
+
+        return [
+            'summary' => [
+                'total_amount'  => (float) $completed->sum('base_amount'),
+                'total_count'   => $donations->count(),
+                'cash_amount'   => (float) $completed->where('donation_type', 'cash')->sum('base_amount'),
+                'in_kind_count' => $donations->where('donation_type', 'in_kind')->count(),
+                'currency'      => 'SYP',
+            ],
+            'donations' => $donations->map(fn(Donation $d) => [
+                'id'            => $d->id,
+                'reference'     => $d->reference,
+                'mosque_id'     => $d->mosque_id,
+                'mosque_name'   => $includeMosque ? ($d->mosque?->name ?? '—') : null,
+                'donor_name'    => $d->donor_name,
+                'donation_type' => $d->donation_type,
+                'payment_method'=> $d->payment_method,
+                'amount'        => $d->amount,
+                'base_amount'   => $d->base_amount,
+                'currency'      => $d->currency,
+                'status'        => $d->status,
+                'campaign'      => $d->campaign?->title,
+                'created_at'    => $d->created_at,
+            ])->all(),
+        ];
+    }
+
+    public function exportReport(int $mosqueId, array $filters = []): string
+    {
+        $report = $this->getReport($mosqueId, $filters);
+        $mosque = Mosque::find($mosqueId);
+
+        return $this->renderAndUploadReport(
+            $report,
+            $mosque?->name ?? '—',
+            false,
+            "donation_report_{$mosqueId}"
+        );
+    }
+
+    /**
+     * Super-admin PDF export across ALL mosques.
+     */
+    public function exportReportForAll(array $filters = []): string
+    {
+        $report = $this->getReportForAll($filters);
+
+        return $this->renderAndUploadReport(
+            $report,
+            'كل المساجد',
+            true,
+            'donation_report_all'
+        );
+    }
+
+    private function renderAndUploadReport(array $report, string $mosqueName, bool $showMosque, string $cacheKey): string
+    {
+        $html = view('donation::reports.donation', [
+            'mosque_name'  => $mosqueName,
+            'generated_at' => now()->format('Y-m-d H:i'),
+            'summary'      => $report['summary'],
+            'donations'    => $report['donations'],
+            'filters'      => [],
+            'showMosque'   => $showMosque,
+        ])->render();
+
+        $pdfContent = $this->pdfGenerator->generate($html, $cacheKey, 'cairo');
+
+        $bucket   = config('services.supabase.bucket');
+        $fileName = $cacheKey . '_' . now()->timestamp . '.pdf';
+
+        $this->storage->uploadPdf($pdfContent, $fileName, $bucket, true);
+
+        return $this->storage->createSignedUrl($fileName, $bucket);
+    }
+
     public function getReceiptDownloadUrl(Donation $donation): string
     {
         $bucket = config('services.supabase.bucket');

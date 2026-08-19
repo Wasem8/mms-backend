@@ -24,6 +24,204 @@
         }
     ],
     "paths": {
+        "/api/admin/activity-log": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Super-admin activity log",
+                "description": "Returns a unified activity feed for the authenticated super-admin, aggregated from existing\ntables that record the actor (no dedicated activity-log storage):\n- complaint status changes (`complaint_status_logs`)\n- sermon approvals (`sermons.region_manager_id`)\n- invitations created (`invitations.created_by`)\n- maintenance status changes (ALL requests; actor = the request's mosque manager via `manager_id`)\nResults are sorted by time (newest first) and paginated.",
+                "operationId": "adminActivityLog",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "module",
+                        "in": "query",
+                        "description": "Filter by source module",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "complaints",
+                                "sermons",
+                                "invitations",
+                                "maintenance"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "description": "Filter activities on or after this date",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "description": "Filter activities on or before this date",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "module": {
+                                                        "type": "string",
+                                                        "example": "complaints"
+                                                    },
+                                                    "action_key": {
+                                                        "type": "string",
+                                                        "example": "complaint_status_changed"
+                                                    },
+                                                    "description": {
+                                                        "type": "string",
+                                                        "example": "تغيير حالة الشكوى رقم #12 من pending إلى resolved"
+                                                    },
+                                                    "target_type": {
+                                                        "type": "string",
+                                                        "example": "complaint"
+                                                    },
+                                                    "target_id": {
+                                                        "type": "integer",
+                                                        "example": 12
+                                                    },
+                                                    "actor_id": {
+                                                        "type": "integer",
+                                                        "example": 1,
+                                                        "nullable": true
+                                                    },
+                                                    "actor_name": {
+                                                        "type": "string",
+                                                        "example": "Admin User"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2026-08-15 09:05:23"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "meta": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 4
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 56
+                                                },
+                                                "from": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "to": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "links": {
+                                            "properties": {
+                                                "first": {
+                                                    "type": "string",
+                                                    "example": "http://localhost:8000/api/admin/activity-log?page=1"
+                                                },
+                                                "last": {
+                                                    "type": "string",
+                                                    "example": "http://localhost:8000/api/admin/activity-log?page=4"
+                                                },
+                                                "prev": {
+                                                    "type": "string",
+                                                    "example": null,
+                                                    "nullable": true
+                                                },
+                                                "next": {
+                                                    "type": "string",
+                                                    "example": "http://localhost:8000/api/admin/activity-log?page=2",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — super_admin role required"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/education/attendance": {
             "get": {
                 "tags": [
@@ -7162,6 +7360,457 @@
                                 }
                             }
                         }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/mosque/donations/report": {
+            "get": {
+                "tags": [
+                    "Donations"
+                ],
+                "summary": "Mosque manager donation report",
+                "description": "Returns a donation report scoped to the authenticated mosque manager's mosque\n(the mosque is derived automatically from the manager — no `mosque_id` required).\n- Supports filtering by donor name, type, status, campaign, and date range.\n- Add `export=pdf` to generate a downloadable PDF (returned as a Supabase signed URL),\n  following the same export flow used for donation receipts and volunteer certificates.\n- Without `export`, the report data is returned as JSON.",
+                "operationId": "mosqueDonationReport",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search by donor name",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "cash",
+                                "in_kind"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pending",
+                                "completed"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "campaign",
+                        "in": "query",
+                        "description": "Filter by campaign ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "description": "Filter donations created on or after this date",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "description": "Filter donations created on or before this date",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "export",
+                        "in": "query",
+                        "description": "Set to `pdf` to receive a downloadable PDF report URL",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pdf"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Report data (JSON) when `export` is omitted, or a signed PDF download URL when `export=pdf`.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "title": "ReportData",
+                                            "properties": {
+                                                "status": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "Success"
+                                                },
+                                                "data": {
+                                                    "properties": {
+                                                        "summary": {
+                                                            "properties": {
+                                                                "total_amount": {
+                                                                    "type": "number",
+                                                                    "format": "float",
+                                                                    "example": 125000
+                                                                },
+                                                                "total_count": {
+                                                                    "type": "integer",
+                                                                    "example": 42
+                                                                },
+                                                                "cash_amount": {
+                                                                    "type": "number",
+                                                                    "format": "float",
+                                                                    "example": 98000
+                                                                },
+                                                                "in_kind_count": {
+                                                                    "type": "integer",
+                                                                    "example": 7
+                                                                },
+                                                                "currency": {
+                                                                    "type": "string",
+                                                                    "example": "SYP"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        },
+                                                        "donations": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/components/schemas/Donation"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "title": "ReportPdf",
+                                            "properties": {
+                                                "status": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "تم إنشاء تقرير التبرعات بنجاح."
+                                                },
+                                                "data": {
+                                                    "properties": {
+                                                        "report_url": {
+                                                            "type": "string",
+                                                            "format": "uri",
+                                                            "example": "https://__.supabase.co/storage/v1/object/sign/bucket/donation_report_5_...pdf?token=..."
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — mosque_manager role required"
+                    },
+                    "422": {
+                        "description": "Manager is not linked to any mosque"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/donations/report": {
+            "get": {
+                "tags": [
+                    "Donations"
+                ],
+                "summary": "Super-admin donation report (all mosques)",
+                "description": "Returns a donation report aggregated across ALL mosques for the super-admin.\nSupports the same filters as the mosque-manager report plus `mosque_id` and `city`.\nAdd `export=pdf` to receive a downloadable PDF (Supabase signed URL),\nfollowing the same export flow used for receipts and volunteer certificates.",
+                "operationId": "adminDonationReport",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search by donor name",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "cash",
+                                "in_kind"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pending",
+                                "completed"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "campaign",
+                        "in": "query",
+                        "description": "Filter by campaign ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "mosque_id",
+                        "in": "query",
+                        "description": "Filter by a specific mosque ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "city",
+                        "in": "query",
+                        "description": "Filter by mosque city",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "description": "Filter donations created on or after this date",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "description": "Filter donations created on or before this date",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "export",
+                        "in": "query",
+                        "description": "Set to `pdf` to receive a downloadable PDF report URL",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pdf"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Report data (JSON) when `export` is omitted, or a signed PDF download URL when `export=pdf`.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "title": "AdminReportData",
+                                            "properties": {
+                                                "status": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "Success"
+                                                },
+                                                "data": {
+                                                    "properties": {
+                                                        "summary": {
+                                                            "properties": {
+                                                                "total_amount": {
+                                                                    "type": "number",
+                                                                    "format": "float",
+                                                                    "example": 1250000
+                                                                },
+                                                                "total_count": {
+                                                                    "type": "integer",
+                                                                    "example": 842
+                                                                },
+                                                                "cash_amount": {
+                                                                    "type": "number",
+                                                                    "format": "float",
+                                                                    "example": 980000
+                                                                },
+                                                                "in_kind_count": {
+                                                                    "type": "integer",
+                                                                    "example": 117
+                                                                },
+                                                                "currency": {
+                                                                    "type": "string",
+                                                                    "example": "SYP"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        },
+                                                        "donations": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": 23
+                                                                    },
+                                                                    "reference": {
+                                                                        "type": "string",
+                                                                        "example": "REC-1645-2026"
+                                                                    },
+                                                                    "mosque_id": {
+                                                                        "type": "integer",
+                                                                        "example": 5
+                                                                    },
+                                                                    "mosque_name": {
+                                                                        "type": "string",
+                                                                        "example": "جامع الفرقان"
+                                                                    },
+                                                                    "donor_name": {
+                                                                        "type": "string",
+                                                                        "example": "فاعل خير"
+                                                                    },
+                                                                    "donation_type": {
+                                                                        "type": "string",
+                                                                        "example": "cash"
+                                                                    },
+                                                                    "payment_method": {
+                                                                        "type": "string",
+                                                                        "example": "cash"
+                                                                    },
+                                                                    "base_amount": {
+                                                                        "type": "number",
+                                                                        "format": "float",
+                                                                        "example": 500
+                                                                    },
+                                                                    "currency": {
+                                                                        "type": "string",
+                                                                        "example": "SYP"
+                                                                    },
+                                                                    "status": {
+                                                                        "type": "string",
+                                                                        "example": "completed"
+                                                                    },
+                                                                    "campaign": {
+                                                                        "type": "string",
+                                                                        "example": "اخر حملة"
+                                                                    },
+                                                                    "created_at": {
+                                                                        "type": "string",
+                                                                        "format": "date-time",
+                                                                        "example": "2026-08-15 09:05:23"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "title": "AdminReportPdf",
+                                            "properties": {
+                                                "status": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "تم إنشاء تقرير التبرعات لكل المساجد بنجاح."
+                                                },
+                                                "data": {
+                                                    "properties": {
+                                                        "report_url": {
+                                                            "type": "string",
+                                                            "format": "uri",
+                                                            "example": "https://__.supabase.co/storage/v1/object/sign/bucket/donation_report_all_...pdf?token=..."
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — super_admin role required"
                     }
                 },
                 "security": [
@@ -27595,6 +28244,10 @@
         {
             "name": "Sermon Selections",
             "description": "Manage sermon selections for Friday prayers (اختيار خطبة الجمعة)."
+        },
+        {
+            "name": "Admin",
+            "description": "Admin"
         },
         {
             "name": "Attendance",

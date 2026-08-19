@@ -80,6 +80,75 @@ class DonationController extends Controller
         ]);
     }
 
+    /**
+     * Donation report for the authenticated mosque manager.
+     * The mosque is derived from the manager's managedMosque (no mosque id required).
+     * - Without `?export=pdf` returns the report data as JSON.
+     * - With `?export=pdf` generates a PDF and returns a Supabase signed download URL
+     *   (same export flow used for donation receipts and volunteer certificates).
+     */
+    public function report(\Illuminate\Http\Request $request)
+    {
+        $manager = auth()->user();
+        $mosque  = $manager->managedMosque;
+
+        if (!$mosque) {
+            return response()->json([
+                'status'  => false,
+                'message' => __('messages.mosque.manager_without_mosque'),
+            ], 422);
+        }
+
+        $filters = $request->only(['search', 'type', 'status', 'campaign', 'date_from', 'date_to']);
+
+        if ($request->query('export') === 'pdf') {
+            $url = $this->donationService->exportReport($mosque->id, $filters);
+
+            return response()->json([
+                'status'  => true,
+                'message' => 'تم إنشاء تقرير التبرعات بنجاح.',
+                'data'    => ['report_url' => $url],
+            ]);
+        }
+
+        $report = $this->donationService->getReport($mosque->id, $filters);
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Success',
+            'data'    => $report,
+        ]);
+    }
+
+    /**
+     * Super-admin donation report across ALL mosques.
+     * - Without `?export=pdf` returns aggregated report data (JSON).
+     * - With `?export=pdf` returns a Supabase signed download URL.
+     * Supports the same filters as the mosque-manager report plus `mosque_id` and `city`.
+     */
+    public function allReport(\Illuminate\Http\Request $request)
+    {
+        $filters = $request->only(['search', 'type', 'status', 'campaign', 'mosque_id', 'city', 'date_from', 'date_to']);
+
+        if ($request->query('export') === 'pdf') {
+            $url = $this->donationService->exportReportForAll($filters);
+
+            return response()->json([
+                'status'  => true,
+                'message' => 'تم إنشاء تقرير التبرعات لكل المساجد بنجاح.',
+                'data'    => ['report_url' => $url],
+            ]);
+        }
+
+        $report = $this->donationService->getReportForAll($filters);
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Success',
+            'data'    => $report,
+        ]);
+    }
+
     public function receipt($id)
     {
         $donation = Donation::findOrFail($id);
