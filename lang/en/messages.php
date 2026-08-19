@@ -174,6 +174,7 @@ return [
     'community.selection_cancelled' => 'Sermon selection cancelled successfully.',
     'community.tameems_retrieved' => 'Tameems retrieved successfully.',
     'community.invalid_recipient' => 'One of the recipients does not exist or is not allowed to receive this tameem.',
+    'community.recipients_required' => 'You must specify recipients or enable sending to all mosque managers.',
     'community.recipient_not_in_mosque' => 'One of the recipients does not belong to your mosque.',
     'community.manager_without_mosque' => 'Your account is not linked to any mosque.',
     'community.tameem_sent' => 'Tameem sent successfully.',
