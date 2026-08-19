@@ -28,7 +28,7 @@ class Tameem extends Model
             related: User::class,
             table: 'tameem_recipients',
             foreignPivotKey: 'tameem_id',
-            relatedPivotKey: 'mosque_manager_id',
+            relatedPivotKey: 'user_id',
         )->withPivot('is_read', 'read_at')
             ->withTimestamps();
     }
