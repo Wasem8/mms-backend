@@ -86,9 +86,17 @@ Route::prefix('tameems')
 
         Route::middleware('role:super_admin')->group(function () {
             Route::post('/', [TameemController::class, 'store']);
-            Route::put('/{id}', [TameemController::class, 'update']);
+            Route::put('/{id}', [TameemController::class, 'update'])->whereNumber('id');
             Route::get('/', [TameemController::class, 'index']);
-            Route::delete('/{id}', [TameemController::class, 'destroy']);
-            Route::get('/{id}', [TameemController::class, 'show']);
+            Route::delete('/{id}', [TameemController::class, 'destroy'])->whereNumber('id');
+            Route::get('/{id}', [TameemController::class, 'show'])->whereNumber('id');
         });
+
+        // Mosque manager sends a tameem to supervisors/teachers of their own mosque.
+        Route::post('/for-mosque', [TameemController::class, 'storeForMosque'])
+            ->middleware('role:mosque_manager');
+
+        // Tameems sent by the authenticated mosque manager.
+        Route::get('/sent', [TameemController::class, 'sentTameems'])
+            ->middleware('role:mosque_manager');
     });

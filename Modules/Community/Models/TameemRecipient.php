@@ -14,7 +14,7 @@ class TameemRecipient extends Model
      * The attributes that are mass assignable.
      */
     protected $table = 'tameem_recipients';
-    protected $fillable = ['tameem_id', 'mosque_manager_id', 'is_read', 'read_at'];
+    protected $fillable = ['tameem_id', 'user_id', 'is_read', 'read_at'];
 
      public function tameem() {
         return $this->belongsTo(Tameem::class, 'tameem_id');

@@ -21,13 +21,24 @@ class TameemRepository implements TameemRepositoryInterface
         return Tameem::whereHas(
             'recipients',
             fn($q) =>
-            $q->where('tameem_recipients.mosque_manager_id', $mosqueManagerId)
+            $q->where('tameem_recipients.user_id', $mosqueManagerId)
         )->with([
             'sender:id,name',
             'recipients' => fn($q) => $q
                 ->select('users.id', 'users.name')
-                ->where('tameem_recipients.mosque_manager_id', $mosqueManagerId),
+                ->where('tameem_recipients.user_id', $mosqueManagerId),
         ])->latest('sent_at')->get();
+    }
+
+    public function getSentByManager($senderId)
+    {
+        return Tameem::where('sender_id', $senderId)
+            ->with([
+                'sender:id,name',
+                'recipients' => fn($q) => $q->select('users.id', 'users.name'),
+            ])
+            ->latest('sent_at')
+            ->get();
     }
 
     public function findById($id)
@@ -70,5 +81,13 @@ class TameemRepository implements TameemRepositoryInterface
         ]);
 
         return true;
+    }
+
+    public function getRecipientsInMosque(int $mosqueId, array $roles)
+    {
+        return User::where('mosque_id', $mosqueId)
+            ->whereHas('roles', fn($q) => $q->whereIn('name', $roles))
+            ->pluck('id')
+            ->all();
     }
 }

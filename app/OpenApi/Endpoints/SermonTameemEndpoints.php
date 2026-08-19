@@ -874,7 +874,7 @@ class SermonTameemEndpoints
         tags: ['Tameems'],
         summary: 'Send a circular',
         description: <<<DESC
-        Sends a tameem to one or more mosque managers.
+        Sends a tameem to one or more mosque managers. (Region manager only.)
         - `sender_id` is resolved automatically from the auth token.
         - All IDs in `recipient_ids` must belong to users with `role = mosque_manager`.
         - Passing a non-mosque-manager ID returns a `422` validation error.
@@ -914,16 +914,75 @@ class SermonTameemEndpoints
             new OA\Response(response: 401, description: 'Unauthenticated'),
             new OA\Response(
                 response: 422,
-                description: 'Validation error — e.g. a recipient ID does not belong to a mosque manager',
+                description: 'Validation error — e.g. a recipient ID does not belong to an allowed role',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'message', type: 'string', example: 'أحد المستلمين غير موجود أو ليس مدير مسجد.'),
+                        new OA\Property(property: 'message', type: 'string', example: 'أحد المستلمين غير موجود أو ليس من الصلاحيات المسموح إرسال التعميم إليها.'),
                     ]
                 )
             ),
         ]
     )]
     public function storeTameem() {}
+
+    #[OA\Post(
+        path: '/tameems/for-mosque',
+        operationId: 'storeTameemForMosque',
+        tags: ['Tameems'],
+        summary: 'Send a circular to the mosque staff',
+        description: <<<DESC
+        Allows an authenticated mosque manager to send a tameem to the supervisors
+        and teachers of their own mosque.
+        - The mosque is derived automatically from the authenticated manager (`managedMosque`); no `mosque_id` is required.
+        - All IDs in `recipient_ids` must belong to users with `role` = `halaqa_supervisor` or `teacher` who belong to the same mosque as the sender.
+        - A recipient from another mosque, or with a different role, returns a `422` validation error.
+        DESC,
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['title', 'content', 'recipient_ids'],
+                properties: [
+                    new OA\Property(property: 'title',   type: 'string', example: 'تعميم بشأن جدول الحلقات'),
+                    new OA\Property(property: 'content', type: 'string', example: 'يُرجى الالتزام بالمواعيد المحددة...'),
+                    new OA\Property(
+                        property: 'recipient_ids',
+                        type: 'array',
+                        description: 'IDs of supervisors/teachers in the sender\'s mosque to receive this tameem.',
+                        items: new OA\Items(type: 'integer'),
+                        example: [12, 15]
+                    ),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Tameem sent successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'تم إرسال التعميم بنجاح'),
+                        new OA\Property(property: 'data',    ref: '#/components/schemas/Tameem'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — mosque_manager role required'),
+            new OA\Response(
+                response: 422,
+                description: 'Validation error — e.g. a recipient is not a supervisor/teacher in your mosque',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'أحد المستلمين غير تابع لمسجدك.'),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function storeTameemForMosque() {}
 
     // =========================================================================
     // PUT /tameems/{id}
@@ -1071,6 +1130,36 @@ class SermonTameemEndpoints
         ]
     )]
     public function myTameems() {}
+
+    #[OA\Get(
+        path: '/tameems/sent',
+        operationId: 'sentTameems',
+        tags: ['Tameems'],
+        summary: 'Get sent circulars',
+        description: 'Returns all tameems sent by the authenticated mosque manager.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'تم جلب التعاميم الصادرة بنجاح'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/Tameem')
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+        ]
+    )]
+    public function sentTameems() {}
 
     // =========================================================================
     // PATCH /tameems/{id}/read
