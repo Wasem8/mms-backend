@@ -45,7 +45,7 @@ Route::prefix('mosques')->group(function () {
     Route::middleware(['auth:api', 'active.user'])->group(function () {
 
         // ── Mosque Management ──
-        Route::put('/{mosque}', [MosqueController::class, 'update']);
+        Route::put('/{mosque}', [MosqueController::class, 'update'])->middleware('role:mosque_manager,super_admin');
 
         Route::middleware('role:super_admin')->group(function () {
             Route::post('/',                   [MosqueController::class, 'store']);
