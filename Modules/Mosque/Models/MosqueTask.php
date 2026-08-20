@@ -7,10 +7,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\Mosque\Enums\MosqueTaskCategory;
 use Modules\User\Models\User;
+use Modules\Mosque\Traits\HasPostgresBooleans;
 
 class MosqueTask extends Model
 {
     use HasFactory;
+    use HasPostgresBooleans;
+
 
     /**
      * The attributes that are mass assignable.
@@ -29,10 +32,10 @@ class MosqueTask extends Model
     ];
 
     protected $casts = [
+        'is_completed' => 'boolean',
+        'is_important' => 'boolean',
         'category'      => MosqueTaskCategory::class,
         'due_date'      => 'date',
-        'is_completed'  => 'boolean',
-        'is_important'  => 'boolean',
         'completed_at'  => 'datetime',
     ];
 

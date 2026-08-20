@@ -16,6 +16,20 @@ class StoreMosqueTaskRequest extends FormRequest
         return true; // role:mosque_manager handled in route middleware
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('is_important')) {
+            $this->merge([
+                'is_important' => filter_var(
+                    $this->input('is_important'),
+                    FILTER_VALIDATE_BOOLEAN,
+                    FILTER_NULL_ON_FAILURE
+                ),
+            ]);
+        }
+    }
+
+
     public function rules(): array
     {
         return [

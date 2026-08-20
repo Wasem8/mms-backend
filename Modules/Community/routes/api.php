@@ -79,7 +79,7 @@ Route::prefix('tameems')
     ->group(function () {
 
         Route::get('/my-tameems', [TameemController::class, 'myTameems'])
-            ->middleware('role:mosque_manager');
+            ->middleware('role:mosque_manager,teacher,supervisor');
 
         Route::patch('/{id}/read', [TameemController::class, 'markAsRead'])
             ->middleware('role:mosque_manager');
