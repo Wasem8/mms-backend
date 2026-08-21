@@ -10,8 +10,10 @@ use Modules\Mosque\Database\Seeders\FacilitiesSeeder;
 use Modules\Mosque\Database\Seeders\MosqueSeeder;
 use Modules\Mosque\Database\Seeders\MosqueDatabaseSeeder;
 use Modules\Mosque\Database\Seeders\MosqueSpaceSeedSeeder;
-use Modules\Mosque\Database\Seeders\MosqueSpacesForAllSeeder;
+use Modules\User\Database\Seeders\PermissionSeeder;
+use Modules\User\Database\Seeders\RolePermissionSeeder;
 use Modules\User\Database\Seeders\RolesAndPermissionsSeeder;
+use Modules\User\Database\Seeders\RoleSeeder;
 use Modules\User\Models\User;
 use Modules\Donation\Database\Seeders\SettingSeeder;
 
@@ -25,19 +27,20 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            MosqueDatabaseSeeder::class,
-            RolesAndPermissionsSeeder::class,
-           // EducationDatabaseSeeder::class,
-            MosqueSeeder::class,
-            FacilitiesSeeder::class,
-            MosqueSpaceSeedSeeder::class,
-            SettingSeeder::class,
-            \Modules\Donation\Database\Seeders\DonationDatabaseSeeder::class,
-            \Modules\Complaint\Database\Seeders\ComplaintDatabaseSeeder::class,
-            \Modules\MaintenanceRequest\Database\Seeders\MaintenanceRequestDatabaseSeeder::class,
-            SeedersSermonSeeder::class,
-            MosqueSpacesForAllSeeder::class,
-            \Modules\Community\Database\Seeders\DawahAndCampaignSeeder::class,
+//            MosqueDatabaseSeeder::class,
+//            RolesAndPermissionsSeeder::class,
+//           // EducationDatabaseSeeder::class,
+//            MosqueSeeder::class,
+//            FacilitiesSeeder::class,
+//            MosqueSpaceSeedSeeder::class,
+//            SettingSeeder::class,
+//            \Modules\Donation\Database\Seeders\DonationDatabaseSeeder::class,
+//            \Modules\Complaint\Database\Seeders\ComplaintDatabaseSeeder::class,
+//            \Modules\MaintenanceRequest\Database\Seeders\MaintenanceRequestDatabaseSeeder::class,
+//            SeedersSermonSeeder::class,
+            RoleSeeder::class,
+            PermissionSeeder::class,
+            RolePermissionSeeder::class,
 
         ]);
 
