@@ -18,13 +18,22 @@ class VolunteerOpportunityController extends Controller
         private readonly VolunteerOpportunityService $service,
     ) {}
 
-    /** Manager: list opportunities for their own mosque, with optional search + status filter */
+    /** Manager: list opportunities for their own mosque, with optional search + status filter.
+     *  Super admins get all opportunities across mosques. */
     public function managerIndex(Request $request)
     {
-        $mosque = auth()->user()->managedMosque;
+        $user = auth()->user();
 
-        if (! $mosque) {
-            return ApiResponse::error(__('messages.no_mosque_assigned_to_manager'), 422);
+        if ($user->hasRole('super_admin')) {
+            $mosqueId = null;
+        } else {
+            $mosque = $user->managedMosque;
+
+            if (! $mosque) {
+                return ApiResponse::error(__('messages.no_mosque_assigned_to_manager'), 422);
+            }
+
+            $mosqueId = (int) $mosque->id;
         }
 
         $perPage = $request->integer('per_page', 15);
@@ -32,7 +41,7 @@ class VolunteerOpportunityController extends Controller
         $status  = $request->input('status');
 
         $opportunities = $this->service->listForManager(
-            (int) $mosque->id,
+            $mosqueId,
             $perPage,
             $search,
             $status
