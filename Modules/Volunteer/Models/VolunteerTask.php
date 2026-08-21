@@ -38,6 +38,11 @@ class VolunteerTask extends Model
     {
         return $this->belongsTo(VolunteerApplication::class, 'application_id');
     }
+
+    public function getVolunteerNameAttribute(): ?string
+    {
+        return $this->application?->volunteer?->name;
+    }
     // protected static function newFactory(): VolunteerTaskFactory
     // {
     //     // return VolunteerTaskFactory::new();

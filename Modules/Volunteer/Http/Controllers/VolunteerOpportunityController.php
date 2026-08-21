@@ -104,11 +104,21 @@ class VolunteerOpportunityController extends Controller
         }
     }
 
-    /** Manager: list applications for an opportunity */
-    public function applications(string $opportunityId)
+    /** Manager: list applications for an opportunity, optionally filtered by status */
+    public function applications(Request $request, string $opportunityId)
     {
-        $applications = $this->service->listApplications((int) $opportunityId);
-        return ApiResponse::success($applications, __('messages.applications_retrieved'), 200);
+        $status = $request->validate([
+            'status' => 'nullable|in:pending,approved,rejected',
+        ])['status'];
+
+        $applications = $this->service->listApplications((int) $opportunityId, $status);
+        $applications->getCollection()->each->append('volunteer_name');
+
+        return ApiResponse::success(
+            $applications->items(),
+            __('messages.applications_retrieved'),
+            $applications
+        );
     }
 
     /** Volunteer: apply for an opportunity */
