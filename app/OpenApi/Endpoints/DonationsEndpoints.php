@@ -567,15 +567,12 @@ class DonationsEndpoints
 
 
 #[OA\Get(
-        path: '/mosques/{mosqueId}/donations/stats',
+        path: '/donations/stats',
         operationId: 'getDonationStats',
         tags: ['Donations'],
         summary: 'Page stat cards',
-        description: 'Returns the four stat cards shown at the top of the donations management page: total donations, this month\'s donations, active campaigns, and new donors this month.',
+        description: 'Returns the four stat cards shown at the top of the donations page. No mosque id is required: for a super-admin the stats are aggregated across ALL mosques, while any other authenticated user gets stats scoped to their own donations.',
         security: [['bearerAuth' => []]],
-        parameters: [
-            new OA\Parameter(name: 'mosqueId', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 5),
-        ],
         responses: [
             new OA\Response(
                 response: 200,
