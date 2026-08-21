@@ -17,10 +17,7 @@ Route::prefix('dashboard')->group(function () {
 
     Route::middleware(['auth:api', 'active.user', 'role:halaqa_supervisor,mosque_manager'])->group(function () {
         Route::get('/supervisor/export-pdf', [SupervisorDashboardController::class, 'exportPdf']);
-        Route::get('/statistics', [
-            MosqueManagerDashboardController::class,
-            'statistics'
-        ]);
+
     });
 
     Route::middleware(['auth:api', 'active.user', 'role:teacher'])->group(function () {
@@ -45,6 +42,10 @@ Route::prefix('dashboard/mosque-manager')
         // 1. Endpoint شامل يعيد كافة بيانات اللوحة في Request واحد
         // (الأسرع للـ Frontend)
         Route::get('/', [MosqueManagerDashboardController::class, 'index']);
+        Route::get('/statistics', [
+            MosqueManagerDashboardController::class,
+            'statistics'
+        ]);
 
     });
 
