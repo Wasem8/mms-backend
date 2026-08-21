@@ -79,11 +79,10 @@ class VolunteerOpportunityController extends Controller
     {
         $opportunity = $this->service->findOrFail((int) $id);
         $this->ensureManagerOwnsOpportunity($opportunity);
-        $opportunity->load('acceptedApplications');
-        $opportunity->acceptedApplications->each->append('volunteer_name');
+        $opportunity->load('acceptedApplications.tasks');
+        $opportunity->acceptedApplications->each->append('volunteer_name', 'all_tasks_completed');
         return ApiResponse::success($opportunity, __('messages.opportunity_retrieved'), 200);
     }
-
     public function update(UpdateOpportunityRequest $request, string $id)
     {
         $opportunity = $this->service->findOrFail((int) $id);
@@ -122,12 +121,13 @@ class VolunteerOpportunityController extends Controller
     /** Manager: list applications for an opportunity, optionally filtered by status */
     public function applications(Request $request, string $opportunityId)
     {
-        $status = $request->validate([
+        $validated = $request->validate([
             'status' => 'nullable|in:pending,approved,rejected',
-        ])['status'];
+        ]);
+        $status = $validated['status'] ?? null;
 
         $applications = $this->service->listApplications((int) $opportunityId, $status);
-        $applications->getCollection()->each->append('volunteer_name');
+        $applications->getCollection()->each->append('volunteer_name', 'all_tasks_completed');
 
         return ApiResponse::success(
             $applications->items(),
@@ -147,6 +147,7 @@ class VolunteerOpportunityController extends Controller
     public function myApplications()
     {
         $applications = $this->service->listMyApplications((int) auth()->id());
+        $applications->getCollection()->each->append('all_tasks_completed');
         return ApiResponse::success($applications, __('messages.my_applications_retrieved'), 200);
     }
 

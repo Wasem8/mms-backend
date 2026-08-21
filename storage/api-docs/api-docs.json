@@ -24676,6 +24676,11 @@
                                                         "example": "Ahmed Al-Otaibi",
                                                         "nullable": true
                                                     },
+                                                    "all_tasks_completed": {
+                                                        "description": "True when the volunteer has at least one task and every task on this application is completed — i.e. they are eligible to log hours.",
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
                                                     "created_at": {
                                                         "type": "string",
                                                         "format": "date-time"
@@ -25299,6 +25304,11 @@
                                                         "type": "string",
                                                         "example": "Ahmed Al-Otaibi",
                                                         "nullable": true
+                                                    },
+                                                    "all_tasks_completed": {
+                                                        "description": "True when the volunteer has at least one task and every task on this application is completed — i.e. they are eligible to log hours.",
+                                                        "type": "boolean",
+                                                        "example": true
                                                     },
                                                     "created_at": {
                                                         "type": "string",

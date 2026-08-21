@@ -178,6 +178,7 @@ class VolunteerEndpoints
                             new OA\Property(property: 'opportunity_id', type: 'integer', example: 1),
                             new OA\Property(property: 'status',         type: 'string',  enum: ['pending', 'approved', 'rejected'], example: 'pending'),
                             new OA\Property(property: 'volunteer_name', type: 'string', nullable: true, example: 'Ahmed Al-Otaibi'),
+                            new OA\Property(property: 'all_tasks_completed', type: 'boolean', example: true, description: 'True when the volunteer has at least one task and every task on this application is completed — i.e. they are eligible to log hours.'),
                             new OA\Property(property: 'created_at',     type: 'string',  format: 'date-time'),
                         ])
                     ),
@@ -539,6 +540,7 @@ class VolunteerEndpoints
                             new OA\Property(property: 'opportunity_id', type: 'integer', example: 1),
                             new OA\Property(property: 'status',         type: 'string',  enum: ['pending', 'approved', 'rejected'], example: 'pending'),
                             new OA\Property(property: 'volunteer_name', type: 'string', nullable: true, example: 'Ahmed Al-Otaibi'),
+                            new OA\Property(property: 'all_tasks_completed', type: 'boolean', example: true, description: 'True when the volunteer has at least one task and every task on this application is completed — i.e. they are eligible to log hours.'),
                             new OA\Property(property: 'created_at',     type: 'string',  format: 'date-time'),
                         ])
                     ),
