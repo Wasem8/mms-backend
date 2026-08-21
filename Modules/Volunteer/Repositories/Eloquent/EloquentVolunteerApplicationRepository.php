@@ -25,7 +25,7 @@ class EloquentVolunteerApplicationRepository implements VolunteerApplicationRepo
         return $this->model
             ->where('opportunity_id', $opportunityId)
             ->when($status, fn($q) => $q->where('status', $status))
-            ->with('volunteer')
+            ->with(['volunteer', 'tasks'])
             ->latest()
             ->paginate($perPage);
     }
@@ -35,7 +35,7 @@ class EloquentVolunteerApplicationRepository implements VolunteerApplicationRepo
     {
         return $this->model
             ->where('volunteer_id', $volunteerId)
-            ->with('opportunity')
+            ->with(['opportunity', 'tasks'])
             ->latest()
             ->paginate($perPage);
     }
