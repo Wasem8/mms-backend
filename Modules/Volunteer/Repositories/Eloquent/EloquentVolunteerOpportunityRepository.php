@@ -34,12 +34,12 @@ class EloquentVolunteerOpportunityRepository implements VolunteerOpportunityRepo
     }
 
     #[\Override]
-    public function findAllForManager(int $mosqueId, int $perPage = 15, ?string $search = null, ?string $status = null): LengthAwarePaginator
+    public function findAllForManager(?int $mosqueId, int $perPage = 15, ?string $search = null, ?string $status = null): LengthAwarePaginator
     {
         return $this->model
             ->withCount(['applications' => fn($q) => $q->where('status', 'approved')])
             ->with('tasks')
-            ->where('mosque_id', $mosqueId)
+            ->when($mosqueId, fn($q) => $q->where('mosque_id', $mosqueId))
             ->when($status, fn($q) => $q->where('status', $status))
             ->when($search, function ($q) use ($search) {
                 $q->where(function ($q) use ($search) {

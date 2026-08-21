@@ -12,7 +12,7 @@ interface VolunteerOpportunityRepositoryInterface
 
     public function findAllOpen(int $mosqueId, int $perPage = 15): LengthAwarePaginator;
 
-    public function findAllForManager(int $mosqueId, int $perPage = 15): LengthAwarePaginator;
+    public function findAllForManager(?int $mosqueId, int $perPage = 15): LengthAwarePaginator;
 
     public function create(CreateOpportunityDTO $dto): VolunteerOpportunity;
 
