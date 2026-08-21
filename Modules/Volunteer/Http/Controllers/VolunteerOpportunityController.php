@@ -50,8 +50,13 @@ class VolunteerOpportunityController extends Controller
     {
         $mosqueId = (int) auth()->user()->mosque_id;
 
-        $Opportunities = $this->service->listOpen($mosqueId);
-        return ApiResponse::success($Opportunities, __('messages.opportunities_retrieved'), 200);
+        $opportunities = $this->service->listOpen($mosqueId);
+
+        return ApiResponse::success(
+            $opportunities->items(),
+            __('messages.opportunities_retrieved'),
+            $opportunities
+        );
     }
 
     /** Manager: create an opportunity for the mosque they manage (see CreateOpportunityRequest::toDTO) */
