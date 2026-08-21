@@ -94,13 +94,53 @@ class DonationService
         return Donation::findOrFail($id);
     }
 
+    /**
+     * Page stats for a specific mosque (legacy, mosque-scoped helper).
+     */
     public function getPageStats(int $mosqueId): array
+    {
+        return $this->computePageStats(
+            fn() => Donation::where('mosque_id', $mosqueId),
+            fn() => Campaign::where('mosque_id', $mosqueId),
+        );
+    }
+
+    /**
+     * Page stats for an authenticated user — scoped to their own donations.
+     * Active campaigns counts only the active campaigns the user has donated to.
+     */
+    public function getPageStatsForUser(int $userId): array
+    {
+        return $this->computePageStats(
+            fn() => Donation::where('user_id', $userId),
+            fn() => Campaign::where('status', 'active')
+                ->whereIn('id', function ($q) use ($userId) {
+                    $q->select('campaign_id')
+                        ->from('donations')
+                        ->where('user_id', $userId)
+                        ->whereNotNull('campaign_id');
+                }),
+        );
+    }
+
+    /**
+     * Page stats for a super-admin — aggregated across ALL mosques.
+     */
+    public function getPageStatsForAll(): array
+    {
+        return $this->computePageStats(
+            fn() => Donation::query(),
+            fn() => Campaign::query(),
+        );
+    }
+
+    private function computePageStats(callable $donationBase, callable $campaignBase): array
     {
         $now = now();
         $prev = now()->subMonth();
 
         // ── Helper: monthly donations for a given year/month ─────────────────
-        $monthlyQuery = fn(int $year, int $month) => Donation::where('mosque_id', $mosqueId)
+        $monthlyQuery = fn(int $year, int $month) => $donationBase()
             ->where('status', 'completed')
             ->where('donation_type', 'cash')
             ->where(fn($q) => $q
@@ -109,7 +149,7 @@ class DonationService
             );
 
         // ── Helper: new donors for a given year/month ────────────────────────
-        $donorsQuery = fn(int $year, int $month) => Donation::where('mosque_id', $mosqueId)
+        $donorsQuery = fn(int $year, int $month) => $donationBase()
             ->where('status', 'completed')
             ->where(fn($q) => $q
                 ->where(fn($q1) => $q1->whereYear('completed_at', $year)->whereMonth('completed_at', $month))
@@ -118,8 +158,8 @@ class DonationService
             ->distinct('donor_name');
 
         // ── Total all-time ───────────────────────────────────────────────────
-        $totalDonations    = Donation::where('mosque_id', $mosqueId)->where('status', 'completed')->where('donation_type', 'cash')->sum('base_amount');
-        $prevTotalDonations = Donation::where('mosque_id', $mosqueId)->where('status', 'completed')->where('donation_type', 'cash')
+        $totalDonations    = $donationBase()->where('status', 'completed')->where('donation_type', 'cash')->sum('base_amount');
+        $prevTotalDonations = $donationBase()->where('status', 'completed')->where('donation_type', 'cash')
             ->where('completed_at', '<', $prev->startOfMonth()->toDateTimeString())
             ->sum('base_amount');
 
@@ -132,9 +172,8 @@ class DonationService
         $lastDonors = (int) $donorsQuery($prev->year, $prev->month)->count('donor_name');
 
         // ── Active campaigns ─────────────────────────────────────────────────
-        $activeCampaigns  = (int) Campaign::where('mosque_id', $mosqueId)->where('status', 'active')->count();
-        $prevActive       = (int) Campaign::where('mosque_id', $mosqueId)
-            ->where('status', 'active')
+        $activeCampaigns  = (int) $campaignBase()->where('status', 'active')->count();
+        $prevActive       = (int) $campaignBase()->where('status', 'active')
             ->where('created_at', '<', $now->startOfMonth()->toDateTimeString())
             ->count();
 
