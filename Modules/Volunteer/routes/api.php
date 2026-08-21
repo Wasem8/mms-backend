@@ -28,19 +28,19 @@ Route::middleware('auth:api')->group(function () {
 
     // Manager routes
     Route::middleware('role:mosque_manager')->group(function () {
-        Route::get('volunteer/manager/opportunities',          [VolunteerOpportunityController::class, 'managerIndex']);
+        Route::get('volunteer/manager/opportunities',          [VolunteerOpportunityController::class, 'managerIndex'])->middleware('role:super_admin');
         Route::post('volunteer/opportunities',                  [VolunteerOpportunityController::class, 'store']);
         Route::put('volunteer/opportunities/{id}',            [VolunteerOpportunityController::class, 'update']);
         Route::post('volunteer/opportunities/{id}/close',      [VolunteerOpportunityController::class, 'close']);
 
         // Applications management
-        Route::get('volunteer/opportunities/{opportunityId}/applications',          [VolunteerOpportunityController::class, 'applications']);
+        Route::get('volunteer/opportunities/{opportunityId}/applications',          [VolunteerOpportunityController::class, 'applications'])->middleware('role:super_admin');
         Route::post('volunteer/applications/{applicationId}/approve',                [VolunteerOpportunityController::class, 'approveApplication']);
         Route::post('volunteer/applications/{applicationId}/reject',                 [VolunteerOpportunityController::class, 'rejectApplication']);
 
         // Tasks: create general tasks on an opportunity, view them all, then distribute to approved volunteers
         Route::post('volunteer/opportunities/{opportunityId}/tasks', [VolunteerTaskController::class, 'store']);
-        Route::get('volunteer/opportunities/{opportunityId}/tasks',  [VolunteerTaskController::class, 'index']);
+        Route::get('volunteer/opportunities/{opportunityId}/tasks',  [VolunteerTaskController::class, 'index'])->middleware('role:super_admin');
         Route::post('volunteer/tasks/{taskId}/assign',                [VolunteerTaskController::class, 'assign']);
 
         // Hours & evaluation
@@ -78,5 +78,5 @@ Route::middleware('auth:api')->group(function () {
 
     // Mosque-manager dashboard stats cards (scoped to their mosque)
     Route::get('volunteer/stats', [VolunteerController::class, 'stats'])
-        ->middleware('role:mosque_manager');
+        ->middleware('role:mosque_manager,super_admin');
 });
