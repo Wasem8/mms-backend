@@ -96,6 +96,18 @@ class VolunteerEndpoints
                             new OA\Property(property: 'end_date',            type: 'string',  format: 'date', nullable: true),
                             new OA\Property(property: 'created_at',          type: 'string',  format: 'date-time'),
                             new OA\Property(property: 'updated_at',          type: 'string',  format: 'date-time'),
+                            new OA\Property(
+                                property: 'accepted_applications',
+                                type: 'array',
+                                description: 'Volunteers accepted for this opportunity (status = approved). Each item carries the volunteer\'s name.',
+                                items: new OA\Items(properties: [
+                                    new OA\Property(property: 'id',             type: 'integer', example: 5),
+                                    new OA\Property(property: 'volunteer_id',   type: 'integer', example: 12),
+                                    new OA\Property(property: 'status',         type: 'string',  example: 'approved'),
+                                    new OA\Property(property: 'volunteer_name', type: 'string',  example: 'Ahmed Al-Otaibi'),
+                                    new OA\Property(property: 'created_at',     type: 'string',  format: 'date-time'),
+                                ])
+                            ),
                         ]
                     ),
                 ])
@@ -226,6 +238,7 @@ class VolunteerEndpoints
                                     new OA\Property(property: 'application_id',    type: 'integer', nullable: true, example: null),
                                     new OA\Property(property: 'task_description',  type: 'string',  example: 'تنظيف المسجد'),
                                     new OA\Property(property: 'status',            type: 'string',  enum: ['unassigned', 'assigned', 'completed'], example: 'unassigned'),
+                                    new OA\Property(property: 'volunteer_name',   type: 'string', nullable: true, example: 'Ahmed Al-Otaibi', description: 'Name of the volunteer the task is assigned to (null when unassigned).'),
                                     new OA\Property(property: 'created_at',       type: 'string',  format: 'date-time'),
                                     new OA\Property(property: 'updated_at',       type: 'string',  format: 'date-time'),
                                 ])
@@ -632,6 +645,7 @@ class VolunteerEndpoints
                             new OA\Property(property: 'application_id',   type: 'integer', nullable: true, example: null),
                             new OA\Property(property: 'task_description', type: 'string',  example: 'ترتيب صفوف المصلى قبل صلاة الجمعة'),
                             new OA\Property(property: 'status',           type: 'string',  enum: ['unassigned', 'assigned', 'completed'], example: 'unassigned'),
+                            new OA\Property(property: 'volunteer_name',  type: 'string', nullable: true, example: 'Ahmed Al-Otaibi', description: 'Name of the volunteer the task is assigned to (null when unassigned).'),
                             new OA\Property(property: 'created_at',       type: 'string',  format: 'date-time'),
                         ])
                     ),

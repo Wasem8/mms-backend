@@ -58,9 +58,19 @@ class DonationController extends Controller
         ]);
     }
 
-    public function stats(int $mosqueId)
+    /**
+     * Donation page stats.
+     * - Super-admin: aggregated across ALL mosques.
+     * - Any other authenticated user: scoped to their own donations.
+     * No mosque id is required — the scope is derived from the authenticated user.
+     */
+    public function stats()
     {
-        $data = $this->donationService->getPageStats($mosqueId);
+        $user = auth()->guard('api')->user();
+
+        $data = $user->hasRole('super_admin')
+            ? $this->donationService->getPageStatsForAll()
+            : $this->donationService->getPageStatsForUser($user->id);
 
         return response()->json([
             'status'  => true,

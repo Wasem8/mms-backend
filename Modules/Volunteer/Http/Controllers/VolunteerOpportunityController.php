@@ -80,6 +80,7 @@ class VolunteerOpportunityController extends Controller
         $opportunity = $this->service->findOrFail((int) $id);
         $this->ensureManagerOwnsOpportunity($opportunity);
         $opportunity->load('acceptedApplications');
+        $opportunity->acceptedApplications->each->append('volunteer_name');
         return ApiResponse::success($opportunity, __('messages.opportunity_retrieved'), 200);
     }
 

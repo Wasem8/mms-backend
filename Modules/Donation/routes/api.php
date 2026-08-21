@@ -23,7 +23,6 @@ Route::prefix('mosques/{mosqueId}/donations')->middleware(['auth:api','role:mosq
     Route::get('/',        [DonationController::class, 'index']);
     Route::get('/summary', [DonationController::class, 'summary']);
     Route::get('/chart',   [DonationController::class, 'chart']);
-    Route::get('/stats', [DonationController::class, 'stats']);
 });
 
 Route::prefix('donations')->group(function () {
@@ -33,6 +32,10 @@ Route::prefix('donations')->group(function () {
         Route::put('/{id}',    [DonationController::class, 'update']);
         Route::delete('/{id}', [DonationController::class, 'destroy']);
     });
+
+    // Page stats — no mosque id; scoped to the authenticated user (or all mosques for super-admin).
+    // Registered before `/{reference}` so it is not captured by the reference route.
+    Route::get('/stats', [DonationController::class, 'stats'])->middleware(['auth:api']);
 
     Route::get('/{reference}', [DonationController::class, 'show']);
     Route::post('/online', [DonationController::class, 'storeOnline']);

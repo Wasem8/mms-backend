@@ -62,23 +62,24 @@ class VolunteerController extends Controller
     public function stats(Request $request)
     {
         $user = $request->user();
-        $mosqueId = $user->managedMosque?->id ?? $user->mosque_id;
+        $isSuperAdmin = $user->hasRole('super_admin');
+        $mosqueId = $isSuperAdmin ? null : ($user->managedMosque?->id ?? $user->mosque_id);
 
-        $opportunitiesTotal = $mosqueId
-            ? VolunteerOpportunity::where('mosque_id', $mosqueId)->count()
-            : 0;
+        $opportunitiesTotal = $isSuperAdmin
+            ? VolunteerOpportunity::count()
+            : VolunteerOpportunity::where('mosque_id', $mosqueId)->count();
 
-        $pendingApplications = $mosqueId
-            ? VolunteerApplication::where('status', ApplicationStatus::Pending)
+        $pendingApplications = $isSuperAdmin
+            ? VolunteerApplication::where('status', ApplicationStatus::Pending)->count()
+            : VolunteerApplication::where('status', ApplicationStatus::Pending)
                 ->whereHas('opportunity', fn($q) => $q->where('mosque_id', $mosqueId))
-                ->count()
-            : 0;
+                ->count();
 
-        $volunteersCount = $mosqueId
-            ? User::where('mosque_id', $mosqueId)
+        $volunteersCount = $isSuperAdmin
+            ? User::whereHas('roles', fn($q) => $q->where('name', 'volunteer'))->count()
+            : User::where('mosque_id', $mosqueId)
                 ->whereHas('roles', fn($q) => $q->where('name', 'volunteer'))
-                ->count()
-            : 0;
+                ->count();
 
         return ApiResponse::success([
             'opportunities_total'   => $opportunitiesTotal,

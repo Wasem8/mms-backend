@@ -8277,25 +8277,14 @@
                 ]
             }
         },
-        "/mosques/{mosqueId}/donations/stats": {
+        "/donations/stats": {
             "get": {
                 "tags": [
                     "Donations"
                 ],
                 "summary": "Page stat cards",
-                "description": "Returns the four stat cards shown at the top of the donations management page: total donations, this month's donations, active campaigns, and new donors this month.",
+                "description": "Returns the four stat cards shown at the top of the donations page. No mosque id is required: for a super-admin the stats are aggregated across ALL mosques, while any other authenticated user gets stats scoped to their own donations.",
                 "operationId": "getDonationStats",
-                "parameters": [
-                    {
-                        "name": "mosqueId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        },
-                        "example": 5
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "Success",
@@ -24368,6 +24357,35 @@
                                                 "updated_at": {
                                                     "type": "string",
                                                     "format": "date-time"
+                                                },
+                                                "accepted_applications": {
+                                                    "description": "Volunteers accepted for this opportunity (status = approved). Each item carries the volunteer's name.",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 5
+                                                            },
+                                                            "volunteer_id": {
+                                                                "type": "integer",
+                                                                "example": 12
+                                                            },
+                                                            "status": {
+                                                                "type": "string",
+                                                                "example": "approved"
+                                                            },
+                                                            "volunteer_name": {
+                                                                "type": "string",
+                                                                "example": "Ahmed Al-Otaibi"
+                                                            },
+                                                            "created_at": {
+                                                                "type": "string",
+                                                                "format": "date-time"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
                                                 }
                                             },
                                             "type": "object"
@@ -24836,6 +24854,12 @@
                                                                         "assigned",
                                                                         "completed"
                                                                     ]
+                                                                },
+                                                                "volunteer_name": {
+                                                                    "description": "Name of the volunteer the task is assigned to (null when unassigned).",
+                                                                    "type": "string",
+                                                                    "example": "Ahmed Al-Otaibi",
+                                                                    "nullable": true
                                                                 },
                                                                 "created_at": {
                                                                     "type": "string",
@@ -25510,6 +25534,12 @@
                                                             "assigned",
                                                             "completed"
                                                         ]
+                                                    },
+                                                    "volunteer_name": {
+                                                        "description": "Name of the volunteer the task is assigned to (null when unassigned).",
+                                                        "type": "string",
+                                                        "example": "Ahmed Al-Otaibi",
+                                                        "nullable": true
                                                     },
                                                     "created_at": {
                                                         "type": "string",
