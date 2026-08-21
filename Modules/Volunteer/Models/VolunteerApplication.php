@@ -46,6 +46,11 @@ class VolunteerApplication extends Model
         return $this->hasMany(VolunteerTask::class, 'application_id');
     }
 
+    public function getVolunteerNameAttribute(): ?string
+    {
+        return $this->volunteer?->name;
+    }
+
     // protected static function newFactory(): VolunteerApplicationFactory
     // {
     //     // return VolunteerApplicationFactory::new();

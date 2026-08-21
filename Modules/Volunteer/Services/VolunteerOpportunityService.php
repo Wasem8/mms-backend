@@ -114,10 +114,10 @@ class VolunteerOpportunityService
 
     // ─── Applications ─────────────────────────────────────────────────────────
 
-    public function listApplications(int $opportunityId, int $perPage = 15): LengthAwarePaginator
+    public function listApplications(int $opportunityId, ?string $status = null, int $perPage = 15): LengthAwarePaginator
     {
         $this->findOrFail($opportunityId);
-        return $this->applicationRepo->findByOpportunity($opportunityId, $perPage);
+        return $this->applicationRepo->findByOpportunity($opportunityId, $status, $perPage);
     }
 
     public function listMyApplications(int $volunteerId, int $perPage = 15): LengthAwarePaginator

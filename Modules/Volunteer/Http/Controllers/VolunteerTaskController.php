@@ -18,6 +18,7 @@ class VolunteerTaskController extends Controller
     public function index(string $opportunityId)
     {
         $tasks = $this->service->listForOpportunity((int) $opportunityId);
+        $tasks->each->append('volunteer_name');
         return ApiResponse::success($tasks, __('messages.tasks_retrieved'), 200);
     }
 

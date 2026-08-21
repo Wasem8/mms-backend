@@ -24653,6 +24653,11 @@
                                                             "rejected"
                                                         ]
                                                     },
+                                                    "volunteer_name": {
+                                                        "type": "string",
+                                                        "example": "Ahmed Al-Otaibi",
+                                                        "nullable": true
+                                                    },
                                                     "created_at": {
                                                         "type": "string",
                                                         "format": "date-time"
@@ -25209,6 +25214,21 @@
                             "type": "integer",
                             "example": 15
                         }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter applications by status.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "pending",
+                            "enum": [
+                                "pending",
+                                "approved",
+                                "rejected"
+                            ]
+                        }
                     }
                 ],
                 "responses": {
@@ -25250,6 +25270,11 @@
                                                             "approved",
                                                             "rejected"
                                                         ]
+                                                    },
+                                                    "volunteer_name": {
+                                                        "type": "string",
+                                                        "example": "Ahmed Al-Otaibi",
+                                                        "nullable": true
                                                     },
                                                     "created_at": {
                                                         "type": "string",

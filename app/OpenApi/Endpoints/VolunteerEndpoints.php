@@ -165,6 +165,7 @@ class VolunteerEndpoints
                             new OA\Property(property: 'volunteer_id',   type: 'integer', example: 12),
                             new OA\Property(property: 'opportunity_id', type: 'integer', example: 1),
                             new OA\Property(property: 'status',         type: 'string',  enum: ['pending', 'approved', 'rejected'], example: 'pending'),
+                            new OA\Property(property: 'volunteer_name', type: 'string', nullable: true, example: 'Ahmed Al-Otaibi'),
                             new OA\Property(property: 'created_at',     type: 'string',  format: 'date-time'),
                         ])
                     ),
@@ -501,6 +502,13 @@ class VolunteerEndpoints
             new OA\Parameter(name: 'opportunityId', in: 'path',  required: true,  schema: new OA\Schema(type: 'integer', example: 1)),
             new OA\Parameter(name: 'page',          in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 1)),
             new OA\Parameter(name: 'per_page',      in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 15)),
+            new OA\Parameter(
+                name: 'status',
+                in: 'query',
+                required: false,
+                description: 'Filter applications by status.',
+                schema: new OA\Schema(type: 'string', enum: ['pending', 'approved', 'rejected'], example: 'pending')
+            ),
         ],
         responses: [
             new OA\Response(
@@ -517,6 +525,7 @@ class VolunteerEndpoints
                             new OA\Property(property: 'volunteer_id',   type: 'integer', example: 12),
                             new OA\Property(property: 'opportunity_id', type: 'integer', example: 1),
                             new OA\Property(property: 'status',         type: 'string',  enum: ['pending', 'approved', 'rejected'], example: 'pending'),
+                            new OA\Property(property: 'volunteer_name', type: 'string', nullable: true, example: 'Ahmed Al-Otaibi'),
                             new OA\Property(property: 'created_at',     type: 'string',  format: 'date-time'),
                         ])
                     ),
