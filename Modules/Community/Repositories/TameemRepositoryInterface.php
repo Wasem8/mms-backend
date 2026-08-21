@@ -6,6 +6,7 @@ interface TameemRepositoryInterface
 {
     public function getAll();
     public function getForMosqueManager($mosqueManagerId);
+    public function getSentByManager($senderId);
     public function findById($id);
 
     public function create(array $data, array $recipientIds);
@@ -17,4 +18,6 @@ interface TameemRepositoryInterface
     public function syncRecipients(int $id , array $recipientIds);
 
     public function markAsRead($tameemId, $mosqueManagerId);
+
+    public function getRecipientsInMosque(int $mosqueId, array $roles);
 }

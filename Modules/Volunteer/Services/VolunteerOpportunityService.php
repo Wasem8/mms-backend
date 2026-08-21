@@ -3,13 +3,16 @@
 namespace Modules\Volunteer\Services;
 
 use Modules\Volunteer\DTOs\CreateOpportunityDTO;
+use Modules\Volunteer\DTOs\CreateTaskDTO;
 use Modules\Volunteer\DTOs\UpdateOpportunityDTO;
+use Modules\Volunteer\Enums\TaskStatus;
 use Modules\Volunteer\Events\ApplicationStatusChanged;
 use Modules\Volunteer\Events\OpportunityCreated;
 use Modules\Volunteer\Models\VolunteerApplication;
 use Modules\Volunteer\Models\VolunteerOpportunity;
 use Modules\Volunteer\Repositories\Contracts\VolunteerApplicationRepositoryInterface;
 use Modules\Volunteer\Repositories\Contracts\VolunteerOpportunityRepositoryInterface;
+use Modules\Volunteer\Repositories\Contracts\VolunteerTaskRepositoryInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -20,13 +23,14 @@ class VolunteerOpportunityService
     public function __construct(
         private readonly VolunteerOpportunityRepositoryInterface $opportunityRepo,
         private readonly VolunteerApplicationRepositoryInterface  $applicationRepo,
+        private readonly VolunteerTaskRepositoryInterface         $taskRepo,
     ) {}
 
     // ─── Opportunities ────────────────────────────────────────────────────────
 
-    public function listForManager(int $mosqueId, int $perPage = 15): LengthAwarePaginator
+    public function listForManager(?int $mosqueId, int $perPage = 15, ?string $search = null, ?string $status = null): LengthAwarePaginator
     {
-        return $this->opportunityRepo->findAllForManager($mosqueId, $perPage);
+        return $this->opportunityRepo->findAllForManager($mosqueId, $perPage, $search, $status);
     }
 
     public function listOpen(int $mosqueId, int $perPage = 15): LengthAwarePaginator
@@ -44,14 +48,63 @@ class VolunteerOpportunityService
     {
         return DB::transaction(function () use ($dto): VolunteerOpportunity {
             $opportunity = $this->opportunityRepo->create($dto);
+
+            foreach ($dto->tasks as $taskDescription) {
+                $this->taskRepo->create(new CreateTaskDTO(
+                    opportunityId: $opportunity->id,
+                    taskDescription: $taskDescription,
+                ));
+            }
+
             event(new OpportunityCreated($opportunity));
-            return $opportunity;
+            return $opportunity->load('tasks');
         });
     }
 
     public function update(VolunteerOpportunity $opportunity, UpdateOpportunityDTO $dto): VolunteerOpportunity
     {
-        return DB::transaction(fn() => $this->opportunityRepo->update($opportunity, $dto));
+        return DB::transaction(function () use ($opportunity, $dto): VolunteerOpportunity {
+            $updated = $this->opportunityRepo->update($opportunity, $dto);
+
+            if ($dto->tasks !== null) {
+                $this->syncTasks($updated, $dto->tasks);
+            }
+
+            return $updated->load('tasks');
+        });
+    }
+
+    /**
+     * Reconcile the opportunity's task list with the provided descriptions.
+     * - Creates unassigned tasks for new descriptions.
+     * - Removes only still-unassigned tasks whose description is no longer present
+     *   (assigned/completed tasks are preserved to avoid losing assignment data).
+     */
+    private function syncTasks(VolunteerOpportunity $opportunity, array $descriptions): void
+    {
+        $newSet = array_values(array_unique(
+            array_filter($descriptions, fn($d) => is_string($d) && trim($d) !== '')
+        ));
+
+        $existing = $this->taskRepo->findByOpportunity($opportunity->id);
+        $existingByDesc = $existing->keyBy('task_description');
+
+        foreach ($newSet as $desc) {
+            if (! $existingByDesc->has($desc)) {
+                $this->taskRepo->create(new CreateTaskDTO(
+                    opportunityId: $opportunity->id,
+                    taskDescription: $desc,
+                ));
+            }
+        }
+
+        foreach ($existing as $task) {
+            if ($task->status === TaskStatus::Unassigned
+                && ! in_array($task->task_description, $newSet, true)
+            ) {
+                $task->delete();
+            }
+        }
     }
 
     public function close(VolunteerOpportunity $opportunity): VolunteerOpportunity
@@ -61,10 +114,10 @@ class VolunteerOpportunityService
 
     // ─── Applications ─────────────────────────────────────────────────────────
 
-    public function listApplications(int $opportunityId, int $perPage = 15): LengthAwarePaginator
+    public function listApplications(int $opportunityId, ?string $status = null, int $perPage = 15): LengthAwarePaginator
     {
         $this->findOrFail($opportunityId);
-        return $this->applicationRepo->findByOpportunity($opportunityId, $perPage);
+        return $this->applicationRepo->findByOpportunity($opportunityId, $status, $perPage);
     }
 
     public function listMyApplications(int $volunteerId, int $perPage = 15): LengthAwarePaginator

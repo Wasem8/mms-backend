@@ -2,27 +2,33 @@
 
 namespace Modules\Volunteer\Listeners;
 
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use Modules\Common\Services\NotificationService;
 use Modules\Volunteer\Events\ApplicationStatusChanged;
-
 
 class NotifyVolunteerOfApplicationStatus
 {
-    /**
-     * Create the event listener.
-     */
-    public function __construct() {}
+    public function __construct(protected NotificationService $notificationService) {}
 
-    /**
-     * Handle the event.
-     */
-    public function handle(ApplicationStatusChanged  $event): void
+    public function handle(ApplicationStatusChanged $event): void
     {
-        $volunteer = $event->application->volunteer;
-        $status    = $event->application->status->value;
+        $application = $event->application;
+        $volunteer   = $application->volunteer;
+        $status      = $application->status->value;
 
-        // Mail::to($volunteer->email)->send(new ApplicationStatusMail($event->application));
-        // or: Notification::send($volunteer, new ApplicationStatusNotification($event->application));
+        if (!$volunteer) {
+            return;
+        }
+
+        $this->notificationService->notify(
+            $volunteer,
+            'تحديث حالة طلب التطوع',
+            'تم تحديث حالة طلبك في فرصة «' . $application->opportunity->title . '» إلى: ' . $status,
+            'application_status_changed',
+            [
+                'application_id' => (string) $application->id,
+                'opportunity_id' => (string) $application->opportunity_id,
+                'status'         => $status,
+            ]
+        );
     }
 }

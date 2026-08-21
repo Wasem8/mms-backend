@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminActivityController;
 use Illuminate\Support\Facades\Route;
 use Modules\Dashboard\Http\Controllers\DashboardController;
 use Modules\Dashboard\Http\Controllers\MosqueManagerDashboardController;
@@ -46,3 +47,7 @@ Route::prefix('dashboard/mosque-manager')
         Route::get('/', [MosqueManagerDashboardController::class, 'index']);
 
     });
+
+Route::middleware(['auth:api', 'role:super_admin'])->group(function () {
+    Route::get('admin/activity-log', [AdminActivityController::class, 'index']);
+});

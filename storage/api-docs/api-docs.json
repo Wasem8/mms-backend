@@ -24,6 +24,204 @@
         }
     ],
     "paths": {
+        "/api/admin/activity-log": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Super-admin activity log",
+                "description": "Returns a unified activity feed for the authenticated super-admin, aggregated from existing\ntables that record the actor (no dedicated activity-log storage):\n- complaint status changes (`complaint_status_logs`)\n- sermon approvals (`sermons.region_manager_id`)\n- invitations created (`invitations.created_by`)\n- maintenance status changes (ALL requests; actor = the request's mosque manager via `manager_id`)\nResults are sorted by time (newest first) and paginated.",
+                "operationId": "adminActivityLog",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "module",
+                        "in": "query",
+                        "description": "Filter by source module",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "complaints",
+                                "sermons",
+                                "invitations",
+                                "maintenance"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "description": "Filter activities on or after this date",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "description": "Filter activities on or before this date",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "module": {
+                                                        "type": "string",
+                                                        "example": "complaints"
+                                                    },
+                                                    "action_key": {
+                                                        "type": "string",
+                                                        "example": "complaint_status_changed"
+                                                    },
+                                                    "description": {
+                                                        "type": "string",
+                                                        "example": "تغيير حالة الشكوى رقم #12 من pending إلى resolved"
+                                                    },
+                                                    "target_type": {
+                                                        "type": "string",
+                                                        "example": "complaint"
+                                                    },
+                                                    "target_id": {
+                                                        "type": "integer",
+                                                        "example": 12
+                                                    },
+                                                    "actor_id": {
+                                                        "type": "integer",
+                                                        "example": 1,
+                                                        "nullable": true
+                                                    },
+                                                    "actor_name": {
+                                                        "type": "string",
+                                                        "example": "Admin User"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2026-08-15 09:05:23"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "meta": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 4
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 56
+                                                },
+                                                "from": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "to": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "links": {
+                                            "properties": {
+                                                "first": {
+                                                    "type": "string",
+                                                    "example": "http://localhost:8000/api/admin/activity-log?page=1"
+                                                },
+                                                "last": {
+                                                    "type": "string",
+                                                    "example": "http://localhost:8000/api/admin/activity-log?page=4"
+                                                },
+                                                "prev": {
+                                                    "type": "string",
+                                                    "example": null,
+                                                    "nullable": true
+                                                },
+                                                "next": {
+                                                    "type": "string",
+                                                    "example": "http://localhost:8000/api/admin/activity-log?page=2",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — super_admin role required"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/education/attendance": {
             "get": {
                 "tags": [
@@ -7171,6 +7369,656 @@
                 ]
             }
         },
+        "/mosque/donations/report": {
+            "get": {
+                "tags": [
+                    "Donations"
+                ],
+                "summary": "Mosque manager donation report",
+                "description": "Returns a donation report scoped to the authenticated mosque manager's mosque\n(the mosque is derived automatically from the manager — no `mosque_id` required).\n- Supports filtering by donor name, type, status, campaign, and date range.\n- Add `export=pdf` to generate a downloadable PDF (returned as a Supabase signed URL),\n  following the same export flow used for donation receipts and volunteer certificates.\n- Without `export`, the report data is returned as JSON.",
+                "operationId": "mosqueDonationReport",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search by donor name",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "cash",
+                                "in_kind"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pending",
+                                "completed"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "campaign",
+                        "in": "query",
+                        "description": "Filter by campaign ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "description": "Filter donations created on or after this date",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "description": "Filter donations created on or before this date",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "export",
+                        "in": "query",
+                        "description": "Set to `pdf` to receive a downloadable PDF report URL",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pdf"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Report data (JSON) when `export` is omitted, or a signed PDF download URL when `export=pdf`.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "title": "ReportData",
+                                            "properties": {
+                                                "status": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "Success"
+                                                },
+                                                "data": {
+                                                    "properties": {
+                                                        "summary": {
+                                                            "properties": {
+                                                                "total_amount": {
+                                                                    "type": "number",
+                                                                    "format": "float",
+                                                                    "example": 125000
+                                                                },
+                                                                "total_count": {
+                                                                    "type": "integer",
+                                                                    "example": 42
+                                                                },
+                                                                "cash_amount": {
+                                                                    "type": "number",
+                                                                    "format": "float",
+                                                                    "example": 98000
+                                                                },
+                                                                "in_kind_count": {
+                                                                    "type": "integer",
+                                                                    "example": 7
+                                                                },
+                                                                "currency": {
+                                                                    "type": "string",
+                                                                    "example": "SYP"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        },
+                                                        "donations": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/components/schemas/Donation"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "title": "ReportPdf",
+                                            "properties": {
+                                                "status": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "تم إنشاء تقرير التبرعات بنجاح."
+                                                },
+                                                "data": {
+                                                    "properties": {
+                                                        "report_url": {
+                                                            "type": "string",
+                                                            "format": "uri",
+                                                            "example": "https://__.supabase.co/storage/v1/object/sign/bucket/donation_report_5_...pdf?token=..."
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — mosque_manager role required"
+                    },
+                    "422": {
+                        "description": "Manager is not linked to any mosque"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/donations/report": {
+            "get": {
+                "tags": [
+                    "Donations"
+                ],
+                "summary": "Super-admin donation report (all mosques)",
+                "description": "Returns a donation report aggregated across ALL mosques for the super-admin.\nSupports the same filters as the mosque-manager report plus `mosque_id` and `city`.\nAdd `export=pdf` to receive a downloadable PDF (Supabase signed URL),\nfollowing the same export flow used for receipts and volunteer certificates.",
+                "operationId": "adminDonationReport",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search by donor name",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "cash",
+                                "in_kind"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pending",
+                                "completed"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "campaign",
+                        "in": "query",
+                        "description": "Filter by campaign ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "mosque_id",
+                        "in": "query",
+                        "description": "Filter by a specific mosque ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "city",
+                        "in": "query",
+                        "description": "Filter by mosque city",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "description": "Filter donations created on or after this date",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "description": "Filter donations created on or before this date",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "export",
+                        "in": "query",
+                        "description": "Set to `pdf` to receive a downloadable PDF report URL",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pdf"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Report data (JSON) when `export` is omitted, or a signed PDF download URL when `export=pdf`.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "title": "AdminReportData",
+                                            "properties": {
+                                                "status": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "Success"
+                                                },
+                                                "data": {
+                                                    "properties": {
+                                                        "summary": {
+                                                            "properties": {
+                                                                "total_amount": {
+                                                                    "type": "number",
+                                                                    "format": "float",
+                                                                    "example": 1250000
+                                                                },
+                                                                "total_count": {
+                                                                    "type": "integer",
+                                                                    "example": 842
+                                                                },
+                                                                "cash_amount": {
+                                                                    "type": "number",
+                                                                    "format": "float",
+                                                                    "example": 980000
+                                                                },
+                                                                "in_kind_count": {
+                                                                    "type": "integer",
+                                                                    "example": 117
+                                                                },
+                                                                "currency": {
+                                                                    "type": "string",
+                                                                    "example": "SYP"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        },
+                                                        "donations": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": 23
+                                                                    },
+                                                                    "reference": {
+                                                                        "type": "string",
+                                                                        "example": "REC-1645-2026"
+                                                                    },
+                                                                    "mosque_id": {
+                                                                        "type": "integer",
+                                                                        "example": 5
+                                                                    },
+                                                                    "mosque_name": {
+                                                                        "type": "string",
+                                                                        "example": "جامع الفرقان"
+                                                                    },
+                                                                    "donor_name": {
+                                                                        "type": "string",
+                                                                        "example": "فاعل خير"
+                                                                    },
+                                                                    "donation_type": {
+                                                                        "type": "string",
+                                                                        "example": "cash"
+                                                                    },
+                                                                    "payment_method": {
+                                                                        "type": "string",
+                                                                        "example": "cash"
+                                                                    },
+                                                                    "base_amount": {
+                                                                        "type": "number",
+                                                                        "format": "float",
+                                                                        "example": 500
+                                                                    },
+                                                                    "currency": {
+                                                                        "type": "string",
+                                                                        "example": "SYP"
+                                                                    },
+                                                                    "status": {
+                                                                        "type": "string",
+                                                                        "example": "completed"
+                                                                    },
+                                                                    "campaign": {
+                                                                        "type": "string",
+                                                                        "example": "اخر حملة"
+                                                                    },
+                                                                    "created_at": {
+                                                                        "type": "string",
+                                                                        "format": "date-time",
+                                                                        "example": "2026-08-15 09:05:23"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "title": "AdminReportPdf",
+                                            "properties": {
+                                                "status": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "تم إنشاء تقرير التبرعات لكل المساجد بنجاح."
+                                                },
+                                                "data": {
+                                                    "properties": {
+                                                        "report_url": {
+                                                            "type": "string",
+                                                            "format": "uri",
+                                                            "example": "https://__.supabase.co/storage/v1/object/sign/bucket/donation_report_all_...pdf?token=..."
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — super_admin role required"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/donations": {
+            "get": {
+                "tags": [
+                    "Donations"
+                ],
+                "summary": "Super-admin list all donations",
+                "description": "Returns a paginated list of donations across ALL mosques for the super-admin.\nSupports the same filters as the mosque list plus `mosque_id` and `city`.",
+                "operationId": "adminListDonations",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search by donor name",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "cash",
+                                "in_kind"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pending",
+                                "completed"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "campaign",
+                        "in": "query",
+                        "description": "Filter by campaign ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "mosque_id",
+                        "in": "query",
+                        "description": "Filter by a specific mosque ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "city",
+                        "in": "query",
+                        "description": "Filter by mosque city",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "description": "Filter donations created on or after this date",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "description": "Filter donations created on or before this date",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Donation"
+                                            }
+                                        },
+                                        "links": {
+                                            "properties": {
+                                                "first": {
+                                                    "type": "string",
+                                                    "example": "http://localhost:8000/api/admin/donations?page=1"
+                                                },
+                                                "last": {
+                                                    "type": "string",
+                                                    "example": "http://localhost:8000/api/admin/donations?page=12"
+                                                },
+                                                "prev": {
+                                                    "type": "string",
+                                                    "example": null,
+                                                    "nullable": true
+                                                },
+                                                "next": {
+                                                    "type": "string",
+                                                    "example": "http://localhost:8000/api/admin/donations?page=2",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "meta": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "from": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 12
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": "string",
+                                                    "example": "http://localhost:8000/api/admin/donations"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "to": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 120
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — super_admin role required"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/donations/mine": {
             "get": {
                 "tags": [
@@ -13472,7 +14320,7 @@
                                         "nullable": true
                                     },
                                     "manager_id": {
-                                        "description": "User ID of a mosque_manager role user.",
+                                        "description": "Optional. User ID of a mosque_manager role user.",
                                         "type": "integer",
                                         "example": 2,
                                         "nullable": true
@@ -20725,7 +21573,7 @@
                     "Tameems"
                 ],
                 "summary": "Send a circular",
-                "description": "Sends a tameem to one or more mosque managers.\n- `sender_id` is resolved automatically from the auth token.\n- All IDs in `recipient_ids` must belong to users with `role = mosque_manager`.\n- Passing a non-mosque-manager ID returns a `422` validation error.",
+                "description": "Sends a tameem to one or more mosque managers. (Region manager only.)\n- `sender_id` is resolved automatically from the auth token.\n- All IDs in `recipient_ids` must belong to users with `role = mosque_manager`.\n- Passing a non-mosque-manager ID returns a `422` validation error.\n- Alternatively, set `all_mosque_managers = true` to send to every mosque manager\n  without listing their IDs. When true, `recipient_ids` is ignored.\n- Exactly one of `recipient_ids` or `all_mosque_managers` must be provided.",
                 "operationId": "storeTameem",
                 "parameters": [
                     {
@@ -20739,8 +21587,7 @@
                             "schema": {
                                 "required": [
                                     "title",
-                                    "content",
-                                    "recipient_ids"
+                                    "content"
                                 ],
                                 "properties": {
                                     "title": {
@@ -20752,7 +21599,7 @@
                                         "example": "يُرجى الالتزام بالمواعيد المحددة..."
                                     },
                                     "recipient_ids": {
-                                        "description": "IDs of mosque managers to receive this tameem.",
+                                        "description": "IDs of mosque managers to receive this tameem. Ignored when `all_mosque_managers` is true.",
                                         "type": "array",
                                         "items": {
                                             "type": "integer"
@@ -20762,6 +21609,12 @@
                                             5,
                                             8
                                         ]
+                                    },
+                                    "all_mosque_managers": {
+                                        "description": "When true, the tameem is sent to ALL mosque managers (no need to list IDs).",
+                                        "type": "boolean",
+                                        "example": true,
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -20793,14 +21646,130 @@
                         "description": "Unauthenticated"
                     },
                     "422": {
-                        "description": "Validation error — e.g. a recipient ID does not belong to a mosque manager",
+                        "description": "Validation error — e.g. a recipient ID does not belong to an allowed role",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "أحد المستلمين غير موجود أو ليس مدير مسجد."
+                                            "example": "أحد المستلمين غير موجود أو ليس من الصلاحيات المسموح إرسال التعميم إليها."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/tameems/for-mosque": {
+            "post": {
+                "tags": [
+                    "Tameems"
+                ],
+                "summary": "Send a circular to the mosque staff",
+                "description": "Allows an authenticated mosque manager to send a tameem to the supervisors\nand teachers of their own mosque.\n- The mosque is derived automatically from the authenticated manager (`managedMosque`); no `mosque_id` is required.\n- All IDs in `recipient_ids` must belong to users with `role` = `halaqa_supervisor` or `teacher` who belong to the same mosque as the sender.\n- A recipient from another mosque, or with a different role, returns a `422` validation error.\n- Alternatively use `all_staff`, `all_teachers`, or `all_supervisors` to target every teacher/supervisor in the mosque without listing IDs. When any is true, `recipient_ids` is ignored.\n- Exactly one of `recipient_ids` or the \"all\" flags must be provided.",
+                "operationId": "storeTameemForMosque",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "content"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "تعميم بشأن جدول الحلقات"
+                                    },
+                                    "content": {
+                                        "type": "string",
+                                        "example": "يُرجى الالتزام بالمواعيد المحددة..."
+                                    },
+                                    "recipient_ids": {
+                                        "description": "IDs of supervisors/teachers in the sender's mosque. Ignored when an \"all\" flag is true.",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "example": [
+                                            12,
+                                            15
+                                        ]
+                                    },
+                                    "all_staff": {
+                                        "description": "Send to ALL teachers and supervisors in the mosque.",
+                                        "type": "boolean",
+                                        "example": true,
+                                        "nullable": true
+                                    },
+                                    "all_teachers": {
+                                        "description": "Send to all teachers in the mosque.",
+                                        "type": "boolean",
+                                        "example": true,
+                                        "nullable": true
+                                    },
+                                    "all_supervisors": {
+                                        "description": "Send to all supervisors in the mosque.",
+                                        "type": "boolean",
+                                        "example": true,
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Tameem sent successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم إرسال التعميم بنجاح"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Tameem"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — mosque_manager role required"
+                    },
+                    "422": {
+                        "description": "Validation error — e.g. a recipient is not a supervisor/teacher in your mosque",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "أحد المستلمين غير تابع لمسجدك."
                                         }
                                     },
                                     "type": "object"
@@ -21056,6 +22025,53 @@
                                         "message": {
                                             "type": "string",
                                             "example": "تم جلب التعاميم الواردة بنجاح"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Tameem"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/tameems/sent": {
+            "get": {
+                "tags": [
+                    "Tameems"
+                ],
+                "summary": "Get sent circulars",
+                "description": "Returns all tameems sent by the authenticated mosque manager.",
+                "operationId": "sentTameems",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم جلب التعاميم الصادرة بنجاح"
                                         },
                                         "data": {
                                             "type": "array",
@@ -23196,9 +24212,31 @@
                                         "format": "date",
                                         "example": "2026-07-30",
                                         "nullable": true
+                                    },
+                                    "tasks": {
+                                        "description": "Optional list of task descriptions to create for this opportunity (each becomes an unassigned task).",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "example": "تنظيف المسجد"
+                                        },
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
+                            },
+                            "example": {
+                                "mosque_id": 1,
+                                "title": "تنظيم الصفوف",
+                                "description": "نحتاج متطوعين لتنظيم صفوف المصلى",
+                                "required_volunteers": 10,
+                                "start_date": "2026-07-01",
+                                "end_date": "2026-07-30",
+                                "tasks": [
+                                    "تنظيف المسجد",
+                                    "تجهيز القاعة",
+                                    "استقبال الضيوف"
+                                ]
                             }
                         }
                     }
@@ -23404,9 +24442,30 @@
                                         "type": "string",
                                         "format": "date",
                                         "nullable": true
+                                    },
+                                    "tasks": {
+                                        "description": "Optional. Send the full desired list of task descriptions to sync. New descriptions are added as unassigned tasks; unassigned tasks no longer in the list are removed. Assigned/completed tasks are preserved. Omit this key to leave tasks unchanged.",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "example": "تنظيف المسجد"
+                                        },
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
+                            },
+                            "example": {
+                                "title": "تنظيم الصفوف - محدّث",
+                                "description": "تحديث تفاصيل التنظيم",
+                                "required_volunteers": 15,
+                                "start_date": "2026-07-05",
+                                "end_date": "2026-07-30",
+                                "tasks": [
+                                    "تنظيف المسجد",
+                                    "تجهيز القاعة",
+                                    "استقبال الضيوف"
+                                ]
                             }
                         }
                     }
@@ -23594,6 +24653,11 @@
                                                             "rejected"
                                                         ]
                                                     },
+                                                    "volunteer_name": {
+                                                        "type": "string",
+                                                        "example": "Ahmed Al-Otaibi",
+                                                        "nullable": true
+                                                    },
                                                     "created_at": {
                                                         "type": "string",
                                                         "format": "date-time"
@@ -23650,6 +24714,30 @@
                         "schema": {
                             "type": "integer",
                             "example": 15
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Filter by title or description.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "تنظيم"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by opportunity status.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "open",
+                            "enum": [
+                                "open",
+                                "closed"
+                            ]
                         }
                     }
                 ],
@@ -23717,10 +24805,286 @@
                                                     "updated_at": {
                                                         "type": "string",
                                                         "format": "date-time"
+                                                    },
+                                                    "tasks": {
+                                                        "description": "Tasks created for this opportunity (each becomes an unassigned/assigned task).",
+                                                        "type": "array",
+                                                        "items": {
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "integer",
+                                                                    "example": 1
+                                                                },
+                                                                "opportunity_id": {
+                                                                    "type": "integer",
+                                                                    "example": 1
+                                                                },
+                                                                "application_id": {
+                                                                    "type": "integer",
+                                                                    "example": null,
+                                                                    "nullable": true
+                                                                },
+                                                                "task_description": {
+                                                                    "type": "string",
+                                                                    "example": "تنظيف المسجد"
+                                                                },
+                                                                "status": {
+                                                                    "type": "string",
+                                                                    "example": "unassigned",
+                                                                    "enum": [
+                                                                        "unassigned",
+                                                                        "assigned",
+                                                                        "completed"
+                                                                    ]
+                                                                },
+                                                                "created_at": {
+                                                                    "type": "string",
+                                                                    "format": "date-time"
+                                                                },
+                                                                "updated_at": {
+                                                                    "type": "string",
+                                                                    "format": "date-time"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
                                                     }
                                                 },
                                                 "type": "object"
                                             }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — mosque_manager role required"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/volunteer/volunteers": {
+            "get": {
+                "tags": [
+                    "Volunteer Opportunities"
+                ],
+                "summary": "List all volunteers",
+                "description": "Returns a paginated list of users with the `volunteer` role. `super_admin` sees all volunteers; `mosque_manager` sees only volunteers of their mosque. Supports `search` and `status` filters.",
+                "operationId": "getVolunteers",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "ahmad"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "active"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Volunteers retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Volunteers retrieved successfully."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 12
+                                                    },
+                                                    "first_name": {
+                                                        "type": "string",
+                                                        "example": "أحمد"
+                                                    },
+                                                    "last_name": {
+                                                        "type": "string",
+                                                        "example": "محمد"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "أحمد محمد"
+                                                    },
+                                                    "email": {
+                                                        "type": "string",
+                                                        "example": "ahmad@example.com"
+                                                    },
+                                                    "phone": {
+                                                        "type": "string",
+                                                        "example": "0999999999",
+                                                        "nullable": true
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "active"
+                                                    },
+                                                    "roles": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        },
+                                                        "example": [
+                                                            "volunteer"
+                                                        ]
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 40
+                                                },
+                                                "has_more_pages": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — super_admin or mosque_manager role required"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/volunteer/stats": {
+            "get": {
+                "tags": [
+                    "Volunteer Opportunities"
+                ],
+                "summary": "Mosque-manager volunteer dashboard stats",
+                "description": "Returns card stats scoped to the authenticated manager's mosque: total opportunities, pending applications, and volunteers count. Requires `mosque_manager` role.",
+                "operationId": "getVolunteerStats",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stats retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Volunteer stats retrieved successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "opportunities_total": {
+                                                    "description": "Total opportunities for the manager's mosque",
+                                                    "type": "integer",
+                                                    "example": 12
+                                                },
+                                                "pending_applications": {
+                                                    "description": "Pending (قائمة) applications for the mosque's opportunities",
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "volunteers_count": {
+                                                    "description": "Volunteers belonging to the mosque",
+                                                    "type": "integer",
+                                                    "example": 30
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -23850,6 +25214,21 @@
                             "type": "integer",
                             "example": 15
                         }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter applications by status.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "pending",
+                            "enum": [
+                                "pending",
+                                "approved",
+                                "rejected"
+                            ]
+                        }
                     }
                 ],
                 "responses": {
@@ -23891,6 +25270,11 @@
                                                             "approved",
                                                             "rejected"
                                                         ]
+                                                    },
+                                                    "volunteer_name": {
+                                                        "type": "string",
+                                                        "example": "Ahmed Al-Otaibi",
+                                                        "nullable": true
                                                     },
                                                     "created_at": {
                                                         "type": "string",
@@ -27084,6 +28468,10 @@
         {
             "name": "Sermon Selections",
             "description": "Manage sermon selections for Friday prayers (اختيار خطبة الجمعة)."
+        },
+        {
+            "name": "Admin",
+            "description": "Admin"
         },
         {
             "name": "Attendance",

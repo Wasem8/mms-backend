@@ -63,9 +63,11 @@ return $program->delete();
     }
 
 
-    public function getProgramsByMosque(int $mosqueId)
+    public function getProgramsByMosque(int $mosqueId, int $perPage = 10)
 {
-return DawahProgram::where('mosque_id', $mosqueId)->with(['space'])->get();
+return DawahProgram::where('mosque_id', $mosqueId)
+    ->with(['space', 'schedules'])
+    ->paginate($perPage);
 }
     public function createSchedules(DawahProgram $program, array $schedules): void
     {

@@ -70,6 +70,11 @@ class User extends Authentication implements JWTSubject
         return $this->roles()->where('name', $role)->exists();
     }
 
+    public function hasAnyRole(array $roles): bool
+    {
+        return $this->roles()->whereIn('name', $roles)->exists();
+    }
+
     public function hasPermission($permission)
     {
         return $this->roles()

@@ -164,6 +164,263 @@ class DonationsEndpoints
     )]
     public function listDonations() {}
 
+    // =========================================================================
+    // GET /mosque/donations/report
+    // Mosque manager donation report (JSON or exported PDF)
+    // =========================================================================
+
+    #[OA\Get(
+        path: '/mosque/donations/report',
+        operationId: 'mosqueDonationReport',
+        tags: ['Donations'],
+        summary: 'Mosque manager donation report',
+        description: <<<DESC
+        Returns a donation report scoped to the authenticated mosque manager's mosque
+        (the mosque is derived automatically from the manager — no `mosque_id` required).
+        - Supports filtering by donor name, type, status, campaign, and date range.
+        - Add `export=pdf` to generate a downloadable PDF (returned as a Supabase signed URL),
+          following the same export flow used for donation receipts and volunteer certificates.
+        - Without `export`, the report data is returned as JSON.
+        DESC,
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'search',    in: 'query', required: false, schema: new OA\Schema(type: 'string'),  description: 'Search by donor name'),
+            new OA\Parameter(name: 'type',      in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['cash', 'in_kind'])),
+            new OA\Parameter(name: 'status',    in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['pending', 'completed'])),
+            new OA\Parameter(name: 'campaign',  in: 'query', required: false, schema: new OA\Schema(type: 'integer'), description: 'Filter by campaign ID'),
+            new OA\Parameter(name: 'date_from', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date'), description: 'Filter donations created on or after this date'),
+            new OA\Parameter(name: 'date_to',   in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date'), description: 'Filter donations created on or before this date'),
+            new OA\Parameter(name: 'export',    in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['pdf']), description: 'Set to `pdf` to receive a downloadable PDF report URL'),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Report data (JSON) when `export` is omitted, or a signed PDF download URL when `export=pdf`.',
+                content: new OA\JsonContent(
+                    oneOf: [
+                        new OA\Schema(
+                            title: 'ReportData',
+                            properties: [
+                                new OA\Property(property: 'status',  type: 'boolean', example: true),
+                                new OA\Property(property: 'message', type: 'string',  example: 'Success'),
+                                new OA\Property(
+                                    property: 'data',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(
+                                            property: 'summary',
+                                            type: 'object',
+                                            properties: [
+                                                new OA\Property(property: 'total_amount',  type: 'number', format: 'float', example: 125000.00),
+                                                new OA\Property(property: 'total_count',   type: 'integer', example: 42),
+                                                new OA\Property(property: 'cash_amount',   type: 'number', format: 'float', example: 98000.00),
+                                                new OA\Property(property: 'in_kind_count', type: 'integer', example: 7),
+                                                new OA\Property(property: 'currency',      type: 'string', example: 'SYP'),
+                                            ]
+                                        ),
+                                        new OA\Property(
+                                            property: 'donations',
+                                            type: 'array',
+                                            items: new OA\Items(ref: '#/components/schemas/Donation')
+                                        ),
+                                    ]
+                                ),
+                            ]
+                        ),
+                        new OA\Schema(
+                            title: 'ReportPdf',
+                            properties: [
+                                new OA\Property(property: 'status',  type: 'boolean', example: true),
+                                new OA\Property(property: 'message', type: 'string',  example: 'تم إنشاء تقرير التبرعات بنجاح.'),
+                                new OA\Property(
+                                    property: 'data',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'report_url', type: 'string', format: 'uri', example: 'https://__.supabase.co/storage/v1/object/sign/bucket/donation_report_5_...pdf?token=...'),
+                                    ]
+                                ),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — mosque_manager role required'),
+            new OA\Response(response: 422, description: 'Manager is not linked to any mosque'),
+        ]
+    )]
+    public function mosqueDonationReport() {}
+
+    // =========================================================================
+    // GET /admin/donations/report
+    // Super-admin donation report across ALL mosques
+    // =========================================================================
+
+    #[OA\Get(
+        path: '/admin/donations/report',
+        operationId: 'adminDonationReport',
+        tags: ['Donations'],
+        summary: 'Super-admin donation report (all mosques)',
+        description: <<<DESC
+        Returns a donation report aggregated across ALL mosques for the super-admin.
+        Supports the same filters as the mosque-manager report plus `mosque_id` and `city`.
+        Add `export=pdf` to receive a downloadable PDF (Supabase signed URL),
+        following the same export flow used for receipts and volunteer certificates.
+        DESC,
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'search',    in: 'query', required: false, schema: new OA\Schema(type: 'string'),  description: 'Search by donor name'),
+            new OA\Parameter(name: 'type',      in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['cash', 'in_kind'])),
+            new OA\Parameter(name: 'status',    in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['pending', 'completed'])),
+            new OA\Parameter(name: 'campaign',  in: 'query', required: false, schema: new OA\Schema(type: 'integer'), description: 'Filter by campaign ID'),
+            new OA\Parameter(name: 'mosque_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer'), description: 'Filter by a specific mosque ID'),
+            new OA\Parameter(name: 'city',      in: 'query', required: false, schema: new OA\Schema(type: 'string'),  description: 'Filter by mosque city'),
+            new OA\Parameter(name: 'date_from', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date'), description: 'Filter donations created on or after this date'),
+            new OA\Parameter(name: 'date_to',   in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date'), description: 'Filter donations created on or before this date'),
+            new OA\Parameter(name: 'export',    in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['pdf']), description: 'Set to `pdf` to receive a downloadable PDF report URL'),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Report data (JSON) when `export` is omitted, or a signed PDF download URL when `export=pdf`.',
+                content: new OA\JsonContent(
+                    oneOf: [
+                        new OA\Schema(
+                            title: 'AdminReportData',
+                            properties: [
+                                new OA\Property(property: 'status',  type: 'boolean', example: true),
+                                new OA\Property(property: 'message', type: 'string',  example: 'Success'),
+                                new OA\Property(
+                                    property: 'data',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(
+                                            property: 'summary',
+                                            type: 'object',
+                                            properties: [
+                                                new OA\Property(property: 'total_amount',  type: 'number', format: 'float', example: 1250000.00),
+                                                new OA\Property(property: 'total_count',   type: 'integer', example: 842),
+                                                new OA\Property(property: 'cash_amount',   type: 'number', format: 'float', example: 980000.00),
+                                                new OA\Property(property: 'in_kind_count', type: 'integer', example: 117),
+                                                new OA\Property(property: 'currency',      type: 'string', example: 'SYP'),
+                                            ]
+                                        ),
+                                        new OA\Property(
+                                            property: 'donations',
+                                            type: 'array',
+                                            items: new OA\Items(
+                                                properties: [
+                                                    new OA\Property(property: 'id',          type: 'integer', example: 23),
+                                                    new OA\Property(property: 'reference',    type: 'string',  example: 'REC-1645-2026'),
+                                                    new OA\Property(property: 'mosque_id',    type: 'integer', example: 5),
+                                                    new OA\Property(property: 'mosque_name',  type: 'string',  example: 'جامع الفرقان'),
+                                                    new OA\Property(property: 'donor_name',   type: 'string',  example: 'فاعل خير'),
+                                                    new OA\Property(property: 'donation_type',type: 'string',  example: 'cash'),
+                                                    new OA\Property(property: 'payment_method', type: 'string', example: 'cash'),
+                                                    new OA\Property(property: 'base_amount', type: 'number',  format: 'float', example: 500),
+                                                    new OA\Property(property: 'currency',    type: 'string',  example: 'SYP'),
+                                                    new OA\Property(property: 'status',      type: 'string',  example: 'completed'),
+                                                    new OA\Property(property: 'campaign',    type: 'string',  example: 'اخر حملة'),
+                                                    new OA\Property(property: 'created_at',  type: 'string',  format: 'date-time', example: '2026-08-15 09:05:23'),
+                                                ]
+                                            )
+                                        ),
+                                    ]
+                                ),
+                            ]
+                        ),
+                        new OA\Schema(
+                            title: 'AdminReportPdf',
+                            properties: [
+                                new OA\Property(property: 'status',  type: 'boolean', example: true),
+                                new OA\Property(property: 'message', type: 'string',  example: 'تم إنشاء تقرير التبرعات لكل المساجد بنجاح.'),
+                                new OA\Property(
+                                    property: 'data',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'report_url', type: 'string', format: 'uri', example: 'https://__.supabase.co/storage/v1/object/sign/bucket/donation_report_all_...pdf?token=...'),
+                                    ]
+                                ),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — super_admin role required'),
+        ]
+    )]
+    public function adminDonationReport() {}
+
+    // =========================================================================
+    // GET /admin/donations
+    // Super-admin: list ALL donations across all mosques
+    // =========================================================================
+
+    #[OA\Get(
+        path: '/admin/donations',
+        operationId: 'adminListDonations',
+        tags: ['Donations'],
+        summary: 'Super-admin list all donations',
+        description: <<<DESC
+        Returns a paginated list of donations across ALL mosques for the super-admin.
+        Supports the same filters as the mosque list plus `mosque_id` and `city`.
+        DESC,
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'search',    in: 'query', required: false, schema: new OA\Schema(type: 'string'),  description: 'Search by donor name'),
+            new OA\Parameter(name: 'type',      in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['cash', 'in_kind'])),
+            new OA\Parameter(name: 'status',    in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['pending', 'completed'])),
+            new OA\Parameter(name: 'campaign',  in: 'query', required: false, schema: new OA\Schema(type: 'integer'), description: 'Filter by campaign ID'),
+            new OA\Parameter(name: 'mosque_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer'), description: 'Filter by a specific mosque ID'),
+            new OA\Parameter(name: 'city',      in: 'query', required: false, schema: new OA\Schema(type: 'string'),  description: 'Filter by mosque city'),
+            new OA\Parameter(name: 'date_from', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date'), description: 'Filter donations created on or after this date'),
+            new OA\Parameter(name: 'date_to',   in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date'), description: 'Filter donations created on or before this date'),
+            new OA\Parameter(name: 'per_page',  in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 10, minimum: 1, maximum: 100)),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/Donation')),
+                        new OA\Property(
+                            property: 'links',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'first', type: 'string', example: 'http://localhost:8000/api/admin/donations?page=1'),
+                                new OA\Property(property: 'last',  type: 'string', example: 'http://localhost:8000/api/admin/donations?page=12'),
+                                new OA\Property(property: 'prev',  type: 'string', nullable: true, example: null),
+                                new OA\Property(property: 'next',  type: 'string', nullable: true, example: 'http://localhost:8000/api/admin/donations?page=2'),
+                            ]
+                        ),
+                        new OA\Property(
+                            property: 'meta',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                new OA\Property(property: 'from',         type: 'integer', example: 1),
+                                new OA\Property(property: 'last_page',    type: 'integer', example: 12),
+                                new OA\Property(property: 'links',       type: 'array', items: new OA\Items(type: 'object')),
+                                new OA\Property(property: 'path',         type: 'string', example: 'http://localhost:8000/api/admin/donations'),
+                                new OA\Property(property: 'per_page',     type: 'integer', example: 10),
+                                new OA\Property(property: 'to',           type: 'integer', example: 10),
+                                new OA\Property(property: 'total',        type: 'integer', example: 120),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — super_admin role required'),
+        ]
+    )]
+    public function adminListDonations() {}
+
     #[OA\Get(
         path: '/donations/mine',
         operationId: 'listMyDonations',

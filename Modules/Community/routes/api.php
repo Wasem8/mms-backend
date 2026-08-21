@@ -20,7 +20,7 @@ Route::prefix('program')->group(function () {
     Route::get('/dawah_programs/{program}/schedules/{schedule}', [ProgramScheduleController::class, 'show']);
 
 
-    // Protected
+    // Protected — mosque resolved from the authenticated mosque_manager
     Route::middleware(['auth:api', 'active.user', 'role:mosque_manager'])->group(function () {
 
         Route::post('/mosques/{mosque}/dawah_programs', [DawahProgramController::class, 'store']);
@@ -79,16 +79,24 @@ Route::prefix('tameems')
     ->group(function () {
 
         Route::get('/my-tameems', [TameemController::class, 'myTameems'])
-            ->middleware('role:mosque_manager');
+            ->middleware('role:mosque_manager,teacher,supervisor');
 
         Route::patch('/{id}/read', [TameemController::class, 'markAsRead'])
             ->middleware('role:mosque_manager');
 
         Route::middleware('role:super_admin')->group(function () {
             Route::post('/', [TameemController::class, 'store']);
-            Route::put('/{id}', [TameemController::class, 'update']);
+            Route::put('/{id}', [TameemController::class, 'update'])->whereNumber('id');
             Route::get('/', [TameemController::class, 'index']);
-            Route::delete('/{id}', [TameemController::class, 'destroy']);
-            Route::get('/{id}', [TameemController::class, 'show']);
+            Route::delete('/{id}', [TameemController::class, 'destroy'])->whereNumber('id');
+            Route::get('/{id}', [TameemController::class, 'show'])->whereNumber('id');
         });
+
+        // Mosque manager sends a tameem to supervisors/teachers of their own mosque.
+        Route::post('/for-mosque', [TameemController::class, 'storeForMosque'])
+            ->middleware('role:mosque_manager');
+
+        // Tameems sent by the authenticated mosque manager.
+        Route::get('/sent', [TameemController::class, 'sentTameems'])
+            ->middleware('role:mosque_manager');
     });

@@ -43,7 +43,6 @@ class Mosque extends Model
     ];
 
     protected $casts = [
-        'is_featured' => 'boolean',
         'latitude' => 'decimal:8',
         'longitude' => 'decimal:8',
         'average_rating' => 'decimal:2',

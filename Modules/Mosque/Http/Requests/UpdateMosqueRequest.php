@@ -24,7 +24,7 @@ class UpdateMosqueRequest extends FormRequest
         $rules = [
             'name'           => 'sometimes|string|max:255',
             'image'          => 'sometimes|image|max:5120',
-            'working_hours'  => 'nullable|array',
+            'working_hours' => 'nullable', 'string', 'max:500',
             'imam'           => 'sometimes|nullable|string|max:255',
             'khatib'         => 'sometimes|nullable|string|max:255',
         ];

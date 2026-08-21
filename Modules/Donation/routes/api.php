@@ -12,6 +12,7 @@ Route::post('stripe/webhook', [StripeWebhookController::class, 'handle']);
 
 Route::middleware(['auth:api', 'role:super_admin'])->group(function () {
     Route::put('settings/exchange-rate', [SettingController::class, 'updateExchangeRate']);
+    Route::get('admin/donations', [DonationController::class, 'allDonations']);
 });
 
 Route::get('settings', [SettingController::class, 'index']);
@@ -61,3 +62,11 @@ Route::middleware(['auth:api', 'role:mosque_manager'])->group(function () {
 });
 
 Route::get('mosques/{mosqueId}/donations/recent', [DonationController::class, 'recentDonations'])->middleware(['auth:api','role:mosque_manager']);
+
+Route::middleware(['auth:api', 'role:mosque_manager'])->group(function () {
+    Route::get('mosque/donations/report', [DonationController::class, 'report']);
+});
+
+Route::middleware(['auth:api', 'role:super_admin'])->group(function () {
+    Route::get('admin/donations/report', [DonationController::class, 'allReport']);
+});

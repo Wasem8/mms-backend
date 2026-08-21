@@ -19,6 +19,8 @@ class CreateOpportunityRequest extends FormRequest
             'required_volunteers' => ['required', 'integer', 'min:1'],
             'start_date'          => ['required', 'date', 'after_or_equal:today'],
             'end_date'            => ['required', 'date', 'after:start_date'],
+            'tasks'               => ['sometimes', 'array'],
+            'tasks.*'             => ['string', 'max:1000'],
         ];
     }
 
@@ -37,6 +39,7 @@ class CreateOpportunityRequest extends FormRequest
             requiredVolunteers: (int) $this->input('required_volunteers'),
             startDate: $this->string('start_date'),
             endDate: $this->string('end_date'),
+            tasks: $this->input('tasks', []),
         );
     }
 

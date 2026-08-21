@@ -20,6 +20,8 @@ class DawahProgramController extends Controller
         $this->dawahProgramService = $dawahProgramService;
     }
 
+
+
     public function index(Request $request)
     {
         $validated = $request->validate([
@@ -47,6 +49,7 @@ class DawahProgramController extends Controller
     public function store(StoreDawahProgramRequest $request, Mosque $mosque)
     {
         try {
+
             $data = $request->validated();
             $data['mosque_id'] = $mosque->id;
 
@@ -66,7 +69,7 @@ class DawahProgramController extends Controller
         }
     }
 
-    public function update(UpdateDawahProgramRequest $request, Mosque $mosque, DawahProgram $program)
+    public function update(UpdateDawahProgramRequest $request,Mosque $mosque, DawahProgram $program)
     {
         try {
             $data = $request->validated();
@@ -87,20 +90,27 @@ class DawahProgramController extends Controller
         }
     }
 
-    public function destroy(Mosque $mosque, DawahProgram $program)
+    public function destroy(Mosque $mosque ,DawahProgram $program)
     {
         try {
-            $this->dawahProgramService->deleteProgram($mosque, $program);
+            $this->dawahProgramService->deleteProgram($mosque,$program);
             return ApiResponse::success(null, __('messages.community.program_deleted'));
         } catch (\Exception $e) {
             return ApiResponse::error($e->getMessage(), 400);
         }
     }
 
-    public function getProgramsByMosque(Mosque $mosque)
+    public function getProgramsByMosque(Request $request, Mosque $mosque)
     {
-        $programs = $this->dawahProgramService->getProgramsByMosque($mosque->id);
+        $validated = $request->validate([
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
 
-        return ApiResponse::success($programs->load('schedules'), __('messages.community.mosque_programs_retrieved'));
+        $programs = $this->dawahProgramService->getProgramsByMosque(
+            $mosque->id,
+            (int) ($validated['per_page'] ?? 10)
+        );
+
+        return ApiResponse::success($programs->items(), __('messages.community.mosque_programs_retrieved'), $programs);
     }
 }

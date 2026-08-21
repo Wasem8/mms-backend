@@ -9,7 +9,7 @@ interface VolunteerApplicationRepositoryInterface
 {
     public function findById(int $id): ?VolunteerApplication;
 
-    public function findByOpportunity(int $opportunityId, int $perPage = 15): LengthAwarePaginator;
+    public function findByOpportunity(int $opportunityId, ?string $status = null, int $perPage = 15): LengthAwarePaginator;
 
     public function findByVolunteer(int $volunteerId, int $perPage = 15): LengthAwarePaginator;
 

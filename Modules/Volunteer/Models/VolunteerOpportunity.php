@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Mosque\Models\Mosque;
+use Modules\Volunteer\Enums\ApplicationStatus;
 use Modules\Volunteer\Enums\OpportunityStatus;
 
 // use Modules\Volunteer\Database\Factories\VolunteerOpportunityFactory;
@@ -48,6 +49,17 @@ class VolunteerOpportunity extends Model
     public function applications(): HasMany
     {
         return $this->hasMany(VolunteerApplication::class, 'opportunity_id');
+    }
+
+    public function acceptedApplications(): HasMany
+    {
+        return $this->applications()->where('status', ApplicationStatus::Approved)
+            ->with('volunteer');
+    }
+
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(VolunteerTask::class, 'opportunity_id');
     }
 
     public function logs(): HasMany

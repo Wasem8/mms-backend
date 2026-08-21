@@ -71,6 +71,11 @@ class TameemService
         return $this->tameemRepo->getForMosqueManager($mosqueManagerId);
     }
 
+    public function getSentTameems($senderId)
+    {
+        return $this->tameemRepo->getSentByManager($senderId);
+    }
+
     public function getTameemById($id)
     {
         return $this->tameemRepo->findById($id);

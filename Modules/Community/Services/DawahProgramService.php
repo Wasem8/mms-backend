@@ -211,9 +211,9 @@ class DawahProgramService
         );
     }
 
-    public function getProgramsByMosque(int $mosqueId)
+    public function getProgramsByMosque(int $mosqueId, int $perPage = 10)
     {
-        return $this->dawahProgramRepository->getProgramsByMosque($mosqueId);
+        return $this->dawahProgramRepository->getProgramsByMosque($mosqueId, $perPage);
     }
 
     private function uploadImage(UploadedFile $image): string

@@ -2,8 +2,7 @@
 
 namespace Modules\Donation\Services;
 
-use Dompdf\Dompdf;
-use Dompdf\Options;
+
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
@@ -14,15 +13,13 @@ use Modules\Donation\Models\Setting;
 use Modules\Donation\Strategies\PaymentStrategyFactory;
 use Modules\Donation\Repositories\SettingRepositoryInterface;
 use Modules\Donation\Models\Campaign;
+use Modules\Mosque\Models\Mosque;
 use Modules\Mosque\Models\MosqueNeed;
-use ArPHP\I18N\Arabic;
 use Illuminate\Validation\ValidationException;
-use Spatie\Browsershot\Browsershot;
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use App\Support\Pdf\PdfGeneratorService;
 use App\Support\Storage\SupabaseStorageService;
-use Mpdf\Mpdf;
-use Mpdf\Config\ConfigVariables;
-use Mpdf\Config\FontVariables;
+
 
 class DonationService
 {
@@ -74,6 +71,17 @@ class DonationService
             ->when($filters['campaign'] ?? null, fn($q, $v) => $q->where('campaign_id', $v))
             ->latest()
             ->paginate($perPage);
+    }
+
+    /**
+     * Super-admin: paginated donations across ALL mosques.
+     * Supports the same filters as the mosque report plus `mosque_id` and `city`.
+     */
+    public function getAllDonations(array $filters = [])
+    {
+        $perPage = isset($filters['per_page']) ? max(1, min(100, (int) $filters['per_page'])) : 10;
+
+        return $this->reportQuery(null, $filters)->paginate($perPage);
     }
 
     public function findByReference(string $reference)
@@ -317,57 +325,169 @@ class DonationService
             'client_secret' => $result->clientSecret ?? null,
         ];
     }
+    public function getReport(int $mosqueId, array $filters = []): array
+    {
+        $donations = $this->reportQuery($mosqueId, $filters)->get();
+
+        return $this->formatReport($donations, false);
+    }
+
+    /**
+     * Super-admin report across ALL mosques.
+     * Supports the same filters plus `mosque_id` and `city`.
+     */
+    public function getReportForAll(array $filters = []): array
+    {
+        $donations = $this->reportQuery(null, $filters)->get();
+
+        return $this->formatReport($donations, true);
+    }
+
+    private function reportQuery(?int $mosqueId, array $filters): \Illuminate\Database\Eloquent\Builder
+    {
+        return Donation::query()
+            ->with(['campaign:id,title', 'mosque:id,name', 'mosqueNeed:id,description'])
+            ->when($mosqueId !== null, fn($q) => $q->where('mosque_id', $mosqueId))
+            ->when($filters['search'] ?? null, fn($q, $v) => $q->where('donor_name', 'like', "%{$v}%"))
+            ->when($filters['type']   ?? null, fn($q, $v) => $q->where('donation_type', $v))
+            ->when($filters['status'] ?? null, fn($q, $v) => $q->where('status', $v))
+            ->when($filters['campaign'] ?? null, fn($q, $v) => $q->where('campaign_id', $v))
+            ->when($mosqueId === null && ($filters['mosque_id'] ?? null), fn($q, $v) => $q->where('mosque_id', $v))
+            ->when($filters['city'] ?? null, fn($q, $v) => $q->whereHas('mosque', fn($q2) => $q2->where('city', 'like', "%{$v}%")))
+            ->when($filters['date_from'] ?? null, fn($q, $v) => $q->whereDate('created_at', '>=', $v))
+            ->when($filters['date_to']   ?? null, fn($q, $v) => $q->whereDate('created_at', '<=', $v))
+            ->latest();
+    }
+
+    private function formatReport(\Illuminate\Database\Eloquent\Collection $donations, bool $includeMosque): array
+    {
+        $completed = $donations->where('status', 'completed');
+
+        return [
+            'summary' => [
+                'total_amount'  => (float) $completed->sum('base_amount'),
+                'total_count'   => $donations->count(),
+                'cash_amount'   => (float) $completed->where('donation_type', 'cash')->sum('base_amount'),
+                'in_kind_count' => $donations->where('donation_type', 'in_kind')->count(),
+                'currency'      => 'SYP',
+            ],
+            'donations' => $donations->map(fn(Donation $d) => [
+                'id'            => $d->id,
+                'reference'     => $d->reference,
+                'mosque_id'     => $d->mosque_id,
+                'mosque_name'   => $includeMosque ? ($d->mosque?->name ?? '—') : null,
+                'donor_name'    => $d->donor_name,
+                'donation_type' => $d->donation_type,
+                'payment_method'=> $d->payment_method,
+                'amount'        => $d->amount,
+                'base_amount'   => $d->base_amount,
+                'currency'      => $d->currency,
+                'status'        => $d->status,
+                'campaign'      => $d->campaign?->title,
+                'created_at'    => $d->created_at,
+            ])->all(),
+        ];
+    }
+
+    public function exportReport(int $mosqueId, array $filters = []): string
+    {
+        $report = $this->getReport($mosqueId, $filters);
+        $mosque = Mosque::find($mosqueId);
+
+        return $this->renderAndUploadReport(
+            $report,
+            $mosque?->name ?? '—',
+            false,
+            "donation_report_{$mosqueId}"
+        );
+    }
+
+    /**
+     * Super-admin PDF export across ALL mosques.
+     */
+    public function exportReportForAll(array $filters = []): string
+    {
+        $report = $this->getReportForAll($filters);
+
+        return $this->renderAndUploadReport(
+            $report,
+            'كل المساجد',
+            true,
+            'donation_report_all'
+        );
+    }
+
+    private function renderAndUploadReport(array $report, string $mosqueName, bool $showMosque, string $cacheKey): string
+    {
+        $html = view('donation::reports.donation', [
+            'mosque_name'  => $mosqueName,
+            'generated_at' => now()->format('Y-m-d H:i'),
+            'summary'      => $report['summary'],
+            'donations'    => $report['donations'],
+            'filters'      => [],
+            'showMosque'   => $showMosque,
+        ])->render();
+
+        $pdfContent = $this->pdfGenerator->generate($html, $cacheKey, 'cairo');
+
+        $bucket   = config('services.supabase.bucket');
+        $fileName = $cacheKey . '_' . now()->timestamp . '.pdf';
+
+        $this->storage->uploadPdf($pdfContent, $fileName, $bucket, true);
+
+        return $this->storage->createSignedUrl($fileName, $bucket);
+    }
+
     public function getReceiptDownloadUrl(Donation $donation): string
     {
-        $bucket   = config('services.supabase.bucket');
-        $fileName = "receipt_donation_{$donation->id}.pdf";
+        $bucket = config('services.supabase.bucket');
+        $base   = "receipt_donation_{$donation->id}";
 
-        $path = Cache::remember(
-            "donation.receipt_path.{$donation->id}",
-            self::RECEIPT_CACHE_TTL,
-            function () use ($donation, $bucket, $fileName) {
-                $donationData = Donation::with(['mosque', 'campaign', 'mosqueNeed'])->findOrFail($donation->id);
-                $target = $this->resolveTarget($donationData);
-
-                $html = view('donation::receipts.donation', [
-                    'donation'        => $donationData,
-                    'mosque'          => $donationData->mosque,
-                    'mosque_name'     => $donationData->mosque?->name ?? 'المسجد الرئيسي',
-                    'target'          => $target,
-                    'donor_name'      => $donationData->donor_name ?? 'متبرع كريم',
-                    'payment_method'  => $donationData->payment_method === 'cash' ? 'نقدي' : $donationData->payment_method,
-                    'donation_status' => $donationData->status === 'completed' ? 'مكتمل' : $donationData->status,
-                    'currency'        => $donationData->currency ?? 'ليرة سورية',
-                    'issued_at'       => now()->format('Y-m-d'),
-                ])->render();
-
-                /* ═══════════════════════════════════════════════════════════════
-                   ✅ إعدادات mPDF للعربية المُتصلة (مع خط xbriyaz المضمن)
-                   ═══════════════════════════════════════════════════════════════ */
-                $mpdf = new Mpdf([
-                    'mode'              => 'utf-8',
-                    'format'            => 'A4',
-                    'margin_left'       => 12,
-                    'margin_right'      => 12,
-                    'margin_top'        => 12,
-                    'margin_bottom'     => 12,
-                    'default_font'      => 'xbriyaz',
-                    'default_font_size' => 12,
-                    'autoLangToFont'    => true,   // ← يربط الحروف العربية
-                    'autoScriptToLang'  => true,   // ← يكتشف النص العربي
-                    'directionality'    => 'rtl',
-                ]);
-
-                $mpdf->WriteHTML($html);
-                $pdfContent = $mpdf->Output('', 'S');
-
-                $this->storage->uploadPdf($pdfContent, $fileName, $bucket);
-
-                return $fileName;
+        // عدّ الإيصالات الموجودة فعلاً لهذا التبرع (القديم بلا رقم + المرقّمة)
+        $objects = $this->storage->listObjects($bucket, $base);
+        $count   = 0;
+        foreach ($objects as $object) {
+            $name = $object['name'] ?? null;
+            if ($name !== null
+                && str_ends_with($name, '.pdf')
+                && (str_starts_with($name, "{$base}_") || $name === "{$base}.pdf")
+            ) {
+                $count++;
             }
+        }
+
+        // الحد الأقصى: إيصالان لتبرع واحد
+        if ($count >= 2) {
+            throw new ConflictHttpException(__('messages.max_receipts_reached'));
+        }
+
+        $index    = $count + 1;
+        $fileName = "{$base}_{$index}.pdf";
+
+        $donationData = Donation::with(['mosque', 'campaign', 'mosqueNeed'])->findOrFail($donation->id);
+        $target = $this->resolveTarget($donationData);
+
+        $html = view('donation::receipts.donation', [
+            'donation'        => $donationData,
+            'mosque'          => $donationData->mosque,
+            'mosque_name'     => $donationData->mosque?->name ?? 'المسجد الرئيسي',
+            'target'          => $target,
+            'donor_name'      => $donationData->donor_name ?? 'متبرع كريم',
+            'payment_method'  => $donationData->payment_method === 'cash' ? 'نقدي' : $donationData->payment_method,
+            'donation_status' => $donationData->status === 'completed' ? 'مكتمل' : $donationData->status,
+            'currency'        => $donationData->currency ?? 'ليرة سورية',
+            'issued_at'       => now()->format('Y-m-d'),
+        ])->render();
+
+        $pdfContent = $this->pdfGenerator->generate(
+            $html,
+            "donation_receipt_{$donation->id}_{$index}",
+            'cairo'
         );
 
-        return $this->storage->createSignedUrl($path, $bucket);
+        $this->storage->uploadPdf($pdfContent, $fileName, $bucket, true);
+
+        return $this->storage->createSignedUrl($fileName, $bucket);
     }
 
     private function resolveTarget(Donation $donation): array

@@ -29,7 +29,7 @@ class MosqueNeedRepository implements MosqueNeedRepositoryInterface
         }
 
         if (isset($filters['urgent']) && $filters['urgent'] !== null) {
-            $query->where('is_urgent', filter_var($filters['urgent'], FILTER_VALIDATE_BOOLEAN));
+            $query->whereRaw('is_urgent = ' . (filter_var($filters['urgent'], FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false'));
         }
 
         if (!empty($filters['mosque_id'])) {
@@ -121,12 +121,12 @@ class MosqueNeedRepository implements MosqueNeedRepositoryInterface
             ->whereHas('needs', fn($q) => $q->where('status', 'open'));
 
         if ($urgentOnly) {
-            $query->whereHas('needs', fn($q) => $q->where('status', 'open')->where('is_urgent', true));
+            $query->whereHas('needs', fn($q) => $q->where('status', 'open')->whereRaw('is_urgent = true'));
         }
 
         $query->withCount([
             'needs as open_needs_count'        => fn($q) => $q->where('status', 'open'),
-            'needs as open_urgent_needs_count' => fn($q) => $q->where('status', 'open')->where('is_urgent', true),
+            'needs as open_urgent_needs_count' => fn($q) => $q->where('status', 'open')->whereRaw('is_urgent = true'),
         ]);
 
         if ($radiusKm) {
