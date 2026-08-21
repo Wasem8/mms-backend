@@ -28,8 +28,8 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
 //            MosqueDatabaseSeeder::class,
-//            RolesAndPermissionsSeeder::class,
-//           // EducationDatabaseSeeder::class,
+            RolesAndPermissionsSeeder::class,
+//            EducationDatabaseSeeder::class,
 //            MosqueSeeder::class,
 //            FacilitiesSeeder::class,
 //            MosqueSpaceSeedSeeder::class,
@@ -38,9 +38,9 @@ class DatabaseSeeder extends Seeder
 //            \Modules\Complaint\Database\Seeders\ComplaintDatabaseSeeder::class,
 //            \Modules\MaintenanceRequest\Database\Seeders\MaintenanceRequestDatabaseSeeder::class,
 //            SeedersSermonSeeder::class,
-            RoleSeeder::class,
-            PermissionSeeder::class,
-            RolePermissionSeeder::class,
+//            RoleSeeder::class,
+//            PermissionSeeder::class,
+//            RolePermissionSeeder::class,
 
         ]);
 
