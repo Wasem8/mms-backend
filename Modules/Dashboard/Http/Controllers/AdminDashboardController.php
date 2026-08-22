@@ -28,4 +28,16 @@ class AdminDashboardController extends Controller
             'تم إنشاء تقرير المدير بنجاح'
         );
     }
+
+    public function superAdminDashboard(Request $request, AdminDashboardService $service)
+    {
+        $filters = $request->only(['module', 'date_from', 'date_to', 'per_page', 'page']);
+
+        $data = $service->getSuperAdminDashboard($request->user(), $filters);
+
+        return ApiResponse::success(
+            $data,
+            'تم جلب بيانات لوحة تحكم مدير المنطقة بنجاح'
+        );
+    }
 }
