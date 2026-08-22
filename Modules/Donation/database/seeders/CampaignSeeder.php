@@ -3,68 +3,249 @@
 namespace Modules\Donation\Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Modules\Donation\Models\Campaign;
 use Modules\Mosque\Models\Mosque;
+use Modules\Donation\Models\Campaign;
 
 class CampaignSeeder extends Seeder
 {
-    private const CAMPAIGN_TEMPLATES = [
-        ['ترميم المسجد', 'حملة لجمع التبرعات لترميم المسجد وإعادة تأهيله من الداخل والخارج.'],
-        ['شراء فرش ومصاحف جديدة', 'توفير فرش ومصاحف جديدة للمحافظة على نظافة المصلى وراحة المصلين.'],
-        ['تركيب مكيفات', 'تركيب مكيفات في قاعة الصلاة لتوفير الراحة خلال أشهر الصيف.'],
-        ['توسعة المصلى', 'توسعة المصلى لاستيعاب المزيد من المصلين في صلاة الجمعة والعيدين.'],
-        ['مشروع المياه والوضوء', 'تجديد شبكة المياه وتأهيل أماكن الوضوء في المسجد.'],
-        ['صيانة دورية للمرافق', 'صيانة المرافق العامة للمسجد ودورات المياه بشكل دوري.'],
-        ['حملة إفطار صائم', 'تمويل وجبات إفطار للصائمين في شهر رمضان المبارك.'],
-        ['تجهيز قاعة تحفيظ القرآن', 'تجهيز قاعة تحفيظ القرآن بالمقاعد والسبورات والوسائل التعليمية.'],
+    /**
+     * حملات واقعية يمكن أن تطلقها المساجد.
+     */
+    private array $campaigns = [
+        [
+            'title' => 'حملة ترميم وصيانة المسجد',
+            'description' => 'حملة للمساهمة في أعمال ترميم وصيانة مرافق المسجد وتحسين حالته العامة.',
+            'target_amount' => 25000000,
+            'priority' => 'high',
+        ],
+        [
+            'title' => 'حملة تجهيز قاعات تحفيظ القرآن',
+            'description' => 'توفير التجهيزات والمستلزمات اللازمة لقاعات تحفيظ القرآن الكريم.',
+            'target_amount' => 15000000,
+            'priority' => 'high',
+        ],
+        [
+            'title' => 'حملة دعم حلقات القرآن',
+            'description' => 'دعم برامج تحفيظ القرآن الكريم وتأمين احتياجات المعلمين والطلاب.',
+            'target_amount' => 18000000,
+            'priority' => 'medium',
+        ],
+        [
+            'title' => 'حملة تأمين التدفئة الشتوية',
+            'description' => 'تأمين مستلزمات التدفئة والوقود للمسجد خلال فصل الشتاء.',
+            'target_amount' => 22000000,
+            'priority' => 'high',
+        ],
+        [
+            'title' => 'حملة تجهيز مصلى النساء',
+            'description' => 'تجهيز وتحسين مصلى النساء وتوفير المستلزمات الأساسية.',
+            'target_amount' => 12000000,
+            'priority' => 'medium',
+        ],
+        [
+            'title' => 'حملة الطاقة الشمسية',
+            'description' => 'المساهمة في تركيب منظومة طاقة شمسية لتأمين الكهرباء للمسجد.',
+            'target_amount' => 45000000,
+            'priority' => 'high',
+        ],
+        [
+            'title' => 'حملة تجهيز مكتبة المسجد',
+            'description' => 'إنشاء وتجهيز مكتبة إسلامية تحتوي على كتب القرآن والتفسير والحديث والفقه.',
+            'target_amount' => 8000000,
+            'priority' => 'low',
+        ],
+        [
+            'title' => 'حملة إفطار الصائمين',
+            'description' => 'توفير وجبات إفطار للصائمين ورواد المسجد خلال شهر رمضان المبارك.',
+            'target_amount' => 30000000,
+            'priority' => 'high',
+        ],
     ];
 
     public function run(): void
     {
-        $mosques = Mosque::all();
+        $this->command->info('');
+        $this->command->info('🔄 بدء إنشاء حملات التبرع...');
+        $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+        /*
+        |--------------------------------------------------------------------------
+        | 1. جلب المساجد
+        |--------------------------------------------------------------------------
+        */
+
+        $mosques = Mosque::query()
+            ->orderBy('id')
+            ->get();
 
         if ($mosques->isEmpty()) {
-            $this->command?->warn('لا توجد مساجد بعد — تجاوز بذر حملات التبرع. قم ببذر وحدة المساجد أولاً.');
-
-            return;
+            throw new \Exception(
+                '❌ لا توجد مساجد. شغّل MosqueSeeder أولاً.'
+            );
         }
 
-        $count = 0;
+        $this->command->info(
+            "🕌 تم العثور على {$mosques->count()} مسجد."
+        );
 
-        foreach ($mosques as $mosque) {
-            // مسجدان من الحملات لكل مسجد بشكل ثابت (كي لا تتكرر عند إعادة البذر)
-            $first = self::CAMPAIGN_TEMPLATES[($mosque->id - 1) % count(self::CAMPAIGN_TEMPLATES)];
-            $second = self::CAMPAIGN_TEMPLATES[($mosque->id + 2) % count(self::CAMPAIGN_TEMPLATES)];
+        $createdCount = 0;
+        $existingCount = 0;
 
-            $this->createCampaign($mosque, $first, 'active', rand(300000, 1500000), rand(50000, 400000));
-            $this->createCampaign($mosque, $second, 'completed', rand(100000, 600000), null);
+        /*
+        |--------------------------------------------------------------------------
+        | 2. إنشاء الحملات
+        |--------------------------------------------------------------------------
+        */
 
-            $count += 2;
+        foreach ($mosques as $mosqueIndex => $mosque) {
+
+            $this->command->info('');
+            $this->command->info(
+                "🕌 المسجد: {$mosque->name} (ID: {$mosque->id})"
+            );
+
+            /*
+             * ننشئ 3 حملات لكل مسجد.
+             *
+             * نغير بداية الاختيار حسب المسجد
+             * حتى لا تحصل كل المساجد على نفس الحملات.
+             */
+            $campaignTemplates = collect($this->campaigns)
+                ->shuffle()
+                ->take(3);
+
+            foreach ($campaignTemplates as $template) {
+
+                $startDate = now()
+                    ->subDays(rand(5, 60))
+                    ->startOfDay();
+
+                $endDate = (clone $startDate)
+                    ->addDays(rand(30, 90))
+                    ->startOfDay();
+
+                /*
+                 * نسبة الإنجاز تختلف من حملة لأخرى.
+                 */
+                $progress = collect([
+                    0.15,
+                    0.25,
+                    0.35,
+                    0.45,
+                    0.60,
+                    0.75,
+                    0.90,
+                ])->random();
+
+                $targetAmount = (float) $template['target_amount'];
+
+                $collectedAmount = round(
+                    $targetAmount * $progress,
+                    2
+                );
+
+                /*
+                 * تحديد حالة الحملة.
+                 */
+                if ($collectedAmount >= $targetAmount) {
+                    $status = 'completed';
+                    $collectedAmount = $targetAmount;
+                } else {
+                    $status = collect([
+                        'active',
+                        'active',
+                        'active',
+                        'paused',
+                    ])->random();
+                }
+
+                /*
+                 * منع تكرار نفس الحملة لنفس المسجد.
+                 */
+                $exists = Campaign::where(
+                    'mosque_id',
+                    $mosque->id
+                )
+                    ->where(
+                        'title',
+                        $template['title']
+                    )
+                    ->exists();
+
+                if ($exists) {
+
+                    $existingCount++;
+
+                    $this->command->line(
+                        "   ↪ موجودة: {$template['title']}"
+                    );
+
+                    continue;
+                }
+
+                Campaign::create([
+                    'mosque_id' => $mosque->id,
+
+                    'title' => $template['title'],
+
+                    'description' => $template['description'],
+
+                    'target_amount' => $targetAmount,
+
+                    'collected_amount' => $collectedAmount,
+
+                    'status' => $status,
+
+                    'start_date' => $startDate->toDateString(),
+
+                    'end_date' => $endDate->toDateString(),
+
+                    'priority' => $template['priority'],
+
+                    'cover_image' => null,
+                ]);
+
+                $createdCount++;
+
+                $this->command->line(
+                    "   ✅ {$template['title']} | الهدف: {$targetAmount} | المحصل: {$collectedAmount}"
+                );
+            }
         }
 
-        $this->command?->info('تم إنشاء/تحديث ' . $count . ' حملة تبرع لمساجد دمشق.');
-    }
+        /*
+        |--------------------------------------------------------------------------
+        | 3. الملخص
+        |--------------------------------------------------------------------------
+        */
 
-    private function createCampaign(Mosque $mosque, array $template, string $status, int $target, ?int $collected): void
-    {
-        $collectedAmount = $collected === null
-            ? $target
-            : min($collected, $target);
+        $this->command->info('');
+        $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        $this->command->info('📊 ملخص Campaigns');
+        $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-        Campaign::updateOrCreate(
-            [
-                'mosque_id' => $mosque->id,
-                'title' => $template[0],
-            ],
-            [
-                'description' => $template[1],
-                'target_amount' => $target,
-                'collected_amount' => $collectedAmount,
-                'status' => $status,
-                'start_date' => now()->subMonths(rand(1, 6))->startOfMonth(),
-                'end_date' => $status === 'completed' ? now()->subDays(rand(10, 40)) : now()->addMonths(rand(1, 6)),
-                'priority' => $status === 'completed' ? 'medium' : (rand(0, 1) ? 'high' : 'medium'),
-            ]
+        $this->command->info(
+            "🕌 عدد المساجد: {$mosques->count()}"
+        );
+
+        $this->command->info(
+            "➕ الحملات الجديدة: {$createdCount}"
+        );
+
+        $this->command->info(
+            "↪ الحملات الموجودة مسبقاً: {$existingCount}"
+        );
+
+        $this->command->info(
+            '📢 إجمالي الحملات: ' . Campaign::count()
+        );
+
+        $this->command->info(
+            '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+        );
+
+        $this->command->info(
+            '✅ تم تنفيذ CampaignSeeder بنجاح.'
         );
     }
 }

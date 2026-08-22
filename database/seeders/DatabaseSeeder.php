@@ -5,12 +5,15 @@ namespace Database\Seeders;
 use Database\Seeders\SermonSeeder as SeedersSermonSeeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Modules\Community\Database\Seeders\SermonSeeder;
 use Modules\Education\Database\Seeders\EducationDatabaseSeeder;
 use Modules\Geo\Database\Seeders\GeoDatabaseSeeder;
-use Modules\Mosque\Database\Seeders\FacilitiesSeeder;
+use Modules\MaintenanceRequest\Database\Seeders\MaintenanceRequestDatabaseSeeder;
+use Modules\Mosque\Database\Seeders\FacilitySeeder;
 use Modules\Mosque\Database\Seeders\MosqueSeeder;
 use Modules\Mosque\Database\Seeders\MosqueDatabaseSeeder;
-use Modules\Mosque\Database\Seeders\MosqueSpaceSeedSeeder;
+use Modules\Mosque\Database\Seeders\MosqueSpaceSeeder;
+use Modules\Mosque\Database\Seeders\MosqueSpaceSeeder;
 use Modules\User\Database\Seeders\PermissionSeeder;
 use Modules\User\Database\Seeders\RolePermissionSeeder;
 use Modules\User\Database\Seeders\RolesAndPermissionsSeeder;
@@ -33,8 +36,8 @@ class DatabaseSeeder extends Seeder
 //            RolesAndPermissionsSeeder::class,
 //            EducationDatabaseSeeder::class,
 //            MosqueSeeder::class,
-//            FacilitiesSeeder::class,
-//            MosqueSpaceSeedSeeder::class,
+//            FacilitySeeder::class,
+//            MosqueSpaceSeeder::class,
 //            SettingSeeder::class,
 //            \Modules\Donation\Database\Seeders\DonationDatabaseSeeder::class,
 //            \Modules\Complaint\Database\Seeders\ComplaintDatabaseSeeder::class,
@@ -45,8 +48,11 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
             GeoDatabaseSeeder::class,
             mosqueSeeder::class,
+//            MaintenanceRequestDatabaseSeeder::class,
             UserSeeder::class,
-            EducationDatabaseSeeder::class
+            EducationDatabaseSeeder::class,
+            SermonSeeder::class,
+            MosqueSpaceSeeder::class,
 
 
         ]);
