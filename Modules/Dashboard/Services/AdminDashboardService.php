@@ -10,6 +10,7 @@ use Modules\Mosque\Models\Mosque;
 use Modules\Donation\Models\Donation;
 use Modules\Complaint\Models\Complaint;
 use Modules\MaintenanceRequest\Models\Maintenance;
+use Modules\Community\Models\Sermon;
 
 class AdminDashboardService
 {
@@ -39,11 +40,13 @@ class AdminDashboardService
             'complaints' => [
                 'total'   => Complaint::count(),
                 'pending' => Complaint::where('status', 'pending')->count(),
+                'urgent'  => Complaint::where('priority', 'high')->count(),
             ],
             'maintenance' => [
                 'total'   => Maintenance::count(),
                 'pending' => Maintenance::where('status', 'pending')->count(),
             ],
+            'pending_sermons' => Sermon::where('status', 'Pending')->count(),
         ];
     }
 

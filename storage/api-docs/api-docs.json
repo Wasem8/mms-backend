@@ -5278,6 +5278,67 @@
                                         "data": {
                                             "properties": {
                                                 "kpi_cards": {
+                                                    "properties": {
+                                                        "monthly_donations": {
+                                                            "properties": {
+                                                                "value": {
+                                                                    "type": "number"
+                                                                },
+                                                                "formatted_value": {
+                                                                    "type": "string"
+                                                                },
+                                                                "percentage_change": {
+                                                                    "type": "string"
+                                                                },
+                                                                "is_increase": {
+                                                                    "type": "boolean"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        },
+                                                        "open_maintenance_requests": {
+                                                            "properties": {
+                                                                "value": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "percentage_change": {
+                                                                    "type": "string"
+                                                                },
+                                                                "is_increase": {
+                                                                    "type": "boolean"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        },
+                                                        "complaints": {
+                                                            "properties": {
+                                                                "value": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "percentage_change": {
+                                                                    "type": "string"
+                                                                },
+                                                                "is_increase": {
+                                                                    "type": "boolean"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        },
+                                                        "accredited_volunteers": {
+                                                            "properties": {
+                                                                "value": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "percentage_change": {
+                                                                    "type": "string"
+                                                                },
+                                                                "is_increase": {
+                                                                    "type": "boolean"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    },
                                                     "type": "object"
                                                 },
                                                 "attendance_chart": {
@@ -5362,6 +5423,27 @@
                                                     "description": "إجمالي دعوات التسجيل المعلقة وغير منتهية الصلاحية",
                                                     "type": "integer",
                                                     "example": 3
+                                                },
+                                                "donations": {
+                                                    "description": "إجمالي التبرعات المعتمدة للمسجد",
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 45000
+                                                },
+                                                "open_maintenance_requests": {
+                                                    "description": "طلبات الصيانة المفتوحة (قيد الانتظار + قيد التنفيذ)",
+                                                    "type": "integer",
+                                                    "example": 4
+                                                },
+                                                "complaints": {
+                                                    "description": "البلاغات والشكاوى المفتوحة (قيد الانتظار + قيد المعالجة)",
+                                                    "type": "integer",
+                                                    "example": 6
+                                                },
+                                                "accredited_volunteers": {
+                                                    "description": "المتطوعون المعتمدون (طلبات تطوع موافق عليها) في المسجد",
+                                                    "type": "integer",
+                                                    "example": 10
                                                 }
                                             },
                                             "type": "object"
@@ -5532,6 +5614,10 @@
                                                         "pending": {
                                                             "type": "integer",
                                                             "example": 7
+                                                        },
+                                                        "urgent": {
+                                                            "type": "integer",
+                                                            "example": 3
                                                         }
                                                     },
                                                     "type": "object"
@@ -5548,6 +5634,10 @@
                                                         }
                                                     },
                                                     "type": "object"
+                                                },
+                                                "pending_sermons": {
+                                                    "type": "integer",
+                                                    "example": 6
                                                 }
                                             },
                                             "type": "object"
@@ -5629,204 +5719,6 @@
                     },
                     "403": {
                         "description": "Forbidden — super_admin only"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/reports/mosques/census": {
-            "get": {
-                "tags": [
-                    "Reports"
-                ],
-                "summary": "التقرير الإحصائي الشامل لمساجد المنطقة",
-                "description": "تقرير PDF لكافة مساجد المنطقة مصنّفة حسب المدينة، مع الحالة التشغيلية والسعة والمرافق والموقع الجغرافي. مخصص لمدير المنطقة (super_admin).",
-                "operationId": "exportMosqueCensusPdf",
-                "responses": {
-                    "200": {
-                        "description": "تم إنشاء التقرير الإحصائي الشامل بنجاح",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "تم إنشاء التقرير الإحصائي الشامل للمساجد بنجاح"
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "url": {
-                                                    "type": "string",
-                                                    "format": "url"
-                                                },
-                                                "cached": {
-                                                    "type": "boolean",
-                                                    "example": false
-                                                }
-                                            },
-                                            "type": "object"
-                                        },
-                                        "pagination": {
-                                            "type": "object",
-                                            "example": null,
-                                            "nullable": true
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "403": {
-                        "description": "Forbidden — super_admin only"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/reports/mosques/readiness": {
-            "get": {
-                "tags": [
-                    "Reports"
-                ],
-                "summary": "تقرير جاهزية المساجد للمواسم",
-                "description": "تقرير PDF لجاهزية الجوامع الكبرى للمواسم (رمضان، التراويح، العيدين، الجمعة) بناءً على المرافق وطلبات الصيانة المفتوحة. مخصص لمدير المنطقة (super_admin).",
-                "operationId": "exportMosqueReadinessPdf",
-                "responses": {
-                    "200": {
-                        "description": "تم إنشاء تقرير الجاهزية بنجاح",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "تم إنشاء تقرير الجاهزية للمواسم بنجاح"
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "url": {
-                                                    "type": "string",
-                                                    "format": "url"
-                                                },
-                                                "cached": {
-                                                    "type": "boolean",
-                                                    "example": false
-                                                }
-                                            },
-                                            "type": "object"
-                                        },
-                                        "pagination": {
-                                            "type": "object",
-                                            "example": null,
-                                            "nullable": true
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "403": {
-                        "description": "Forbidden — super_admin only"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/reports/mosques/fact-sheet": {
-            "get": {
-                "tags": [
-                    "Reports"
-                ],
-                "summary": "تقرير بطاقة المسجد التعريفية",
-                "description": "تقرير PDF لملف المسجد الكامل (العنوان، الموقع GPS، المدير، الإمام، الخطيب، القاعات، المرافق، الاحتياجات). مدير المسجد مقصور على مسجده؛ مدير المنطقة يمرر mosque_id.",
-                "operationId": "exportMosqueFactSheetPdf",
-                "parameters": [
-                    {
-                        "name": "mosque_id",
-                        "in": "query",
-                        "description": "معرف المسجد (إلزامي لـ super_admin لتحديد المسجد؛ يتجاهله مدير المسجد ويُقصر على مسجده)",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "example": 1
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "تم إنشاء بطاقة المسجد التعريفية بنجاح",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "تم إنشاء بطاقة المسجد التعريفية بنجاح"
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "url": {
-                                                    "type": "string",
-                                                    "format": "url"
-                                                },
-                                                "cached": {
-                                                    "type": "boolean",
-                                                    "example": false
-                                                }
-                                            },
-                                            "type": "object"
-                                        },
-                                        "pagination": {
-                                            "type": "object",
-                                            "example": null,
-                                            "nullable": true
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "404": {
-                        "description": "Mosque not found"
                     }
                 },
                 "security": [

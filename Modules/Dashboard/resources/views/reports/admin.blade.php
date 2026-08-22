@@ -104,6 +104,16 @@
         </tr>
     </table>
 
+    <div class="section-title">مؤشرات المنطقة</div>
+    <table class="cards">
+        <tr>
+            <td><div class="card-value">{{ $data['totals']['mosques'] ?? 0 }}</div><div class="card-label">المساجد</div></td>
+            <td><div class="card-value">{{ $data['pending_sermons'] ?? 0 }}</div><div class="card-label">الخطب المعلقة</div></td>
+            <td><div class="card-value">{{ number_format($data['donations'] ?? 0) }} ر.س</div><div class="card-label">إجمالي التبرعات</div></td>
+            <td><div class="card-value">{{ $data['complaints']['urgent'] ?? 0 }}</div><div class="card-label">الشكاوى العاجلة</div></td>
+        </tr>
+    </table>
+
     <div class="section-title">المالية والشكاوى والصيانة</div>
     <table class="data">
         <tbody>

@@ -12,7 +12,12 @@ class MosqueDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // مساجد سوريا فقط (بدون مرافق/مساحات/احتياجات/مهام حسب الطلب)
-        $this->call(MosqueSeeder::class);
+        // مساجد دمشق الحقيقية (عربي/سوري) مع مرافقها ومساحاتها ومهامها
+        $this->call([
+            MosqueSeeder::class,
+            MosqueFacilitySeeder::class,
+            MosqueSpaceRealSeeder::class,
+            MosqueTaskSeeder::class,
+        ]);
     }
 }
