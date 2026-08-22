@@ -3,156 +3,201 @@
 namespace Modules\Mosque\Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 use Modules\Mosque\Models\Mosque;
-use Modules\User\Models\User;
 
 class MosqueSeeder extends Seeder
 {
     public function run(): void
     {
-        $mosquesData = [
+        $baseUrl = rtrim(config('services.supabase.url'), '/');
+        $bucket = trim(config('services.supabase.bucket'), '/');
+
+        $imageUrl = function (string $fileName) use ($baseUrl, $bucket): string {
+            return "{$baseUrl}/storage/v1/object/public/{$bucket}/{$fileName}";
+        };
+
+        $mosques = [
+
             [
-                'name' => 'مسجد الرحمن',
-                'image' => 'mosques/mosque1.png',
-                'working_hours' => '5:00 AM - 10:00 PM',
+                'name' => 'الجامع الأموي',
+                'city' => 'دمشق',
+                'district' => 'دمشق القديمة',
+                'image' => $imageUrl('umayyad-mosque.jpg'),
+                'working_hours' => '24 ساعة',
                 'status' => 'active',
-                'is_featured' => true,
+                'latitude' => 33.5112,
+                'longitude' => 36.3064,
+                'average_rating' => 4.90,
+                'reviews_count' => 1250,
+                'imam' => 'إمام الجامع الأموي',
+                'khatib' => 'خطيب الجامع الأموي',
+                'manager_id' => null,
+            ],
+
+            [
+                'name' => 'جامع الحسن',
                 'city' => 'دمشق',
                 'district' => 'المزة',
-                'latitude' => 33.5138,
-                'longitude' => 36.2765,
-                'average_rating' => 4.0,
-                'reviews_count' => 0,
-                'imam' => 'الشيخ أحمد',
-                'khatib' => 'الشيخ عبد الله',
-            ],
-            [
-                'name' => 'مسجد النور',
-                'image' => 'mosques/mosque2.png',
-                'working_hours' => '4:30 AM - 11:00 PM',
+                'image' => $imageUrl('al-hassan-mosque.jpg'),
+                'working_hours' => '05:00 - 22:00',
                 'status' => 'active',
-                'is_featured' => false,
-                'city' => 'حلب',
-                'district' => 'السليمانية',
-                'latitude' => 36.2021,
-                'longitude' => 37.1343,
-                'average_rating' => 3.5,
-                'reviews_count' => 1,
-                'imam' => 'الشيخ محمد',
-                'khatib' => 'الشيخ يوسف',
+                'latitude' => 33.4975,
+                'longitude' => 36.2585,
+                'average_rating' => 4.70,
+                'reviews_count' => 340,
+                'imam' => 'إمام جامع الحسن',
+                'khatib' => 'خطيب جامع الحسن',
+                'manager_id' => null,
             ],
+
             [
-                'name' => 'مسجد الإيمان',
-                'image' => 'mosques/mosque3.png',
-                'working_hours' => '5:00 AM - 9:30 PM',
-                'status' => 'active',
-                'is_featured' => true,
-                'city' => 'حمص',
-                'district' => 'باب السباع',
-                'latitude' => 34.7324,
-                'longitude' => 36.7182,
-                'average_rating' => 5.0,
-                'reviews_count' => 2,
-                'imam' => 'الشيخ عمر',
-                'khatib' => 'الشيخ خالد',
-            ],
-            [
-                'name' => 'مسجد التقوى',
-                'image' => 'mosques/mosque2.png',
-                'working_hours' => '5:15 AM - 10:15 PM',
-                'status' => 'active',
-                'is_featured' => false,
-                'city' => 'اللاذقية',
-                'district' => 'الصليبة',
-                'latitude' => 35.5317,
-                'longitude' => 35.7901,
-                'average_rating' => 0,
-                'reviews_count' => 0,
-                'imam' => 'الشيخ حسن',
-                'khatib' => 'الشيخ محمود',
-            ],
-            [
-                'name' => 'مسجد الرحمن',
-                'image' => 'mosques/mosque1.png',
-                'working_hours' => '5:00 AM - 10:00 PM',
-                'status' => 'active',
-                'is_featured' => true,
+                'name' => 'جامع الرحمن',
                 'city' => 'دمشق',
-                'district' => 'المزة',
-                'latitude' => 33.5138,
-                'longitude' => 36.2765,
-                'average_rating' => 4.0,
-                'reviews_count' => 0,
-                'imam' => 'الشيخ أحمد',
-                'khatib' => 'الشيخ عبد الله',
-            ],
-            [
-                'name' => 'مسجد النور',
-                'image' => 'mosques/mosque2.png',
-                'working_hours' => '4:30 AM - 11:00 PM',
+                'district' => 'كفرسوسة',
+                'image' => $imageUrl('al-rahman-mosque.jpg'),
+                'working_hours' => '05:00 - 22:00',
                 'status' => 'active',
-                'is_featured' => false,
-                'city' => 'حلب',
-                'district' => 'السليمانية',
-                'latitude' => 36.2021,
-                'longitude' => 37.1343,
-                'average_rating' => 3.5,
-                'reviews_count' => 1,
-                'imam' => 'الشيخ محمد',
-                'khatib' => 'الشيخ يوسف',
+                'latitude' => 33.4805,
+                'longitude' => 36.2570,
+                'average_rating' => 4.60,
+                'reviews_count' => 280,
+                'imam' => 'إمام جامع الرحمن',
+                'khatib' => 'خطيب جامع الرحمن',
+                'manager_id' => null,
             ],
+
             [
-                'name' => 'مسجد الإيمان',
-                'image' => 'mosques/mosque3.png',
-                'working_hours' => '5:00 AM - 9:30 PM',
+                'name' => 'جامع الإيمان',
+                'city' => 'دمشق',
+                'district' => 'المزرعة',
+                'image' => $imageUrl('al-iman-mosque.jpg'),
+                'working_hours' => '05:00 - 22:00',
                 'status' => 'active',
-                'is_featured' => true,
-                'city' => 'حمص',
-                'district' => 'باب السباع',
-                'latitude' => 34.7324,
-                'longitude' => 36.7182,
-                'average_rating' => 5.0,
-                'reviews_count' => 2,
-                'imam' => 'الشيخ عمر',
-                'khatib' => 'الشيخ خالد',
+                'latitude' => 33.5200,
+                'longitude' => 36.2870,
+                'average_rating' => 4.50,
+                'reviews_count' => 190,
+                'imam' => 'إمام جامع الإيمان',
+                'khatib' => 'خطيب جامع الإيمان',
+                'manager_id' => null,
             ],
+
             [
-                'name' => 'مسجد التقوى',
-                'image' => 'mosques/mosque2.png',
-                'working_hours' => '5:15 AM - 10:15 PM',
+                'name' => 'جامع عثمان بن عفان',
+                'city' => 'دمشق',
+                'district' => 'برزة',
+                'image' => $imageUrl('uthman-ibn-affan-mosque.jpg'),
+                'working_hours' => '05:00 - 22:00',
                 'status' => 'active',
-                'is_featured' => false,
-                'city' => 'اللاذقية',
-                'district' => 'الصليبة',
-                'latitude' => 35.5317,
-                'longitude' => 35.7901,
-                'average_rating' => 0,
-                'reviews_count' => 0,
-                'imam' => 'الشيخ حسن',
-                'khatib' => 'الشيخ محمود',
+
+                'latitude' => 33.5520,
+                'longitude' => 36.3220,
+                'average_rating' => 4.40,
+                'reviews_count' => 150,
+                'imam' => 'إمام جامع عثمان بن عفان',
+                'khatib' => 'خطيب جامع عثمان بن عفان',
+                'manager_id' => null,
+            ],
+
+            [
+                'name' => 'جامع التوبة',
+                'city' => 'دمشق',
+                'district' => 'ركن الدين',
+                'image' => $imageUrl('al-tawba-mosque.jpg'),
+                'working_hours' => '05:00 - 22:00',
+                'status' => 'active',
+
+                'latitude' => 33.5350,
+                'longitude' => 36.2930,
+                'average_rating' => 4.30,
+                'reviews_count' => 120,
+                'imam' => 'إمام جامع التوبة',
+                'khatib' => 'خطيب جامع التوبة',
+                'manager_id' => null,
+            ],
+
+            [
+                'name' => 'جامع النور',
+                'city' => 'دمشق',
+                'district' => 'العدوي',
+                'image' => $imageUrl('al-noor-mosque.jpg'),
+                'working_hours' => '05:00 - 22:00',
+                'status' => 'active',
+
+                'latitude' => 33.5300,
+                'longitude' => 36.3100,
+                'average_rating' => 4.20,
+                'reviews_count' => 95,
+                'imam' => 'إمام جامع النور',
+                'khatib' => 'خطيب جامع النور',
+                'manager_id' => null,
+            ],
+
+            [
+                'name' => 'جامع الرحمة',
+                'city' => 'دمشق',
+                'district' => 'الميدان',
+                'image' => $imageUrl('al-rahma-mosque.jpg'),
+                'working_hours' => '05:00 - 22:00',
+                'status' => 'active',
+
+                'latitude' => 33.4850,
+                'longitude' => 36.2940,
+                'average_rating' => 4.40,
+                'reviews_count' => 175,
+                'imam' => 'إمام جامع الرحمة',
+                'khatib' => 'خطيب جامع الرحمة',
+                'manager_id' => null,
+            ],
+
+            [
+                'name' => 'جامع خالد بن الوليد',
+                'city' => 'دمشق',
+                'district' => 'القصاع',
+                'image' => $imageUrl('khalid-ibn-al-walid-mosque.jpg'),
+                'working_hours' => '05:00 - 22:00',
+                'status' => 'active',
+
+                'latitude' => 33.5200,
+                'longitude' => 36.3150,
+                'average_rating' => 4.30,
+                'reviews_count' => 130,
+                'imam' => 'إمام جامع خالد بن الوليد',
+                'khatib' => 'خطيب جامع خالد بن الوليد',
+                'manager_id' => null,
+            ],
+
+            [
+                'name' => 'جامع التقوى',
+                'city' => 'دمشق',
+                'district' => 'دمر',
+                'image' => $imageUrl('al-taqwa-mosque.jpg'),
+                'working_hours' => '05:00 - 22:00',
+                'status' => 'active',
+
+                'latitude' => 33.5350,
+                'longitude' => 36.2300,
+                'average_rating' => 4.10,
+                'reviews_count' => 85,
+                'imam' => 'إمام جامع التقوى',
+                'khatib' => 'خطيب جامع التقوى',
+                'manager_id' => null,
             ],
         ];
 
-        foreach ($mosquesData as $index => $data) {
-            $number = $index + 1;
+        foreach ($mosques as $data) {
 
-            // إنشاء مستخدم manager مستقل لكل مسجد
-            $manager = User::firstOrCreate(
-                ['email' => "mosque.manager{$number}@wasl.test"],
+            Mosque::updateOrCreate(
                 [
-                    'name' => "مدير {$data['name']}",
-                    'first_name' => 'مدير',
-                    'last_name' => (string) $number,
-                    'password' => Hash::make('password'),
-                    'status' => 'active',
-                    'email_verified_at' => now(),
-                ]
+                    'name' => $data['name'],
+                    'city' => $data['city'],
+                ],
+                $data
             );
-
-            $manager->assignRole('mosque_manager');
-
-            Mosque::create($data + ['manager_id' => $manager->id]);
         }
+
+        $this->command->info(
+            '✅ تم إنشاء/تحديث ' . count($mosques) . ' مساجد في دمشق.'
+        );
     }
 }
