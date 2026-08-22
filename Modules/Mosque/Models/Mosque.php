@@ -46,6 +46,7 @@ class Mosque extends Model
         'latitude' => 'decimal:8',
         'longitude' => 'decimal:8',
         'average_rating' => 'decimal:2',
+        'is_featured' => 'boolean',
     ];
 
 
