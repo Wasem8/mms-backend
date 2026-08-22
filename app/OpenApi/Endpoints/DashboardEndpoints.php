@@ -693,39 +693,22 @@ class DashboardEndpoints
                             property: 'data',
                             type: 'object',
                             properties: [
+                                new OA\Property(property: 'mosques_of_region', type: 'integer', example: 12, description: 'عدد مساجد المنطقة'),
+                                new OA\Property(property: 'mosques_under_maintenance', type: 'integer', example: 4, description: 'عدد المساجد التي لديها طلبات صيانة غير مكتملة/ملغاة'),
+                                new OA\Property(property: 'pending_sermons', type: 'integer', example: 6, description: 'الخطب المعلقة'),
                                 new OA\Property(
-                                    property: 'totals',
+                                    property: 'region_donations_this_month',
                                     type: 'object',
                                     properties: [
-                                        new OA\Property(property: 'mosques', type: 'integer', example: 12),
-                                        new OA\Property(property: 'students', type: 'integer', example: 340),
-                                        new OA\Property(property: 'halaqas', type: 'integer', example: 28),
-                                        new OA\Property(property: 'teachers', type: 'integer', example: 30),
-                                        new OA\Property(property: 'volunteers', type: 'integer', example: 45),
-                                        new OA\Property(property: 'managers', type: 'integer', example: 10),
-                                        new OA\Property(property: 'supervisors', type: 'integer', example: 14),
-                                        new OA\Property(property: 'parents', type: 'integer', example: 250)
-                                    ]
+                                        new OA\Property(property: 'count', type: 'integer', example: 18),
+                                        new OA\Property(property: 'total_base_amount', type: 'number', format: 'float', example: 2140000.0),
+                                        new OA\Property(property: 'total_amount', type: 'number', format: 'float', example: 2140000.0),
+                                        new OA\Property(property: 'currency', type: 'string', example: 'SYP'),
+                                        new OA\Property(property: 'active_campaigns', type: 'integer', example: 7, description: 'عدد الحملات النشطة')
+                                    ],
+                                    description: 'تبرعات المساجد خلال الشهر الحالي'
                                 ),
-                                new OA\Property(property: 'donations', type: 'number', format: 'float', example: 125000.0),
-                                new OA\Property(
-                                    property: 'complaints',
-                                    type: 'object',
-                                    properties: [
-                                        new OA\Property(property: 'total', type: 'integer', example: 40),
-                                        new OA\Property(property: 'pending', type: 'integer', example: 7),
-                                        new OA\Property(property: 'urgent', type: 'integer', example: 3)
-                                    ]
-                                ),
-                                new OA\Property(
-                                    property: 'maintenance',
-                                    type: 'object',
-                                    properties: [
-                                        new OA\Property(property: 'total', type: 'integer', example: 22),
-                                        new OA\Property(property: 'pending', type: 'integer', example: 5)
-                                    ]
-                                ),
-                                new OA\Property(property: 'pending_sermons', type: 'integer', example: 6)
+                                new OA\Property(property: 'critical_complaints', type: 'integer', example: 3, description: 'الشكاوى الحرجة (أولوية عالية ولم تُحل)')
                             ]
                         ),
                         new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
@@ -741,9 +724,9 @@ class DashboardEndpoints
     #[OA\Get(
         path: '/admin/export-pdf',
         operationId: 'exportAdminDashboardPdf',
-        tags: ['Reports'],
+        tags: ['Dashboard'],
         summary: 'تصدير تقرير مدير المنطقة PDF',
-        description: 'يولّد تقرير PDF ملخّص النظام ككل ويرفعه إلى Supabase ويعيد رابطاً موقّعاً مؤقتاً.',
+        description: 'يولّد تقرير PDF للوحة مدير المنطقة (البطاقات الأربع) ويرفعه إلى Supabase ويعيد رابطاً موقّعاً مؤقتاً.',
         security: [['bearerAuth' => []]],
         responses: [
             new OA\Response(
@@ -765,7 +748,7 @@ class DashboardEndpoints
                     ]
                 )
             ),
-            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
             new OA\Response(response: 403, description: 'Forbidden — super_admin only')
         ]
     )]
@@ -1119,5 +1102,49 @@ class DashboardEndpoints
         ]
     )]
     public function getManagerComplaintsReport() {}
+
+    #[OA\Get(
+        path: '/admin/mosque-operations',
+        operationId: 'getAdminMosqueOperations',
+        tags: ['Dashboard'],
+        summary: 'سجل عمليات المساجد (مدير المنطقة)',
+        description: 'سجل مشتق من بيانات الموديولات (دون جدول جديد): تغييرات حالات الشكاوى والصيانة، التبرعات للمساجد، اعتماد الخطب، وإضافة المساجد. يدعم فلترة بالتاريخ والوحدة.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'date_from', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'date_to', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'module', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['complaints', 'maintenance', 'donations', 'sermons', 'mosques'])),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 15)),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'قائمة عمليات المساجد'),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — super_admin only')
+        ]
+    )]
+    public function getAdminMosqueOperations() {}
+
+    #[OA\Get(
+        path: '/dashboard/mosque-manager/mosque-operations',
+        operationId: 'getManagerMosqueOperations',
+        tags: ['Dashboard'],
+        summary: 'سجل عمليات المسجد (مدير المسجد)',
+        description: 'سجل عمليات مُقيّد بمسجد مدير المسجد: تغييرات حالات الشكاوى والصيانة، التبرعات، وإضافة المسجد.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'date_from', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'date_to', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'module', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['complaints', 'maintenance', 'donations', 'mosques'])),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 15)),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'قائمة عمليات المسجد'),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — mosque_manager only')
+        ]
+    )]
+    public function getManagerMosqueOperations() {}
 
 }

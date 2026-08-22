@@ -5561,81 +5561,54 @@
                                         },
                                         "data": {
                                             "properties": {
-                                                "totals": {
-                                                    "properties": {
-                                                        "mosques": {
-                                                            "type": "integer",
-                                                            "example": 12
-                                                        },
-                                                        "students": {
-                                                            "type": "integer",
-                                                            "example": 340
-                                                        },
-                                                        "halaqas": {
-                                                            "type": "integer",
-                                                            "example": 28
-                                                        },
-                                                        "teachers": {
-                                                            "type": "integer",
-                                                            "example": 30
-                                                        },
-                                                        "volunteers": {
-                                                            "type": "integer",
-                                                            "example": 45
-                                                        },
-                                                        "managers": {
-                                                            "type": "integer",
-                                                            "example": 10
-                                                        },
-                                                        "supervisors": {
-                                                            "type": "integer",
-                                                            "example": 14
-                                                        },
-                                                        "parents": {
-                                                            "type": "integer",
-                                                            "example": 250
-                                                        }
-                                                    },
-                                                    "type": "object"
+                                                "mosques_of_region": {
+                                                    "description": "عدد مساجد المنطقة",
+                                                    "type": "integer",
+                                                    "example": 12
                                                 },
-                                                "donations": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 125000
-                                                },
-                                                "complaints": {
-                                                    "properties": {
-                                                        "total": {
-                                                            "type": "integer",
-                                                            "example": 40
-                                                        },
-                                                        "pending": {
-                                                            "type": "integer",
-                                                            "example": 7
-                                                        },
-                                                        "urgent": {
-                                                            "type": "integer",
-                                                            "example": 3
-                                                        }
-                                                    },
-                                                    "type": "object"
-                                                },
-                                                "maintenance": {
-                                                    "properties": {
-                                                        "total": {
-                                                            "type": "integer",
-                                                            "example": 22
-                                                        },
-                                                        "pending": {
-                                                            "type": "integer",
-                                                            "example": 5
-                                                        }
-                                                    },
-                                                    "type": "object"
+                                                "mosques_under_maintenance": {
+                                                    "description": "عدد المساجد التي لديها طلبات صيانة غير مكتملة/ملغاة",
+                                                    "type": "integer",
+                                                    "example": 4
                                                 },
                                                 "pending_sermons": {
+                                                    "description": "الخطب المعلقة",
                                                     "type": "integer",
                                                     "example": 6
+                                                },
+                                                "region_donations_this_month": {
+                                                    "description": "تبرعات المساجد خلال الشهر الحالي",
+                                                    "properties": {
+                                                        "count": {
+                                                            "type": "integer",
+                                                            "example": 18
+                                                        },
+                                                        "total_base_amount": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 2140000
+                                                        },
+                                                        "total_amount": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 2140000
+                                                        },
+                                                        "currency": {
+                                                            "type": "string",
+                                                            "example": "SYP"
+                                                        },
+                                                        "active_campaigns": {
+                                                            "description": "عدد الحملات النشطة",
+                                                            "type": "integer",
+                                                            "example": 7
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "critical_complaints": {
+                                                    "description": "الشكاوى الحرجة (أولوية عالية ولم تُحل)",
+                                                    "type": "integer",
+                                                    "example": 3
                                                 }
                                             },
                                             "type": "object"
@@ -5668,10 +5641,10 @@
         "/admin/export-pdf": {
             "get": {
                 "tags": [
-                    "Reports"
+                    "Dashboard"
                 ],
                 "summary": "تصدير تقرير مدير المنطقة PDF",
-                "description": "يولّد تقرير PDF ملخّص النظام ككل ويرفعه إلى Supabase ويعيد رابطاً موقّعاً مؤقتاً.",
+                "description": "يولّد تقرير PDF للوحة مدير المنطقة (البطاقات الأربع) ويرفعه إلى Supabase ويعيد رابطاً موقّعاً مؤقتاً.",
                 "operationId": "exportAdminDashboardPdf",
                 "responses": {
                     "200": {
@@ -5713,7 +5686,7 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthenticated"
+                        "$ref": "#/components/responses/Unauthenticated"
                     },
                     "403": {
                         "description": "Forbidden — super_admin only"
@@ -6591,6 +6564,151 @@
                 "responses": {
                     "200": {
                         "description": "تم جلب تقرير الشكاوى بنجاح"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — mosque_manager only"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/mosque-operations": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "سجل عمليات المساجد (مدير المنطقة)",
+                "description": "سجل مشتق من بيانات الموديولات (دون جدول جديد): تغييرات حالات الشكاوى والصيانة، التبرعات للمساجد، اعتماد الخطب، وإضافة المساجد. يدعم فلترة بالتاريخ والوحدة.",
+                "operationId": "getAdminMosqueOperations",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "module",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "complaints",
+                                "maintenance",
+                                "donations",
+                                "sermons",
+                                "mosques"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "قائمة عمليات المساجد"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — super_admin only"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/dashboard/mosque-manager/mosque-operations": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "سجل عمليات المسجد (مدير المسجد)",
+                "description": "سجل عمليات مُقيّد بمسجد مدير المسجد: تغييرات حالات الشكاوى والصيانة، التبرعات، وإضافة المسجد.",
+                "operationId": "getManagerMosqueOperations",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "module",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "complaints",
+                                "maintenance",
+                                "donations",
+                                "mosques"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "قائمة عمليات المسجد"
                     },
                     "401": {
                         "$ref": "#/components/responses/Unauthenticated"

@@ -3,6 +3,7 @@
 namespace Modules\Dashboard\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Services\SuperAdminActivityService;
 use App\Support\ApiResponse;
 use Illuminate\Http\Request;
 use Modules\Dashboard\Services\AdminDashboardService;
@@ -27,6 +28,37 @@ class AdminDashboardController extends Controller
             $result,
             'تم إنشاء تقرير المدير بنجاح'
         );
+    }
+
+    /**
+     * سجل عمليات المساجد المشتق من بيانات الموديولات (دون جدول جديد).
+     * للسوبر أدمن: كل عمليات المساجد. لمدير المسجد: مُقيّد بمسجده.
+     */
+    public function mosqueOperations(Request $request, SuperAdminActivityService $service)
+    {
+        $filters = $request->only(['module', 'date_from', 'date_to', 'per_page', 'page']);
+
+        $result = $service->getMosqueOperations($request->user(), $filters);
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Success',
+            'data'    => $result->items(),
+            'meta'    => [
+                'current_page' => $result->currentPage(),
+                'last_page'    => $result->lastPage(),
+                'per_page'     => $result->perPage(),
+                'total'        => $result->total(),
+                'from'         => $result->firstItem(),
+                'to'           => $result->lastItem(),
+            ],
+            'links'   => [
+                'first' => $result->url(1),
+                'last'  => $result->url($result->lastPage()),
+                'prev'  => $result->previousPageUrl(),
+                'next'  => $result->nextPageUrl(),
+            ],
+        ]);
     }
 
     public function superAdminDashboard(Request $request, AdminDashboardService $service)

@@ -60,6 +60,9 @@ Route::prefix('dashboard/mosque-manager')
         Route::get('/reports/maintenance/download', [ReportController::class, 'downloadMaintenance']);
         Route::get('/reports/complaints/download', [ReportController::class, 'downloadComplaints']);
 
+        // سجل عمليات المساجد (مُقيّد بمسجد المدير)
+        Route::get('/mosque-operations', [AdminDashboardController::class, 'mosqueOperations']);
+
     });
 
 Route::middleware(['auth:api', 'active.user', 'role:super_admin'])->group(function () {
@@ -67,6 +70,9 @@ Route::middleware(['auth:api', 'active.user', 'role:super_admin'])->group(functi
     Route::get('admin/dashboard', [AdminDashboardController::class, 'index']);
     Route::get('admin/super-dashboard', [AdminDashboardController::class, 'superAdminDashboard']);
     Route::get('admin/export-pdf', [AdminDashboardController::class, 'exportPdf']);
+
+    // سجل عمليات المساجد (كل المساجد لمدير المنطقة)
+    Route::get('admin/mosque-operations', [AdminDashboardController::class, 'mosqueOperations']);
 
     // تقارير مدير المنطقة (يمكن تصفيتها لأي مسجد + من/إلى تاريخ)
     Route::get('admin/reports/donations', [ReportController::class, 'donations']);
