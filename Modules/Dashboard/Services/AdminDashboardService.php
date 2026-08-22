@@ -3,16 +3,14 @@
 namespace Modules\Dashboard\Services;
 
 use App\Services\SuperAdminActivityService;
-use Modules\Dashboard\Models\Report;
 use Modules\User\Models\User;
-use Modules\Education\Models\Student;
-use Modules\Education\Models\Halaqa;
 use Modules\Mosque\Models\Mosque;
+use Modules\Donation\Models\Campaign;
 use Modules\Donation\Models\Donation;
 use Modules\Donation\Models\Setting;
 use Modules\Complaint\Models\Complaint;
-use Modules\MaintenanceRequest\Models\Maintenance;
 use Modules\Community\Models\Sermon;
+use Modules\MaintenanceRequest\Models\Maintenance;
 
 class AdminDashboardService
 {
@@ -24,32 +22,33 @@ class AdminDashboardService
 
     /**
      * بيانات لوحة تحكم المدير (super_admin) على مستوى النظام ككل.
+     * البطاقات: مساجد المنطقة، الخطب المعلقة، تبرعات المساجد خلال الشهر، الشكاوى الحرجة.
      */
     public function getDashboardData(): array
     {
+        $now = now();
+
+        $donationsThisMonth = Donation::whereNotNull('mosque_id')
+            ->whereIn('status', ['paid', 'completed', 'approved'])
+            ->whereYear('created_at', $now->year)
+            ->whereMonth('created_at', $now->month);
+
         return [
-            'totals' => [
-                'mosques'     => Mosque::count(),
-                'students'    => Student::count(),
-                'halaqas'     => Halaqa::count(),
-                'teachers'    => User::role('teacher')->count(),
-                'volunteers'  => User::role('volunteer')->count(),
-                'managers'    => User::role('mosque_manager')->count(),
-                'supervisors' => User::role('halaqa_supervisor')->count(),
-                'parents'     => User::role('parent')->count(),
+            'mosques_of_region' => Mosque::count(),
+            'mosques_under_maintenance' => Maintenance::whereNotIn('status', ['completed', 'cancelled'])
+                ->distinct('mosque_id')
+                ->count(),
+            'pending_sermons'   => Sermon::where('status', 'Pending')->count(),
+            'region_donations_this_month' => [
+                'count'             => (clone $donationsThisMonth)->count(),
+                'total_base_amount' => (float) (clone $donationsThisMonth)->sum('base_amount'),
+                'total_amount'      => (float) (clone $donationsThisMonth)->sum('amount'),
+                'currency'          => 'SYP',
+                'active_campaigns'  => Campaign::where('status', 'active')->count(),
             ],
-            'donations' => (float) Donation::whereIn('status', ['paid', 'completed', 'approved'])
-                ->sum('amount'),
-            'complaints' => [
-                'total'   => Complaint::count(),
-                'pending' => Complaint::where('status', 'pending')->count(),
-                'urgent'  => Complaint::where('priority', 'high')->count(),
-            ],
-            'maintenance' => [
-                'total'   => Maintenance::count(),
-                'pending' => Maintenance::where('status', 'pending')->count(),
-            ],
-            'pending_sermons' => Sermon::where('status', 'Pending')->count(),
+            'critical_complaints' => Complaint::where('priority', 'high')
+                ->whereIn('status', ['pending', 'in_progress'])
+                ->count(),
         ];
     }
 
@@ -161,7 +160,6 @@ class AdminDashboardService
 
         $pdfContent = $this->pdfGenerator->generate($html);
 
-        // مسار مسطّح (مجلد واحد) لتفادي مشاكل المسارات المتداخلة عند توقيع الرابط في Supabase
         $filePrefix = "admin-reports/user_{$user->id}";
 
         [$fileName, $signedUrl] = $this->uploadAndSign($pdfContent, $filePrefix);
@@ -178,10 +176,6 @@ class AdminDashboardService
         ];
     }
 
-    /**
-     * رفع ملف الـ PDF إلى التخزين السحابي ثم إنشاء رابط موقّع،
-     * مع إعادة المحاولة في حال فشل الرفع أو إرجاع السيرفر خطأ "العنصر غير موجود" (NoSuchKey).
-     */
     private function uploadAndSign(string $pdfContent, string $filePrefix): array
     {
         $lastException = null;
