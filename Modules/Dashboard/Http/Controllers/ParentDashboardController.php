@@ -33,17 +33,14 @@ class ParentDashboardController extends Controller
         ]);
     }
 
-    public function exportPdf()
+    public function exportPdf(Request $request)
     {
-        $parentId = auth()->id();
+        $result = $this->parentDashboardService
+            ->generateParentReportPdf($request->user());
 
-        $report = $this->parentDashboardService
-            ->generateParentReportPdf($parentId);
         return ApiResponse::success(
-            $report,
-            'تم إنشاء التقرير بنجاح'
+            $result,
+            'تم إنشاء تقرير ولي الأمر بنجاح'
         );
-
-
     }
 }

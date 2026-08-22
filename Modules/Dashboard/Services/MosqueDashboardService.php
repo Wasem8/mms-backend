@@ -396,7 +396,7 @@ class MosqueDashboardService
             'total_supervisors' => $totalHalaqaSupervisors,
 
             'pending_invitations' => $pendingInvitations,
-            
+
         ];
     }
 }
