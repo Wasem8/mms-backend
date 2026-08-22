@@ -3,7 +3,10 @@
 namespace Modules\Mosque\Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Modules\Geo\Models\City;
+use Modules\Geo\Models\Governorate;
 use Modules\Mosque\Models\Mosque;
+use Modules\User\Models\User;
 
 class MosqueSeeder extends Seeder
 {
@@ -16,188 +19,256 @@ class MosqueSeeder extends Seeder
             return "{$baseUrl}/storage/v1/object/public/{$bucket}/{$fileName}";
         };
 
-        $mosques = [
+        // يعتمد على بيانات المستخدمين: نربط كل مسجد بمدير مسجد إن وُجد
+        $manager = User::whereHas('roles', fn($q) => $q->where('name', 'mosque_manager'))
+            ->first();
 
+        $mosques = [
+            // ===== دمشق =====
             [
                 'name' => 'الجامع الأموي',
+                'governorate' => 'دمشق',
                 'city' => 'دمشق',
+                'city_lat' => 33.5138,
+                'city_lng' => 36.2765,
                 'district' => 'دمشق القديمة',
-                'image' => $imageUrl('umayyad-mosque.jpg'),
+                'image' => 'umayyad-mosque.jpg',
                 'working_hours' => '24 ساعة',
                 'status' => 'active',
+                'is_featured' => true,
                 'latitude' => 33.5112,
                 'longitude' => 36.3064,
                 'average_rating' => 4.90,
                 'reviews_count' => 1250,
-                'imam' => 'إمام الجامع الأموي',
-                'khatib' => 'خطيب الجامع الأموي',
-                'manager_id' => null,
+                'imam' => 'الشيخ محمد الأموي',
+                'khatib' => 'الشيخ أحمد سعد',
             ],
-
             [
-                'name' => 'جامع الحسن',
+                'name' => 'جامع أبي النور',
+                'governorate' => 'دمشق',
                 'city' => 'دمشق',
-                'district' => 'المزة',
-                'image' => $imageUrl('al-hassan-mosque.jpg'),
-                'working_hours' => '05:00 - 22:00',
-                'status' => 'active',
-                'latitude' => 33.4975,
-                'longitude' => 36.2585,
-                'average_rating' => 4.70,
-                'reviews_count' => 340,
-                'imam' => 'إمام جامع الحسن',
-                'khatib' => 'خطيب جامع الحسن',
-                'manager_id' => null,
-            ],
-
-            [
-                'name' => 'جامع الرحمن',
-                'city' => 'دمشق',
-                'district' => 'كفرسوسة',
-                'image' => $imageUrl('al-rahman-mosque.jpg'),
-                'working_hours' => '05:00 - 22:00',
-                'status' => 'active',
-                'latitude' => 33.4805,
-                'longitude' => 36.2570,
-                'average_rating' => 4.60,
-                'reviews_count' => 280,
-                'imam' => 'إمام جامع الرحمن',
-                'khatib' => 'خطيب جامع الرحمن',
-                'manager_id' => null,
-            ],
-
-            [
-                'name' => 'جامع الإيمان',
-                'city' => 'دمشق',
+                'city_lat' => 33.5138,
+                'city_lng' => 36.2765,
                 'district' => 'المزرعة',
-                'image' => $imageUrl('al-iman-mosque.jpg'),
+                'image' => 'abu-al-noor-mosque.jpg',
                 'working_hours' => '05:00 - 22:00',
                 'status' => 'active',
-                'latitude' => 33.5200,
-                'longitude' => 36.2870,
-                'average_rating' => 4.50,
-                'reviews_count' => 190,
-                'imam' => 'إمام جامع الإيمان',
-                'khatib' => 'خطيب جامع الإيمان',
-                'manager_id' => null,
+                'is_featured' => false,
+                'latitude' => 33.5310,
+                'longitude' => 36.2920,
+                'average_rating' => 4.70,
+                'reviews_count' => 410,
+                'imam' => 'الشيخ خالد النوري',
+                'khatib' => 'الشيخ عمر الفاروق',
             ],
-
             [
-                'name' => 'جامع عثمان بن عفان',
+                'name' => 'جامع العادلية الكبير',
+                'governorate' => 'دمشق',
                 'city' => 'دمشق',
-                'district' => 'برزة',
-                'image' => $imageUrl('uthman-ibn-affan-mosque.jpg'),
+                'city_lat' => 33.5138,
+                'city_lng' => 36.2765,
+                'district' => 'السويقة',
+                'image' => 'al-adiliyah-mosque.jpg',
                 'working_hours' => '05:00 - 22:00',
                 'status' => 'active',
-
-                'latitude' => 33.5520,
-                'longitude' => 36.3220,
+                'is_featured' => false,
+                'latitude' => 33.5110,
+                'longitude' => 36.3010,
+                'average_rating' => 4.60,
+                'reviews_count' => 320,
+                'imam' => 'الشيخ يوسف العادلي',
+                'khatib' => 'الشيخ سمير حسن',
+            ],
+            [
+                'name' => 'جامع سنان باشا',
+                'governorate' => 'دمشق',
+                'city' => 'دمشق',
+                'city_lat' => 33.5138,
+                'city_lng' => 36.2765,
+                'district' => 'الشاغور',
+                'image' => 'sinan-pasha-mosque.jpg',
+                'working_hours' => '05:00 - 22:00',
+                'status' => 'active',
+                'is_featured' => false,
+                'latitude' => 33.5160,
+                'longitude' => 36.3120,
+                'average_rating' => 4.50,
+                'reviews_count' => 210,
+                'imam' => 'الشيخ زيد السناني',
+                'khatib' => 'الشيخ طارق العبد',
+            ],
+            [
+                'name' => 'جامع تنكز',
+                'governorate' => 'دمشق',
+                'city' => 'دمشق',
+                'city_lat' => 33.5138,
+                'city_lng' => 36.2765,
+                'district' => 'الصالحية',
+                'image' => 'tankiz-mosque.jpg',
+                'working_hours' => '05:00 - 22:00',
+                'status' => 'active',
+                'is_featured' => false,
+                'latitude' => 33.5230,
+                'longitude' => 36.3050,
+                'average_rating' => 4.40,
+                'reviews_count' => 160,
+                'imam' => 'الشيخ وليد التنكزي',
+                'khatib' => 'الشيخ فادي رمضان',
+            ],
+            [
+                'name' => 'جامع السيدة رقية',
+                'governorate' => 'دمشق',
+                'city' => 'دمشق',
+                'city_lat' => 33.5138,
+                'city_lng' => 36.2765,
+                'district' => 'باب توما',
+                'image' => 'sayyida-ruqayya-mosque.jpg',
+                'working_hours' => '05:00 - 22:00',
+                'status' => 'active',
+                'is_featured' => false,
+                'latitude' => 33.5125,
+                'longitude' => 36.3075,
+                'average_rating' => 4.60,
+                'reviews_count' => 300,
+                'imam' => 'الشيخ رقية الدمشقي',
+                'khatib' => 'الشيخ منذر العلي',
+            ],
+            [
+                'name' => 'جامع سيدي محيي الدين',
+                'governorate' => 'دمشق',
+                'city' => 'دمشق',
+                'city_lat' => 33.5138,
+                'city_lng' => 36.2765,
+                'district' => 'الصالحية',
+                'image' => 'muhyiddin-ibn-arabi-mosque.jpg',
+                'working_hours' => '05:00 - 22:00',
+                'status' => 'active',
+                'is_featured' => true,
+                'latitude' => 33.5320,
+                'longitude' => 36.3040,
+                'average_rating' => 4.65,
+                'reviews_count' => 340,
+                'imam' => 'الشيخ محيي الدين العربي',
+                'khatib' => 'الشيخ إياد نجم',
+            ],
+            [
+                'name' => 'جامع الدرويشية',
+                'governorate' => 'دمشق',
+                'city' => 'دمشق',
+                'city_lat' => 33.5138,
+                'city_lng' => 36.2765,
+                'district' => 'سوق الحميدية',
+                'image' => 'al-darwishiyya-mosque.jpg',
+                'working_hours' => '05:00 - 22:00',
+                'status' => 'active',
+                'is_featured' => false,
+                'latitude' => 33.5122,
+                'longitude' => 36.3038,
+                'average_rating' => 4.45,
+                'reviews_count' => 175,
+                'imam' => 'الشيخ درويش حلاق',
+                'khatib' => 'الشيخ بلال زين',
+            ],
+            [
+                'name' => 'جامع السنجقدار',
+                'governorate' => 'دمشق',
+                'city' => 'دمشق',
+                'city_lat' => 33.5138,
+                'city_lng' => 36.2765,
+                'district' => 'الميدان',
+                'image' => 'al-sinjaqdar-mosque.jpg',
+                'working_hours' => '05:00 - 22:00',
+                'status' => 'active',
+                'is_featured' => false,
+                'latitude' => 33.4950,
+                'longitude' => 36.2980,
+                'average_rating' => 4.35,
+                'reviews_count' => 140,
+                'imam' => 'الشيخ سنجق داري',
+                'khatib' => 'الشيخ أنس فارس',
+            ],
+            [
+                'name' => 'جامع القيمرية',
+                'governorate' => 'دمشق',
+                'city' => 'دمشق',
+                'city_lat' => 33.5138,
+                'city_lng' => 36.2765,
+                'district' => 'القيمرية',
+                'image' => 'al-qaymariyya-mosque.jpg',
+                'working_hours' => '05:00 - 22:00',
+                'status' => 'active',
+                'is_featured' => false,
+                'latitude' => 33.5118,
+                'longitude' => 36.3090,
                 'average_rating' => 4.40,
                 'reviews_count' => 150,
-                'imam' => 'إمام جامع عثمان بن عفان',
-                'khatib' => 'خطيب جامع عثمان بن عفان',
-                'manager_id' => null,
-            ],
-
-            [
-                'name' => 'جامع التوبة',
-                'city' => 'دمشق',
-                'district' => 'ركن الدين',
-                'image' => $imageUrl('al-tawba-mosque.jpg'),
-                'working_hours' => '05:00 - 22:00',
-                'status' => 'active',
-
-                'latitude' => 33.5350,
-                'longitude' => 36.2930,
-                'average_rating' => 4.30,
-                'reviews_count' => 120,
-                'imam' => 'إمام جامع التوبة',
-                'khatib' => 'خطيب جامع التوبة',
-                'manager_id' => null,
-            ],
-
-            [
-                'name' => 'جامع النور',
-                'city' => 'دمشق',
-                'district' => 'العدوي',
-                'image' => $imageUrl('al-noor-mosque.jpg'),
-                'working_hours' => '05:00 - 22:00',
-                'status' => 'active',
-
-                'latitude' => 33.5300,
-                'longitude' => 36.3100,
-                'average_rating' => 4.20,
-                'reviews_count' => 95,
-                'imam' => 'إمام جامع النور',
-                'khatib' => 'خطيب جامع النور',
-                'manager_id' => null,
-            ],
-
-            [
-                'name' => 'جامع الرحمة',
-                'city' => 'دمشق',
-                'district' => 'الميدان',
-                'image' => $imageUrl('al-rahma-mosque.jpg'),
-                'working_hours' => '05:00 - 22:00',
-                'status' => 'active',
-
-                'latitude' => 33.4850,
-                'longitude' => 36.2940,
-                'average_rating' => 4.40,
-                'reviews_count' => 175,
-                'imam' => 'إمام جامع الرحمة',
-                'khatib' => 'خطيب جامع الرحمة',
-                'manager_id' => null,
-            ],
-
-            [
-                'name' => 'جامع خالد بن الوليد',
-                'city' => 'دمشق',
-                'district' => 'القصاع',
-                'image' => $imageUrl('khalid-ibn-al-walid-mosque.jpg'),
-                'working_hours' => '05:00 - 22:00',
-                'status' => 'active',
-
-                'latitude' => 33.5200,
-                'longitude' => 36.3150,
-                'average_rating' => 4.30,
-                'reviews_count' => 130,
-                'imam' => 'إمام جامع خالد بن الوليد',
-                'khatib' => 'خطيب جامع خالد بن الوليد',
-                'manager_id' => null,
-            ],
-
-            [
-                'name' => 'جامع التقوى',
-                'city' => 'دمشق',
-                'district' => 'دمر',
-                'image' => $imageUrl('al-taqwa-mosque.jpg'),
-                'working_hours' => '05:00 - 22:00',
-                'status' => 'active',
-
-                'latitude' => 33.5350,
-                'longitude' => 36.2300,
-                'average_rating' => 4.10,
-                'reviews_count' => 85,
-                'imam' => 'إمام جامع التقوى',
-                'khatib' => 'خطيب جامع التقوى',
-                'manager_id' => null,
+                'imam' => 'الشيخ قيمري الشامي',
+                'khatib' => 'الشيخ حسام الجندي',
             ],
         ];
+
+        // جميع المساجد في مدينة واحدة: دمشق
+        $city = $this->resolveCity('دمشق', 'دمشق', 33.5138, 36.2765);
+
+        // الاقتصار على مساجد دمشق فقط (10 مساجد) - فلترة صريحة بدل الاعتماد على ترتيب المصفوفة
+        $mosques = array_values(array_filter($mosques, fn($m) => $m['city'] === 'دمشق'));
+        $mosques = array_slice($mosques, 0, 10);
+
+        $count = 0;
 
         foreach ($mosques as $data) {
 
             Mosque::updateOrCreate(
                 [
                     'name' => $data['name'],
-                    'city' => $data['city'],
+                    'city_id' => $city?->id,
                 ],
-                $data
+                [
+                    'city_id' => $city?->id,
+                    'district_id' => null,
+                    'district' => $data['district'],
+                    'image' => $imageUrl($data['image']),
+                    'working_hours' => $data['working_hours'],
+                    'status' => $data['status'],
+                    'is_featured' => $data['is_featured'],
+                    'latitude' => $data['latitude'],
+                    'longitude' => $data['longitude'],
+                    'average_rating' => $data['average_rating'],
+                    'reviews_count' => $data['reviews_count'],
+                    'imam' => $data['imam'],
+                    'khatib' => $data['khatib'],
+                    'manager_id' => $manager?->id,
+                ]
             );
+
+            $count++;
         }
 
-        $this->command->info(
-            '✅ تم إنشاء/تحديث ' . count($mosques) . ' مساجد في دمشق.'
-        );
+        $this->command->info('تم إنشاء/تحديث ' . $count . ' مسجداً في دمشق.');
+    }
+
+    /**
+     * يجلب المدينة حسب الاسم، وينشئ المحافظة/المدينة عند الحاجة كي لا تفشل المفاتيح الأجنبية.
+     */
+    private function resolveCity(string $governorateName, string $cityName, float $lat, float $lng): ?City
+    {
+        $governorate = Governorate::where('name_ar', $governorateName)->first()
+            ?? Governorate::create([
+                'name_ar' => $governorateName,
+                'name_en' => $governorateName,
+                'lat' => $lat,
+                'lng' => $lng,
+            ]);
+
+        return City::where('name_ar', $cityName)
+            ->where('governorate_id', $governorate->id)
+            ->first()
+            ?? City::create([
+                'governorate_id' => $governorate->id,
+                'name_ar' => $cityName,
+                'name_en' => $cityName,
+                'lat' => $lat,
+                'lng' => $lng,
+            ]);
     }
 }

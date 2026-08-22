@@ -585,4 +585,241 @@ class DashboardEndpoints
         ]
     )]
     public function getMosqueManagerStatistics() {}
+
+    #[OA\Get(
+        path: '/dashboard/mosque-manager/export-pdf',
+        operationId: 'exportMosqueManagerDashboardPdf',
+        tags: ['Reports'],
+        summary: 'تصدير تقرير مدير المسجد PDF',
+        description: 'يولّد تقرير PDF بلوحة تحكم مدير المسجد (المؤشرات، الحضور، الأنشطة، البلاغات، الإحصائيات) ويرفعه إلى Supabase ويعيد رابطاً موقّعاً مؤقتاً مع حالة الكاش.',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'تم إنشاء التقرير بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم إنشاء تقرير مدير المسجد بنجاح'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'url', type: 'string', format: 'url', example: 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/sign/reports/mosque-manager-reports/1_user_3_...pdf?token=...'),
+                                new OA\Property(property: 'cached', type: 'boolean', example: false)
+                            ]
+                        ),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden')
+        ]
+    )]
+    public function exportMosqueManagerPdf() {}
+
+    #[OA\Get(
+        path: '/admin/dashboard',
+        operationId: 'getAdminDashboardStats',
+        tags: ['Dashboard'],
+        summary: 'إحصائيات لوحة تحكم مدير المنطقة (النظام ككل)',
+        description: 'يعيد مؤشرات النظام الإجمالية: عدد المساجد، الطلاب، الحلقات، المستخدمين حسب الدور، التبرعات، الشكاوى وطلبات الصيانة.',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'تم جلب إحصائيات لوحة تحكم المدير بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم جلب إحصائيات لوحة تحكم المدير بنجاح'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'totals',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'mosques', type: 'integer', example: 12),
+                                        new OA\Property(property: 'students', type: 'integer', example: 340),
+                                        new OA\Property(property: 'halaqas', type: 'integer', example: 28),
+                                        new OA\Property(property: 'teachers', type: 'integer', example: 30),
+                                        new OA\Property(property: 'volunteers', type: 'integer', example: 45),
+                                        new OA\Property(property: 'managers', type: 'integer', example: 10),
+                                        new OA\Property(property: 'supervisors', type: 'integer', example: 14),
+                                        new OA\Property(property: 'parents', type: 'integer', example: 250)
+                                    ]
+                                ),
+                                new OA\Property(property: 'donations', type: 'number', format: 'float', example: 125000.0),
+                                new OA\Property(
+                                    property: 'complaints',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'total', type: 'integer', example: 40),
+                                        new OA\Property(property: 'pending', type: 'integer', example: 7)
+                                    ]
+                                ),
+                                new OA\Property(
+                                    property: 'maintenance',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'total', type: 'integer', example: 22),
+                                        new OA\Property(property: 'pending', type: 'integer', example: 5)
+                                    ]
+                                )
+                            ]
+                        ),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — super_admin only')
+        ]
+    )]
+    public function getAdminStats() {}
+
+    #[OA\Get(
+        path: '/admin/export-pdf',
+        operationId: 'exportAdminDashboardPdf',
+        tags: ['Reports'],
+        summary: 'تصدير تقرير مدير المنطقة PDF',
+        description: 'يولّد تقرير PDF ملخّص النظام ككل ويرفعه إلى Supabase ويعيد رابطاً موقّعاً مؤقتاً.',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'تم إنشاء التقرير بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم إنشاء تقرير المدير بنجاح'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'url', type: 'string', format: 'url'),
+                                new OA\Property(property: 'cached', type: 'boolean', example: false)
+                            ]
+                        ),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — super_admin only')
+        ]
+    )]
+    public function exportAdminPdf() {}
+
+    #[OA\Get(
+        path: '/reports/mosques/census',
+        operationId: 'exportMosqueCensusPdf',
+        tags: ['Reports'],
+        summary: 'التقرير الإحصائي الشامل لمساجد المنطقة',
+        description: 'تقرير PDF لكافة مساجد المنطقة مصنّفة حسب المدينة، مع الحالة التشغيلية والسعة والمرافق والموقع الجغرافي. مخصص لمدير المنطقة (super_admin).',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'تم إنشاء التقرير الإحصائي الشامل بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم إنشاء التقرير الإحصائي الشامل للمساجد بنجاح'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'url', type: 'string', format: 'url'),
+                                new OA\Property(property: 'cached', type: 'boolean', example: false)
+                            ]
+                        ),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — super_admin only')
+        ]
+    )]
+    public function exportMosqueCensusPdf() {}
+
+    #[OA\Get(
+        path: '/reports/mosques/readiness',
+        operationId: 'exportMosqueReadinessPdf',
+        tags: ['Reports'],
+        summary: 'تقرير جاهزية المساجد للمواسم',
+        description: 'تقرير PDF لجاهزية الجوامع الكبرى للمواسم (رمضان، التراويح، العيدين، الجمعة) بناءً على المرافق وطلبات الصيانة المفتوحة. مخصص لمدير المنطقة (super_admin).',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'تم إنشاء تقرير الجاهزية بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم إنشاء تقرير الجاهزية للمواسم بنجاح'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'url', type: 'string', format: 'url'),
+                                new OA\Property(property: 'cached', type: 'boolean', example: false)
+                            ]
+                        ),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — super_admin only')
+        ]
+    )]
+    public function exportMosqueReadinessPdf() {}
+
+    #[OA\Get(
+        path: '/reports/mosques/fact-sheet',
+        operationId: 'exportMosqueFactSheetPdf',
+        tags: ['Reports'],
+        summary: 'تقرير بطاقة المسجد التعريفية',
+        description: 'تقرير PDF لملف المسجد الكامل (العنوان، الموقع GPS، المدير، الإمام، الخطيب، القاعات، المرافق، الاحتياجات). مدير المسجد مقصور على مسجده؛ مدير المنطقة يمرر mosque_id.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'mosque_id',
+                in: 'query',
+                required: false,
+                description: 'معرف المسجد (إلزامي لـ super_admin لتحديد المسجد؛ يتجاهله مدير المسجد ويُقصر على مسجده)',
+                schema: new OA\Schema(type: 'integer', example: 1)
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'تم إنشاء بطاقة المسجد التعريفية بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم إنشاء بطاقة المسجد التعريفية بنجاح'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'url', type: 'string', format: 'url'),
+                                new OA\Property(property: 'cached', type: 'boolean', example: false)
+                            ]
+                        ),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden'),
+            new OA\Response(response: 404, description: 'Mosque not found')
+        ]
+    )]
+    public function exportMosqueFactSheetPdf() {}
 }
