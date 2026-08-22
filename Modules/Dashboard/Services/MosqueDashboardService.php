@@ -11,7 +11,10 @@ use Modules\Donation\Models\Donation;
 use Modules\Education\Models\Attendance;
 use Modules\Complaint\Service\ComplaintService;
 use Modules\MaintenanceRequest\Service\MaintenanceService;
+use Modules\MaintenanceRequest\Models\Maintenance;
 use Modules\Mosque\Services\MosqueTaskService;
+use Modules\Volunteer\Models\VolunteerApplication;
+use Modules\Volunteer\Enums\ApplicationStatus;
 
 class MosqueDashboardService
 {
@@ -43,32 +46,7 @@ class MosqueDashboardService
 
     private function getKpiCards($mosqueId, $today, $startOfMonth, $previousMonthStart, $previousMonthEnd): array
     {
-        // 1. إجمالي الطلاب من جدول students (إما عبر mosque_id مباشر أو عبر حلقاته)
-        $totalStudents = Student::whereHas('halaqats', function ($q) use ($mosqueId) {
-            $q->where('mosque_id', $mosqueId);
-        })->count();
-        // ملاحظة: إذا كان جدول students يحتوي على mosque_id مباشرة، استخدم:
-        // $totalStudents = Student::where('mosque_id', $mosqueId)->count();
-
-        // 2. إجمالي المعلمين
-        $totalTeachers = User::role('teacher')
-            ->where('mosque_id', $mosqueId)
-            ->count();
-
-        // 3. نسبة حضور اليوم
-        $todayTotalAttendance = Attendance::whereHas('halaqa', function ($query) use ($mosqueId) {
-            $query->where('mosque_id', $mosqueId);
-        })->whereDate('date', $today)->count();
-
-        $todayPresentCount = Attendance::whereHas('halaqa', function ($query) use ($mosqueId) {
-            $query->where('mosque_id', $mosqueId);
-        })->whereDate('date', $today)->where('status', 'present')->count();
-
-        $todayAttendanceRate = $todayTotalAttendance > 0
-            ? round(($todayPresentCount / $todayTotalAttendance) * 100)
-            : 0;
-
-        // 4. التبرعات
+        // 1. التبرعات هذا الشهر
         $currentMonthDonations = Donation::where('mosque_id', $mosqueId)
             ->whereIn('status', ['paid', 'completed', 'approved'])
             ->where('created_at', '>=', $startOfMonth)
@@ -83,27 +61,42 @@ class MosqueDashboardService
             ? round((($currentMonthDonations - $lastMonthDonations) / $lastMonthDonations) * 100, 1)
             : 0;
 
+        // 5. طلبات الصيانة المفتوحة (قيد الانتظار + قيد التنفيذ)
+        $openMaintenanceRequests = Maintenance::where('mosque_id', $mosqueId)
+            ->whereIn('status', ['pending', 'in_progress'])
+            ->count();
+
+        // 6. البلاغات والشكاوى المفتوحة (قيد الانتظار + قيد المعالجة)
+        $openComplaints = Complaint::where('mosque_id', $mosqueId)
+            ->whereIn('status', ['pending', 'in_progress'])
+            ->count();
+
+        // 7. المتطوعون المعتمدون (طلبات تطوع موافق عليها لمسجدهم)
+        $accreditedVolunteers = VolunteerApplication::where('status', ApplicationStatus::Approved)
+            ->whereHas('volunteer', fn($q) => $q->where('mosque_id', $mosqueId))
+            ->count();
+
         return [
-            'total_students' => [
-                'value' => $totalStudents,
-                'percentage_change' => '+12%',
-                'is_increase' => true
-            ],
-            'total_teachers' => [
-                'value' => $totalTeachers,
-                'percentage_change' => '+2',
-                'is_increase' => true
-            ],
-            'today_attendance' => [
-                'value' => "%{$todayAttendanceRate}",
-                'percentage_change' => '+5%',
-                'is_increase' => true
-            ],
             'monthly_donations' => [
                 'value' => (float) $currentMonthDonations,
                 'formatted_value' => number_format($currentMonthDonations) . ' ر.س',
                 'percentage_change' => ($donationChangePercentage >= 0 ? '+' : '') . $donationChangePercentage . '%',
                 'is_increase' => $donationChangePercentage >= 0
+            ],
+            'open_maintenance_requests' => [
+                'value' => $openMaintenanceRequests,
+                'percentage_change' => '0%',
+                'is_increase' => false
+            ],
+            'complaints' => [
+                'value' => $openComplaints,
+                'percentage_change' => '0%',
+                'is_increase' => false
+            ],
+            'accredited_volunteers' => [
+                'value' => $accreditedVolunteers,
+                'percentage_change' => '0%',
+                'is_increase' => false
             ]
         ];
     }
@@ -268,11 +261,35 @@ class MosqueDashboardService
             })
             ->count();
 
+        // 5. إجمالي التبرعات المعتمدة للْمسجد
+        $donations = (float) Donation::where('mosque_id', $mosqueId)
+            ->whereIn('status', ['paid', 'completed', 'approved'])
+            ->sum('amount');
+
+        // 6. طلبات الصيانة المفتوحة (قيد الانتظار + قيد التنفيذ)
+        $openMaintenanceRequests = Maintenance::where('mosque_id', $mosqueId)
+            ->whereIn('status', ['pending', 'in_progress'])
+            ->count();
+
+        // 7. البلاغات والشكاوى المفتوحة (قيد الانتظار + قيد المعالجة)
+        $complaints = Complaint::where('mosque_id', $mosqueId)
+            ->whereIn('status', ['pending', 'in_progress'])
+            ->count();
+
+        // 8. المتطوعون المعتمدون (طلبات تطوع موافق عليها لمسجدهم)
+        $accreditedVolunteers = VolunteerApplication::where('status', ApplicationStatus::Approved)
+            ->whereHas('volunteer', fn($q) => $q->where('mosque_id', $mosqueId))
+            ->count();
+
         return [
-            'total_students' => $totalStudents,
-            'total_teachers' => $totalTeachers,
-            'total_volunteers' => $totalVolunteers,
-            'pending_invitations' => $pendingInvitations,
+            'total_students'          => $totalStudents,
+            'total_teachers'          => $totalTeachers,
+            'total_volunteers'        => $totalVolunteers,
+            'pending_invitations'     => $pendingInvitations,
+            'donations'              => $donations,
+            'open_maintenance_requests' => $openMaintenanceRequests,
+            'complaints'             => $complaints,
+            'accredited_volunteers'  => $accreditedVolunteers,
         ];
     }
 }

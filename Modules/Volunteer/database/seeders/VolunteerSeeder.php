@@ -6,111 +6,163 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Modules\Mosque\Models\Mosque;
+use Modules\User\Models\Role;
 use Modules\User\Models\User;
 use Modules\Volunteer\Enums\ApplicationStatus;
 use Modules\Volunteer\Enums\OpportunityStatus;
 use Modules\Volunteer\Enums\TaskStatus;
 use Modules\Volunteer\Models\VolunteerApplication;
 use Modules\Volunteer\Models\VolunteerCertificate;
+use Modules\Volunteer\Models\VolunteerLog;
 use Modules\Volunteer\Models\VolunteerOpportunity;
 use Modules\Volunteer\Models\VolunteerTask;
 
 class VolunteerSeeder extends Seeder
 {
-    private const OPPORTUNITIES_PER_MOSQUE = 3;
+    private const OPPORTUNITIES_PER_MOSQUE = 2;
 
-    /**
-     * Number of dedicated volunteer users to create.
-     */
-    private const VOLUNTEER_USERS_COUNT = 15;
-
-    private const TITLES = [
-        'تنظيف وترتيب المسجد',
-        'استقبال المصلين في صلاة التراويح',
-        'حملة توزيع إفطار صائم',
-        'تنظيم الحفل السنوي للمسجد',
-        'صيانة وتجهيز قاعة الدروس',
-        'الإشراف على حلقات تحفيظ القرآن',
+    private const VOLUNTEER_NAMES = [
+        'أحمد العلي', 'محمد الحسن', 'خالد الدين', 'عمر فارس', 'يوسف الشامي',
+        'عبد الله نور', 'زيد القاسم', 'سلمان الرفاعي', 'بلال الزهراني', 'طارق الحلبي',
+        'فادي العلي', 'مالك السباعي', 'سامر يوسف', 'كنان الخطيب', 'وليد العمر',
+        'رامي النجار', 'هاني الشامي', 'نور الدين', 'ضياء المنصور', 'باسل الكردي',
     ];
+
+    private const OPPORTUNITY_TEMPLATES = [
+        ['تنظيف وترتيب المسجد', 'حملة تطوعية لنظافة المصلى الرئيسي ودورات المياه وترتيب السجاد بالتعاون مع أهالي الحي.'],
+        ['استقبال المصلين في صلاة التراويح', 'تنظيم دخول المصلين وتوزيع المصاحف وتقديم المياه الباردة بعد الصلاة.'],
+        ['حملة توزيع إفطار صائم', 'تجهيز وتوزيع وجبات إفطار على المارة والفقراء بالتنسيق مع لجنة المسجد.'],
+        ['تنظيم حفل القرآن السنوي', 'الإشراف على حفل تكريم حفظة القرآن الكريم وتجهيز المسرح والضيافة.'],
+        ['صيانة وتجهيز قاعة الدروس', 'طلاء وتعقيم قاعة الدروس وتجهيزها للمحاضرات والدروس اليومية.'],
+        ['الإشراف على حلقات تحفيظ القرآن', 'متابعة حضور الطلاب وتنظيم الجداول في حلقات تحفيظ القرآن الكريم.'],
+        ['حملة تشجير ساحة المسجد', 'زراعة أشجار وورود في ساحة المسجد الخارجية وتنظيف المكان.'],
+        ['تجهيز مخيم الأيتام', 'تجهيز وتنظيم فعاليات ترفيهية للأيتام بالتعاون مع الجمعيات الخيرية.'],
+    ];
+
+    private const TASK_TEMPLATES = [
+        'تنظيف المصلى الرئيسي',
+        'ترتيب السجاد وتعقيمه',
+        'تعقيم دورات المياه',
+        'توزيع وجبات الإفطار',
+        'تنظيم دخول المصلين',
+        'إعداد القاعة للدروس',
+        'تجهيز الكراسي والطاولات',
+        'زراعة الأشجار في الساحة',
+    ];
+
+    private const EVALUATIONS = ['ممتاز', 'جيد جداً', 'جيد', 'أداء متميز'];
 
     public function run(): void
     {
         $mosques = Mosque::all();
 
         if ($mosques->isEmpty()) {
-            $this->command?->warn('No mosques found — skipping VolunteerDatabaseSeeder. Seed the Mosque module first.');
+            $this->command?->warn('لا توجد مساجد بعد — تجاوز بذر المتطوعين. قم ببذر وحدة المساجد أولاً.');
 
             return;
         }
 
-        $volunteers = $this->seedVolunteerUsers();
+        $volunteers = $this->ensureVolunteers();
 
         foreach ($mosques as $mosque) {
+            // تجنب التكرار عند إعادة البذر: تجاوز المسجد إن كان لديه فرص سابقة
+            if (VolunteerOpportunity::where('mosque_id', $mosque->id)->exists()) {
+                continue;
+            }
+
             for ($i = 0; $i < self::OPPORTUNITIES_PER_MOSQUE; $i++) {
-                $opportunity = $this->createOpportunity($mosque);
+                $opportunity = $this->createOpportunity($mosque, $i);
                 $this->seedApplicationsForOpportunity($opportunity, $volunteers);
             }
         }
+
+        $this->command?->info('تم إنشاء بيانات المتطوعين والفرص التطوعية لـ ' . $mosques->count() . ' مسجداً في دمشق.');
     }
 
     /**
-     * Create dedicated volunteer users and assign them the `volunteer` role.
+     * تأكد من وجود مجموعة متطوعين (عربية/سورية) وأعدها.
      *
      * @return Collection<int, User>
      */
-    private function seedVolunteerUsers(): Collection
+    private function ensureVolunteers(): Collection
     {
-        $volunteers = collect();
+        // التأكد من وجود دور "المتطوع" قبل ربطه بالمستخدمين
+        $volunteerRole = Role::firstOrCreate(
+            ['name' => 'volunteer'],
+            ['display_name' => 'المتطوع']
+        );
 
-        for ($i = 0; $i < self::VOLUNTEER_USERS_COUNT; $i++) {
-            $user = User::factory()->create([
-                'name' => fake()->name(),
-                'phone' => fake()->unique()->numerify('09########'),
-            ]);
+        $volunteers = User::whereHas('roles', fn($q) => $q->where('name', 'volunteer'))->get();
 
-            if (method_exists($user, 'assignRole') && ! $user->hasRole('volunteer')) {
-                $user->assignRole('volunteer');
+        if ($volunteers->count() >= 12) {
+            return $volunteers;
+        }
+
+        // حلقة محدودة بـ 12 متطوعاً لتفادي التكرار اللانهائي عند وجود مستخدمين بنفس البريد
+        for ($i = 1; $i <= 12; $i++) {
+            if ($volunteers->count() >= 12) {
+                break;
             }
 
-            $volunteers->push($user);
+            $fullName = self::VOLUNTEER_NAMES[($i - 1) % count(self::VOLUNTEER_NAMES)];
+            $email = 'volunteer' . $i . '@mms.test';
+
+            $user = User::where('email', $email)->first();
+
+            if (!$user) {
+                $parts = explode(' ', $fullName, 2);
+                $user = User::create([
+                    'first_name' => $parts[0],
+                    'last_name' => $parts[1] ?? '',
+                    'name' => $fullName,
+                    'email' => $email,
+                    'phone' => '09' . str_pad((string) ($i * 137123), 8, '0', STR_PAD_LEFT),
+                    'password' => bcrypt('password'),
+                    'status' => 'active',
+                ]);
+            }
+
+            // ربط المستخدم الفعلي بدور المتطوع بشكل صريح
+            if (!$user->roles()->where('role_id', $volunteerRole->id)->exists()) {
+                $user->roles()->attach($volunteerRole->id);
+            }
+
+            // تجنب إضافة نفس المستخدم أكثر من مرة للمجموعة
+            if (!$volunteers->contains('id', $user->id)) {
+                $volunteers->push($user);
+            }
         }
 
         return $volunteers;
     }
 
-    private function createOpportunity(Mosque $mosque): VolunteerOpportunity
+    private function createOpportunity(Mosque $mosque, int $index): VolunteerOpportunity
     {
-        $status = fake()->randomElement(OpportunityStatus::cases());
+        $status = $index % 2 === 0 ? OpportunityStatus::Open : OpportunityStatus::Closed;
 
-        // Closed opportunities sit fully in the past for consistent seed data;
-        // open ones can start recently or up to a month out.
+        $template = self::OPPORTUNITY_TEMPLATES[($mosque->id + $index) % count(self::OPPORTUNITY_TEMPLATES)];
+
         $startDate = $status === OpportunityStatus::Closed
-            ? fake()->dateTimeBetween('-3 months', '-1 month')
-            : fake()->dateTimeBetween('-2 weeks', '+1 month');
+            ? Carbon::now()->subMonths(2)->addDays($index * 3)
+            : Carbon::now()->subDays(10)->addDays($index * 5);
 
-        $endDate = (clone $startDate)->modify('+' . rand(3, 21) . ' days');
+        $endDate = (clone $startDate)->addDays(rand(5, 15));
 
         return VolunteerOpportunity::create([
             'mosque_id' => $mosque->id,
-            'title' => fake()->randomElement(self::TITLES),
-            'description' => fake()->realText(180),
-            'required_volunteers' => rand(2, 8),
+            'title' => $template[0],
+            'description' => $template[1],
+            'required_volunteers' => rand(3, 8),
             'start_date' => $startDate,
             'end_date' => $endDate,
             'status' => $status,
         ]);
     }
 
-    /**
-     * Create applications (and their downstream tasks/certificates) for a single opportunity.
-     *
-     * @param  Collection<int, User>  $volunteers
-     */
     private function seedApplicationsForOpportunity(VolunteerOpportunity $opportunity, Collection $volunteers): void
     {
-        $applicantCount = min($opportunity->required_volunteers + rand(1, 2), $volunteers->count());
-        $applicants = $volunteers->random($applicantCount);
-        $applicants = $applicants instanceof Collection ? $applicants : collect([$applicants]);
+        $applicantCount = min($opportunity->required_volunteers, $volunteers->count());
+        $applicants = $volunteers->take($applicantCount);
 
         $approvedSoFar = 0;
 
@@ -123,11 +175,15 @@ class VolunteerSeeder extends Seeder
                 $approvedSoFar++;
             }
 
-            $application = VolunteerApplication::create([
-                'opportunity_id' => $opportunity->id,
-                'volunteer_id' => $volunteer->id,
-                'status' => $status,
-            ]);
+            $application = VolunteerApplication::firstOrCreate(
+                [
+                    'opportunity_id' => $opportunity->id,
+                    'volunteer_id' => $volunteer->id,
+                ],
+                [
+                    'status' => $status,
+                ]
+            );
 
             if ($status === ApplicationStatus::Approved) {
                 $this->seedTasksForApplication($application, $opportunity);
@@ -138,26 +194,51 @@ class VolunteerSeeder extends Seeder
     private function seedTasksForApplication(VolunteerApplication $application, VolunteerOpportunity $opportunity): void
     {
         $opportunityClosed = $opportunity->status === OpportunityStatus::Closed;
-        $taskCount = rand(1, 3);
+        $taskCount = rand(1, 2);
 
         for ($i = 0; $i < $taskCount; $i++) {
-            VolunteerTask::create([
-                'application_id' => $application->id,
-                'task_description' => fake()->sentence(6),
-                'status' => $opportunityClosed
-                    ? TaskStatus::Completed
-                    : fake()->randomElement([TaskStatus::Assigned, TaskStatus::Completed]),
-            ]);
+            $description = self::TASK_TEMPLATES[($opportunity->id + $application->id + $i) % count(self::TASK_TEMPLATES)];
+            $status = $opportunityClosed ? TaskStatus::Completed : fake()->randomElement([TaskStatus::Assigned, TaskStatus::Completed]);
+
+            $task = VolunteerTask::firstOrCreate(
+                [
+                    'application_id' => $application->id,
+                    'task_description' => $description,
+                ],
+                [
+                    'opportunity_id' => $opportunity->id,
+                    'status' => $status,
+                ]
+            );
+
+            // سجل ساعات التطوع لكل مهمة مكتملة
+            if ($status === TaskStatus::Completed) {
+                VolunteerLog::firstOrCreate(
+                    [
+                        'volunteer_id' => $application->volunteer_id,
+                        'opportunity_id' => $opportunity->id,
+                        'notes' => 'إنجاز مهمة: ' . $description,
+                    ],
+                    [
+                        'logged_hours' => rand(3, 6),
+                        'manager_evaluation' => self::EVALUATIONS[($opportunity->id + $i) % count(self::EVALUATIONS)],
+                    ]
+                );
+            }
         }
 
-        // Issue a certificate once the opportunity is closed (tasks are done).
+        // إصدار شهادة عند إغلاق الفرصة (المهام منجزة)
         if ($opportunityClosed) {
-            VolunteerCertificate::create([
-                'volunteer_id' => $application->volunteer_id,
-                'opportunity_id' => $opportunity->id,
-                'certificate_url' => 'https://placeholder.wasl-mms.test/certificates/' . fake()->uuid() . '.pdf',
-                'issued_at' => Carbon::parse($opportunity->end_date)->addDay(),
-            ]);
+            VolunteerCertificate::firstOrCreate(
+                [
+                    'volunteer_id' => $application->volunteer_id,
+                    'opportunity_id' => $opportunity->id,
+                ],
+                [
+                    'certificate_url' => 'https://placeholder.wasl-mms.test/certificates/opp-' . $opportunity->id . '-vol-' . $application->volunteer_id . '.pdf',
+                    'issued_at' => Carbon::parse($opportunity->end_date)->addDay(),
+                ]
+            );
         }
     }
 }

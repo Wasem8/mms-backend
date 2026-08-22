@@ -3,151 +3,116 @@
 namespace Modules\Donation\Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use Modules\Donation\Models\Campaign;
+use Modules\Donation\Models\Donation;
+use Modules\Mosque\Models\Mosque;
+use Modules\User\Models\User;
 
 class DonationSeeder extends Seeder
 {
+    private const DONOR_NAMES = [
+        'أحمد محمد', 'خالد عمر', 'سارة أحمد', 'محمد علي', 'فاطمة الحسن',
+        'عبد الرحمن سعيد', 'ليلى خليل', 'ياسر النعيمي', 'هدى الشامي', 'عمر فارس',
+        'نورا يوسف', 'مؤسسة الخير', 'لجنة زكاة الحي', 'فاعل خير',
+    ];
+
+    private const IN_KIND_ITEMS = [
+        'مواد غذائية متنوعة',
+        'فرش ومصاحف',
+        'مكيفات هواء',
+        'أجهزة صوتية',
+        'مواد تنظيف',
+    ];
+
     public function run(): void
     {
-        $donations = [
-            [
-                'reference' => 'DON-00001',
-                'mosque_id' => 1,
-                'user_id' => 5,
-                'campaign_id' => 1,
-                'mosque_need_id' => null,
-                'donation_type' => 'cash',
-                'payment_method' => 'cash',
-                'amount' => 5000,
-                'currency' => 'SYP',
-                'exchange_rate' => 1,
-                'base_amount' => 5000,
-                'item_description' => null,
-                'donor_name' => 'أحمد محمد',
-                'status' => 'completed',
-                'completed_at' => '2025-01-15 10:30:00',
-            ],
-            [
-                'reference' => 'DON-00002',
-                'mosque_id' => 1,
-                'user_id' => null,
-                'campaign_id' => 1,
-                'mosque_need_id' => null,
-                'donation_type' => 'cash',
-                'payment_method' => 'cash',
-                'amount' => 10000,
-                'currency' => 'SYP',
-                'exchange_rate' => 1,
-                'base_amount' => 10000,
-                'item_description' => null,
-                'donor_name' => 'فاعل خير',
-                'status' => 'completed',
-                'completed_at' => '2025-02-01 14:00:00',
-            ],
-            [
-                'reference' => 'DON-00003',
-                'mosque_id' => 1,
-                'user_id' => 5,
-                'campaign_id' => 2,
-                'mosque_need_id' => null,
-                'donation_type' => 'cash',
-                'payment_method' => 'stripe',
-                'amount' => 25000,
-                'currency' => 'SYP',
-                'exchange_rate' => 1,
-                'base_amount' => 25000,
-                'item_description' => null,
-                'donor_name' => 'خالد عمر',
-                'status' => 'completed',
-                'completed_at' => '2024-07-15 09:00:00',
-            ],
-            [
-                'reference' => 'DON-00004',
-                'mosque_id' => 2,
-                'user_id' => 5,
-                'campaign_id' => 3,
-                'mosque_need_id' => null,
-                'donation_type' => 'cash',
-                'payment_method' => 'cash',
-                'amount' => 10000,
-                'currency' => 'SYP',
-                'exchange_rate' => 1,
-                'base_amount' => 10000,
-                'item_description' => null,
-                'donor_name' => 'سارة أحمد',
-                'status' => 'completed',
-                'completed_at' => '2025-03-15 11:00:00',
-            ],
-            [
-                'reference' => 'DON-00005',
-                'mosque_id' => 2,
-                'user_id' => null,
-                'campaign_id' => 3,
-                'mosque_need_id' => null,
-                'donation_type' => 'cash',
-                'payment_method' => 'cash',
-                'amount' => 5000,
-                'currency' => 'SYP',
-                'exchange_rate' => 1,
-                'base_amount' => 5000,
-                'item_description' => null,
-                'donor_name' => 'فاعل خير',
-                'status' => 'pending',
-                'completed_at' => null,
-            ],
-            [
-                'reference' => 'DON-00006',
-                'mosque_id' => 3,
-                'user_id' => 1,
-                'campaign_id' => null,
-                'mosque_need_id' => null,
-                'donation_type' => 'cash',
-                'payment_method' => 'stripe',
-                'amount' => 50000,
-                'currency' => 'SYP',
-                'exchange_rate' => 1,
-                'base_amount' => 50000,
-                'item_description' => null,
-                'donor_name' => 'محمد علي',
-                'status' => 'completed',
-                'completed_at' => '2025-04-01 16:30:00',
-            ],
-            [
-                'reference' => 'DON-00007',
-                'mosque_id' => 4,
-                'user_id' => null,
-                'campaign_id' => null,
-                'mosque_need_id' => null,
-                'donation_type' => 'cash',
-                'payment_method' => 'cash',
-                'amount' => 1000,
-                'currency' => 'SYP',
-                'exchange_rate' => 1,
-                'base_amount' => 1000,
-                'item_description' => null,
-                'donor_name' => 'فاعل خير',
-                'status' => 'pending',
-                'completed_at' => null,
-            ],
-            [
-                'reference' => 'DON-00008',
-                'mosque_id' => 1,
-                'user_id' => null,
-                'campaign_id' => null,
-                'mosque_need_id' => null,
-                'donation_type' => 'in_kind',
-                'payment_method' => 'cash',
-                'amount' => null,
-                'currency' => 'SYP',
-                'exchange_rate' => 1,
-                'base_amount' => 0,
-                'item_description' => 'مواد غذائية متنوعة',
-                'donor_name' => 'مؤسسة الخير',
-                'status' => 'completed',
-                'completed_at' => '2025-01-20 12:00:00',
-            ],
-        ];
+        $userIds = User::pluck('id')->toArray();
 
-        DB::table('donations')->insert($donations);
+        if (empty($userIds)) {
+            $this->command?->warn('لا يوجد مستخدمون لربط التبرعات، تم تخطي البذر.');
+
+            return;
+        }
+
+        $referenceCounter = 0;
+        $count = 0;
+
+        // تبرعات مرتبطة بحملات
+        foreach (Campaign::all() as $campaign) {
+            $donationsCount = 3 + ($campaign->id % 3);
+
+            for ($i = 0; $i < $donationsCount; $i++) {
+                $referenceCounter++;
+                $count += $this->createDonation($referenceCounter, [
+                    'mosque_id' => $campaign->mosque_id,
+                    'campaign_id' => $campaign->id,
+                    'user_id' => $userIds[($campaign->id + $i) % count($userIds)],
+                ]);
+            }
+        }
+
+        // تبرعات مستقلة (غير مرتبطة بحملة) لكل مسجد
+        foreach (Mosque::all() as $mosque) {
+            for ($i = 0; $i < 2; $i++) {
+                $referenceCounter++;
+                $count += $this->createDonation($referenceCounter, [
+                    'mosque_id' => $mosque->id,
+                    'campaign_id' => null,
+                    'user_id' => $userIds[($mosque->id + $i) % count($userIds)],
+                ]);
+            }
+        }
+
+        $this->command?->info('تم إنشاء/تحديث ' . $count . ' تبرع لمساجد دمشق.');
+    }
+
+    /**
+     * @param  array{mosque_id: int, campaign_id: ?int, user_id: int}  $context
+     */
+    private function createDonation(int $referenceCounter, array $context): int
+    {
+        $reference = 'DON-' . str_pad((string) $referenceCounter, 5, '0', STR_PAD_LEFT);
+
+        // بعض التبرعات عينية وبعضها نقدي
+        $isInKind = $referenceCounter % 4 === 0;
+
+        $status = $referenceCounter % 7 === 0 ? 'pending' : 'completed';
+
+        if ($isInKind) {
+            $item = self::IN_KIND_ITEMS[$referenceCounter % count(self::IN_KIND_ITEMS)];
+            $amount = null;
+            $baseAmount = 0;
+            $description = $item;
+        } else {
+            $item = null;
+            $amount = [5000, 10000, 25000, 50000, 100000, 250000][$referenceCounter % 6];
+            $baseAmount = $amount;
+            $description = null;
+        }
+
+        $donorName = self::DONOR_NAMES[$referenceCounter % count(self::DONOR_NAMES)];
+        $paymentMethod = $isInKind ? 'cash' : (($referenceCounter % 3 === 0) ? 'stripe' : 'cash');
+
+        Donation::updateOrCreate(
+            ['reference' => $reference],
+            [
+                'mosque_id' => $context['mosque_id'],
+                'user_id' => $context['user_id'],
+                'campaign_id' => $context['campaign_id'],
+                'mosque_need_id' => null,
+                'donation_type' => $isInKind ? 'in_kind' : 'cash',
+                'payment_method' => $paymentMethod,
+                'amount' => $amount,
+                'currency' => 'SYP',
+                'exchange_rate' => 1,
+                'base_amount' => $baseAmount,
+                'item_description' => $description,
+                'donor_name' => $donorName,
+                'status' => $status,
+                'completed_at' => $status === 'completed' ? now()->subDays($referenceCounter % 60) : null,
+            ]
+        );
+
+        return 1;
     }
 }

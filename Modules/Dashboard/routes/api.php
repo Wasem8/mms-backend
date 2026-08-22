@@ -5,7 +5,6 @@ use Illuminate\Support\Facades\Route;
 use Modules\Dashboard\Http\Controllers\AdminDashboardController;
 use Modules\Dashboard\Http\Controllers\DashboardController;
 use Modules\Dashboard\Http\Controllers\MosqueManagerDashboardController;
-use Modules\Dashboard\Http\Controllers\MosqueReportController;
 use Modules\Dashboard\Http\Controllers\ParentDashboardController;
 use Modules\Dashboard\Http\Controllers\SupervisorDashboardController;
 use Modules\Dashboard\Http\Controllers\TeacherDashboardController;
@@ -56,13 +55,4 @@ Route::middleware(['auth:api', 'active.user', 'role:super_admin'])->group(functi
     Route::get('admin/activity-log', [AdminActivityController::class, 'index']);
     Route::get('admin/dashboard', [AdminDashboardController::class, 'index']);
     Route::get('admin/export-pdf', [AdminDashboardController::class, 'exportPdf']);
-
-    // تقارير المساجد والمرافق (مدير المنطقة فقط)
-    Route::get('reports/mosques/census', [MosqueReportController::class, 'census']);
-    Route::get('reports/mosques/readiness', [MosqueReportController::class, 'readiness']);
-});
-
-Route::middleware(['auth:api', 'active.user', 'role:super_admin,mosque_manager'])->group(function () {
-    // بطاقة المسجد التعريفية: مدير المسجد مقصور على مسجده، ومدير المنطقة يختار أي مسجد
-    Route::get('reports/mosques/fact-sheet', [MosqueReportController::class, 'factSheet']);
 });

@@ -14,6 +14,7 @@ class DonationDatabaseSeeder extends Seeder
         $this->call([
             CampaignSeeder::class,
             DonationSeeder::class,
+            SettingSeeder::class,
         ]);
     }
 }

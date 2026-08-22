@@ -102,39 +102,22 @@
     <table class="cards">
         <tr>
             <td>
-                <div class="card-value">{{ $data['kpi_cards']['total_students']['value'] ?? 0 }}</div>
-                <div class="card-label">إجمالي الطلاب</div>
-            </td>
-            <td>
-                <div class="card-value">{{ $data['kpi_cards']['total_teachers']['value'] ?? 0 }}</div>
-                <div class="card-label">إجمالي المعلمين</div>
-            </td>
-            <td>
-                <div class="card-value">{{ $data['kpi_cards']['today_attendance']['value'] ?? '0%' }}</div>
-                <div class="card-label">نسبة حضور اليوم</div>
-            </td>
-            <td>
                 <div class="card-value">{{ $data['kpi_cards']['monthly_donations']['formatted_value'] ?? 0 }}</div>
                 <div class="card-label">تبرعات الشهر</div>
             </td>
+            <td>
+                <div class="card-value">{{ $data['kpi_cards']['open_maintenance_requests']['value'] ?? 0 }}</div>
+                <div class="card-label">طلبات صيانة مفتوحة</div>
+            </td>
+            <td>
+                <div class="card-value">{{ $data['kpi_cards']['complaints']['value'] ?? 0 }}</div>
+                <div class="card-label">شكاوى مفتوحة</div>
+            </td>
+            <td>
+                <div class="card-value">{{ $data['kpi_cards']['accredited_volunteers']['value'] ?? 0 }}</div>
+                <div class="card-label">متطوعون معتمدون</div>
+            </td>
         </tr>
-    </table>
-
-    <div class="section-title">نسبة الحضور ({{ $data['attendance_chart']['filter'] ?? '' }})</div>
-    <table class="data">
-        <thead>
-            <tr><th>اليوم</th><th>نسبة الحضور</th></tr>
-        </thead>
-        <tbody>
-            @forelse ($data['attendance_chart']['series'] ?? [] as $row)
-                <tr>
-                    <td>{{ $row['day'] }}</td>
-                    <td>{{ $row['rate'] }}%</td>
-                </tr>
-            @empty
-                <tr><td colspan="2">لا توجد بيانات</td></tr>
-            @endforelse
-        </tbody>
     </table>
 
     <div class="section-title">أحدث الأنشطة</div>
@@ -172,6 +155,10 @@
             <tr><td>المعلمون</td><td>{{ $stats['total_teachers'] ?? 0 }}</td></tr>
             <tr><td>المتطوعون</td><td>{{ $stats['total_volunteers'] ?? 0 }}</td></tr>
             <tr><td>الدعوات المعلقة</td><td>{{ $stats['pending_invitations'] ?? 0 }}</td></tr>
+            <tr><td>التبرعات المعتمدة</td><td>{{ number_format($stats['donations'] ?? 0) }} ر.س</td></tr>
+            <tr><td>طلبات الصيانة المفتوحة</td><td>{{ $stats['open_maintenance_requests'] ?? 0 }}</td></tr>
+            <tr><td>البلاغات والشكاوى المفتوحة</td><td>{{ $stats['complaints'] ?? 0 }}</td></tr>
+            <tr><td>المتطوعون المعتمدون</td><td>{{ $stats['accredited_volunteers'] ?? 0 }}</td></tr>
         </tbody>
     </table>
 

@@ -479,7 +479,33 @@ class DashboardEndpoints
                             property: 'data',
                             type: 'object',
                             properties: [
-                                new OA\Property(property: 'kpi_cards', type: 'object'),
+                                new OA\Property(
+                                    property: 'kpi_cards',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'monthly_donations', type: 'object', properties: [
+                                            new OA\Property(property: 'value', type: 'number'),
+                                            new OA\Property(property: 'formatted_value', type: 'string'),
+                                            new OA\Property(property: 'percentage_change', type: 'string'),
+                                            new OA\Property(property: 'is_increase', type: 'boolean'),
+                                        ]),
+                                        new OA\Property(property: 'open_maintenance_requests', type: 'object', properties: [
+                                            new OA\Property(property: 'value', type: 'integer'),
+                                            new OA\Property(property: 'percentage_change', type: 'string'),
+                                            new OA\Property(property: 'is_increase', type: 'boolean'),
+                                        ]),
+                                        new OA\Property(property: 'complaints', type: 'object', properties: [
+                                            new OA\Property(property: 'value', type: 'integer'),
+                                            new OA\Property(property: 'percentage_change', type: 'string'),
+                                            new OA\Property(property: 'is_increase', type: 'boolean'),
+                                        ]),
+                                        new OA\Property(property: 'accredited_volunteers', type: 'object', properties: [
+                                            new OA\Property(property: 'value', type: 'integer'),
+                                            new OA\Property(property: 'percentage_change', type: 'string'),
+                                            new OA\Property(property: 'is_increase', type: 'boolean'),
+                                        ]),
+                                    ]
+                                ),
                                 new OA\Property(property: 'attendance_chart', type: 'object'),
                                 new OA\Property(property: 'recent_activities', type: 'array', items: new OA\Items(type: 'object')),
                                 new OA\Property(property: 'today_tasks', type: 'object'),
@@ -553,6 +579,35 @@ class DashboardEndpoints
                                     type: 'integer',
                                     example: 3,
                                     description: 'إجمالي دعوات التسجيل المعلقة وغير منتهية الصلاحية'
+                                ),
+
+                                new OA\Property(
+                                    property: 'donations',
+                                    type: 'number',
+                                    format: 'float',
+                                    example: 45000.0,
+                                    description: 'إجمالي التبرعات المعتمدة للمسجد'
+                                ),
+
+                                new OA\Property(
+                                    property: 'open_maintenance_requests',
+                                    type: 'integer',
+                                    example: 4,
+                                    description: 'طلبات الصيانة المفتوحة (قيد الانتظار + قيد التنفيذ)'
+                                ),
+
+                                new OA\Property(
+                                    property: 'complaints',
+                                    type: 'integer',
+                                    example: 6,
+                                    description: 'البلاغات والشكاوى المفتوحة (قيد الانتظار + قيد المعالجة)'
+                                ),
+
+                                new OA\Property(
+                                    property: 'accredited_volunteers',
+                                    type: 'integer',
+                                    example: 10,
+                                    description: 'المتطوعون المعتمدون (طلبات تطوع موافق عليها) في المسجد'
                                 ),
 
                             ]
@@ -658,7 +713,8 @@ class DashboardEndpoints
                                     type: 'object',
                                     properties: [
                                         new OA\Property(property: 'total', type: 'integer', example: 40),
-                                        new OA\Property(property: 'pending', type: 'integer', example: 7)
+                                        new OA\Property(property: 'pending', type: 'integer', example: 7),
+                                        new OA\Property(property: 'urgent', type: 'integer', example: 3)
                                     ]
                                 ),
                                 new OA\Property(
@@ -668,7 +724,8 @@ class DashboardEndpoints
                                         new OA\Property(property: 'total', type: 'integer', example: 22),
                                         new OA\Property(property: 'pending', type: 'integer', example: 5)
                                     ]
-                                )
+                                ),
+                                new OA\Property(property: 'pending_sermons', type: 'integer', example: 6)
                             ]
                         ),
                         new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
@@ -714,112 +771,4 @@ class DashboardEndpoints
     )]
     public function exportAdminPdf() {}
 
-    #[OA\Get(
-        path: '/reports/mosques/census',
-        operationId: 'exportMosqueCensusPdf',
-        tags: ['Reports'],
-        summary: 'التقرير الإحصائي الشامل لمساجد المنطقة',
-        description: 'تقرير PDF لكافة مساجد المنطقة مصنّفة حسب المدينة، مع الحالة التشغيلية والسعة والمرافق والموقع الجغرافي. مخصص لمدير المنطقة (super_admin).',
-        security: [['bearerAuth' => []]],
-        responses: [
-            new OA\Response(
-                response: 200,
-                description: 'تم إنشاء التقرير الإحصائي الشامل بنجاح',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'status', type: 'boolean', example: true),
-                        new OA\Property(property: 'message', type: 'string', example: 'تم إنشاء التقرير الإحصائي الشامل للمساجد بنجاح'),
-                        new OA\Property(
-                            property: 'data',
-                            type: 'object',
-                            properties: [
-                                new OA\Property(property: 'url', type: 'string', format: 'url'),
-                                new OA\Property(property: 'cached', type: 'boolean', example: false)
-                            ]
-                        ),
-                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
-                    ]
-                )
-            ),
-            new OA\Response(response: 401, description: 'Unauthenticated'),
-            new OA\Response(response: 403, description: 'Forbidden — super_admin only')
-        ]
-    )]
-    public function exportMosqueCensusPdf() {}
-
-    #[OA\Get(
-        path: '/reports/mosques/readiness',
-        operationId: 'exportMosqueReadinessPdf',
-        tags: ['Reports'],
-        summary: 'تقرير جاهزية المساجد للمواسم',
-        description: 'تقرير PDF لجاهزية الجوامع الكبرى للمواسم (رمضان، التراويح، العيدين، الجمعة) بناءً على المرافق وطلبات الصيانة المفتوحة. مخصص لمدير المنطقة (super_admin).',
-        security: [['bearerAuth' => []]],
-        responses: [
-            new OA\Response(
-                response: 200,
-                description: 'تم إنشاء تقرير الجاهزية بنجاح',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'status', type: 'boolean', example: true),
-                        new OA\Property(property: 'message', type: 'string', example: 'تم إنشاء تقرير الجاهزية للمواسم بنجاح'),
-                        new OA\Property(
-                            property: 'data',
-                            type: 'object',
-                            properties: [
-                                new OA\Property(property: 'url', type: 'string', format: 'url'),
-                                new OA\Property(property: 'cached', type: 'boolean', example: false)
-                            ]
-                        ),
-                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
-                    ]
-                )
-            ),
-            new OA\Response(response: 401, description: 'Unauthenticated'),
-            new OA\Response(response: 403, description: 'Forbidden — super_admin only')
-        ]
-    )]
-    public function exportMosqueReadinessPdf() {}
-
-    #[OA\Get(
-        path: '/reports/mosques/fact-sheet',
-        operationId: 'exportMosqueFactSheetPdf',
-        tags: ['Reports'],
-        summary: 'تقرير بطاقة المسجد التعريفية',
-        description: 'تقرير PDF لملف المسجد الكامل (العنوان، الموقع GPS، المدير، الإمام، الخطيب، القاعات، المرافق، الاحتياجات). مدير المسجد مقصور على مسجده؛ مدير المنطقة يمرر mosque_id.',
-        security: [['bearerAuth' => []]],
-        parameters: [
-            new OA\Parameter(
-                name: 'mosque_id',
-                in: 'query',
-                required: false,
-                description: 'معرف المسجد (إلزامي لـ super_admin لتحديد المسجد؛ يتجاهله مدير المسجد ويُقصر على مسجده)',
-                schema: new OA\Schema(type: 'integer', example: 1)
-            )
-        ],
-        responses: [
-            new OA\Response(
-                response: 200,
-                description: 'تم إنشاء بطاقة المسجد التعريفية بنجاح',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'status', type: 'boolean', example: true),
-                        new OA\Property(property: 'message', type: 'string', example: 'تم إنشاء بطاقة المسجد التعريفية بنجاح'),
-                        new OA\Property(
-                            property: 'data',
-                            type: 'object',
-                            properties: [
-                                new OA\Property(property: 'url', type: 'string', format: 'url'),
-                                new OA\Property(property: 'cached', type: 'boolean', example: false)
-                            ]
-                        ),
-                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
-                    ]
-                )
-            ),
-            new OA\Response(response: 401, description: 'Unauthenticated'),
-            new OA\Response(response: 403, description: 'Forbidden'),
-            new OA\Response(response: 404, description: 'Mosque not found')
-        ]
-    )]
-    public function exportMosqueFactSheetPdf() {}
 }
