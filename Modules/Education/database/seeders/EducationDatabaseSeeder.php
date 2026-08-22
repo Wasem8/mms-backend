@@ -20,10 +20,36 @@ use Modules\Education\Models\AttendanceExcuse;
 class EducationDatabaseSeeder extends Seeder
 {
     private array $firstNames = [
-        'محمد', 'أحمد', 'علي', 'فاطمة', 'عائشة', 'خديجة',
-        'حسن', 'حسين', 'إبراهيم', 'موسى', 'عمر', 'سارة',
-        'مريم', 'زينب', 'هند', 'آمنة', 'نور', 'ياسر',
-        'سلمى', 'ليلى'
+        'محمد',
+        'أحمد',
+        'علي',
+        'حسن',
+        'حسين',
+        'إبراهيم',
+        'موسى',
+        'عمر',
+        'ياسر',
+        'خالد',
+        'عبد الله',
+        'عبد الرحمن',
+        'عبد العزيز',
+        'يوسف',
+        'حمزة',
+        'بلال',
+        'سعد',
+        'سلمان',
+        'معاذ',
+        'أنس',
+        'زياد',
+        'رامي',
+        'مازن',
+        'طارق',
+        'كريم',
+        'مصطفى',
+        'أيمن',
+        'سامر',
+        'باسل',
+        'فراس',
     ];
 
     private array $lastNames = [
@@ -308,10 +334,7 @@ class EducationDatabaseSeeder extends Seeder
                         ->subYears(rand(7, 15))
                         ->toDateString(),
 
-                    'gender' => collect([
-                        'male',
-                        'female'
-                    ])->random(),
+                    'gender' => 'male',
 
                     'status' => 'active',
 
