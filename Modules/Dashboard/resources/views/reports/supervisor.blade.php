@@ -9,14 +9,14 @@
             font-family: 'Cairo';
             font-style: normal;
             font-weight: normal;
-            src: url('{{ storage_path("fonts/Cairo-Regular.ttf") }}') format('truetype');
+            src: url('/tmp/Cairo-Regular.ttf') format('truetype');
         }
 
         @font-face {
             font-family: 'Cairo';
             font-style: normal;
             font-weight: bold;
-            src: url('{{ storage_path("fonts/Cairo-Bold.ttf") }}') format('truetype');
+            src: url('/tmp/Cairo-Bold.ttf') format('truetype');
         }
 
         body {

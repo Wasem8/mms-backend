@@ -9,6 +9,7 @@ use Modules\Donation\Models\Donation;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\Webhook;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Modules\Donation\Services\DonationService;
 
 class StripeWebhookController extends Controller
@@ -40,9 +41,23 @@ class StripeWebhookController extends Controller
 
     private function handleSucceeded(object $paymentIntent): void
     {
-        $donation = Donation::where('stripe_payment_intent_id', $paymentIntent->id)
-            ->where('status', 'pending')
-            ->first();
+        // 🔒 قفل متشائم (pessimistic lock) داخل معاملة DB لمنع حالة السباق (Race Condition):
+        // عند تكرار إرسال نفس الـ webhook من Stripe في اللحظة نفسها، يمنع القفل طلبين متزامنين
+        // من قراءة نفس الصف «pending» قبل أن يكتمل الأول، فيتجنّب التحديث المزدوج وازدواج incrementTotals.
+        $donation = DB::transaction(function () use ($paymentIntent) {
+            $locked = Donation::where('stripe_payment_intent_id', $paymentIntent->id)
+                ->where('status', 'pending')
+                ->lockForUpdate()
+                ->first();
+
+            if (! $locked) {
+                return null;
+            }
+
+            $this->donationService->markCompleted($locked);
+
+            return $locked;
+        });
 
         if (! $donation) {
             Log::warning('StripeWebhook: no pending donation found for payment_intent', [
@@ -50,8 +65,6 @@ class StripeWebhookController extends Controller
             ]);
             return;
         }
-
-        $this->donationService->markCompleted($donation);
 
         Log::info('StripeWebhook: donation completed via base_amount', [
             'donation_id'      => $donation->id,
