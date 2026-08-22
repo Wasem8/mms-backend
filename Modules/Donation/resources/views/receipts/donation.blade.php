@@ -270,7 +270,7 @@
 
         /*
         |--------------------------------------------------------------------------
-        | Amount Box
+        | Amount / Description Box
         |--------------------------------------------------------------------------
         */
 
@@ -347,6 +347,22 @@
             font-weight: 800;
 
             white-space: nowrap;
+        }
+
+        .description-value {
+            margin: 0;
+
+            color: #0c986b;
+
+            font-size: 18px;
+
+            line-height: 1.5;
+
+            font-weight: 700;
+
+            padding: 0 5px;
+
+            word-break: break-word;
         }
 
 
@@ -615,16 +631,8 @@
                             تبرع نقدي
                             @break
 
-                        @case('kind')
+                        @case('in_kind')
                             تبرع عيني
-                            @break
-
-                        @case('food')
-                            تبرع غذائي
-                            @break
-
-                        @case('clothes')
-                            تبرع بالملابس
                             @break
 
                         @default
@@ -638,26 +646,40 @@
 
 
             {{-- ========================================================
-                 Amount
+                 Amount (cash) / Description (in_kind)
             ========================================================= --}}
 
             <div class="amount-container">
 
-                <div class="amount-label">
-                    المبلغ المستلم
-                </div>
+                @if($donation->donation_type === 'in_kind')
 
-                <div class="amount-value">
+                    <div class="amount-label">
+                        وصف التبرع
+                    </div>
 
-                    <span class="amount-number">
-                        {{ number_format((float) $donation->amount) }}
-                    </span>
+                    <p class="description-value">
+                        {{ $donation->item_description ?? '—' }}
+                    </p>
 
-                    <span class="amount-currency">
-                        ل.س
-                    </span>
+                @else
 
-                </div>
+                    <div class="amount-label">
+                        المبلغ المستلم
+                    </div>
+
+                    <div class="amount-value">
+
+                        <span class="amount-number">
+                            {{ number_format((float) $donation->amount) }}
+                        </span>
+
+                        <span class="amount-currency">
+                            ل.س
+                        </span>
+
+                    </div>
+
+                @endif
 
             </div>
 

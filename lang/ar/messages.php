@@ -87,6 +87,7 @@ return [
     'task_completed' => 'تم إكمال المهمة بنجاح.',
     'tasks_retrieved' => 'تم جلب المهام بنجاح.',
     'hours_logged' => 'تم تسجيل الساعات والتقييم بنجاح.',
+    'tasks_not_completed' => 'هناك مهام لم تكتمل بعد. لا يمكن تسجيل الساعات.',
     'hours_retrieved' => 'تم جلب إجمالي الساعات بنجاح.',
     'logs_retrieved' => 'تم جلب السجلات بنجاح.',
     'certificate_issued' => 'تم إصدار الشهادة بنجاح.',

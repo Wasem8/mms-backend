@@ -121,27 +121,40 @@ class ComplaintService
         ];
     }
 
-    public function getComplaintPageStats(int $mosqueId): array
+    public function getComplaintPageStats(array $filters = []): array
     {
         $now = now();
-        $query = fn () => Complaint::where('mosque_id', $mosqueId);
+
+        $base = function () use ($filters) {
+            $q = Complaint::query();
+
+            if (isset($filters['mosque_id'])) {
+                $q->where('mosque_id', $filters['mosque_id']);
+            }
+
+            if (isset($filters['user_id'])) {
+                $q->where('user_id', $filters['user_id']);
+            }
+
+            return $q;
+        };
 
         // إجمالي الشكاوى
-        $total = $query()->count();
+        $total = $base()->count();
 
         // شكاوى مفتوحة (pending + in_progress)
-        $open = $query()
+        $open = $base()
             ->whereIn('status', ['pending', 'in_progress'])
             ->count();
 
         // شكاوى عاجلة (priority = high فقط حسب الـ migration)
-        $urgent = $query()
+        $urgent = $base()
             ->where('priority', 'high')
             ->whereIn('status', ['pending', 'in_progress'])
             ->count();
 
         // تم الحل هذا الشهر
-        $resolvedThisMonth = $query()
+        $resolvedThisMonth = $base()
             ->where('status', 'resolved')
             ->whereYear('updated_at', $now->year)
             ->whereMonth('updated_at', $now->month)
@@ -149,7 +162,17 @@ class ComplaintService
 
         // متوسط الاستجابة بالساعات
         // من created_at للشكوى إلى changed_at لأول log بعد pending
-        $avgResponseHours = Complaint::where('mosque_id', $mosqueId)
+        $avgQuery = Complaint::query();
+
+        if (isset($filters['mosque_id'])) {
+            $avgQuery->where('mosque_id', $filters['mosque_id']);
+        }
+
+        if (isset($filters['user_id'])) {
+            $avgQuery->where('user_id', $filters['user_id']);
+        }
+
+        $avgResponseHours = $avgQuery
             ->where('status', '!=', 'pending')
             ->join('complaint_status_logs as csl', function ($join) {
                 $join->on('csl.complaint_id', '=', 'complaints.id')
@@ -159,7 +182,7 @@ class ComplaintService
                 FROM complaint_status_logs
                 WHERE complaint_id = complaints.id
                     AND new_status != 'pending'
-             )");
+              )");
             })
             ->selectRaw('AVG(EXTRACT(EPOCH FROM (csl.changed_at - complaints.created_at)) / 3600) as avg_hours')
             ->value('avg_hours');
@@ -234,18 +257,22 @@ class ComplaintService
         return $this->repository->getFiltered($filters);
     }
 
-    public function assignToSuperAdmin(int $complaintId, int $adminId, int $assignedBy, ?string $note = null)
+    public function assignToSuperAdmin(int $complaintId, ?int $adminId, int $assignedBy, ?string $note = null)
     {
-        $admin = User::findOrFail($adminId);
+        if ($adminId === null) {
+            $admin = User::whereHas('roles', fn ($q) => $q->where('name', 'super_admin'))->firstOrFail();
+        } else {
+            $admin = User::findOrFail($adminId);
 
-        if (! $admin->hasRole('super_admin')) {
-            abort(422, __('messages.complaint.invalid_admin_role'));
+            if (! $admin->hasRole('super_admin')) {
+                abort(422, __('messages.complaint.invalid_admin_role'));
+            }
         }
 
         $complaint = $this->repository->find($complaintId);
         $oldStatus = $complaint->status;
 
-        $updated = $this->repository->assignToAdmin($complaintId, $adminId);
+        $updated = $this->repository->assignToAdmin($complaintId, $admin->id);
 
         $this->repository->logStatusChange($complaint, [
             'old_status' => $oldStatus,

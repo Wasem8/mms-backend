@@ -222,7 +222,12 @@ class ComplaintController extends Controller
     {
         $mosqueId = $this->getManagerMosqueId();
 
-        $data = $this->service->getComplaintPageStats($mosqueId);
+        // مدير المسجد: إحصائيات مسجده. غير المدير (متطوع/ولي أمر/...): إحصائيات شكاواه الشخصية.
+        $filters = $mosqueId
+            ? ['mosque_id' => $mosqueId]
+            : ['user_id' => auth()->id()];
+
+        $data = $this->service->getComplaintPageStats($filters);
 
         return response()->json([
             'status'  => true,
@@ -256,7 +261,7 @@ class ComplaintController extends Controller
 
         $complaint = $this->service->assignToSuperAdmin(
             (int) $id,
-            $validated['admin_id'],
+            $validated['admin_id'] ?? null,
             auth()->id(),
             $validated['note'] ?? null
         );

@@ -14,7 +14,7 @@ class AssignComplaintRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'admin_id' => ['required', 'integer', 'exists:users,id'],
+            'admin_id' => ['nullable', 'integer', 'exists:users,id'],
             'note' => ['nullable', 'string', 'max:1000'],
         ];
     }

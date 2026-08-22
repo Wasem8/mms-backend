@@ -239,8 +239,11 @@ class SupervisorDashboardService
         ])->render();
 
         $pdfContent = $this->pdfGenerator->generate($html);
-        $fileName = "mosque-reports/{$mosqueId}/{$userRoleKey}/user_{$currentUserId}_halaqa_{$halaqaId}_" . time() . '.pdf';
-        $this->storage->uploadPdf($pdfContent, $fileName);
+
+        // مسار مسطّح (مجلد واحد) لتفادي مشاكل المسارات المتداخلة عند توقيع الرابط في Supabase
+        $filePrefix = "supervisor-reports/{$mosqueId}_{$userRoleKey}_user_{$currentUserId}_halaqa_{$halaqaId}";
+
+        [$fileName, $signedUrl] = $this->uploadAndSign($pdfContent, $filePrefix);
 
         Report::create([
             'user_id'      => $currentUserId,
@@ -249,9 +252,30 @@ class SupervisorDashboardService
         ]);
 
         return [
-            'url'    => $this->storage->createSignedUrl($fileName),
+            'url'    => $signedUrl,
             'cached' => false,
         ];
+    }
+
+    /**
+     * رفع ملف الـ PDF إلى التخزين السحابي ثم إنشاء رابط موقّع،
+     * مع إعادة المحاولة في حال فشل الرفع أو إرجاع السيرفر خطأ "العنصر غير موجود" (NoSuchKey).
+     */
+    private function uploadAndSign(string $pdfContent, string $filePrefix): array
+    {
+        $lastException = null;
+
+        for ($attempt = 1; $attempt <= 2; $attempt++) {
+            $fileName = $filePrefix . '_' . time() . '_' . $attempt . '.pdf';
+            try {
+                $this->storage->uploadPdf($pdfContent, $fileName);
+                return [$fileName, $this->storage->createSignedUrl($fileName)];
+            } catch (\Throwable $e) {
+                $lastException = $e;
+            }
+        }
+
+        throw $lastException ?? new \Exception('Failed to generate supervisor report PDF.');
     }
 
     /*

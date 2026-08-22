@@ -90,6 +90,7 @@ return [
     'task_completed' => 'Task marked as completed successfully.',
     'tasks_retrieved' => 'Tasks retrieved successfully.',
     'hours_logged' => 'Hours logged and evaluation saved successfully.',
+    'tasks_not_completed' => 'There are tasks not completed yet. Cannot log hours.',
     'hours_retrieved' => 'Total hours retrieved successfully.',
     'logs_retrieved' => 'Logs retrieved successfully.',
     'certificate_issued' => 'Certificate issued successfully.',

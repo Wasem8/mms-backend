@@ -9,8 +9,7 @@ class SupabaseStorageService
     public function uploadPdf(string $pdfContent, string $fileName, string $bucket, bool $upsert = false): void
     {
         $baseUrl = config('services.supabase.url');
-        $key     = config('services.supabase.key');
-
+        $key = config('services.supabase.service_role_key');
         $uploadUrl = "{$baseUrl}/storage/v1/object/{$bucket}/{$fileName}";
 
         $response = Http::retry(3, 1000)
@@ -37,9 +36,8 @@ class SupabaseStorageService
     public function listObjects(string $bucket, string $prefix): array
     {
         $baseUrl = config('services.supabase.url');
-        $key     = config('services.supabase.key');
-
-        $response = Http::timeout(30)
+        $key = config('services.supabase.service_role_key');
+                $response = Http::timeout(30)
             ->withHeaders([
                 'apikey'        => $key,
                 'Authorization' => 'Bearer ' . $key,
@@ -59,9 +57,8 @@ class SupabaseStorageService
     public function createSignedUrl(string $fileName, string $bucket, int $expiresIn = 3600): string
     {
         $baseUrl = config('services.supabase.url');
-        $key     = config('services.supabase.key');
-
-        $response = Http::withHeaders([
+        $key = config('services.supabase.service_role_key');
+                $response = Http::withHeaders([
             'apikey'        => $key,
             'Authorization' => 'Bearer ' . $key,
         ])->post(

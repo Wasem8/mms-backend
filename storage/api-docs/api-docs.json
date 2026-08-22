@@ -4393,7 +4393,7 @@
                     "Complaints"
                 ],
                 "summary": "Assign complaint to a super admin",
-                "description": "Allows a mosque_manager to assign a complaint to a super_admin user for escalated handling.",
+                "description": "Allows a mosque_manager to assign a complaint to a super_admin user for escalated handling. If admin_id is omitted, the complaint is assigned to the single super_admin automatically.",
                 "operationId": "assignComplaintToAdmin",
                 "parameters": [
                     {
@@ -4413,14 +4413,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "required": [
-                                    "admin_id"
-                                ],
                                 "properties": {
                                     "admin_id": {
-                                        "description": "ID of the super_admin user receiving the complaint",
+                                        "description": "ID of the super_admin user receiving the complaint. If omitted, the complaint is assigned to the only super_admin automatically.",
                                         "type": "integer",
-                                        "example": 3
+                                        "example": 3,
+                                        "nullable": true
                                     },
                                     "note": {
                                         "type": "string",
@@ -5278,6 +5276,67 @@
                                         "data": {
                                             "properties": {
                                                 "kpi_cards": {
+                                                    "properties": {
+                                                        "monthly_donations": {
+                                                            "properties": {
+                                                                "value": {
+                                                                    "type": "number"
+                                                                },
+                                                                "formatted_value": {
+                                                                    "type": "string"
+                                                                },
+                                                                "percentage_change": {
+                                                                    "type": "string"
+                                                                },
+                                                                "is_increase": {
+                                                                    "type": "boolean"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        },
+                                                        "open_maintenance_requests": {
+                                                            "properties": {
+                                                                "value": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "percentage_change": {
+                                                                    "type": "string"
+                                                                },
+                                                                "is_increase": {
+                                                                    "type": "boolean"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        },
+                                                        "complaints": {
+                                                            "properties": {
+                                                                "value": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "percentage_change": {
+                                                                    "type": "string"
+                                                                },
+                                                                "is_increase": {
+                                                                    "type": "boolean"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        },
+                                                        "accredited_volunteers": {
+                                                            "properties": {
+                                                                "value": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "percentage_change": {
+                                                                    "type": "string"
+                                                                },
+                                                                "is_increase": {
+                                                                    "type": "boolean"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    },
                                                     "type": "object"
                                                 },
                                                 "attendance_chart": {
@@ -5362,6 +5421,27 @@
                                                     "description": "إجمالي دعوات التسجيل المعلقة وغير منتهية الصلاحية",
                                                     "type": "integer",
                                                     "example": 3
+                                                },
+                                                "donations": {
+                                                    "description": "إجمالي التبرعات المعتمدة للمسجد",
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 45000
+                                                },
+                                                "open_maintenance_requests": {
+                                                    "description": "طلبات الصيانة المفتوحة (قيد الانتظار + قيد التنفيذ)",
+                                                    "type": "integer",
+                                                    "example": 4
+                                                },
+                                                "complaints": {
+                                                    "description": "البلاغات والشكاوى المفتوحة (قيد الانتظار + قيد المعالجة)",
+                                                    "type": "integer",
+                                                    "example": 6
+                                                },
+                                                "accredited_volunteers": {
+                                                    "description": "المتطوعون المعتمدون (طلبات تطوع موافق عليها) في المسجد",
+                                                    "type": "integer",
+                                                    "example": 10
                                                 }
                                             },
                                             "type": "object"
@@ -5385,6 +5465,1138 @@
                     },
                     "500": {
                         "description": "Server error - خطأ داخلي في السيرفر"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/dashboard/mosque-manager/export-pdf": {
+            "get": {
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "تصدير تقرير مدير المسجد PDF",
+                "description": "يولّد تقرير PDF بلوحة تحكم مدير المسجد (المؤشرات، الحضور، الأنشطة، البلاغات، الإحصائيات) ويرفعه إلى Supabase ويعيد رابطاً موقّعاً مؤقتاً مع حالة الكاش.",
+                "operationId": "exportMosqueManagerDashboardPdf",
+                "responses": {
+                    "200": {
+                        "description": "تم إنشاء التقرير بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم إنشاء تقرير مدير المسجد بنجاح"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "url": {
+                                                    "type": "string",
+                                                    "format": "url",
+                                                    "example": "https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/sign/reports/mosque-manager-reports/1_user_3_...pdf?token=..."
+                                                },
+                                                "cached": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/dashboard": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "إحصائيات لوحة تحكم مدير المنطقة (النظام ككل)",
+                "description": "يعيد مؤشرات النظام الإجمالية: عدد المساجد، الطلاب، الحلقات، المستخدمين حسب الدور، التبرعات، الشكاوى وطلبات الصيانة.",
+                "operationId": "getAdminDashboardStats",
+                "responses": {
+                    "200": {
+                        "description": "تم جلب إحصائيات لوحة تحكم المدير بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم جلب إحصائيات لوحة تحكم المدير بنجاح"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "totals": {
+                                                    "properties": {
+                                                        "mosques": {
+                                                            "type": "integer",
+                                                            "example": 12
+                                                        },
+                                                        "students": {
+                                                            "type": "integer",
+                                                            "example": 340
+                                                        },
+                                                        "halaqas": {
+                                                            "type": "integer",
+                                                            "example": 28
+                                                        },
+                                                        "teachers": {
+                                                            "type": "integer",
+                                                            "example": 30
+                                                        },
+                                                        "volunteers": {
+                                                            "type": "integer",
+                                                            "example": 45
+                                                        },
+                                                        "managers": {
+                                                            "type": "integer",
+                                                            "example": 10
+                                                        },
+                                                        "supervisors": {
+                                                            "type": "integer",
+                                                            "example": 14
+                                                        },
+                                                        "parents": {
+                                                            "type": "integer",
+                                                            "example": 250
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "donations": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 125000
+                                                },
+                                                "complaints": {
+                                                    "properties": {
+                                                        "total": {
+                                                            "type": "integer",
+                                                            "example": 40
+                                                        },
+                                                        "pending": {
+                                                            "type": "integer",
+                                                            "example": 7
+                                                        },
+                                                        "urgent": {
+                                                            "type": "integer",
+                                                            "example": 3
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "maintenance": {
+                                                    "properties": {
+                                                        "total": {
+                                                            "type": "integer",
+                                                            "example": 22
+                                                        },
+                                                        "pending": {
+                                                            "type": "integer",
+                                                            "example": 5
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "pending_sermons": {
+                                                    "type": "integer",
+                                                    "example": 6
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — super_admin only"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/export-pdf": {
+            "get": {
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "تصدير تقرير مدير المنطقة PDF",
+                "description": "يولّد تقرير PDF ملخّص النظام ككل ويرفعه إلى Supabase ويعيد رابطاً موقّعاً مؤقتاً.",
+                "operationId": "exportAdminDashboardPdf",
+                "responses": {
+                    "200": {
+                        "description": "تم إنشاء التقرير بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم إنشاء تقرير المدير بنجاح"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "url": {
+                                                    "type": "string",
+                                                    "format": "url"
+                                                },
+                                                "cached": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — super_admin only"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/super-dashboard": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "لوحة تحكم مدير المنطقة المركّزة",
+                "description": "يعيد مساجد المنطقة، الخطب المعلقة، تبرعات المساجد خلال الشهر، الشكاوى الحرجة، سعر الصرف (USD→SYP)، وسجل العمليات حسب التاريخ.",
+                "operationId": "getSuperAdminDashboard",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2026-01-01"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2026-08-22"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم جلب بيانات لوحة تحكم مدير المنطقة بنجاح"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — super_admin only"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/reports/donations": {
+            "get": {
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "تقرير التبرعات لمدير المنطقة",
+                "description": "تبرعات (مدفوعة/مكتملة) مُفلترة من/إلى تاريخ، واختيارياً لمسجد محدد. يرجع ملخصاً (العدد والمبالغ) وقائمة مُصنّفة.",
+                "operationId": "getAdminDonationsReport",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2026-01-01"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2026-08-22"
+                        }
+                    },
+                    {
+                        "name": "mosque_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 3
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم جلب تقرير التبرعات بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم جلب تقرير التبرعات بنجاح"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "summary": {
+                                                    "properties": {
+                                                        "count": {
+                                                            "type": "integer",
+                                                            "example": 42
+                                                        },
+                                                        "total_base_amount": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 5120000
+                                                        },
+                                                        "total_amount": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 354.5
+                                                        },
+                                                        "currency": {
+                                                            "type": "string",
+                                                            "example": "SYP"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — super_admin only"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/reports/maintenance": {
+            "get": {
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "تقرير الصيانة لمدير المنطقة",
+                "description": "طلبات الصيانة مُفلترة من/إلى تاريخ، واختيارياً لمسجد محدد. يرجع ملخصاً (العدد والتوزيع حسب الحالة/الأولوية) وقائمة مُصنّفة.",
+                "operationId": "getAdminMaintenanceReport",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2026-01-01"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2026-08-22"
+                        }
+                    },
+                    {
+                        "name": "mosque_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 3
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم جلب تقرير الصيانة بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم جلب تقرير الصيانة بنجاح"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "summary": {
+                                                    "properties": {
+                                                        "count": {
+                                                            "type": "integer",
+                                                            "example": 18
+                                                        },
+                                                        "by_status": {
+                                                            "type": "object",
+                                                            "example": {
+                                                                "pending": 5,
+                                                                "completed": 10,
+                                                                "cancelled": 3
+                                                            }
+                                                        },
+                                                        "by_priority": {
+                                                            "type": "object",
+                                                            "example": {
+                                                                "low": 4,
+                                                                "medium": 8,
+                                                                "high": 6
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — super_admin only"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/reports/complaints": {
+            "get": {
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "تقرير الشكاوى لمدير المنطقة",
+                "description": "الشكاوى مُفلترة من/إلى تاريخ، واختيارياً لمسجد محدد. يرجع ملخصاً (العدد والتوزيع حسب الحالة وعدد الحرجة) وقائمة مُصنّفة.",
+                "operationId": "getAdminComplaintsReport",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2026-01-01"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2026-08-22"
+                        }
+                    },
+                    {
+                        "name": "mosque_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 3
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم جلب تقرير الشكاوى بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم جلب تقرير الشكاوى بنجاح"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "summary": {
+                                                    "properties": {
+                                                        "count": {
+                                                            "type": "integer",
+                                                            "example": 25
+                                                        },
+                                                        "by_status": {
+                                                            "type": "object",
+                                                            "example": {
+                                                                "pending": 7,
+                                                                "in_progress": 10,
+                                                                "resolved": 6,
+                                                                "canceled": 2
+                                                            }
+                                                        },
+                                                        "urgent": {
+                                                            "type": "integer",
+                                                            "example": 4
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — super_admin only"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/reports/donations/download": {
+            "get": {
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "تنزيل تقرير التبرعات PDF (مدير المنطقة)",
+                "description": "يولّد ملف PDF لتقرير التبرعات مُفلتراً بالتاريخ/المسجد، يرفعه إلى Supabase ويعيد رابطاً موقّعاً مؤقتاً.",
+                "operationId": "downloadAdminDonationsReport",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "mosque_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم إنشاء التقرير بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم إنشاء تقرير تقرير التبرعات بنجاح"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "url": {
+                                                    "type": "string",
+                                                    "format": "url"
+                                                },
+                                                "cached": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — super_admin only"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/reports/maintenance/download": {
+            "get": {
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "تنزيل تقرير الصيانة PDF (مدير المنطقة)",
+                "description": "يولّد ملف PDF لتقرير الصيانة مُفلتراً بالتاريخ/المسجد، يرفعه إلى Supabase ويعيد رابطاً موقّعاً مؤقتاً.",
+                "operationId": "downloadAdminMaintenanceReport",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "mosque_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم إنشاء التقرير بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم إنشاء تقرير تقرير الصيانة بنجاح"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "url": {
+                                                    "type": "string",
+                                                    "format": "url"
+                                                },
+                                                "cached": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — super_admin only"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/reports/complaints/download": {
+            "get": {
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "تنزيل تقرير الشكاوى PDF (مدير المنطقة)",
+                "description": "يولّد ملف PDF لتقرير الشكاوى مُفلتراً بالتاريخ/المسجد، يرفعه إلى Supabase ويعيد رابطاً موقّعاً مؤقتاً.",
+                "operationId": "downloadAdminComplaintsReport",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "mosque_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم إنشاء التقرير بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "تم إنشاء تقرير تقرير الشكاوى بنجاح"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "url": {
+                                                    "type": "string",
+                                                    "format": "url"
+                                                },
+                                                "cached": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object",
+                                            "example": null,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — super_admin only"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/dashboard/mosque-manager/reports/donations": {
+            "get": {
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "تقرير تبرعات مسجد مدير المسجد",
+                "description": "تبرعات مسجد مدير المسجد فقط، مُفلترة من/إلى تاريخ.",
+                "operationId": "getManagerDonationsReport",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2026-01-01"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2026-08-22"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم جلب تقرير التبرعات بنجاح"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — mosque_manager only"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/dashboard/mosque-manager/reports/maintenance": {
+            "get": {
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "تقرير صيانة مسجد مدير المسجد",
+                "description": "طلبات صيانة مسجد مدير المسجد فقط، مُفلترة من/إلى تاريخ.",
+                "operationId": "getManagerMaintenanceReport",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2026-01-01"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2026-08-22"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم جلب تقرير الصيانة بنجاح"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — mosque_manager only"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/dashboard/mosque-manager/reports/complaints": {
+            "get": {
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "تقرير شكاوى مسجد مدير المسجد",
+                "description": "شكاوى مسجد مدير المسجد فقط، مُفلترة من/إلى تاريخ.",
+                "operationId": "getManagerComplaintsReport",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2026-01-01"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2026-08-22"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم جلب تقرير الشكاوى بنجاح"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — mosque_manager only"
                     }
                 },
                 "security": [
@@ -24676,6 +25888,11 @@
                                                         "example": "Ahmed Al-Otaibi",
                                                         "nullable": true
                                                     },
+                                                    "all_tasks_completed": {
+                                                        "description": "True when the volunteer has at least one task and every task on this application is completed — i.e. they are eligible to log hours.",
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
                                                     "created_at": {
                                                         "type": "string",
                                                         "format": "date-time"
@@ -25299,6 +26516,11 @@
                                                         "type": "string",
                                                         "example": "Ahmed Al-Otaibi",
                                                         "nullable": true
+                                                    },
+                                                    "all_tasks_completed": {
+                                                        "description": "True when the volunteer has at least one task and every task on this application is completed — i.e. they are eligible to log hours.",
+                                                        "type": "boolean",
+                                                        "example": true
                                                     },
                                                     "created_at": {
                                                         "type": "string",

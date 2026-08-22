@@ -6,6 +6,7 @@ use App\Support\Pdf\PdfGeneratorService;
 use App\Support\Storage\SupabaseStorageService;
 use Modules\Volunteer\DTOs\LogHoursDTO;
 use Modules\Volunteer\Events\CertificateIssued;
+use Modules\Volunteer\Models\VolunteerApplication;
 use Modules\Volunteer\Models\VolunteerCertificate;
 use Modules\Volunteer\Models\VolunteerLog;
 use Modules\Volunteer\Models\VolunteerOpportunity;
@@ -25,7 +26,27 @@ class VolunteerEvaluationService
 
     public function logHours(LogHoursDTO $dto): VolunteerLog
     {
+        $this->ensureAllTasksCompleted($dto->volunteerId, $dto->opportunityId);
+
         return DB::transaction(fn() => $this->evaluationRepo->createLog($dto));
+    }
+
+    /**
+     * A manager may only log hours once every task belonging to the volunteer's
+     * application on the opportunity is completed. Otherwise we reject with an error.
+     */
+    private function ensureAllTasksCompleted(int $volunteerId, int $opportunityId): void
+    {
+        $application = VolunteerApplication::where('volunteer_id', $volunteerId)
+            ->where('opportunity_id', $opportunityId)
+            ->with('tasks')
+            ->first();
+
+        if (! $application || ! $application->all_tasks_completed) {
+            throw ValidationException::withMessages([
+                'tasks' => __('messages.tasks_not_completed'),
+            ]);
+        }
     }
 
     public function getLogsForVolunteer(int $volunteerId): Collection
