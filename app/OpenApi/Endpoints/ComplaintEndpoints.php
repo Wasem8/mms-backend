@@ -657,7 +657,7 @@ class ComplaintEndpoints
         operationId: 'assignComplaintToAdmin',
         tags: ['Complaints'],
         summary: 'Assign complaint to a super admin',
-        description: 'Allows a mosque_manager to assign a complaint to a super_admin user for escalated handling.',
+        description: 'Allows a mosque_manager to assign a complaint to a super_admin user for escalated handling. If admin_id is omitted, the complaint is assigned to the single super_admin automatically.',
         security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
@@ -666,9 +666,8 @@ class ComplaintEndpoints
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['admin_id'],
                 properties: [
-                    new OA\Property(property: 'admin_id', type: 'integer', example: 3, description: 'ID of the super_admin user receiving the complaint'),
+                    new OA\Property(property: 'admin_id', type: 'integer', nullable: true, example: 3, description: 'ID of the super_admin user receiving the complaint. If omitted, the complaint is assigned to the only super_admin automatically.'),
                     new OA\Property(property: 'note', type: 'string', nullable: true, example: 'Needs regional office review — recurring issue across branches.'),
                 ]
             )

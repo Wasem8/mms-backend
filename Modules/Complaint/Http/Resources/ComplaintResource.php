@@ -20,6 +20,10 @@ class ComplaintResource extends JsonResource
                 'id' => $this->mosque->id,
                 'name' => $this->mosque->name,
             ]),
+            'assigned_admin' => $this->whenLoaded('assignedAdmin', fn() => $this->assignedAdmin ? [
+                'id' => $this->assignedAdmin->id,
+                'name' => $this->assignedAdmin->name,
+            ] : null),
             'created_at' => $this->created_at?->format('Y-m-d H:i'),
         ];
     }

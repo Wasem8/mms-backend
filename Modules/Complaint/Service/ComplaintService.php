@@ -257,18 +257,22 @@ class ComplaintService
         return $this->repository->getFiltered($filters);
     }
 
-    public function assignToSuperAdmin(int $complaintId, int $adminId, int $assignedBy, ?string $note = null)
+    public function assignToSuperAdmin(int $complaintId, ?int $adminId, int $assignedBy, ?string $note = null)
     {
-        $admin = User::findOrFail($adminId);
+        if ($adminId === null) {
+            $admin = User::whereHas('roles', fn ($q) => $q->where('name', 'super_admin'))->firstOrFail();
+        } else {
+            $admin = User::findOrFail($adminId);
 
-        if (! $admin->hasRole('super_admin')) {
-            abort(422, __('messages.complaint.invalid_admin_role'));
+            if (! $admin->hasRole('super_admin')) {
+                abort(422, __('messages.complaint.invalid_admin_role'));
+            }
         }
 
         $complaint = $this->repository->find($complaintId);
         $oldStatus = $complaint->status;
 
-        $updated = $this->repository->assignToAdmin($complaintId, $adminId);
+        $updated = $this->repository->assignToAdmin($complaintId, $admin->id);
 
         $this->repository->logStatusChange($complaint, [
             'old_status' => $oldStatus,

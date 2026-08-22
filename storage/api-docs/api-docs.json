@@ -4393,7 +4393,7 @@
                     "Complaints"
                 ],
                 "summary": "Assign complaint to a super admin",
-                "description": "Allows a mosque_manager to assign a complaint to a super_admin user for escalated handling.",
+                "description": "Allows a mosque_manager to assign a complaint to a super_admin user for escalated handling. If admin_id is omitted, the complaint is assigned to the single super_admin automatically.",
                 "operationId": "assignComplaintToAdmin",
                 "parameters": [
                     {
@@ -4413,14 +4413,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "required": [
-                                    "admin_id"
-                                ],
                                 "properties": {
                                     "admin_id": {
-                                        "description": "ID of the super_admin user receiving the complaint",
+                                        "description": "ID of the super_admin user receiving the complaint. If omitted, the complaint is assigned to the only super_admin automatically.",
                                         "type": "integer",
-                                        "example": 3
+                                        "example": 3,
+                                        "nullable": true
                                     },
                                     "note": {
                                         "type": "string",

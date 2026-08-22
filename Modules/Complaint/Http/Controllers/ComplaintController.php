@@ -261,7 +261,7 @@ class ComplaintController extends Controller
 
         $complaint = $this->service->assignToSuperAdmin(
             (int) $id,
-            $validated['admin_id'],
+            $validated['admin_id'] ?? null,
             auth()->id(),
             $validated['note'] ?? null
         );
