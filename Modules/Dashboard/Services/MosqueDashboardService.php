@@ -291,40 +291,7 @@ class MosqueDashboardService
             })
             ->count();
 
-        // 5. إجمالي التبرعات
-        $donations = (float) Donation::where(
-            'mosque_id',
-            $mosqueId
-        )
-            ->whereIn('status', [
-                'paid',
-                'completed',
-                'approved'
-            ])
-            ->sum('amount');
-
-        // 6. طلبات الصيانة المفتوحة
-        $openMaintenanceRequests = Maintenance::where(
-            'mosque_id',
-            $mosqueId
-        )
-            ->whereIn('status', [
-                'pending',
-                'in_progress'
-            ])
-            ->count();
-
-        // 7. الشكاوى المفتوحة
-        $complaints = Complaint::where(
-            'mosque_id',
-            $mosqueId
-        )
-            ->whereIn('status', [
-                'pending',
-                'in_progress'
-            ])
-            ->count();
-
+        //
         // 8. المتطوعون المعتمدون
         $accreditedVolunteers = VolunteerApplication::where(
             'status',
@@ -346,139 +313,69 @@ class MosqueDashboardService
 
             'pending_invitations' => $pendingInvitations,
 
-            'donations' => $donations,
-
-            'open_maintenance_requests' => $openMaintenanceRequests,
-
-            'complaints' => $complaints,
-
-            'accredited_volunteers' => $accreditedVolunteers,
         ];
     }
 
     private function getRegionManagerStatistics(User $user): array
     {
-        /*
-        |--------------------------------------------------------------------------
-        | مدير المنطقة يرى جميع المساجد
-        |--------------------------------------------------------------------------
-        */
-
         // جميع المساجد
-        $mosqueIds = Mosque::query()
-            ->pluck('id');
-
-        if ($mosqueIds->isEmpty()) {
-            return [
-                'role' => 'region_manager',
-
-                'total_mosque_managers' => 0,
-                'total_halaqa_supervisors' => 0,
-                'total_mosques' => 0,
-                'pending_invitations' => 0,
-                'donations' => 0,
-                'open_maintenance_requests' => 0,
-                'complaints' => 0,
-            ];
-        }
+        $mosqueIds = Mosque::query()->pluck('id');
 
         /*
         |--------------------------------------------------------------------------
-        | 1. إجمالي مديري المساجد
+        | عدد مديري المساجد
         |--------------------------------------------------------------------------
         */
-
         $totalMosqueManagers = User::role('mosque_manager')
             ->whereIn('mosque_id', $mosqueIds)
             ->count();
 
         /*
         |--------------------------------------------------------------------------
-        | 2. إجمالي مشرفي الحلقات
+        | عدد المعلمين
         |--------------------------------------------------------------------------
         */
+        $totalTeachers = User::role('teacher')
+            ->whereIn('mosque_id', $mosqueIds)
+            ->count();
 
+        /*
+        |--------------------------------------------------------------------------
+        | عدد مشرفي الحلقات
+        |--------------------------------------------------------------------------
+        */
         $totalHalaqaSupervisors = User::role('halaqa_supervisor')
             ->whereIn('mosque_id', $mosqueIds)
             ->count();
 
         /*
         |--------------------------------------------------------------------------
-        | 3. إجمالي المساجد
+        | الدعوات المعلقة
         |--------------------------------------------------------------------------
         */
-
-        $totalMosques = $mosqueIds->count();
-
-        /*
-        |--------------------------------------------------------------------------
-        | 4. الدعوات المعلقة
-        |--------------------------------------------------------------------------
-        */
-
         $pendingInvitations = Invitation::whereIn(
             'mosque_id',
             $mosqueIds
         )
             ->whereNull('accepted_at')
             ->where(function ($query) {
-                $query
-                    ->whereNull('expires_at')
-                    ->orWhere(
-                        'expires_at',
-                        '>',
-                        now()
-                    );
+                $query->whereNull('expires_at')
+                    ->orWhere('expires_at', '>', now());
             })
             ->count();
 
         /*
         |--------------------------------------------------------------------------
-        | 5. إجمالي التبرعات لجميع المساجد
+        | المتطوعون المعتمدون
         |--------------------------------------------------------------------------
         */
-
-        $donations = (float) Donation::whereIn(
-            'mosque_id',
-            $mosqueIds
+        $accreditedVolunteers = VolunteerApplication::where(
+            'status',
+            ApplicationStatus::Approved
         )
-            ->whereIn('status', [
-                'paid',
-                'completed',
-                'approved',
-            ])
-            ->sum('amount');
-
-        /*
-        |--------------------------------------------------------------------------
-        | 6. طلبات الصيانة المفتوحة
-        |--------------------------------------------------------------------------
-        */
-
-        $openMaintenanceRequests = Maintenance::whereIn(
-            'mosque_id',
-            $mosqueIds
-        )
-            ->whereIn('status', [
-                'pending',
-                'in_progress',
-            ])
-            ->count();
-
-        /*
-        |--------------------------------------------------------------------------
-        | 7. الشكاوى المفتوحة
-        |--------------------------------------------------------------------------
-        */
-
-        $complaints = Complaint::whereIn(
-            'mosque_id',
-            $mosqueIds
-        )
-            ->whereIn('status', [
-                'pending',
-                'in_progress',
-            ])
+            ->whereHas('volunteer', function ($query) use ($mosqueIds) {
+                $query->whereIn('mosque_id', $mosqueIds);
+            })
             ->count();
 
         /*
@@ -486,23 +383,20 @@ class MosqueDashboardService
         | Response
         |--------------------------------------------------------------------------
         */
-
         return [
             'role' => 'region_manager',
 
-            'total_mosque_managers' => $totalMosqueManagers,
+            // هذا الحقل يعرض عدد مديري المساجد
+            'total_managers' => $totalMosqueManagers,
 
-            'total_halaqa_supervisors' => $totalHalaqaSupervisors,
+            // هذا الحقل يبقى عدد المعلمين
+            'total_teachers' => $totalTeachers,
 
-            'total_mosques' => $totalMosques,
+            // هذا الحقل يعرض عدد مشرفي الحلقات
+            'total_supervisors' => $totalHalaqaSupervisors,
 
             'pending_invitations' => $pendingInvitations,
-
-            'donations' => $donations,
-
-            'open_maintenance_requests' => $openMaintenanceRequests,
-
-            'complaints' => $complaints,
+            
         ];
     }
 }
