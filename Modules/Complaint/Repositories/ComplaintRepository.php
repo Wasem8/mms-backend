@@ -9,7 +9,7 @@ class ComplaintRepository implements ComplaintRepositoryInterface
 {
     public function getFiltered(array $filters = []): LengthAwarePaginator
     {
-        $query = Complaint::with(['user', 'mosque', 'statusLogs', 'files']);
+        $query = Complaint::with(['user', 'mosque', 'statusLogs', 'files', 'assignedAdmin']);
 
         if (array_key_exists('mosque_id', $filters)) {
             $query->where('mosque_id', $filters['mosque_id']);
@@ -35,7 +35,7 @@ class ComplaintRepository implements ComplaintRepositoryInterface
 
     public function find(int $id): Complaint
     {
-        return Complaint::with(['user', 'mosque', 'statusLogs', 'files'])->findOrFail($id);
+        return Complaint::with(['user', 'mosque', 'statusLogs', 'files', 'assignedAdmin'])->findOrFail($id);
     }
 
     public function findByComplaintNumber(string $complaintNumber): Complaint
@@ -84,7 +84,7 @@ class ComplaintRepository implements ComplaintRepositoryInterface
         'assigned_admin_id' => $adminId,
     ]);
 
-    return $complaint->fresh();
+    return $complaint->fresh(['assignedAdmin']);
 }
 
 }
