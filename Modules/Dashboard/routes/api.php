@@ -6,6 +6,7 @@ use Modules\Dashboard\Http\Controllers\AdminDashboardController;
 use Modules\Dashboard\Http\Controllers\DashboardController;
 use Modules\Dashboard\Http\Controllers\MosqueManagerDashboardController;
 use Modules\Dashboard\Http\Controllers\ParentDashboardController;
+use Modules\Dashboard\Http\Controllers\ReportController;
 use Modules\Dashboard\Http\Controllers\SupervisorDashboardController;
 use Modules\Dashboard\Http\Controllers\TeacherDashboardController;
 
@@ -49,10 +50,31 @@ Route::prefix('dashboard/mosque-manager')
         ]);
         Route::get('/export-pdf', [MosqueManagerDashboardController::class, 'exportPdf']);
 
+        // تقارير مدير المسجد (مُقيّدة بمسجده)
+        Route::get('/reports/donations', [ReportController::class, 'donations']);
+        Route::get('/reports/maintenance', [ReportController::class, 'maintenance']);
+        Route::get('/reports/complaints', [ReportController::class, 'complaints']);
+
+        // تنزيل التقارير PDF
+        Route::get('/reports/donations/download', [ReportController::class, 'downloadDonations']);
+        Route::get('/reports/maintenance/download', [ReportController::class, 'downloadMaintenance']);
+        Route::get('/reports/complaints/download', [ReportController::class, 'downloadComplaints']);
+
     });
 
 Route::middleware(['auth:api', 'active.user', 'role:super_admin'])->group(function () {
     Route::get('admin/activity-log', [AdminActivityController::class, 'index']);
     Route::get('admin/dashboard', [AdminDashboardController::class, 'index']);
+    Route::get('admin/super-dashboard', [AdminDashboardController::class, 'superAdminDashboard']);
     Route::get('admin/export-pdf', [AdminDashboardController::class, 'exportPdf']);
+
+    // تقارير مدير المنطقة (يمكن تصفيتها لأي مسجد + من/إلى تاريخ)
+    Route::get('admin/reports/donations', [ReportController::class, 'donations']);
+    Route::get('admin/reports/maintenance', [ReportController::class, 'maintenance']);
+    Route::get('admin/reports/complaints', [ReportController::class, 'complaints']);
+
+    // تنزيل التقارير PDF
+    Route::get('admin/reports/donations/download', [ReportController::class, 'downloadDonations']);
+    Route::get('admin/reports/maintenance/download', [ReportController::class, 'downloadMaintenance']);
+    Route::get('admin/reports/complaints/download', [ReportController::class, 'downloadComplaints']);
 });

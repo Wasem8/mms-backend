@@ -771,4 +771,353 @@ class DashboardEndpoints
     )]
     public function exportAdminPdf() {}
 
+    #[OA\Get(
+        path: '/admin/super-dashboard',
+        operationId: 'getSuperAdminDashboard',
+        tags: ['Dashboard'],
+        summary: 'لوحة تحكم مدير المنطقة المركّزة',
+        description: 'يعيد مساجد المنطقة، الخطب المعلقة، تبرعات المساجد خلال الشهر، الشكاوى الحرجة، سعر الصرف (USD→SYP)، وسجل العمليات حسب التاريخ.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'date_from', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date', example: '2026-01-01')),
+            new OA\Parameter(name: 'date_to', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date', example: '2026-08-22')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'تم جلب بيانات لوحة تحكم مدير المنطقة بنجاح'),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — super_admin only')
+        ]
+    )]
+    public function getSuperAdminDashboard() {}
+
+    // ===== تقارير مدير المنطقة (super_admin) =====
+
+    #[OA\Get(
+        path: '/admin/reports/donations',
+        operationId: 'getAdminDonationsReport',
+        tags: ['Reports'],
+        summary: 'تقرير التبرعات لمدير المنطقة',
+        description: 'تبرعات (مدفوعة/مكتملة) مُفلترة من/إلى تاريخ، واختيارياً لمسجد محدد. يرجع ملخصاً (العدد والمبالغ) وقائمة مُصنّفة.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'date_from', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date', example: '2026-01-01')),
+            new OA\Parameter(name: 'date_to', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date', example: '2026-08-22')),
+            new OA\Parameter(name: 'mosque_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 3)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 15)),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'تم جلب تقرير التبرعات بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم جلب تقرير التبرعات بنجاح'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'summary',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'count', type: 'integer', example: 42),
+                                        new OA\Property(property: 'total_base_amount', type: 'number', format: 'float', example: 5120000.0),
+                                        new OA\Property(property: 'total_amount', type: 'number', format: 'float', example: 354.5),
+                                        new OA\Property(property: 'currency', type: 'string', example: 'SYP'),
+                                    ]
+                                ),
+                                new OA\Property(property: 'items', type: 'array', items: new OA\Items(type: 'object')),
+                            ]
+                        ),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true)
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — super_admin only')
+        ]
+    )]
+    public function getAdminDonationsReport() {}
+
+    #[OA\Get(
+        path: '/admin/reports/maintenance',
+        operationId: 'getAdminMaintenanceReport',
+        tags: ['Reports'],
+        summary: 'تقرير الصيانة لمدير المنطقة',
+        description: 'طلبات الصيانة مُفلترة من/إلى تاريخ، واختيارياً لمسجد محدد. يرجع ملخصاً (العدد والتوزيع حسب الحالة/الأولوية) وقائمة مُصنّفة.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'date_from', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date', example: '2026-01-01')),
+            new OA\Parameter(name: 'date_to', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date', example: '2026-08-22')),
+            new OA\Parameter(name: 'mosque_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 3)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 15)),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'تم جلب تقرير الصيانة بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم جلب تقرير الصيانة بنجاح'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'summary',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'count', type: 'integer', example: 18),
+                                        new OA\Property(property: 'by_status', type: 'object', example: ['pending' => 5, 'completed' => 10, 'cancelled' => 3]),
+                                        new OA\Property(property: 'by_priority', type: 'object', example: ['low' => 4, 'medium' => 8, 'high' => 6]),
+                                    ]
+                                ),
+                                new OA\Property(property: 'items', type: 'array', items: new OA\Items(type: 'object')),
+                            ]
+                        ),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true)
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — super_admin only')
+        ]
+    )]
+    public function getAdminMaintenanceReport() {}
+
+    #[OA\Get(
+        path: '/admin/reports/complaints',
+        operationId: 'getAdminComplaintsReport',
+        tags: ['Reports'],
+        summary: 'تقرير الشكاوى لمدير المنطقة',
+        description: 'الشكاوى مُفلترة من/إلى تاريخ، واختيارياً لمسجد محدد. يرجع ملخصاً (العدد والتوزيع حسب الحالة وعدد الحرجة) وقائمة مُصنّفة.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'date_from', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date', example: '2026-01-01')),
+            new OA\Parameter(name: 'date_to', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date', example: '2026-08-22')),
+            new OA\Parameter(name: 'mosque_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 3)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 15)),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'تم جلب تقرير الشكاوى بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم جلب تقرير الشكاوى بنجاح'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'summary',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'count', type: 'integer', example: 25),
+                                        new OA\Property(property: 'by_status', type: 'object', example: ['pending' => 7, 'in_progress' => 10, 'resolved' => 6, 'canceled' => 2]),
+                                        new OA\Property(property: 'urgent', type: 'integer', example: 4),
+                                    ]
+                                ),
+                                new OA\Property(property: 'items', type: 'array', items: new OA\Items(type: 'object')),
+                            ]
+                        ),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true)
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — super_admin only')
+        ]
+    )]
+    public function getAdminComplaintsReport() {}
+
+    #[OA\Get(
+        path: '/admin/reports/donations/download',
+        operationId: 'downloadAdminDonationsReport',
+        tags: ['Reports'],
+        summary: 'تنزيل تقرير التبرعات PDF (مدير المنطقة)',
+        description: 'يولّد ملف PDF لتقرير التبرعات مُفلتراً بالتاريخ/المسجد، يرفعه إلى Supabase ويعيد رابطاً موقّعاً مؤقتاً.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'date_from', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'date_to', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'mosque_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'تم إنشاء التقرير بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم إنشاء تقرير تقرير التبرعات بنجاح'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'url', type: 'string', format: 'url'),
+                                new OA\Property(property: 'cached', type: 'boolean', example: false)
+                            ]
+                        ),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — super_admin only')
+        ]
+    )]
+    public function downloadAdminDonationsReport() {}
+
+    #[OA\Get(
+        path: '/admin/reports/maintenance/download',
+        operationId: 'downloadAdminMaintenanceReport',
+        tags: ['Reports'],
+        summary: 'تنزيل تقرير الصيانة PDF (مدير المنطقة)',
+        description: 'يولّد ملف PDF لتقرير الصيانة مُفلتراً بالتاريخ/المسجد، يرفعه إلى Supabase ويعيد رابطاً موقّعاً مؤقتاً.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'date_from', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'date_to', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'mosque_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'تم إنشاء التقرير بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم إنشاء تقرير تقرير الصيانة بنجاح'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'url', type: 'string', format: 'url'),
+                                new OA\Property(property: 'cached', type: 'boolean', example: false)
+                            ]
+                        ),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — super_admin only')
+        ]
+    )]
+    public function downloadAdminMaintenanceReport() {}
+
+    #[OA\Get(
+        path: '/admin/reports/complaints/download',
+        operationId: 'downloadAdminComplaintsReport',
+        tags: ['Reports'],
+        summary: 'تنزيل تقرير الشكاوى PDF (مدير المنطقة)',
+        description: 'يولّد ملف PDF لتقرير الشكاوى مُفلتراً بالتاريخ/المسجد، يرفعه إلى Supabase ويعيد رابطاً موقّعاً مؤقتاً.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'date_from', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'date_to', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'mosque_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'تم إنشاء التقرير بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'تم إنشاء تقرير تقرير الشكاوى بنجاح'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'url', type: 'string', format: 'url'),
+                                new OA\Property(property: 'cached', type: 'boolean', example: false)
+                            ]
+                        ),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — super_admin only')
+        ]
+    )]
+    public function downloadAdminComplaintsReport() {}
+
+    // ===== تقارير مدير المسجد (mosque_manager) — مُقيّدة بمسجده =====
+
+    #[OA\Get(
+        path: '/dashboard/mosque-manager/reports/donations',
+        operationId: 'getManagerDonationsReport',
+        tags: ['Reports'],
+        summary: 'تقرير تبرعات مسجد مدير المسجد',
+        description: 'تبرعات مسجد مدير المسجد فقط، مُفلترة من/إلى تاريخ.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'date_from', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date', example: '2026-01-01')),
+            new OA\Parameter(name: 'date_to', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date', example: '2026-08-22')),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 15)),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'تم جلب تقرير التبرعات بنجاح'),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — mosque_manager only')
+        ]
+    )]
+    public function getManagerDonationsReport() {}
+
+    #[OA\Get(
+        path: '/dashboard/mosque-manager/reports/maintenance',
+        operationId: 'getManagerMaintenanceReport',
+        tags: ['Reports'],
+        summary: 'تقرير صيانة مسجد مدير المسجد',
+        description: 'طلبات صيانة مسجد مدير المسجد فقط، مُفلترة من/إلى تاريخ.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'date_from', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date', example: '2026-01-01')),
+            new OA\Parameter(name: 'date_to', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date', example: '2026-08-22')),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 15)),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'تم جلب تقرير الصيانة بنجاح'),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — mosque_manager only')
+        ]
+    )]
+    public function getManagerMaintenanceReport() {}
+
+    #[OA\Get(
+        path: '/dashboard/mosque-manager/reports/complaints',
+        operationId: 'getManagerComplaintsReport',
+        tags: ['Reports'],
+        summary: 'تقرير شكاوى مسجد مدير المسجد',
+        description: 'شكاوى مسجد مدير المسجد فقط، مُفلترة من/إلى تاريخ.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'date_from', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date', example: '2026-01-01')),
+            new OA\Parameter(name: 'date_to', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date', example: '2026-08-22')),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 15)),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'تم جلب تقرير الشكاوى بنجاح'),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — mosque_manager only')
+        ]
+    )]
+    public function getManagerComplaintsReport() {}
+
 }
