@@ -38,7 +38,7 @@ Route::prefix('dashboard')->group(function () {
 });
 
 Route::prefix('dashboard/mosque-manager')
-    ->middleware(['auth:api', 'active.user'])
+    ->middleware(['auth:api', 'active.user','role:mosque_manager,super_admin'])
     ->group(function () {
 
         // 1. Endpoint شامل يعيد كافة بيانات اللوحة في Request واحد
