@@ -4,6 +4,7 @@ namespace Modules\Education\Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 
@@ -19,6 +20,63 @@ use Modules\Education\Models\AttendanceExcuse;
 
 class EducationDatabaseSeeder extends Seeder
 {
+    /*
+    |--------------------------------------------------------------------------
+    | إعدادات Seeder
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * عدد الحلقات في كل مسجد.
+     */
+    private int $halaqatPerMosque = 3;
+
+    /**
+     * عدد الطلاب الإجمالي.
+     */
+    private int $studentsCount = 200;
+
+    /**
+     * أسماء المعلمين الذين سيتم إنشاؤهم عند الحاجة.
+     */
+    private array $teacherFirstNames = [
+        'محمد',
+        'أحمد',
+        'علي',
+        'حسن',
+        'حسين',
+        'إبراهيم',
+        'موسى',
+        'عمر',
+        'ياسر',
+        'خالد',
+        'عبد الله',
+        'عبد الرحمن',
+        'عبد العزيز',
+        'يوسف',
+        'حمزة',
+        'بلال',
+        'سعد',
+        'سلمان',
+        'معاذ',
+        'أنس',
+        'زياد',
+        'رامي',
+        'مازن',
+        'طارق',
+        'كريم',
+        'مصطفى',
+        'أيمن',
+        'سامر',
+        'باسل',
+        'فراس',
+        'طارق',
+        'محمود',
+        'وليد',
+        'هشام',
+        'رامز',
+    ];
+
     private array $firstNames = [
         'محمد',
         'أحمد',
@@ -53,23 +111,49 @@ class EducationDatabaseSeeder extends Seeder
     ];
 
     private array $lastNames = [
-        'محمود', 'علي', 'الشامي', 'الخطيب', 'الحموي',
-        'الدمشقي', 'الحلبي', 'العمر', 'الحسن', 'النعسان',
-        'الرفاعي', 'القادري', 'القرشي', 'المالكي', 'الحسيني'
+        'محمود',
+        'علي',
+        'الشامي',
+        'الخطيب',
+        'الحموي',
+        'الدمشقي',
+        'الحلبي',
+        'العمر',
+        'الحسن',
+        'النعسان',
+        'الرفاعي',
+        'القادري',
+        'القرشي',
+        'المالكي',
+        'الحسيني',
     ];
 
     private array $specializations = [
         'عاصم عن حفص والتجويد المتقدم',
         'قراءات العشر والأساسيات',
         'تجويد وتحفيظ أجزاء عم وتبارك',
-        'مراجعة وتثبيت القرآن كامل'
+        'مراجعة وتثبيت القرآن كامل',
     ];
 
     private array $surahs = [
-        'الفاتحة', 'البقرة', 'آل عمران', 'النساء', 'المائدة',
-        'الأنعام', 'الأعراف', 'الأنفال', 'التوبة', 'يونس',
-        'هود', 'يوسف', 'الرعد', 'إبراهيم', 'الحجر', 'النحل',
-        'الإسراء', 'الكهف'
+        'الفاتحة',
+        'البقرة',
+        'آل عمران',
+        'النساء',
+        'المائدة',
+        'الأنعام',
+        'الأعراف',
+        'الأنفال',
+        'التوبة',
+        'يونس',
+        'هود',
+        'يوسف',
+        'الرعد',
+        'إبراهيم',
+        'الحجر',
+        'النحل',
+        'الإسراء',
+        'الكهف',
     ];
 
     private array $evaluationNotes = [
@@ -81,7 +165,7 @@ class EducationDatabaseSeeder extends Seeder
         'يحتاج تحسين',
         'بحاجة لمتابعة',
         'متوسط الأداء',
-        'متقدم'
+        'متقدم',
     ];
 
     private array $excuseReasons = [
@@ -90,7 +174,7 @@ class EducationDatabaseSeeder extends Seeder
         'مرض مفاجئ',
         'سفر ضروري',
         'موعد طبي',
-        'ظروف قاهرة'
+        'ظروف قاهرة',
     ];
 
     private array $schedules = [
@@ -99,18 +183,24 @@ class EducationDatabaseSeeder extends Seeder
         ['monday', 'wednesday', 'friday'],
     ];
 
+    /*
+    |--------------------------------------------------------------------------
+    | RUN
+    |--------------------------------------------------------------------------
+    */
+
     public function run(): void
     {
         DB::beginTransaction();
 
         try {
 
-            $this->command->info(
-                '🔄 بدء إنشاء بيانات التعليم وربطها بالمساجد والمستخدمين الموجودين...'
-            );
+            $this->command->info('');
+            $this->command->info('🚀 بدء إنشاء بيانات Education...');
+            $this->command->info('');
 
             // =========================================================
-            // 1. جلب المساجد التي أنشأها MosqueSeeder
+            // 1. جلب المساجد
             // =========================================================
 
             $mosques = Mosque::query()
@@ -123,10 +213,13 @@ class EducationDatabaseSeeder extends Seeder
                 );
             }
 
-            $mosqueIds = $mosques->pluck('id')->values()->toArray();
+            $mosqueIds = $mosques
+                ->pluck('id')
+                ->values()
+                ->toArray();
 
             $this->command->info(
-                '🕌 تم العثور على ' . count($mosqueIds) . ' مسجد موجود مسبقاً.'
+                '🕌 عدد المساجد: ' . count($mosqueIds)
             );
 
             // =========================================================
@@ -134,13 +227,14 @@ class EducationDatabaseSeeder extends Seeder
             // =========================================================
 
             $parentRole = Role::where('name', 'parent')->first();
-            $teacherRole = Role::where('name', 'teacher')->first();
 
             if (!$parentRole) {
                 throw new \Exception(
                     '❌ Role "parent" غير موجود. شغّل RoleSeeder أولاً.'
                 );
             }
+
+            $teacherRole = Role::where('name', 'teacher')->first();
 
             if (!$teacherRole) {
                 throw new \Exception(
@@ -149,7 +243,7 @@ class EducationDatabaseSeeder extends Seeder
             }
 
             // =========================================================
-            // 3. جلب المعلمين الموجودين من UserSeeder
+            // 3. جلب المعلمين الموجودين
             // =========================================================
 
             $teachers = User::whereHas('roles', function ($query) use ($teacherRole) {
@@ -158,14 +252,149 @@ class EducationDatabaseSeeder extends Seeder
                 ->orderBy('id')
                 ->get();
 
-            if ($teachers->isEmpty()) {
-                throw new \Exception(
-                    '❌ لا يوجد مستخدمون بدور teacher. شغّل UserSeeder أولاً.'
+            $requiredTeachers =
+                count($mosqueIds) * $this->halaqatPerMosque;
+
+            $this->command->info(
+                "👨‍🏫 المعلمون الموجودون: {$teachers->count()}"
+            );
+
+            $this->command->info(
+                "🎯 المعلمون المطلوبون: {$requiredTeachers}"
+            );
+
+            // =========================================================
+            // 4. إنشاء المعلمين الناقصين
+            // =========================================================
+
+            if ($teachers->count() < $requiredTeachers) {
+
+                $missingTeachers =
+                    $requiredTeachers - $teachers->count();
+
+                $this->command->warn(
+                    "⚠️ يوجد نقص في المعلمين: {$missingTeachers}"
                 );
+
+                $this->command->info(
+                    '🔄 سيتم إنشاء المعلمين الناقصين تلقائياً...'
+                );
+
+                for ($i = 0; $i < $missingTeachers; $i++) {
+
+                    $teacherNumber =
+                        $teachers->count() + $i + 1;
+
+                    $firstName = $this->teacherFirstNames[
+                    $i % count($this->teacherFirstNames)
+                    ];
+
+                    $lastName = $this->lastNames[
+                    $i % count($this->lastNames)
+                    ];
+
+                    $email =
+                        'teacher' .
+                        $teacherNumber .
+                        '@mms.test';
+
+                    /*
+                     * إذا كان المستخدم موجوداً مسبقاً
+                     * لا ننشئه مرة ثانية.
+                     */
+                    $teacher = User::firstOrCreate(
+                        [
+                            'email' => $email,
+                        ],
+                        [
+                            'name' =>
+                                $firstName .
+                                ' ' .
+                                $lastName,
+
+                            'password' => Hash::make(
+                                'password'
+                            ),
+
+                            'phone' =>
+                                '+9639' .
+                                str_pad(
+                                    (string) $teacherNumber,
+                                    8,
+                                    '0',
+                                    STR_PAD_LEFT
+                                ),
+
+                            'mosque_id' =>
+                                $mosqueIds[
+                                $i % count($mosqueIds)
+                                ],
+                        ]
+                    );
+
+                    /*
+                     * ربط المعلم بدور teacher.
+                     *
+                     * إذا كان لديك Spatie Permission
+                     * نستخدم assignRole.
+                     */
+                    if (method_exists($teacher, 'assignRole')) {
+
+                        if (!$teacher->hasRole('teacher')) {
+                            $teacher->assignRole('teacher');
+                        }
+
+                    } else {
+
+                        /*
+                         * fallback إذا كانت العلاقة
+                         * مخصصة في المشروع.
+                         */
+                        $teacher->roles()->syncWithoutDetaching([
+                            $teacherRole->id,
+                        ]);
+                    }
+
+                    /*
+                     * تحديث mosque_id إذا لم يكن موجوداً.
+                     */
+                    if (!$teacher->mosque_id) {
+
+                        $teacher->update([
+                            'mosque_id' =>
+                                $mosqueIds[
+                                $i % count($mosqueIds)
+                                ],
+                        ]);
+                    }
+
+                    $teachers->push($teacher);
+
+                    $this->command->info(
+                        "  ➜ تم تجهيز المعلم: {$teacher->name}"
+                    );
+                }
             }
 
             // =========================================================
-            // 4. جلب أولياء الأمور الموجودين من UserSeeder
+            // 5. التحقق النهائي من عدد المعلمين
+            // =========================================================
+
+            if ($teachers->count() < $requiredTeachers) {
+
+                throw new \Exception(
+                    "❌ فشل تجهيز المعلمين. " .
+                    "المطلوب {$requiredTeachers}، " .
+                    "والموجود {$teachers->count()}."
+                );
+            }
+
+            $this->command->info(
+                "✅ أصبح لدينا {$teachers->count()} معلم."
+            );
+
+            // =========================================================
+            // 6. جلب أولياء الأمور
             // =========================================================
 
             $parents = User::whereHas('roles', function ($query) use ($parentRole) {
@@ -175,21 +404,19 @@ class EducationDatabaseSeeder extends Seeder
                 ->get();
 
             if ($parents->isEmpty()) {
+
                 throw new \Exception(
                     '❌ لا يوجد مستخدمون بدور parent. شغّل UserSeeder أولاً.'
                 );
             }
 
             $this->command->info(
-                '👨‍🏫 المعلمون الموجودون: ' . $teachers->count()
-            );
-
-            $this->command->info(
-                '👨‍👩‍👧 أولياء الأمور الموجودون: ' . $parents->count()
+                '👨‍👩‍👧 أولياء الأمور: ' .
+                $parents->count()
             );
 
             // =========================================================
-            // 5. إنشاء TeacherProfile للمعلمين
+            // 7. Teacher Profiles
             // =========================================================
 
             foreach ($teachers as $teacher) {
@@ -199,153 +426,218 @@ class EducationDatabaseSeeder extends Seeder
                         'user_id' => $teacher->id,
                     ],
                     [
-                        'phone' => $teacher->phone
-                            ?? '+9639' . rand(10000000, 99999999),
+                        'phone' =>
+                            $teacher->phone
+                            ?? '+9639' . rand(
+                                10000000,
+                                99999999
+                            ),
 
-                        'specialization' => collect(
-                            $this->specializations
-                        )->random(),
+                        'specialization' =>
+                            collect(
+                                $this->specializations
+                            )->random(),
 
                         'status' => 'active',
 
-                        'notes' => 'معلم قرآن كريم وحلقة تحفيظ.',
+                        'notes' =>
+                            'معلم قرآن كريم وحلقة تحفيظ.',
                     ]
                 );
             }
 
             $this->command->info(
-                '✅ تم تجهيز ملفات المعلمين Teacher Profiles.'
+                '✅ تم تجهيز Teacher Profiles.'
             );
 
             // =========================================================
-            // 6. إنشاء حلقات للمعلمين
+            // 8. إنشاء الحلقات
             // =========================================================
 
             $halaqat = collect();
 
-            $counter = 1;
+            $teacherIndex = 0;
+            $halaqaCounter = 1;
 
-            foreach ($teachers as $index => $teacher) {
+            $startTimes = [
+                '16:00',
+                '17:30',
+                '18:00',
+                '19:30',
+            ];
 
-                /*
-                 * إذا كان للمعلم مسجد محدد من UserSeeder
-                 * نستخدمه.
-                 *
-                 * وإلا نربطه بأحد المساجد الموجودة.
-                 */
+            foreach ($mosques as $mosque) {
 
-                $mosqueId = $teacher->mosque_id;
+                $this->command->info('');
 
-                if (!$mosqueId || !in_array($mosqueId, $mosqueIds)) {
-                    $mosqueId = $mosqueIds[$index % count($mosqueIds)];
-
-                    $teacher->update([
-                        'mosque_id' => $mosqueId,
-                    ]);
-                }
-
-                $startTimes = [
-                    '16:00',
-                    '17:30',
-                    '18:00',
-                    '19:30'
-                ];
-
-                $startTime = $startTimes[$index % count($startTimes)];
-
-                $endTime = Carbon::createFromFormat(
-                    'H:i',
-                    $startTime
-                )
-                    ->addMinutes(90)
-                    ->format('H:i:s');
-
-                $halaqa = Halaqa::firstOrCreate(
-                    [
-                        'teacher_id' => $teacher->id,
-                        'mosque_id' => $mosqueId,
-                        'name' => 'حلقة ' . $counter . ' - ' . $teacher->name,
-                    ],
-                    [
-                        'capacity' => rand(15, 30),
-
-                        'schedule_days' =>
-                            $this->schedules[
-                            $index % count($this->schedules)
-                            ],
-
-                        'start_time' => $startTime,
-
-                        'end_time' => $endTime,
-
-                        'status' => 'active',
-                    ]
+                $this->command->info(
+                    "🕌 المسجد #{$mosque->id}: إنشاء {$this->halaqatPerMosque} حلقات..."
                 );
 
-                $halaqat->push($halaqa);
+                for (
+                    $halaqaNumber = 1;
+                    $halaqaNumber <= $this->halaqatPerMosque;
+                    $halaqaNumber++
+                ) {
 
-                $counter++;
+                    $teacher = $teachers[$teacherIndex];
+
+                    /*
+                     * ربط المعلم بالمسجد.
+                     */
+                    if ($teacher->mosque_id != $mosque->id) {
+
+                        $teacher->update([
+                            'mosque_id' => $mosque->id,
+                        ]);
+                    }
+
+                    $startTime =
+                        $startTimes[
+                        ($halaqaNumber - 1) %
+                        count($startTimes)
+                        ];
+
+                    $endTime = Carbon::createFromFormat(
+                        'H:i',
+                        $startTime
+                    )
+                        ->addMinutes(90)
+                        ->format('H:i:s');
+
+                    $schedule =
+                        $this->schedules[
+                        ($halaqaNumber - 1) %
+                        count($this->schedules)
+                        ];
+
+                    $name =
+                        'حلقة ' .
+                        $halaqaNumber .
+                        ' - ' .
+                        $mosque->id .
+                        ' - ' .
+                        $teacher->name;
+
+                    $halaqa = Halaqa::firstOrCreate(
+                        [
+                            'teacher_id' => $teacher->id,
+                            'mosque_id' => $mosque->id,
+                            'name' => $name,
+                        ],
+                        [
+                            'capacity' => rand(15, 30),
+
+                            'schedule_days' => $schedule,
+
+                            'start_time' => $startTime,
+
+                            'end_time' => $endTime,
+
+                            'status' => 'active',
+                        ]
+                    );
+
+                    $halaqat->push($halaqa);
+
+                    $this->command->info(
+                        "  📖 {$name} → المعلم {$teacher->id}"
+                    );
+
+                    $teacherIndex++;
+                    $halaqaCounter++;
+                }
             }
 
+            $this->command->info('');
+
             $this->command->info(
-                '📖 تم إنشاء/تجهيز ' . $halaqat->count() . ' حلقة.'
+                '📖 إجمالي الحلقات: ' .
+                $halaqat->count()
             );
 
             // =========================================================
-            // 7. إنشاء الطلاب
+            // 9. إنشاء الطلاب
             // =========================================================
 
             $studentHalaqaMap = [];
 
             $studentCount = 0;
 
-            /*
-             * ننشئ 200 طالب تقريباً.
-             */
+            $this->command->info('');
 
-            for ($i = 1; $i <= 200; $i++) {
+            $this->command->info(
+                "👦 إنشاء {$this->studentsCount} طالب..."
+            );
+
+            for (
+                $i = 1;
+                $i <= $this->studentsCount;
+                $i++
+            ) {
 
                 if ($halaqat->isEmpty()) {
                     break;
                 }
 
-                $halaqa = $halaqat[$i % $halaqat->count()];
+                /*
+                 * توزيع الطلاب على جميع الحلقات.
+                 */
+                $halaqa =
+                    $halaqat[
+                    ($i - 1) %
+                    $halaqat->count()
+                    ];
 
                 /*
-                 * نختار ولي أمر من المستخدمين الموجودين.
+                 * توزيع أولياء الأمور.
                  */
-
-                $parent = $parents[$i % $parents->count()];
+                $parent =
+                    $parents[
+                    ($i - 1) %
+                    $parents->count()
+                    ];
 
                 $student = Student::create([
-                    'first_name' => collect(
-                        $this->firstNames
-                    )->random(),
+                    'first_name' =>
+                        collect(
+                            $this->firstNames
+                        )->random(),
 
-                    'last_name' => collect(
-                        $this->lastNames
-                    )->random(),
+                    'last_name' =>
+                        collect(
+                            $this->lastNames
+                        )->random(),
 
-                    'parent_id' => $parent->id,
+                    'parent_id' =>
+                        $parent->id,
 
-                    'mosque_id' => $halaqa->mosque_id,
+                    'mosque_id' =>
+                        $halaqa->mosque_id,
 
-                    'date_of_birth' => now()
-                        ->subYears(rand(7, 15))
-                        ->toDateString(),
+                    'date_of_birth' =>
+                        now()
+                            ->subYears(
+                                rand(7, 15)
+                            )
+                            ->toDateString(),
 
                     'gender' => 'male',
 
                     'status' => 'active',
 
-                    'halaqa_id' => $halaqa->id,
+                    'halaqa_id' =>
+                        $halaqa->id,
                 ]);
 
-                $studentHalaqaMap[$student->id] = $halaqa->id;
+                $studentHalaqaMap[
+                $student->id
+                ] = $halaqa->id;
 
                 $studentCount++;
 
                 if ($studentCount % 50 === 0) {
+
                     $this->command->info(
                         "  ➜ تم إنشاء {$studentCount} طالب..."
                     );
@@ -353,35 +645,54 @@ class EducationDatabaseSeeder extends Seeder
             }
 
             $this->command->info(
-                '👦 تم إنشاء ' . $studentCount . ' طالب.'
+                "👦 تم إنشاء {$studentCount} طالب."
             );
 
             // =========================================================
-            // 8. Attendance Excuses
+            // 10. Attendance Excuses
             // =========================================================
 
+            $this->command->info(
+                '📋 إنشاء أعذار الغياب...'
+            );
+
             $studentsForExcuses = Student::query()
-                ->whereIn('id', array_keys($studentHalaqaMap))
+                ->whereIn(
+                    'id',
+                    array_keys($studentHalaqaMap)
+                )
                 ->inRandomOrder()
-                ->take(10)
+                ->take(
+                    min(
+                        20,
+                        count($studentHalaqaMap)
+                    )
+                )
                 ->get();
 
             foreach ($studentsForExcuses as $student) {
 
                 AttendanceExcuse::create([
-                    'student_id' => $student->id,
+                    'student_id' =>
+                        $student->id,
 
-                    'halaqa_id' => $student->halaqa_id,
+                    'halaqa_id' =>
+                        $student->halaqa_id,
 
-                    'parent_id' => $student->parent_id,
+                    'parent_id' =>
+                        $student->parent_id,
 
-                    'absence_date' => now()
-                        ->subDays(rand(1, 10))
-                        ->toDateString(),
+                    'absence_date' =>
+                        now()
+                            ->subDays(
+                                rand(1, 10)
+                            )
+                            ->toDateString(),
 
-                    'reason' => collect(
-                        $this->excuseReasons
-                    )->random(),
+                    'reason' =>
+                        collect(
+                            $this->excuseReasons
+                        )->random(),
 
                     'status' => 'pending',
 
@@ -390,12 +701,14 @@ class EducationDatabaseSeeder extends Seeder
             }
 
             $this->command->info(
-                '📋 تم إنشاء أعذار الغياب.'
+                '✅ تم إنشاء أعذار الغياب.'
             );
 
             // =========================================================
-            // 9. Attendance + Evaluations
+            // 11. Attendance + Evaluations
             // =========================================================
+
+            $this->command->info('');
 
             $this->command->info(
                 '🔄 جاري إنشاء الحضور والتقييمات...'
@@ -404,30 +717,42 @@ class EducationDatabaseSeeder extends Seeder
             $attendancesData = [];
             $evaluationsData = [];
 
-            $nowStr = Carbon::now()->toDateTimeString();
+            $nowStr =
+                Carbon::now()->toDateTimeString();
 
-            foreach ($studentHalaqaMap as $studentId => $halaqaId) {
+            foreach (
+                $studentHalaqaMap
+                as $studentId => $halaqaId
+            ) {
 
-                $halaqa = $halaqat->firstWhere(
-                    'id',
-                    $halaqaId
-                );
+                $halaqa =
+                    $halaqat->firstWhere(
+                        'id',
+                        $halaqaId
+                    );
 
                 if (!$halaqa) {
                     continue;
                 }
 
-                // -----------------------------------------------------
+                // =====================================================
                 // Attendance
-                // -----------------------------------------------------
+                // =====================================================
 
-                for ($day = 30; $day >= 0; $day--) {
+                for (
+                    $day = 30;
+                    $day >= 0;
+                    $day--
+                ) {
 
-                    $date = Carbon::today()->subDays($day);
+                    $date =
+                        Carbon::today()
+                            ->subDays($day);
 
-                    $dayName = strtolower(
-                        $date->format('l')
-                    );
+                    $dayName =
+                        strtolower(
+                            $date->format('l')
+                        );
 
                     if (
                         !in_array(
@@ -438,83 +763,113 @@ class EducationDatabaseSeeder extends Seeder
                         continue;
                     }
 
+                    $status = collect([
+                        'present',
+                        'present',
+                        'present',
+                        'late',
+                        'absent',
+                    ])->random();
+
                     $attendancesData[] = [
-                        'halaqa_id' => $halaqaId,
+                        'halaqa_id' =>
+                            $halaqaId,
 
-                        'student_id' => $studentId,
+                        'student_id' =>
+                            $studentId,
 
-                        'date' => $date->toDateString(),
+                        'date' =>
+                            $date->toDateString(),
 
-                        'status' => collect([
-                            'present',
-                            'present',
-                            'present',
-                            'late',
-                            'absent'
-                        ])->random(),
+                        'status' =>
+                            $status,
 
                         'notes' => null,
 
-                        'created_at' => $nowStr,
+                        'created_at' =>
+                            $nowStr,
 
-                        'updated_at' => $nowStr,
+                        'updated_at' =>
+                            $nowStr,
                     ];
                 }
 
-                // -----------------------------------------------------
+                // =====================================================
                 // Evaluations
-                // -----------------------------------------------------
+                // =====================================================
 
-                $evalCount = rand(5, 15);
+                $evalCount =
+                    rand(5, 15);
 
-                for ($i = 0; $i < $evalCount; $i++) {
+                for (
+                    $i = 0;
+                    $i < $evalCount;
+                    $i++
+                ) {
 
-                    $from = rand(1, 100);
+                    $from =
+                        rand(1, 100);
 
-                    $evaluationsData[] = [
-                        'client_uuid' => Str::uuid()->toString(),
-
-                        'halaqa_id' => $halaqaId,
-
-                        'student_id' => $studentId,
-
-                        'surah_name' => collect(
-                            $this->surahs
-                        )->random(),
-
-                        'from_ayah' => $from,
-
-                        'to_ayah' => min(
+                    $to =
+                        min(
                             $from + rand(2, 15),
                             286
-                        ),
+                        );
 
-                        'score' => collect([
-                            75,
-                            80,
-                            85,
-                            90,
-                            95,
-                            100
-                        ])->random(),
+                    $evaluationsData[] = [
+                        'client_uuid' =>
+                            Str::uuid()->toString(),
 
-                        'notes' => collect(
-                            $this->evaluationNotes
-                        )->random(),
+                        'halaqa_id' =>
+                            $halaqaId,
 
-                        'evaluated_at' => now()
-                            ->subDays(rand(1, 30))
-                            ->toDateString(),
+                        'student_id' =>
+                            $studentId,
 
-                        'created_at' => $nowStr,
+                        'surah_name' =>
+                            collect(
+                                $this->surahs
+                            )->random(),
 
-                        'updated_at' => $nowStr,
+                        'from_ayah' =>
+                            $from,
+
+                        'to_ayah' =>
+                            $to,
+
+                        'score' =>
+                            collect([
+                                75,
+                                80,
+                                85,
+                                90,
+                                95,
+                                100,
+                            ])->random(),
+
+                        'notes' =>
+                            collect(
+                                $this->evaluationNotes
+                            )->random(),
+
+                        'evaluated_at' =>
+                            now()
+                                ->subDays(
+                                    rand(1, 30)
+                                )
+                                ->toDateString(),
+
+                        'created_at' =>
+                            $nowStr,
+
+                        'updated_at' =>
+                            $nowStr,
                     ];
                 }
             }
 
             // =========================================================
-            // 10. Bulk Attendance
+            // 12. Bulk Attendance
             // =========================================================
 
             $this->command->info(
@@ -524,14 +879,17 @@ class EducationDatabaseSeeder extends Seeder
             );
 
             foreach (
-                array_chunk($attendancesData, 500)
-                as $chunk
+                array_chunk(
+                    $attendancesData,
+                    500
+                ) as $chunk
             ) {
+
                 Attendance::insert($chunk);
             }
 
             // =========================================================
-            // 11. Bulk Evaluations
+            // 13. Bulk Evaluations
             // =========================================================
 
             $this->command->info(
@@ -541,20 +899,33 @@ class EducationDatabaseSeeder extends Seeder
             );
 
             foreach (
-                array_chunk($evaluationsData, 500)
-                as $chunk
+                array_chunk(
+                    $evaluationsData,
+                    500
+                ) as $chunk
             ) {
+
                 Evaluation::insert($chunk);
             }
 
             // =========================================================
-            // 12. Commit
+            // 14. Commit
             // =========================================================
 
             DB::commit();
 
+            $this->command->info('');
+
             $this->command->info(
-                '✅ تم تنفيذ EducationDatabaseSeeder بنجاح.'
+                '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+            );
+
+            $this->command->info(
+                '🎉 تم تنفيذ EducationDatabaseSeeder بنجاح!'
+            );
+
+            $this->command->info(
+                '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
             );
 
             $this->printSummary(
@@ -569,17 +940,36 @@ class EducationDatabaseSeeder extends Seeder
 
             DB::rollBack();
 
+            $this->command->error('');
+
             $this->command->error(
-                '❌ حدث خطأ: ' . $e->getMessage()
+                '❌ حدث خطأ أثناء تنفيذ EducationDatabaseSeeder'
             );
 
             $this->command->error(
-                '📍 السطر: ' . $e->getLine()
+                '📍 السطر: ' .
+                $e->getLine()
+            );
+
+            $this->command->error(
+                '📁 الملف: ' .
+                $e->getFile()
+            );
+
+            $this->command->error(
+                '💬 الرسالة: ' .
+                $e->getMessage()
             );
 
             throw $e;
         }
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Summary
+    |--------------------------------------------------------------------------
+    */
 
     private function printSummary(
         int $students,
@@ -600,31 +990,39 @@ class EducationDatabaseSeeder extends Seeder
         );
 
         $this->command->info(
-            '🕌 المساجد: ' . Mosque::count()
+            '🕌 المساجد: ' .
+            Mosque::count()
         );
 
         $this->command->info(
-            '👨‍🏫 المعلمون: ' . $teachers
+            '👨‍🏫 المعلمون: ' .
+            $teachers
         );
 
         $this->command->info(
-            '📖 الحلقات: ' . $halaqat
+            '📖 الحلقات: ' .
+            $halaqat
         );
 
         $this->command->info(
-            '👦 الطلاب: ' . $students
+            '👦 الطلاب: ' .
+            $students
         );
 
         $this->command->info(
-            '📝 سجلات الحضور: ' . $attendance
+            '📝 سجلات الحضور: ' .
+            $attendance
         );
 
         $this->command->info(
-            '⭐ التقييمات: ' . $evaluations
+            '⭐ التقييمات: ' .
+            $evaluations
         );
 
         $this->command->info(
             '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
         );
+
+        $this->command->info('');
     }
 }
