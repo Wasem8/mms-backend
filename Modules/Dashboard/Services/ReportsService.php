@@ -7,28 +7,45 @@ use Illuminate\Support\Collection;
 use Modules\Complaint\Models\Complaint;
 use Modules\Donation\Models\Donation;
 use Modules\MaintenanceRequest\Models\Maintenance;
+use Modules\Mosque\Models\Mosque;
 use Modules\User\Models\User;
 
 class ReportsService
 {
-    /**
-     * تقارير مُفلترة حسب تاريخ (من/إلى) ومسجد اختياري.
-     * - التبرعات: للمديرين (المنطقة + المسجد). مدير المنطقة يمكنه اختيار أي مسجد.
-     * - الصيانة: للمديرين. للمنطقة فقط بشكل افتراضي ويمكن تصفيتها لمسجد.
-     * - الشكاوى: للمديرين. مدير المسجد مُقيّد بمسجده.
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | Date Filters
+    |--------------------------------------------------------------------------
+    */
 
-    private function applyDate($query, array $filters)
-    {
-        if (! empty($filters['date_from'])) {
-            $query->whereDate('created_at', '>=', $filters['date_from']);
+    private function applyDate(
+        $query,
+        array $filters
+    ) {
+        if (!empty($filters['date_from'])) {
+            $query->whereDate(
+                'created_at',
+                '>=',
+                $filters['date_from']
+            );
         }
-        if (! empty($filters['date_to'])) {
-            $query->whereDate('created_at', '<=', $filters['date_to']);
+
+        if (!empty($filters['date_to'])) {
+            $query->whereDate(
+                'created_at',
+                '<=',
+                $filters['date_to']
+            );
         }
 
         return $query;
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Mosque of Manager
+    |--------------------------------------------------------------------------
+    */
 
     private function managerMosqueId(User $user): ?int
     {
@@ -36,177 +53,856 @@ class ReportsService
             return $user->mosque_id;
         }
 
-        $mosque = \Modules\Mosque\Models\Mosque::where('manager_id', $user->id)->first();
+        $mosque = Mosque::where(
+            'manager_id',
+            $user->id
+        )->first();
 
         return $mosque?->id;
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Pagination
+    |--------------------------------------------------------------------------
+    */
+
     private function perPage(array $filters): int
     {
-        return isset($filters['per_page'])
-            ? max(1, min(100, (int) $filters['per_page']))
-            : 15;
+        if (!isset($filters['per_page'])) {
+            return 15;
+        }
+
+        return max(
+            1,
+            min(
+                100,
+                (int) $filters['per_page']
+            )
+        );
     }
 
-    private function paginateOrAll($query, array $filters, bool $all): LengthAwarePaginator|Collection
-    {
+    private function paginateOrAll(
+        $query,
+        array $filters,
+        bool $all
+    ): LengthAwarePaginator|Collection {
+        $query->latest();
+
         if ($all) {
-            return $query->latest()->get();
+            return $query->get();
         }
 
-        return $query->latest()->paginate($this->perPage($filters));
+        return $query->paginate(
+            $this->perPage($filters)
+        );
     }
 
-    // ===== التبرعات =====
+    /*
+    |--------------------------------------------------------------------------
+    | Donations Query
+    |--------------------------------------------------------------------------
+    */
 
-    private function donationsQuery(User $user, array $filters)
-    {
-        $query = Donation::with(['mosque:id,name', 'campaign:id,title', 'user:id,name'])
-            ->whereIn('status', ['paid', 'completed', 'approved']);
+    private function donationsQuery(
+        User $user,
+        array $filters
+    ) {
+        $query = Donation::with([
+            'mosque:id,name',
+            'campaign:id,title',
+            'user:id,name',
+        ])->whereIn(
+            'status',
+            [
+                'paid',
+                'completed',
+                'approved',
+            ]
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Super Admin
+        |--------------------------------------------------------------------------
+        */
 
         if ($user->hasRole('super_admin')) {
-            if (! empty($filters['mosque_id'])) {
-                $query->where('mosque_id', $filters['mosque_id']);
-            }
-        } elseif ($user->hasRole('mosque_manager')) {
-            $mosqueId = $this->managerMosqueId($user);
-            if ($mosqueId) {
-                $query->where('mosque_id', $mosqueId);
+
+            if (!empty($filters['mosque_id'])) {
+                $query->where(
+                    'mosque_id',
+                    $filters['mosque_id']
+                );
             }
         }
 
-        return $this->applyDate($query, $filters);
+        /*
+        |--------------------------------------------------------------------------
+        | Mosque Manager
+        |--------------------------------------------------------------------------
+        */
+
+        elseif ($user->hasRole('mosque_manager')) {
+
+            $mosqueId = $this->managerMosqueId($user);
+
+            if ($mosqueId) {
+                $query->where(
+                    'mosque_id',
+                    $mosqueId
+                );
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Region Manager
+        |--------------------------------------------------------------------------
+        */
+
+        elseif ($user->hasRole('region_manager')) {
+
+            /*
+             * مدير المنطقة يرى جميع المساجد.
+             * ويمكنه اختيار مسجد محدد باستخدام mosque_id.
+             */
+
+            if (!empty($filters['mosque_id'])) {
+                $query->where(
+                    'mosque_id',
+                    $filters['mosque_id']
+                );
+            }
+        }
+
+        return $this->applyDate(
+            $query,
+            $filters
+        );
     }
 
-    public function donationsReport(User $user, array $filters = []): array
-    {
-        $query = $this->donationsQuery($user, $filters);
+    /*
+    |--------------------------------------------------------------------------
+    | Donations Report
+    |--------------------------------------------------------------------------
+    */
+
+    public function donationsReport(
+        User $user,
+        array $filters = []
+    ): array {
+        $query = $this->donationsQuery(
+            $user,
+            $filters
+        );
 
         $summary = [
-            'count'             => (clone $query)->count(),
-            'total_base_amount' => (float) (clone $query)->sum('base_amount'),
-            'total_amount'      => (float) (clone $query)->sum('amount'),
-            'currency'          => 'SYP',
+            'count' =>
+                (clone $query)->count(),
+
+            'total_base_amount' =>
+                (float) (clone $query)->sum(
+                    'base_amount'
+                ),
+
+            'total_amount' =>
+                (float) (clone $query)->sum(
+                    'amount'
+                ),
+
+            'currency' =>
+                'SYP',
         ];
 
-        $items = $this->paginateOrAll($query, $filters, false);
+        $items = $this->paginateOrAll(
+            $query,
+            $filters,
+            false
+        );
 
-        return ['summary' => $summary, 'items' => $items];
+        return [
+            'summary' => $summary,
+            'items' => $items,
+        ];
     }
 
-    public function donationsExport(User $user, array $filters = []): array
-    {
-        $query = $this->donationsQuery($user, $filters);
+    /*
+    |--------------------------------------------------------------------------
+    | Donations Export
+    |--------------------------------------------------------------------------
+    */
+
+    public function donationsExport(
+        User $user,
+        array $filters = []
+    ): array {
+        $query = $this->donationsQuery(
+            $user,
+            $filters
+        );
 
         $summary = [
-            'count'             => (clone $query)->count(),
-            'total_base_amount' => (float) (clone $query)->sum('base_amount'),
-            'total_amount'      => (float) (clone $query)->sum('amount'),
-            'currency'          => 'SYP',
+            'count' =>
+                (clone $query)->count(),
+
+            'total_base_amount' =>
+                (float) (clone $query)->sum(
+                    'base_amount'
+                ),
+
+            'total_amount' =>
+                (float) (clone $query)->sum(
+                    'amount'
+                ),
+
+            'currency' =>
+                'SYP',
         ];
 
-        $items = $this->paginateOrAll($query, $filters, true);
+        $items = $this->paginateOrAll(
+            $query,
+            $filters,
+            true
+        );
 
-        return ['summary' => $summary, 'items' => $items];
+        return [
+            'summary' => $summary,
+            'items' => $items,
+        ];
     }
 
-    // ===== الصيانة =====
+    /*
+    |--------------------------------------------------------------------------
+    | Maintenance Query
+    |--------------------------------------------------------------------------
+    */
 
-    private function maintenanceQuery(User $user, array $filters)
-    {
-        $query = Maintenance::with(['mosque:id,name']);
+    private function maintenanceQuery(
+        User $user,
+        array $filters
+    ) {
+        $query = Maintenance::with([
+            'mosque:id,name',
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Super Admin
+        |--------------------------------------------------------------------------
+        */
 
         if ($user->hasRole('super_admin')) {
-            if (! empty($filters['mosque_id'])) {
-                $query->where('mosque_id', $filters['mosque_id']);
-            }
-        } elseif ($user->hasRole('mosque_manager')) {
-            $mosqueId = $this->managerMosqueId($user);
-            if ($mosqueId) {
-                $query->where('mosque_id', $mosqueId);
+
+            if (!empty($filters['mosque_id'])) {
+                $query->where(
+                    'mosque_id',
+                    $filters['mosque_id']
+                );
             }
         }
 
-        return $this->applyDate($query, $filters);
+        /*
+        |--------------------------------------------------------------------------
+        | Mosque Manager
+        |--------------------------------------------------------------------------
+        */
+
+        elseif ($user->hasRole('mosque_manager')) {
+
+            $mosqueId = $this->managerMosqueId($user);
+
+            if ($mosqueId) {
+                $query->where(
+                    'mosque_id',
+                    $mosqueId
+                );
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Region Manager
+        |--------------------------------------------------------------------------
+        */
+
+        elseif ($user->hasRole('region_manager')) {
+
+            if (!empty($filters['mosque_id'])) {
+                $query->where(
+                    'mosque_id',
+                    $filters['mosque_id']
+                );
+            }
+        }
+
+        return $this->applyDate(
+            $query,
+            $filters
+        );
     }
 
-    public function maintenanceReport(User $user, array $filters = []): array
-    {
-        $query = $this->maintenanceQuery($user, $filters);
+    /*
+    |--------------------------------------------------------------------------
+    | Maintenance Summary
+    |--------------------------------------------------------------------------
+    */
 
-        $summary = [
-            'count'       => (clone $query)->count(),
-            'by_status'   => (clone $query)->selectRaw('status, count(*) as count')->groupBy('status')->pluck('count', 'status'),
-            'by_priority' => (clone $query)->selectRaw('priority, count(*) as count')->groupBy('priority')->pluck('count', 'priority'),
+    private function buildMaintenanceSummary(
+        $query
+    ): array {
+        /*
+        |--------------------------------------------------------------------------
+        | Main Counters
+        |--------------------------------------------------------------------------
+        */
+
+        $total = (clone $query)->count();
+
+        $pending = (clone $query)
+            ->where('status', 'pending')
+            ->count();
+
+        $inProgress = (clone $query)
+            ->where('status', 'in_progress')
+            ->count();
+
+        $completed = (clone $query)
+            ->where('status', 'completed')
+            ->count();
+
+        $cancelled = (clone $query)
+            ->where('status', 'cancelled')
+            ->count();
+
+        $highPriority = (clone $query)
+            ->whereIn(
+                'priority',
+                [
+                    'high',
+                    'urgent',
+                ]
+            )
+            ->count();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Completion Percentage
+        |--------------------------------------------------------------------------
+        */
+
+        $completionPercentage = $total > 0
+            ? round(
+                ($completed / $total) * 100,
+                1
+            )
+            : 0;
+
+        /*
+        |--------------------------------------------------------------------------
+        | By Status
+        |--------------------------------------------------------------------------
+        */
+
+        $statusCounts = (clone $query)
+            ->selectRaw(
+                'status, COUNT(*) as count'
+            )
+            ->groupBy('status')
+            ->pluck(
+                'count',
+                'status'
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | By Priority
+        |--------------------------------------------------------------------------
+        */
+
+        $priorityCounts = (clone $query)
+            ->selectRaw(
+                'priority, COUNT(*) as count'
+            )
+            ->groupBy('priority')
+            ->pluck(
+                'count',
+                'priority'
+            );
+
+        return [
+            'total' =>
+                $total,
+
+            'pending' =>
+                $pending,
+
+            'in_progress' =>
+                $inProgress,
+
+            'completed' =>
+                $completed,
+
+            'cancelled' =>
+                $cancelled,
+
+            'high_priority' =>
+                $highPriority,
+
+            'completion_percentage' =>
+                $completionPercentage,
+
+            'by_status' => [
+                'pending' =>
+                    (int) (
+                        $statusCounts['pending']
+                        ?? 0
+                    ),
+
+                'in_progress' =>
+                    (int) (
+                        $statusCounts['in_progress']
+                        ?? 0
+                    ),
+
+                'completed' =>
+                    (int) (
+                        $statusCounts['completed']
+                        ?? 0
+                    ),
+
+                'cancelled' =>
+                    (int) (
+                        $statusCounts['cancelled']
+                        ?? 0
+                    ),
+            ],
+
+            'by_priority' => [
+                'low' =>
+                    (int) (
+                        $priorityCounts['low']
+                        ?? 0
+                    ),
+
+                'medium' =>
+                    (int) (
+                        $priorityCounts['medium']
+                        ?? 0
+                    ),
+
+                'high' =>
+                    (int) (
+                        $priorityCounts['high']
+                        ?? 0
+                    ),
+
+                'urgent' =>
+                    (int) (
+                        $priorityCounts['urgent']
+                        ?? 0
+                    ),
+            ],
         ];
-
-        $items = $this->paginateOrAll($query, $filters, false);
-
-        return ['summary' => $summary, 'items' => $items];
     }
 
-    public function maintenanceExport(User $user, array $filters = []): array
-    {
-        $query = $this->maintenanceQuery($user, $filters);
+    /*
+    |--------------------------------------------------------------------------
+    | Maintenance Report
+    |--------------------------------------------------------------------------
+    */
 
-        $summary = [
-            'count'       => (clone $query)->count(),
-            'by_status'   => (clone $query)->selectRaw('status, count(*) as count')->groupBy('status')->pluck('count', 'status'),
-            'by_priority' => (clone $query)->selectRaw('priority, count(*) as count')->groupBy('priority')->pluck('count', 'priority'),
+    public function maintenanceReport(
+        User $user,
+        array $filters = []
+    ): array {
+        $query = $this->maintenanceQuery(
+            $user,
+            $filters
+        );
+
+        $summary = $this->buildMaintenanceSummary(
+            $query
+        );
+
+        $items = $this->paginateOrAll(
+            $query,
+            $filters,
+            false
+        );
+
+        return [
+            'summary' => $summary,
+            'items' => $items,
         ];
-
-        $items = $this->paginateOrAll($query, $filters, true);
-
-        return ['summary' => $summary, 'items' => $items];
     }
 
-    // ===== الشكاوى =====
+    /*
+    |--------------------------------------------------------------------------
+    | Maintenance Export
+    |--------------------------------------------------------------------------
+    */
 
-    private function complaintsQuery(User $user, array $filters)
-    {
-        $query = Complaint::with(['mosque:id,name', 'assignedAdmin:id,name']);
+    public function maintenanceExport(
+        User $user,
+        array $filters = []
+    ): array {
+        $query = $this->maintenanceQuery(
+            $user,
+            $filters
+        );
+
+        $summary = $this->buildMaintenanceSummary(
+            $query
+        );
+
+        $items = $this->paginateOrAll(
+            $query,
+            $filters,
+            true
+        );
+
+        return [
+            'summary' => $summary,
+            'items' => $items,
+        ];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Complaints Query
+    |--------------------------------------------------------------------------
+    */
+
+    private function complaintsQuery(
+        User $user,
+        array $filters
+    ) {
+        $query = Complaint::with([
+            'mosque:id,name',
+            'assignedAdmin:id,name',
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Super Admin
+        |--------------------------------------------------------------------------
+        */
 
         if ($user->hasRole('super_admin')) {
-            if (! empty($filters['mosque_id'])) {
-                $query->where('mosque_id', $filters['mosque_id']);
-            }
-        } elseif ($user->hasRole('mosque_manager')) {
-            $mosqueId = $this->managerMosqueId($user);
-            if ($mosqueId) {
-                $query->where('mosque_id', $mosqueId);
+
+            if (!empty($filters['mosque_id'])) {
+                $query->where(
+                    'mosque_id',
+                    $filters['mosque_id']
+                );
             }
         }
 
-        return $this->applyDate($query, $filters);
+        /*
+        |--------------------------------------------------------------------------
+        | Mosque Manager
+        |--------------------------------------------------------------------------
+        */
+
+        elseif ($user->hasRole('mosque_manager')) {
+
+            $mosqueId = $this->managerMosqueId($user);
+
+            if ($mosqueId) {
+                $query->where(
+                    'mosque_id',
+                    $mosqueId
+                );
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Region Manager
+        |--------------------------------------------------------------------------
+        */
+
+        elseif ($user->hasRole('region_manager')) {
+
+            if (!empty($filters['mosque_id'])) {
+                $query->where(
+                    'mosque_id',
+                    $filters['mosque_id']
+                );
+            }
+        }
+
+        return $this->applyDate(
+            $query,
+            $filters
+        );
     }
 
-    public function complaintsReport(User $user, array $filters = []): array
-    {
-        $query = $this->complaintsQuery($user, $filters);
+    /*
+    |--------------------------------------------------------------------------
+    | Complaints Summary
+    |--------------------------------------------------------------------------
+    */
 
-        $summary = [
-            'count'     => (clone $query)->count(),
-            'by_status' => (clone $query)->selectRaw('status, count(*) as count')->groupBy('status')->pluck('count', 'status'),
-            'urgent'    => (clone $query)->where('priority', 'high')->count(),
+    private function buildComplaintsSummary(
+        $query
+    ): array {
+        /*
+        |--------------------------------------------------------------------------
+        | Main Counters
+        |--------------------------------------------------------------------------
+        */
+
+        $total = (clone $query)->count();
+
+        $pending = (clone $query)
+            ->where(
+                'status',
+                'pending'
+            )
+            ->count();
+
+        $inProgress = (clone $query)
+            ->where(
+                'status',
+                'in_progress'
+            )
+            ->count();
+
+        $resolved = (clone $query)
+            ->where(
+                'status',
+                'resolved'
+            )
+            ->count();
+
+        $closed = (clone $query)
+            ->where(
+                'status',
+                'closed'
+            )
+            ->count();
+
+        $rejected = (clone $query)
+            ->where(
+                'status',
+                'rejected'
+            )
+            ->count();
+
+        /*
+        |--------------------------------------------------------------------------
+        | High / Urgent Priority
+        |--------------------------------------------------------------------------
+        */
+
+        $highPriority = (clone $query)
+            ->whereIn(
+                'priority',
+                [
+                    'high',
+                    'urgent',
+                ]
+            )
+            ->count();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Completion Percentage
+        |--------------------------------------------------------------------------
+        |
+        | تعتبر الشكوى منجزة إذا كانت:
+        | resolved أو closed
+        |
+        */
+
+        $completedCount =
+            $resolved + $closed;
+
+        $completionPercentage = $total > 0
+            ? round(
+                ($completedCount / $total) * 100,
+                1
+            )
+            : 0;
+
+        /*
+        |--------------------------------------------------------------------------
+        | By Status
+        |--------------------------------------------------------------------------
+        */
+
+        $statusCounts = (clone $query)
+            ->selectRaw(
+                'status, COUNT(*) as count'
+            )
+            ->groupBy('status')
+            ->pluck(
+                'count',
+                'status'
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | By Priority
+        |--------------------------------------------------------------------------
+        */
+
+        $priorityCounts = (clone $query)
+            ->selectRaw(
+                'priority, COUNT(*) as count'
+            )
+            ->groupBy('priority')
+            ->pluck(
+                'count',
+                'priority'
+            );
+
+        return [
+            'total' =>
+                $total,
+
+            'pending' =>
+                $pending,
+
+            'in_progress' =>
+                $inProgress,
+
+            'resolved' =>
+                $resolved,
+
+            'closed' =>
+                $closed,
+
+            'rejected' =>
+                $rejected,
+
+            'high_priority' =>
+                $highPriority,
+
+            'completion_percentage' =>
+                $completionPercentage,
+
+            'by_status' => [
+                'pending' =>
+                    (int) (
+                        $statusCounts['pending']
+                        ?? 0
+                    ),
+
+                'in_progress' =>
+                    (int) (
+                        $statusCounts['in_progress']
+                        ?? 0
+                    ),
+
+                'resolved' =>
+                    (int) (
+                        $statusCounts['resolved']
+                        ?? 0
+                    ),
+
+                'closed' =>
+                    (int) (
+                        $statusCounts['closed']
+                        ?? 0
+                    ),
+
+                'rejected' =>
+                    (int) (
+                        $statusCounts['rejected']
+                        ?? 0
+                    ),
+            ],
+
+            'by_priority' => [
+                'low' =>
+                    (int) (
+                        $priorityCounts['low']
+                        ?? 0
+                    ),
+
+                'medium' =>
+                    (int) (
+                        $priorityCounts['medium']
+                        ?? 0
+                    ),
+
+                'high' =>
+                    (int) (
+                        $priorityCounts['high']
+                        ?? 0
+                    ),
+
+                'urgent' =>
+                    (int) (
+                        $priorityCounts['urgent']
+                        ?? 0
+                    ),
+            ],
         ];
-
-        $items = $this->paginateOrAll($query, $filters, false);
-
-        return ['summary' => $summary, 'items' => $items];
     }
 
-    public function complaintsExport(User $user, array $filters = []): array
-    {
-        $query = $this->complaintsQuery($user, $filters);
+    /*
+    |--------------------------------------------------------------------------
+    | Complaints Report
+    |--------------------------------------------------------------------------
+    */
 
-        $summary = [
-            'count'     => (clone $query)->count(),
-            'by_status' => (clone $query)->selectRaw('status, count(*) as count')->groupBy('status')->pluck('count', 'status'),
-            'urgent'    => (clone $query)->where('priority', 'high')->count(),
+    public function complaintsReport(
+        User $user,
+        array $filters = []
+    ): array {
+        $query = $this->complaintsQuery(
+            $user,
+            $filters
+        );
+
+        $summary = $this->buildComplaintsSummary(
+            $query
+        );
+
+        $items = $this->paginateOrAll(
+            $query,
+            $filters,
+            false
+        );
+
+        return [
+            'summary' => $summary,
+            'items' => $items,
         ];
+    }
 
-        $items = $this->paginateOrAll($query, $filters, true);
+    /*
+    |--------------------------------------------------------------------------
+    | Complaints Export
+    |--------------------------------------------------------------------------
+    */
 
-        return ['summary' => $summary, 'items' => $items];
+    public function complaintsExport(
+        User $user,
+        array $filters = []
+    ): array {
+        $query = $this->complaintsQuery(
+            $user,
+            $filters
+        );
+
+        $summary = $this->buildComplaintsSummary(
+            $query
+        );
+
+        $items = $this->paginateOrAll(
+            $query,
+            $filters,
+            true
+        );
+
+        return [
+            'summary' => $summary,
+            'items' => $items,
+        ];
     }
 }
