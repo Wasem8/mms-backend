@@ -358,4 +358,183 @@ class InvitationEndpoints
         ]
     )]
     public function acceptInvitation() {}
+
+
+    #[OA\Delete(
+        path: '/invitations/{id}',
+        operationId: 'deleteInvitation',
+        tags: ['Invitations'],
+        summary: 'Delete an invitation',
+        description: 'Delete an invitation created by the currently authenticated user. Accepted invitations cannot be deleted.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'Invitation ID',
+                schema: new OA\Schema(
+                    type: 'integer',
+                    example: 1
+                )
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Invitation deleted successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'status',
+                            type: 'boolean',
+                            example: true
+                        ),
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'تم حذف الدعوة بنجاح.'
+                        ),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            nullable: true,
+                            example: null
+                        ),
+                        new OA\Property(
+                            property: 'pagination',
+                            type: 'object',
+                            nullable: true,
+                            example: null
+                        ),
+                    ]
+                )
+            ),
+
+            new OA\Response(
+                response: 401,
+                description: 'Unauthenticated - Missing or invalid token',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'status',
+                            type: 'boolean',
+                            example: false
+                        ),
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'غير مصرح لك بالوصول'
+                        ),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            nullable: true,
+                            example: null
+                        ),
+                        new OA\Property(
+                            property: 'pagination',
+                            type: 'object',
+                            nullable: true,
+                            example: null
+                        ),
+                    ]
+                )
+            ),
+
+            new OA\Response(
+                response: 403,
+                description: 'Forbidden - User is not the creator of the invitation',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'status',
+                            type: 'boolean',
+                            example: false
+                        ),
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'غير مصرح لك بحذف هذه الدعوة. يمكنك حذف الدعوات التي قمت بإنشائها فقط.'
+                        ),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            nullable: true,
+                            example: null
+                        ),
+                        new OA\Property(
+                            property: 'pagination',
+                            type: 'object',
+                            nullable: true,
+                            example: null
+                        ),
+                    ]
+                )
+            ),
+
+            new OA\Response(
+                response: 404,
+                description: 'Invitation not found',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'status',
+                            type: 'boolean',
+                            example: false
+                        ),
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'Invitation not found.'
+                        ),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            nullable: true,
+                            example: null
+                        ),
+                        new OA\Property(
+                            property: 'pagination',
+                            type: 'object',
+                            nullable: true,
+                            example: null
+                        ),
+                    ]
+                )
+            ),
+
+            new OA\Response(
+                response: 422,
+                description: 'Cannot delete an accepted invitation',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'status',
+                            type: 'boolean',
+                            example: false
+                        ),
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'لا يمكن حذف الدعوة لأن المستخدم قام بقبولها بالفعل.'
+                        ),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            nullable: true,
+                            example: null
+                        ),
+                        new OA\Property(
+                            property: 'pagination',
+                            type: 'object',
+                            nullable: true,
+                            example: null
+                        ),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function deleteInvitation() {}
 }

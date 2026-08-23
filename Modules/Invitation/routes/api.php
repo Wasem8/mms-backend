@@ -8,6 +8,7 @@ Route::prefix('invitations')->group(function () {
     Route::middleware(['auth:api', 'active.user'])->group(function () {
         Route::post('/send', [InvitationController::class, 'send']);
         Route::get('/', [InvitationController::class, 'index']);
+        Route::delete('/{invitation}', [InvitationController::class, 'destroy']);
         Route::post('/{invitation}/resend', [InvitationController::class, 'resend']);
     });
 

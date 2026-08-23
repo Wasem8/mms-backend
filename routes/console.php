@@ -9,3 +9,14 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('sermons:purge-expired')->dailyAt('00:01');
+
+
+
+
+Schedule::command(
+    'backup:database --triggered-by=scheduled'
+)
+    ->dailyAt('02:00')
+    ->timezone('Asia/Damascus')
+    ->withoutOverlapping()
+    ->onOneServer();

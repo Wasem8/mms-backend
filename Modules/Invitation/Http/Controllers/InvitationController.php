@@ -104,6 +104,40 @@ class InvitationController
             throw $e;
         }
     }
+
+    public function destroy(Request $request, $id)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return ApiResponse::error('غير مصرح لك بالوصول', 401);
+        }
+
+        $invitation = Invitation::findOrFail($id);
+
+        // فقط الشخص الذي أنشأ الدعوة يستطيع حذفها
+        if ((int) $invitation->created_by !== (int) $user->id) {
+            return ApiResponse::error(
+                'غير مصرح لك بحذف هذه الدعوة. يمكنك حذف الدعوات التي قمت بإنشائها فقط.',
+                403
+            );
+        }
+
+        // لا يمكن حذف دعوة تم قبولها
+        if ($invitation->accepted_at !== null) {
+            return ApiResponse::error(
+                'لا يمكن حذف الدعوة لأن المستخدم قام بقبولها بالفعل.',
+                422
+            );
+        }
+
+        $invitation->delete();
+
+        return ApiResponse::success(
+            null,
+            'تم حذف الدعوة بنجاح.'
+        );
+    }
     public function showAcceptForm(Request $request)
     {
         $token = $request->query('token');
