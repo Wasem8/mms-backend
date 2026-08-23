@@ -15,6 +15,10 @@ class ComplaintRepository implements ComplaintRepositoryInterface
             $query->where('mosque_id', $filters['mosque_id']);
         }
 
+        if (isset($filters['user_id'])) {
+            $query->where('user_id', $filters['user_id']);
+        }
+
         if (isset($filters['status']))     $query->where('status', $filters['status']);
         if (isset($filters['complaint_type'])) $query->where('complaint_type', $filters['complaint_type']);
         if (isset($filters['priority']))   $query->where('priority', $filters['priority']);

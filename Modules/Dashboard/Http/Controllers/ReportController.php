@@ -115,7 +115,7 @@ class ReportController extends Controller
 
         return ApiResponse::success(
             [
-                'download_url' => $downloadUrl,
+                'url' => $downloadUrl,
             ],
             'تم جلب ' . self::TITLES[$slug] . ' بنجاح'
         );
