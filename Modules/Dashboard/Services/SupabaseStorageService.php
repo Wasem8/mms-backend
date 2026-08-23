@@ -12,7 +12,7 @@ class SupabaseStorageService
     ): void {
         $baseUrl = rtrim(config('services.supabase.url'), '/');
         $bucket  = trim(config('services.supabase.reports_bucket'), '/');
-        $key     = config('services.supabase.key');
+        $key     = config('services.supabase.service_role_key');
 
         $uploadUrl =
             "{$baseUrl}/storage/v1/object/{$bucket}/{$fileName}";
@@ -23,6 +23,7 @@ class SupabaseStorageService
                 'apikey'        => $key,
                 'Authorization' => 'Bearer ' . $key,
                 'Content-Type'  => 'application/pdf',
+                'x-upsert'      => 'true',
             ])
             ->withBody(
                 $pdfContent,
@@ -33,7 +34,7 @@ class SupabaseStorageService
         if (!$response->successful()) {
             throw new \Exception(
                 'Supabase PDF Upload Failed: ' .
-                $response->body()
+                    $response->body()
             );
         }
     }
@@ -44,7 +45,7 @@ class SupabaseStorageService
     ): string {
         $baseUrl = rtrim(config('services.supabase.url'), '/');
         $bucket  = trim(config('services.supabase.reports_bucket'), '/');
-        $key     = config('services.supabase.key');
+        $key     = config('services.supabase.service_role_key');
 
         $response = Http::withHeaders([
             'apikey'        => $key,
@@ -59,7 +60,7 @@ class SupabaseStorageService
         if (!$response->successful()) {
             throw new \Exception(
                 'Failed to create signed URL: ' .
-                $response->body()
+                    $response->body()
             );
         }
 

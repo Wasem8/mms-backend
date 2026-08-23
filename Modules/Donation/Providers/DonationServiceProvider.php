@@ -10,6 +10,8 @@ use Modules\Donation\Repositories\DonationRepository;
 use Modules\Donation\Repositories\DonationRepositoryInterface;
 use Modules\Donation\Repositories\SettingRepository;
 use Modules\Donation\Repositories\SettingRepositoryInterface;
+use Modules\Donation\Repositories\DonationStatsRepository;
+use Modules\Donation\Repositories\DonationStatsRepositoryInterface;
 
 class DonationServiceProvider extends ModuleServiceProvider
 {
@@ -49,6 +51,7 @@ class DonationServiceProvider extends ModuleServiceProvider
         $this->app->bind(CampaignRepositoryInterface::class, CampaignRepository::class);
         $this->app->bind(DonationRepositoryInterface::class, DonationRepository::class);
         $this->app->bind(SettingRepositoryInterface::class, SettingRepository::class);
+        $this->app->bind(DonationStatsRepositoryInterface::class, DonationStatsRepository::class);
 
     }
 

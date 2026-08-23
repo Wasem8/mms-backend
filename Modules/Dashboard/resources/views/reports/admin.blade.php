@@ -88,40 +88,24 @@
         </div>
     </div>
 
-    <div class="section-title">الإحصائيات العامة</div>
+    <div class="section-title">بطاقات لوحة التحكم</div>
     <table class="cards">
         <tr>
-            <td><div class="card-value">{{ $data['totals']['mosques'] ?? 0 }}</div><div class="card-label">المساجد</div></td>
-            <td><div class="card-value">{{ $data['totals']['students'] ?? 0 }}</div><div class="card-label">الطلاب</div></td>
-            <td><div class="card-value">{{ $data['totals']['halaqas'] ?? 0 }}</div><div class="card-label">الحلقات</div></td>
-            <td><div class="card-value">{{ $data['totals']['teachers'] ?? 0 }}</div><div class="card-label">المعلمون</div></td>
-        </tr>
-        <tr>
-            <td><div class="card-value">{{ $data['totals']['volunteers'] ?? 0 }}</div><div class="card-label">المتطوعون</div></td>
-            <td><div class="card-value">{{ $data['totals']['managers'] ?? 0 }}</div><div class="card-label">مديرو المساجد</div></td>
-            <td><div class="card-value">{{ $data['totals']['supervisors'] ?? 0 }}</div><div class="card-label">المشرفون</div></td>
-            <td><div class="card-value">{{ $data['totals']['parents'] ?? 0 }}</div><div class="card-label">أولياء الأمور</div></td>
-        </tr>
-    </table>
-
-    <div class="section-title">مؤشرات المنطقة</div>
-    <table class="cards">
-        <tr>
-            <td><div class="card-value">{{ $data['totals']['mosques'] ?? 0 }}</div><div class="card-label">المساجد</div></td>
+            <td><div class="card-value">{{ $data['mosques_of_region'] ?? 0 }}</div><div class="card-label">مساجد المنطقة</div></td>
+            <td><div class="card-value">{{ $data['mosques_under_maintenance'] ?? 0 }}</div><div class="card-label">مساجد تحت الصيانة</div></td>
             <td><div class="card-value">{{ $data['pending_sermons'] ?? 0 }}</div><div class="card-label">الخطب المعلقة</div></td>
-            <td><div class="card-value">{{ number_format($data['donations'] ?? 0) }} ر.س</div><div class="card-label">إجمالي التبرعات</div></td>
-            <td><div class="card-value">{{ $data['complaints']['urgent'] ?? 0 }}</div><div class="card-label">الشكاوى العاجلة</div></td>
+            <td><div class="card-value">{{ number_format($data['region_donations_this_month']['total_base_amount'] ?? 0) }} ر.س</div><div class="card-label">تبرعات المساجد (هذا الشهر)</div></td>
+            <td><div class="card-value">{{ $data['critical_complaints'] ?? 0 }}</div><div class="card-label">الشكاوى الحرجة</div></td>
         </tr>
     </table>
 
-    <div class="section-title">المالية والشكاوى والصيانة</div>
+    <div class="section-title">تفاصيل تبرعات المساجد (هذا الشهر)</div>
     <table class="data">
         <tbody>
-            <tr><td>إجمالي التبرعات (مكتملة)</td><td>{{ number_format($data['donations'] ?? 0) }} ر.س</td></tr>
-            <tr><td>إجمالي الشكاوى</td><td>{{ $data['complaints']['total'] ?? 0 }}</td></tr>
-            <tr><td>الشكاوى المعلقة</td><td>{{ $data['complaints']['pending'] ?? 0 }}</td></tr>
-            <tr><td>إجمالي طلبات الصيانة</td><td>{{ $data['maintenance']['total'] ?? 0 }}</td></tr>
-            <tr><td>طلبات الصيانة المعلقة</td><td>{{ $data['maintenance']['pending'] ?? 0 }}</td></tr>
+            <tr><td>عدد التبرعات</td><td>{{ $data['region_donations_this_month']['count'] ?? 0 }}</td></tr>
+            <tr><td>إجمالي المبلغ (بالليرة)</td><td>{{ number_format($data['region_donations_this_month']['total_base_amount'] ?? 0) }} ر.س</td></tr>
+            <tr><td>إجمالي المبلغ (العملة الأصلية)</td><td>{{ number_format($data['region_donations_this_month']['total_amount'] ?? 0) }} {{ $data['region_donations_this_month']['currency'] ?? '' }}</td></tr>
+            <tr><td>الحملات النشطة</td><td>{{ $data['region_donations_this_month']['active_campaigns'] ?? 0 }}</td></tr>
         </tbody>
     </table>
 

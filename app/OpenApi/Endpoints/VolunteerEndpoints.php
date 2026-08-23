@@ -1038,8 +1038,8 @@ class VolunteerEndpoints
         path: '/volunteer/certificates/{volunteerId}/{opportunityId}/stream',
         operationId: 'streamVolunteerCertificate',
         tags: ['Volunteer Evaluation'],
-        summary: 'View certificate PDF in browser',
-        description: 'Stream an issued certificate PDF inline in the browser. Requires `mosque_manager` role.',
+        summary: 'Get certificate URL',
+        description: 'Return the Supabase signed URL of an issued certificate (does not stream PDF content). Requires `mosque_manager` role.',
         security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
@@ -1049,11 +1049,17 @@ class VolunteerEndpoints
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'PDF streamed successfully',
-                content: new OA\MediaType(
-                    mediaType: 'application/pdf',
-                    schema: new OA\Schema(type: 'string', format: 'binary')
-                )
+                description: 'Certificate URL returned successfully',
+                content: new OA\JsonContent(properties: [
+                    new OA\Property(property: 'status',  type: 'boolean', example: true),
+                    new OA\Property(property: 'message', type: 'string',  example: 'Certificate URL generated successfully'),
+                    new OA\Property(
+                        property: 'data',
+                        properties: [
+                            new OA\Property(property: 'certificate_url', type: 'string', example: 'https://__.supabase.co/storage/v1/object/sign/bucket/volunteer_12_opportunity_1_...pdf?token=...'),
+                        ]
+                    ),
+                ])
             ),
             new OA\Response(response: 401, description: 'Unauthenticated'),
             new OA\Response(response: 403, description: 'Forbidden'),

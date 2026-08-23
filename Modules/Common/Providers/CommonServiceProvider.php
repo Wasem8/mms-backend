@@ -3,6 +3,8 @@
 namespace Modules\Common\Providers;
 
 use Modules\Common\Listeners\SendEvaluationNotification;
+use Modules\Common\Recommendations\RecommendationEngineService;
+use Modules\Common\Recommendations\StatsCollectorService;
 use Modules\Education\Events\EvaluationUpdated;
 use Nwidart\Modules\Support\ModuleServiceProvider;
 use Illuminate\Console\Scheduling\Schedule;
@@ -46,4 +48,12 @@ class CommonServiceProvider extends ModuleServiceProvider
     // {
     //     $schedule->command('inspire')->hourly();
     // }
+
+    public function register(): void
+    {
+        parent::register();
+
+        $this->app->bind(StatsCollectorService::class);
+        $this->app->bind(RecommendationEngineService::class);
+    }
 }
