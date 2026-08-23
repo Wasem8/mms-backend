@@ -146,6 +146,34 @@
             color: #6b7280;
         }
 
+        .recommendations-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+
+        .recommendations-table td {
+            border: 1px solid #d1d5db;
+            padding: 8px 10px;
+            font-size: 10px;
+            text-align: right;
+        }
+
+        .rec-critical {
+            border-right: 4px solid #dc2626;
+            background: #fef2f2;
+        }
+
+        .rec-warning {
+            border-right: 4px solid #d97706;
+            background: #fffbeb;
+        }
+
+        .rec-info {
+            border-right: 4px solid #2563eb;
+            background: #eff6ff;
+        }
+
         .footer {
             margin-top: 18px;
             padding-top: 8px;
@@ -735,6 +763,37 @@
     </tbody>
 
 </table>
+
+
+{{-- =========================================================
+     Recommendations
+========================================================= --}}
+
+@if(!empty($recommendations))
+
+    <div class="section-title">
+        التوصيات
+    </div>
+
+    <table class="recommendations-table">
+
+        <tbody>
+
+        @foreach($recommendations as $rec)
+
+            <tr>
+                <td class="rec-{{ $rec['severity'] ?? 'info' }}">
+                    {{ $rec['text'] }}
+                </td>
+            </tr>
+
+        @endforeach
+
+        </tbody>
+
+    </table>
+
+@endif
 
 
 {{-- =========================================================

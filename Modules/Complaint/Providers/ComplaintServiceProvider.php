@@ -6,6 +6,8 @@ use Nwidart\Modules\Support\ModuleServiceProvider;
 use Illuminate\Console\Scheduling\Schedule;
 use Modules\Complaint\Repositories\ComplaintRepository;
 use Modules\Complaint\Repositories\ComplaintRepositoryInterface;
+use Modules\Complaint\Repositories\ComplaintStatsRepository;
+use Modules\Complaint\Repositories\ComplaintStatsRepositoryInterface;
 use Modules\Complaint\Repositories\MaintenanceRequestRepository;
 use Modules\Complaint\Repositories\MaintenanceRequestRepositoryInterface;
 
@@ -43,6 +45,7 @@ class ComplaintServiceProvider extends ModuleServiceProvider
         parent::register();
         
         $this->app->bind(ComplaintRepositoryInterface::class, ComplaintRepository::class);
+        $this->app->bind(ComplaintStatsRepositoryInterface::class, ComplaintStatsRepository::class);
     }
     /**
      * Define module schedules.

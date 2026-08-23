@@ -10,6 +10,8 @@ use Modules\Volunteer\Repositories\Contracts\VolunteerApplicationRepositoryInter
 use Modules\Volunteer\Repositories\Eloquent\EloquentVolunteerApplicationRepository;
 use Modules\Volunteer\Repositories\Contracts\VolunteerTaskRepositoryInterface;
 use Modules\Volunteer\Repositories\Eloquent\EloquentVolunteerTaskRepository;
+use Modules\Volunteer\Repositories\Contracts\VolunteerStatsRepositoryInterface;
+use Modules\Volunteer\Repositories\Eloquent\VolunteerStatsRepository;
 use Modules\Volunteer\Repositories\Contracts\VolunteerEvaluationRepositoryInterface;
 use Modules\Volunteer\Repositories\Eloquent\EloquentVolunteerEvaluationRepository;
 use Modules\Volunteer\Services\VolunteerEvaluationService;
@@ -62,6 +64,11 @@ class VolunteerServiceProvider extends ModuleServiceProvider
         $this->app->bind(
             VolunteerTaskRepositoryInterface::class,
             EloquentVolunteerTaskRepository::class,
+        );
+
+        $this->app->bind(
+            VolunteerStatsRepositoryInterface::class,
+            VolunteerStatsRepository::class,
         );
 
         $this->app->bind(

@@ -2,6 +2,10 @@
 
 return [
 
+    'access_denied_role' => 'Access denied. Your role does not allow this action.',
+
+    'validation_error' => 'Validation error.',
+
     'messages.otp_resent_successfully' => 'OTP verification code has been resent to your email.',
 
     // --- Students Section ---

@@ -166,14 +166,14 @@ class ReportController extends Controller
         return ApiResponse::success(
             [
                 'url' =>
-                    $url,
+                $url,
 
                 'cached' =>
-                    false,
+                false,
             ],
             'تم إنشاء ' .
-            self::TITLES[$slug] .
-            ' بنجاح'
+                self::TITLES[$slug] .
+                ' بنجاح'
         );
     }
 
@@ -243,28 +243,31 @@ class ReportController extends Controller
             'dashboard::reports.export',
             [
                 'title' =>
-                    self::TITLES[$slug],
+                self::TITLES[$slug],
 
                 'summary' =>
-                    $result['summary'],
+                $result['summary'],
 
                 'columns' =>
-                    self::COLUMNS[$slug],
+                self::COLUMNS[$slug],
 
                 'rows' =>
-                    $rows,
+                $rows,
 
                 'filters' =>
-                    $filters,
+                $filters,
 
                 'slug' =>
-                    $slug,
+                $slug,
 
                 'generatedAt' =>
-                    now(),
+                now(),
 
                 'user' =>
-                    $user,
+                $user,
+
+                'recommendations' =>
+                $result['recommendations'] ?? [],
             ]
         )->render();
 
@@ -325,7 +328,7 @@ class ReportController extends Controller
 
     private function buildRows(
         string $slug,
-               $items
+        $items
     ): Collection {
         return collect($items)
             ->values()
@@ -344,7 +347,7 @@ class ReportController extends Controller
                             $index + 1,
 
                             $item->mosque?->name
-                            ?? '-',
+                                ?? '-',
 
                             number_format(
                                 (float) $item->amount,
@@ -352,7 +355,7 @@ class ReportController extends Controller
                             ),
 
                             $item->currency
-                            ?? 'SYP',
+                                ?? 'SYP',
 
                             number_format(
                                 (float) $item->base_amount,
@@ -378,13 +381,13 @@ class ReportController extends Controller
                             $index + 1,
 
                             $item->mosque?->name
-                            ?? '-',
+                                ?? '-',
 
                             $item->title
-                            ?? '-',
+                                ?? '-',
 
                             $item->category
-                            ?? '-',
+                                ?? '-',
 
                             $this->translatePriority(
                                 $item->priority
@@ -409,13 +412,13 @@ class ReportController extends Controller
                             $index + 1,
 
                             $item->complaint_number
-                            ?? '-',
+                                ?? '-',
 
                             $item->mosque?->name
-                            ?? '-',
+                                ?? '-',
 
                             $item->title
-                            ?? '-',
+                                ?? '-',
 
                             $this->translatePriority(
                                 $item->priority
@@ -458,7 +461,7 @@ class ReportController extends Controller
             'عاجلة',
 
             default =>
-                $priority ?? '-',
+            $priority ?? '-',
         };
     }
 
@@ -486,7 +489,7 @@ class ReportController extends Controller
             'ملغى',
 
             default =>
-                $status ?? '-',
+            $status ?? '-',
         };
     }
 
@@ -517,7 +520,7 @@ class ReportController extends Controller
             'مرفوض',
 
             default =>
-                $status ?? '-',
+            $status ?? '-',
         };
     }
 
@@ -545,7 +548,7 @@ class ReportController extends Controller
             'معتمد',
 
             default =>
-                $status ?? '-',
+            $status ?? '-',
         };
     }
 }
