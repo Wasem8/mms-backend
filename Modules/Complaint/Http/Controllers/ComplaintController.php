@@ -34,6 +34,16 @@ class ComplaintController extends Controller
         return $mosque->id;
     }
 
+    /**
+     * المدير العام (super_admin) يرى كل الشكاوى عالمياً بغض النظر عن المسجد،
+     * حتى لو كان يحمل دور mosque_manager أو أُرسل mosque_id في الطلب.
+     */
+    private function isSuperAdmin(): bool
+    {
+        $user = auth()->user();
+        return $user && $user->hasRole('super_admin');
+    }
+
     public function storeGuest(
         RequestsSubmitComplaintRequest $request
     ) {
@@ -162,11 +172,13 @@ class ComplaintController extends Controller
     {
         $filters = $request->only(['status', 'complaint_type', 'priority', 'per_page']);
 
-        $mosqueId = $this->getManagerMosqueId();
-        if ($mosqueId) {
-            $filters['mosque_id'] = $mosqueId;
-        } elseif ($request->has('mosque_id')) {
-            $filters['mosque_id'] = $request->mosque_id;
+        if (! $this->isSuperAdmin()) {
+            $mosqueId = $this->getManagerMosqueId();
+            if ($mosqueId) {
+                $filters['mosque_id'] = $mosqueId;
+            } elseif ($request->has('mosque_id')) {
+                $filters['mosque_id'] = $request->mosque_id;
+            }
         }
 
         $complaints = $this->service->getComplaintsForAdmin($filters);
@@ -192,9 +204,11 @@ class ComplaintController extends Controller
     {
         $filters = [];
 
-        $mosqueId = $this->getManagerMosqueId();
-        if ($mosqueId) {
-            $filters['mosque_id'] = $mosqueId;
+        if (! $this->isSuperAdmin()) {
+            $mosqueId = $this->getManagerMosqueId();
+            if ($mosqueId) {
+                $filters['mosque_id'] = $mosqueId;
+            }
         }
 
         $complaint = $this->service->getComplaintDetails((int)$id, $filters);
@@ -206,11 +220,13 @@ class ComplaintController extends Controller
     {
         $filters = [];
 
-        $mosqueId = $this->getManagerMosqueId();
-        if ($mosqueId) {
-            $filters['mosque_id'] = $mosqueId;
-        } elseif ($request->has('mosque_id')) {
-            $filters['mosque_id'] = $request->mosque_id;
+        if (! $this->isSuperAdmin()) {
+            $mosqueId = $this->getManagerMosqueId();
+            if ($mosqueId) {
+                $filters['mosque_id'] = $mosqueId;
+            } elseif ($request->has('mosque_id')) {
+                $filters['mosque_id'] = $request->mosque_id;
+            }
         }
 
         $stats = $this->service->getComplaintStatistics($filters);
@@ -220,12 +236,17 @@ class ComplaintController extends Controller
 
     public function pageStats()
     {
-        $mosqueId = $this->getManagerMosqueId();
+        // المدير العام يرى كل الشكاوى عالمياً
+        if ($this->isSuperAdmin()) {
+            $filters = [];
+        } else {
+            $mosqueId = $this->getManagerMosqueId();
 
-        // مدير المسجد: إحصائيات مسجده. غير المدير (متطوع/ولي أمر/...): إحصائيات شكاواه الشخصية.
-        $filters = $mosqueId
-            ? ['mosque_id' => $mosqueId]
-            : ['user_id' => auth()->id()];
+            // مدير المسجد: إحصائيات مسجده. غير المدير (متطوع/ولي أمر/...): إحصائيات شكاواه الشخصية.
+            $filters = $mosqueId
+                ? ['mosque_id' => $mosqueId]
+                : ['user_id' => auth()->id()];
+        }
 
         $data = $this->service->getComplaintPageStats($filters);
 
