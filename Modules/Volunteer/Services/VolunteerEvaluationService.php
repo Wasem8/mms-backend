@@ -148,7 +148,29 @@ class VolunteerEvaluationService
 
     public function getCertificatesForVolunteer(int $volunteerId): Collection
     {
-        return $this->evaluationRepo->findCertificatesByVolunteer($volunteerId);
+        $bucket = config('services.supabase.bucket');
+        $certificates = $this->evaluationRepo->findCertificatesByVolunteer($volunteerId);
+
+        return $certificates->map(function (VolunteerCertificate $certificate) use ($bucket) {
+            // القيمة المخزّنة إما اسم ملف حقيقي مرفوع على Supabase، أو رابط
+            // وهمي من بيانات الـ seeder (https://placeholder.wasl-mms.test/...).
+            // لا نُعيد توليد ملفات الـ seeder هنا (عملية بطيئة تسبب تجاوز وقت
+            // التنفيذ)، بل نُنشئ رابطاً مُوقّعاً للملفات الحقيقية فقط، ونُبقي
+            // روابط الـ seeder كما هي — يمكن تنزيلها عبر نقطة التحميل الخاصة
+            // بكل شهادة التي تُعيد توليدها عند الطلب.
+            if (! filter_var($certificate->certificate_url, FILTER_VALIDATE_URL)) {
+                try {
+                    $certificate->certificate_url = $this->storage->createSignedUrl(
+                        $certificate->certificate_url,
+                        $bucket
+                    );
+                } catch (\Throwable $e) {
+                    // نُبقي القيمة المخزّنة عند فشل إنشاء الرابط
+                }
+            }
+
+            return $certificate;
+        });
     }
 
     public function findCertificate(int $volunteerId, int $opportunityId): ?VolunteerCertificate
