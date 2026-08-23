@@ -162,6 +162,40 @@
         </tbody>
     </table>
 
+    <div class="section-title">التوصيات التشغيلية</div>
+    @if (!empty($recommendations))
+        <table class="data">
+            <thead>
+                <tr>
+                    <th>التصنيف</th>
+                    <th>الأهمية</th>
+                    <th>التوصية</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($recommendations as $rec)
+                    <tr>
+                        <td>{{ $rec['category'] ?? '' }}</td>
+                        <td>
+                            @if (($rec['severity'] ?? '') === 'info')
+                                معلومات
+                            @elseif (($rec['severity'] ?? '') === 'warning')
+                                تنبيه
+                            @elseif (($rec['severity'] ?? '') === 'critical')
+                                حرج
+                            @else
+                                {{ $rec['severity'] ?? '' }}
+                            @endif
+                        </td>
+                        <td>{{ $rec['text'] ?? '' }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @else
+        <div class="list">لا توجد توصيات حالياً — جميع المؤشرات ضمن الحدود المقبولة.</div>
+    @endif
+
     <div class="footer">تم توليد هذا التقرير آلياً من نظام إدارة المسجد</div>
 </div>
 </body>

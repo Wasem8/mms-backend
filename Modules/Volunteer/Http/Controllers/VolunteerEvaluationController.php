@@ -60,6 +60,23 @@ class VolunteerEvaluationController extends Controller
         );
     }
 
+    public function streamCertificate(string $volunteerId, string $opportunityId)
+    {
+        $certificate = $this->service->findCertificate((int) $volunteerId, (int) $opportunityId);
+
+        if (!$certificate) {
+            return ApiResponse::error(__('messages.certificate_not_found'), 404);
+        }
+
+        $url = $this->service->getCertificateDownloadUrl($certificate);
+
+        return ApiResponse::success(
+            ['certificate_url' => $url],
+            __('messages.certificate_url_generated'),
+            200
+        );
+    }
+
     public function myCertificateDownload(string $certificateId)
     {
         $certificate = $this->service->findCertificateById((int) $certificateId);

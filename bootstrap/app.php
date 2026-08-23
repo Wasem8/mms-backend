@@ -46,9 +46,9 @@ return Application::configure(basePath: dirname(__DIR__))
     // 👆 نهاية بلوك الجدولة 👆
     ->withExceptions(function (Exceptions $exceptions): void {
 
-        $exceptions->shouldRenderJsonWhen(function ($request, $e) {
-            return $request->is('api/*') || $request->expectsJson();
-        });
+        // هذا الباك-إند API فقط: أعد كل الأخطاء كـ JSON دائماً
+        // حتى تظهر رسالة الخطأ الحقيقية بدلاً من صفحة HTML/الترحيب.
+        $exceptions->shouldRenderJsonWhen(fn($request, $e) => true);
 
         // 🔐 Unauthenticated
         $exceptions->render(function (AuthenticationException $e, $request) {
@@ -81,7 +81,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // ⚠️ Validation
         $exceptions->render(function (ValidationException $e, $request) {
             return ApiResponse::error(
-                'Validation error.',
+                __('messages.validation_error'),
                 422,
                 $e->errors()
             );

@@ -27733,8 +27733,8 @@
                 "tags": [
                     "Volunteer Evaluation"
                 ],
-                "summary": "View certificate PDF in browser",
-                "description": "Stream an issued certificate PDF inline in the browser. Requires `mosque_manager` role.",
+                "summary": "Get certificate URL",
+                "description": "Return the Supabase signed URL of an issued certificate (does not stream PDF content). Requires `mosque_manager` role.",
                 "operationId": "streamVolunteerCertificate",
                 "parameters": [
                     {
@@ -27761,12 +27761,30 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "PDF streamed successfully",
+                        "description": "Certificate URL returned successfully",
                         "content": {
-                            "application/pdf": {
+                            "application/json": {
                                 "schema": {
-                                    "type": "string",
-                                    "format": "binary"
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Certificate URL generated successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "certificate_url": {
+                                                    "type": "string",
+                                                    "example": "https://__.supabase.co/storage/v1/object/sign/bucket/volunteer_12_opportunity_1_...pdf?token=..."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }

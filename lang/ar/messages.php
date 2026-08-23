@@ -1,6 +1,10 @@
 <?php
 
 return [
+
+    'access_denied_role' => 'غير مسموح لك بالوصول. دورك لا يسمح بهذا الإجراء.',
+
+    'validation_error' => 'خطأ في التحقق من البيانات.',
     'messages.otp_resent_successfully' => 'تم إعادة إرسال رمز التحقق OTP إلى بريدك الإلكتروني.',
 
     // --- قسم الطلاب ---

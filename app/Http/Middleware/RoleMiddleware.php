@@ -24,7 +24,7 @@ class RoleMiddleware
         }
 
         return ApiResponse::error(
-            'Access denied. Your role does not allow this action.',
+            __('messages.access_denied_role'),
             403
         );
     }

@@ -4,6 +4,7 @@ namespace Modules\Dashboard\Services;
 
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Modules\Common\Recommendations\RecommendationEngineService;
 use Modules\Complaint\Models\Complaint;
 use Modules\Donation\Models\Donation;
 use Modules\MaintenanceRequest\Models\Maintenance;
@@ -12,6 +13,10 @@ use Modules\User\Models\User;
 
 class ReportsService
 {
+    public function __construct(
+        private RecommendationEngineService $recommendationEngine,
+    ) {}
+
     /*
     |--------------------------------------------------------------------------
     | Date Filters
@@ -59,6 +64,29 @@ class ReportsService
         )->first();
 
         return $mosque?->id;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Recommendation Mosque Resolver
+    |--------------------------------------------------------------------------
+    |
+    | يحدد المسجد المستهدف لتوليد التوصيات:
+    | - إذا حُدد mosque_id بالفلاتر (مدير المنطقة أو super_admin فلتروا لمسجد واحد) يُعتمد.
+    | - وإلا يُعتمد مسجد مدير المسجد نفسه عبر managerMosqueId().
+    | - في حال عدم وجود مسجد محدد (مثلاً "جميع المساجد") لا تُولَّد توصيات.
+    |
+    */
+
+    private function resolveMosqueIdForRecommendations(
+        User $user,
+        array $filters
+    ): ?int {
+        if (!empty($filters['mosque_id'])) {
+            return (int) $filters['mosque_id'];
+        }
+
+        return $this->managerMosqueId($user);
     }
 
     /*
@@ -141,9 +169,7 @@ class ReportsService
         |--------------------------------------------------------------------------
         | Mosque Manager
         |--------------------------------------------------------------------------
-        */
-
-        elseif ($user->hasRole('mosque_manager')) {
+        */ elseif ($user->hasRole('mosque_manager')) {
 
             $mosqueId = $this->managerMosqueId($user);
 
@@ -159,9 +185,7 @@ class ReportsService
         |--------------------------------------------------------------------------
         | Region Manager
         |--------------------------------------------------------------------------
-        */
-
-        elseif ($user->hasRole('region_manager')) {
+        */ elseif ($user->hasRole('region_manager')) {
 
             /*
              * مدير المنطقة يرى جميع المساجد.
@@ -198,21 +222,20 @@ class ReportsService
         );
 
         $summary = [
-            'count' =>
-                (clone $query)->count(),
+            'count' => (clone $query)->count(),
 
             'total_base_amount' =>
-                (float) (clone $query)->sum(
-                    'base_amount'
-                ),
+            (float) (clone $query)->sum(
+                'base_amount'
+            ),
 
             'total_amount' =>
-                (float) (clone $query)->sum(
-                    'amount'
-                ),
+            (float) (clone $query)->sum(
+                'amount'
+            ),
 
             'currency' =>
-                'SYP',
+            'SYP',
         ];
 
         $items = $this->paginateOrAll(
@@ -243,21 +266,20 @@ class ReportsService
         );
 
         $summary = [
-            'count' =>
-                (clone $query)->count(),
+            'count' => (clone $query)->count(),
 
             'total_base_amount' =>
-                (float) (clone $query)->sum(
-                    'base_amount'
-                ),
+            (float) (clone $query)->sum(
+                'base_amount'
+            ),
 
             'total_amount' =>
-                (float) (clone $query)->sum(
-                    'amount'
-                ),
+            (float) (clone $query)->sum(
+                'amount'
+            ),
 
             'currency' =>
-                'SYP',
+            'SYP',
         ];
 
         $items = $this->paginateOrAll(
@@ -266,9 +288,18 @@ class ReportsService
             true
         );
 
+        $mosqueId = $this->resolveMosqueIdForRecommendations($user, $filters);
+
+        $recommendations = $mosqueId
+            ? collect($this->recommendationEngine->generate($mosqueId, 'donation'))
+            ->map(fn($dto) => $dto->toArray())
+            ->all()
+            : [];
+
         return [
             'summary' => $summary,
             'items' => $items,
+            'recommendations' => $recommendations,
         ];
     }
 
@@ -306,9 +337,7 @@ class ReportsService
         |--------------------------------------------------------------------------
         | Mosque Manager
         |--------------------------------------------------------------------------
-        */
-
-        elseif ($user->hasRole('mosque_manager')) {
+        */ elseif ($user->hasRole('mosque_manager')) {
 
             $mosqueId = $this->managerMosqueId($user);
 
@@ -324,9 +353,7 @@ class ReportsService
         |--------------------------------------------------------------------------
         | Region Manager
         |--------------------------------------------------------------------------
-        */
-
-        elseif ($user->hasRole('region_manager')) {
+        */ elseif ($user->hasRole('region_manager')) {
 
             if (!empty($filters['mosque_id'])) {
                 $query->where(
@@ -432,76 +459,76 @@ class ReportsService
 
         return [
             'total' =>
-                $total,
+            $total,
 
             'pending' =>
-                $pending,
+            $pending,
 
             'in_progress' =>
-                $inProgress,
+            $inProgress,
 
             'completed' =>
-                $completed,
+            $completed,
 
             'cancelled' =>
-                $cancelled,
+            $cancelled,
 
             'high_priority' =>
-                $highPriority,
+            $highPriority,
 
             'completion_percentage' =>
-                $completionPercentage,
+            $completionPercentage,
 
             'by_status' => [
                 'pending' =>
-                    (int) (
-                        $statusCounts['pending']
-                        ?? 0
-                    ),
+                (int) (
+                    $statusCounts['pending']
+                    ?? 0
+                ),
 
                 'in_progress' =>
-                    (int) (
-                        $statusCounts['in_progress']
-                        ?? 0
-                    ),
+                (int) (
+                    $statusCounts['in_progress']
+                    ?? 0
+                ),
 
                 'completed' =>
-                    (int) (
-                        $statusCounts['completed']
-                        ?? 0
-                    ),
+                (int) (
+                    $statusCounts['completed']
+                    ?? 0
+                ),
 
                 'cancelled' =>
-                    (int) (
-                        $statusCounts['cancelled']
-                        ?? 0
-                    ),
+                (int) (
+                    $statusCounts['cancelled']
+                    ?? 0
+                ),
             ],
 
             'by_priority' => [
                 'low' =>
-                    (int) (
-                        $priorityCounts['low']
-                        ?? 0
-                    ),
+                (int) (
+                    $priorityCounts['low']
+                    ?? 0
+                ),
 
                 'medium' =>
-                    (int) (
-                        $priorityCounts['medium']
-                        ?? 0
-                    ),
+                (int) (
+                    $priorityCounts['medium']
+                    ?? 0
+                ),
 
                 'high' =>
-                    (int) (
-                        $priorityCounts['high']
-                        ?? 0
-                    ),
+                (int) (
+                    $priorityCounts['high']
+                    ?? 0
+                ),
 
                 'urgent' =>
-                    (int) (
-                        $priorityCounts['urgent']
-                        ?? 0
-                    ),
+                (int) (
+                    $priorityCounts['urgent']
+                    ?? 0
+                ),
             ],
         ];
     }
@@ -562,9 +589,18 @@ class ReportsService
             true
         );
 
+        $mosqueId = $this->resolveMosqueIdForRecommendations($user, $filters);
+
+        $recommendations = $mosqueId
+            ? collect($this->recommendationEngine->generate($mosqueId, 'maintenance'))
+            ->map(fn($dto) => $dto->toArray())
+            ->all()
+            : [];
+
         return [
             'summary' => $summary,
             'items' => $items,
+            'recommendations' => $recommendations,
         ];
     }
 
@@ -603,9 +639,7 @@ class ReportsService
         |--------------------------------------------------------------------------
         | Mosque Manager
         |--------------------------------------------------------------------------
-        */
-
-        elseif ($user->hasRole('mosque_manager')) {
+        */ elseif ($user->hasRole('mosque_manager')) {
 
             $mosqueId = $this->managerMosqueId($user);
 
@@ -621,9 +655,7 @@ class ReportsService
         |--------------------------------------------------------------------------
         | Region Manager
         |--------------------------------------------------------------------------
-        */
-
-        elseif ($user->hasRole('region_manager')) {
+        */ elseif ($user->hasRole('region_manager')) {
 
             if (!empty($filters['mosque_id'])) {
                 $query->where(
@@ -761,85 +793,85 @@ class ReportsService
 
         return [
             'total' =>
-                $total,
+            $total,
 
             'pending' =>
-                $pending,
+            $pending,
 
             'in_progress' =>
-                $inProgress,
+            $inProgress,
 
             'resolved' =>
-                $resolved,
+            $resolved,
 
             'closed' =>
-                $closed,
+            $closed,
 
             'rejected' =>
-                $rejected,
+            $rejected,
 
             'high_priority' =>
-                $highPriority,
+            $highPriority,
 
             'completion_percentage' =>
-                $completionPercentage,
+            $completionPercentage,
 
             'by_status' => [
                 'pending' =>
-                    (int) (
-                        $statusCounts['pending']
-                        ?? 0
-                    ),
+                (int) (
+                    $statusCounts['pending']
+                    ?? 0
+                ),
 
                 'in_progress' =>
-                    (int) (
-                        $statusCounts['in_progress']
-                        ?? 0
-                    ),
+                (int) (
+                    $statusCounts['in_progress']
+                    ?? 0
+                ),
 
                 'resolved' =>
-                    (int) (
-                        $statusCounts['resolved']
-                        ?? 0
-                    ),
+                (int) (
+                    $statusCounts['resolved']
+                    ?? 0
+                ),
 
                 'closed' =>
-                    (int) (
-                        $statusCounts['closed']
-                        ?? 0
-                    ),
+                (int) (
+                    $statusCounts['closed']
+                    ?? 0
+                ),
 
                 'rejected' =>
-                    (int) (
-                        $statusCounts['rejected']
-                        ?? 0
-                    ),
+                (int) (
+                    $statusCounts['rejected']
+                    ?? 0
+                ),
             ],
 
             'by_priority' => [
                 'low' =>
-                    (int) (
-                        $priorityCounts['low']
-                        ?? 0
-                    ),
+                (int) (
+                    $priorityCounts['low']
+                    ?? 0
+                ),
 
                 'medium' =>
-                    (int) (
-                        $priorityCounts['medium']
-                        ?? 0
-                    ),
+                (int) (
+                    $priorityCounts['medium']
+                    ?? 0
+                ),
 
                 'high' =>
-                    (int) (
-                        $priorityCounts['high']
-                        ?? 0
-                    ),
+                (int) (
+                    $priorityCounts['high']
+                    ?? 0
+                ),
 
                 'urgent' =>
-                    (int) (
-                        $priorityCounts['urgent']
-                        ?? 0
-                    ),
+                (int) (
+                    $priorityCounts['urgent']
+                    ?? 0
+                ),
             ],
         ];
     }
@@ -900,9 +932,18 @@ class ReportsService
             true
         );
 
+        $mosqueId = $this->resolveMosqueIdForRecommendations($user, $filters);
+
+        $recommendations = $mosqueId
+            ? collect($this->recommendationEngine->generate($mosqueId, 'complaints'))
+            ->map(fn($dto) => $dto->toArray())
+            ->all()
+            : [];
+
         return [
             'summary' => $summary,
             'items' => $items,
+            'recommendations' => $recommendations,
         ];
     }
 }

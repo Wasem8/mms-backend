@@ -291,6 +291,21 @@ class MosqueDashboardService
             })
             ->count();
 
+        // 5. التبرعات المعتمدة (المبلغ المحوّل لعملة الأساس)
+        $donations = Donation::where('mosque_id', $mosqueId)
+            ->whereIn('status', ['paid', 'completed', 'approved'])
+            ->sum('base_amount');
+
+        // 6. طلبات الصيانة المفتوحة (قيد الانتظار + قيد التنفيذ)
+        $openMaintenanceRequests = Maintenance::where('mosque_id', $mosqueId)
+            ->whereIn('status', ['pending', 'in_progress'])
+            ->count();
+
+        // 7. البلاغات والشكاوى المفتوحة (قيد الانتظار + قيد المعالجة)
+        $complaints = Complaint::where('mosque_id', $mosqueId)
+            ->whereIn('status', ['pending', 'in_progress'])
+            ->count();
+
         //
         // 8. المتطوعون المعتمدون
         $accreditedVolunteers = VolunteerApplication::where(
@@ -312,6 +327,14 @@ class MosqueDashboardService
             'total_volunteers' => $totalVolunteers,
 
             'pending_invitations' => $pendingInvitations,
+
+            'donations' => (float) $donations,
+
+            'open_maintenance_requests' => $openMaintenanceRequests,
+
+            'complaints' => $complaints,
+
+            'accredited_volunteers' => $accreditedVolunteers,
 
         ];
     }

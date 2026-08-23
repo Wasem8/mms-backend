@@ -6,6 +6,8 @@ use Nwidart\Modules\Support\ModuleServiceProvider;
 use Illuminate\Console\Scheduling\Schedule;
 use Modules\MaintenanceRequest\Repositories\MaintenanceRepository;
 use Modules\MaintenanceRequest\Repositories\MaintenanceRepositoryInterface;
+use Modules\MaintenanceRequest\Repositories\MaintenanceStatsRepository;
+use Modules\MaintenanceRequest\Repositories\MaintenanceStatsRepositoryInterface;
 
 class MaintenanceRequestServiceProvider extends ModuleServiceProvider
 {
@@ -45,6 +47,11 @@ class MaintenanceRequestServiceProvider extends ModuleServiceProvider
         $this->app->bind(
             MaintenanceRepositoryInterface::class,
             MaintenanceRepository::class,
+        );
+
+        $this->app->bind(
+            MaintenanceStatsRepositoryInterface::class,
+            MaintenanceStatsRepository::class,
         );
     }
     /**
