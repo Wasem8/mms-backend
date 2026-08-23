@@ -96,12 +96,55 @@ class VolunteerEvaluationService
         });
     }
     public function getCertificateDownloadUrl(VolunteerCertificate $certificate): string
-{
-    return $this->storage->createSignedUrl(
-        $certificate->certificate_url, // now holds the file path, e.g. "volunteer_12_opportunity_1_...pdf"
-        config('services.supabase.bucket')
-    );
-}
+    {
+        // إن كان الرابط المخزّن رابطاً كاملاً (مثل بيانات الـ seeder الوهمية
+        // https://placeholder.wasl-mms.test/...) فالملف غير موجود فعلاً في الـ bucket.
+        // نعيد توليد الـ PDF ورفعه لنتمكّن من تنزيله عبر رابط مُوقّع صالح.
+        if (filter_var($certificate->certificate_url, FILTER_VALIDATE_URL)) {
+            $certificate = $this->regenerateCertificateFile($certificate);
+        }
+
+        try {
+            return $this->storage->createSignedUrl(
+                $certificate->certificate_url,
+                config('services.supabase.bucket')
+            );
+        } catch (\Throwable $e) {
+            // الكائن غير موجود فعلاً في الـ bucket (NoSuchKey) أو فشل إنشاء الرابط.
+            throw new \RuntimeException(__('messages.certificate_not_found'), 0, $e);
+        }
+    }
+
+    /**
+     * إعادة توليد ملف الـ PDF للشهادة ورفعه إلى الـ bucket، ثم تحديث المسار المخزّن.
+     * تُستخدم عندما يكون المسار المخزّن رابطاً وهمياً (بيانات seeder) أو مفقوداً.
+     */
+    private function regenerateCertificateFile(VolunteerCertificate $certificate): VolunteerCertificate
+    {
+        $totalHours = $this->evaluationRepo->totalHours(
+            $certificate->volunteer_id,
+            $certificate->opportunity_id
+        );
+
+        $pdfContent = $this->pdfGenerator->generate(
+            $this->buildCertificateHtml(
+                $certificate->volunteer_id,
+                $certificate->opportunity_id,
+                $totalHours
+            ),
+            cacheKey: 'volunteer'
+        );
+
+        $bucket = config('services.supabase.bucket');
+        $fileName = "volunteer_{$certificate->volunteer_id}_opportunity_{$certificate->opportunity_id}_" . now()->timestamp . '.pdf';
+
+        $this->storage->uploadPdf($pdfContent, $fileName, $bucket);
+
+        $certificate->certificate_url = $fileName;
+        $certificate->save();
+
+        return $certificate;
+    }
 
     public function getCertificatesForVolunteer(int $volunteerId): Collection
     {

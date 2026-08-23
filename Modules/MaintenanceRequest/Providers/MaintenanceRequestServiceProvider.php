@@ -4,6 +4,7 @@ namespace Modules\MaintenanceRequest\Providers;
 
 use Nwidart\Modules\Support\ModuleServiceProvider;
 use Illuminate\Console\Scheduling\Schedule;
+use Modules\MaintenanceRequest\Console\NotifyDelayedMaintenanceCommand;
 use Modules\MaintenanceRequest\Repositories\MaintenanceRepository;
 use Modules\MaintenanceRequest\Repositories\MaintenanceRepositoryInterface;
 use Modules\MaintenanceRequest\Repositories\MaintenanceStatsRepository;
@@ -26,7 +27,9 @@ class MaintenanceRequestServiceProvider extends ModuleServiceProvider
      *
      * @var string[]
      */
-    // protected array $commands = [];
+    protected array $commands = [
+        NotifyDelayedMaintenanceCommand::class,
+    ];
 
     /**
      * Provider classes to register.
@@ -59,8 +62,8 @@ class MaintenanceRequestServiceProvider extends ModuleServiceProvider
      *
      * @param $schedule
      */
-    // protected function configureSchedules(Schedule $schedule): void
-    // {
-    //     $schedule->command('inspire')->hourly();
-    // }
+    protected function configureSchedules(Schedule $schedule): void
+    {
+        $schedule->command(NotifyDelayedMaintenanceCommand::class)->dailyAt('08:00');
+    }
 }
