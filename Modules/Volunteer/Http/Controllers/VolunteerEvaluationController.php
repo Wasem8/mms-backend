@@ -51,7 +51,11 @@ class VolunteerEvaluationController extends Controller
             return ApiResponse::error(__('messages.certificate_not_found'), 404);
         }
 
-        $url = $this->service->getCertificateDownloadUrl($certificate);
+        try {
+            $url = $this->service->getCertificateDownloadUrl($certificate);
+        } catch (\RuntimeException $e) {
+            return ApiResponse::error(__('messages.certificate_not_found'), 404);
+        }
 
         return ApiResponse::success(
             ['certificate_url' => $url],
@@ -68,7 +72,11 @@ class VolunteerEvaluationController extends Controller
             return ApiResponse::error(__('messages.certificate_not_found'), 404);
         }
 
-        $url = $this->service->getCertificateDownloadUrl($certificate);
+        try {
+            $url = $this->service->getCertificateDownloadUrl($certificate);
+        } catch (\RuntimeException $e) {
+            return ApiResponse::error(__('messages.certificate_not_found'), 404);
+        }
 
         return ApiResponse::success(
             ['certificate_url' => $url],
@@ -85,7 +93,11 @@ class VolunteerEvaluationController extends Controller
             return ApiResponse::error(__('messages.certificate_not_found'), 404);
         }
 
-        $url = $this->service->getCertificateDownloadUrl($certificate);
+        try {
+            $url = $this->service->getCertificateDownloadUrl($certificate);
+        } catch (\RuntimeException $e) {
+            return ApiResponse::error(__('messages.certificate_not_found'), 404);
+        }
 
         return ApiResponse::success(
             ['certificate_url' => $url],
