@@ -22,6 +22,14 @@ return [
         'bucket' => env('SUPABASE_BUCKET'),
         'reports_bucket' => env('SUPABASE_REPORTS_BUCKET'),
         'voices' => env('SUPABASE_EVALUATION_VOICE_BUCKET'),
+        'backups_bucket' => env(
+            'SUPABASE_BACKUPS_BUCKET',
+            'backups'
+        ),
+        'backup_pg_dump_path' => env(
+            'BACKUP_PG_DUMP_PATH',
+            'pg_dump'
+        ),
     ],
 
     'postmark' => [
