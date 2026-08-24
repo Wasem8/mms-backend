@@ -111,6 +111,12 @@ class CampaignController extends Controller
         return ApiResponse::success($data, 'Success');
     }
 
+    public function statsForAll()
+    {
+        $data = $this->campaignService->getStatsForAll();
+        return ApiResponse::success($data, 'Success');
+    }
+
     public function analytics(int $id)
     {
         $campaign  = $this->campaignService->getCampaignById($id);

@@ -20,5 +20,7 @@ interface CampaignRepositoryInterface
 
     public function getStatsByMosque(int $mosqueId): array;
 
+    public function getStatsForAll(): array;
+
     public function getFiltered(array $filters = []);
 }

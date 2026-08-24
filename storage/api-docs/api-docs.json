@@ -2774,6 +2774,131 @@
                 ]
             }
         },
+        "/admin/campaigns/stats": {
+            "get": {
+                "tags": [
+                    "Campaigns"
+                ],
+                "summary": "Campaign stats across all mosques (super admin)",
+                "description": "Aggregated campaign statistics for every mosque. Provides platform-wide totals, status breakdown, month-on-month growth, and a per-mosque breakdown. Restricted to super_admin.",
+                "operationId": "getAllCampaignStats",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptLanguageHeader"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "total_campaigns": {
+                                                    "description": "Total campaigns across all mosques",
+                                                    "type": "integer",
+                                                    "example": 320
+                                                },
+                                                "total_collected": {
+                                                    "description": "Sum of collected_amount across all campaigns",
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 12500000
+                                                },
+                                                "total_target": {
+                                                    "description": "Sum of target_amount across all campaigns",
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 20000000
+                                                },
+                                                "overall_progress_percent": {
+                                                    "description": "total_collected / total_target × 100",
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 62.5
+                                                },
+                                                "active_count": {
+                                                    "description": "Campaigns with status = active across all mosques",
+                                                    "type": "integer",
+                                                    "example": 120
+                                                },
+                                                "completed_count": {
+                                                    "description": "Campaigns with status = completed across all mosques",
+                                                    "type": "integer",
+                                                    "example": 150
+                                                },
+                                                "growth_rate_percent": {
+                                                    "description": "Month-on-month growth of collected_amount",
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 78
+                                                },
+                                                "mosques_with_campaigns": {
+                                                    "description": "Distinct mosques that have at least one campaign",
+                                                    "type": "integer",
+                                                    "example": 45
+                                                },
+                                                "status_breakdown": {
+                                                    "properties": {
+                                                        "active": {
+                                                            "type": "integer",
+                                                            "example": 120
+                                                        },
+                                                        "completed": {
+                                                            "type": "integer",
+                                                            "example": 150
+                                                        },
+                                                        "paused": {
+                                                            "type": "integer",
+                                                            "example": 30
+                                                        },
+                                                        "cancelled": {
+                                                            "type": "integer",
+                                                            "example": 20
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "per_mosque": {
+                                                    "description": "Per-mosque breakdown, ordered by total_collected descending",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/CampaignMosqueStat"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden — requires super_admin role"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/campaigns/{id}": {
             "get": {
                 "tags": [
@@ -28249,6 +28374,53 @@
                     "updated_at": {
                         "type": "string",
                         "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "CampaignMosqueStat": {
+                "properties": {
+                    "mosque_id": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "mosque_name": {
+                        "type": "string",
+                        "example": "جامع الراجحي الكبير",
+                        "nullable": true
+                    },
+                    "city": {
+                        "type": "string",
+                        "example": "الرياض",
+                        "nullable": true
+                    },
+                    "total_campaigns": {
+                        "type": "integer",
+                        "example": 8
+                    },
+                    "active_count": {
+                        "type": "integer",
+                        "example": 3
+                    },
+                    "completed_count": {
+                        "type": "integer",
+                        "example": 4
+                    },
+                    "total_collected": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 750000
+                    },
+                    "total_target": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 1000000
+                    },
+                    "progress_percent": {
+                        "description": "collected / target × 100",
+                        "type": "number",
+                        "format": "float",
+                        "example": 75
                     }
                 },
                 "type": "object"
