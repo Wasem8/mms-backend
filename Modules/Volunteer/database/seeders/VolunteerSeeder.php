@@ -227,17 +227,35 @@ class VolunteerSeeder extends Seeder
             }
         }
 
-        // إصدار شهادة عند إغلاق الفرصة (المهام منجزة)
-        if ($opportunityClosed) {
-            VolunteerCertificate::firstOrCreate(
-                [
-                    'volunteer_id' => $application->volunteer_id,
-                    'opportunity_id' => $opportunity->id,
-                ],
-                [
-                    'certificate_url' => 'https://placeholder.wasl-mms.test/certificates/opp-' . $opportunity->id . '-vol-' . $application->volunteer_id . '.pdf',
-                    'issued_at' => Carbon::parse($opportunity->end_date)->addDay(),
-                ]
+            // إصدار شهادة حقيقية (ملف PDF مرفوع فعلياً على Supabase) عند إغلاق
+            // الفرصة وكذا المهام منجزة — بحيث تصبح قابلة للتنزيل مباشرةً.
+            if ($opportunityClosed) {
+                $this->issueRealCertificate($application->volunteer_id, $opportunity->id);
+            }
+    }
+
+    /**
+     * إصدار شهادة حقيقية لمتطوع على فرصة مغلقة عبر خدمة التقييم (توليد PDF + رفع
+     * على Supabase). نتجاوز التكرار عند إعادة البذر، ونكمل بذر باقي البيانات حتى
+     * لو فشل رفع الـ PDF (مثلاً بسبب غياب إعدادات Supabase).
+     */
+    private function issueRealCertificate(int $volunteerId, int $opportunityId): void
+    {
+        if (VolunteerCertificate::where('volunteer_id', $volunteerId)
+            ->where('opportunity_id', $opportunityId)
+            ->exists()
+        ) {
+            return;
+        }
+
+        try {
+            $service = app(\Modules\Volunteer\Services\VolunteerEvaluationService::class);
+            $service->issueCertificate($volunteerId, $opportunityId);
+
+            $this->command?->info("✔ تم إصدار شهادة حقيقية للمتطوع {$volunteerId} في الفرصة {$opportunityId}");
+        } catch (\Throwable $e) {
+            $this->command?->warn(
+                "⚠ تعذّر إصدار الشهادة للمتطوع {$volunteerId} في الفرصة {$opportunityId}: {$e->getMessage()}"
             );
         }
     }

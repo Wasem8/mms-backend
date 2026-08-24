@@ -42,6 +42,11 @@ class CampaignService
         return $this->campaignRepository->getStatsByMosque($mosqueId);
     }
 
+    public function getStatsForAll(): array
+    {
+        return $this->campaignRepository->getStatsForAll();
+    }
+
     public function createCampaign(array $data)
     {
         if (isset($data['cover_image'])) {
@@ -61,6 +66,10 @@ class CampaignService
     public function deleteCampaign($id)
     {
         return $this->campaignRepository->delete($id);
+    }
+
+    public function getAllCampaignStats() {
+        
     }
 
     public function expireEndedCampaigns(): int

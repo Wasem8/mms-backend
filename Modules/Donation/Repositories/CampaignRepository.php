@@ -117,4 +117,95 @@ class CampaignRepository implements CampaignRepositoryInterface
             'growth_rate_percent' => $growthRate,
         ];
     }
+
+    public function getStatsForAll(): array
+    {
+        $this->expirePastEndDateCampaigns();
+
+        $totals = Campaign::query()
+            ->selectRaw("
+                COUNT(*)                                                              AS total_campaigns,
+                COALESCE(SUM(collected_amount), 0)                                    AS total_collected,
+                COALESCE(SUM(target_amount), 0)                                       AS total_target,
+                COUNT(CASE WHEN status = 'active'    THEN 1 END)                      AS active_count,
+                COUNT(CASE WHEN status = 'completed' THEN 1 END)                      AS completed_count,
+                COUNT(CASE WHEN status = 'paused'    THEN 1 END)                      AS paused_count,
+                COUNT(CASE WHEN status = 'cancelled' THEN 1 END)                      AS cancelled_count,
+                COUNT(DISTINCT mosque_id)                                             AS mosques_count
+            ")
+            ->first();
+
+        $growthRate = $this->growthRateFor(Campaign::query());
+
+        $overallProgress = $totals->total_target > 0
+            ? round(($totals->total_collected / $totals->total_target) * 100, 1)
+            : 0.0;
+
+        $perMosque = Campaign::query()
+            ->select('mosque_id')
+            ->selectRaw("
+                COUNT(*)                                                              AS total_campaigns,
+                COALESCE(SUM(collected_amount), 0)                                    AS total_collected,
+                COALESCE(SUM(target_amount), 0)                                       AS total_target,
+                COUNT(CASE WHEN status = 'active'    THEN 1 END)                      AS active_count,
+                COUNT(CASE WHEN status = 'completed' THEN 1 END)                      AS completed_count
+            ")
+            ->groupBy('mosque_id')
+            ->with('mosque:id,name,city_id')
+            ->with('mosque.city:id,name_ar,name_en')
+            ->orderByDesc('total_collected')
+            ->get()
+            ->map(function ($row) {
+                $mosque   = $row->mosque;
+                $city     = $mosque && $mosque->relationLoaded('city') ? $mosque->getRelation('city') : null;
+                $locale   = app()->getLocale();
+                $target   = (float) $row->total_target;
+                $collected = (float) $row->total_collected;
+
+                return [
+                    'mosque_id'        => $row->mosque_id,
+                    'mosque_name'      => $mosque?->name,
+                    'city'             => $city ? ($locale === 'ar' ? $city->name_ar : $city->name_en) : null,
+                    'total_campaigns'  => (int) $row->total_campaigns,
+                    'active_count'     => (int) $row->active_count,
+                    'completed_count'  => (int) $row->completed_count,
+                    'total_collected'  => $collected,
+                    'total_target'     => $target,
+                    'progress_percent' => $target > 0 ? round(($collected / $target) * 100, 1) : 0.0,
+                ];
+            });
+
+        return [
+            'total_campaigns'           => (int)    $totals->total_campaigns,
+            'total_collected'           => (float) $totals->total_collected,
+            'total_target'              => (float) $totals->total_target,
+            'overall_progress_percent'  => $overallProgress,
+            'active_count'              => (int)    $totals->active_count,
+            'completed_count'           => (int)    $totals->completed_count,
+            'growth_rate_percent'       => $growthRate,
+            'mosques_with_campaigns'   => (int)    $totals->mosques_count,
+            'status_breakdown'          => [
+                'active'    => (int) $totals->active_count,
+                'completed' => (int) $totals->completed_count,
+                'paused'    => (int) $totals->paused_count,
+                'cancelled' => (int) $totals->cancelled_count,
+            ],
+            'per_mosque'                => $perMosque->toArray(),
+        ];
+    }
+
+    private function growthRateFor(\Illuminate\Database\Eloquent\Builder $query): float
+    {
+        $thisMonth = (clone $query)
+            ->where('created_at', '>=', now()->startOfMonth())
+            ->sum('collected_amount');
+
+        $lastMonth = (clone $query)
+            ->whereBetween('created_at', [now()->subMonth()->startOfMonth(), now()->subMonth()->endOfMonth()])
+            ->sum('collected_amount');
+
+        return $lastMonth > 0
+            ? round((($thisMonth - $lastMonth) / $lastMonth) * 100, 1)
+            : ($thisMonth > 0 ? 100.0 : 0.0);
+    }
 }

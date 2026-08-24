@@ -281,6 +281,84 @@ class CampaignEndpoints
     public function getCampaignStats() {}
 
     // =========================================================================
+    // GET /admin/campaigns/stats   ← NEW (super admin — all mosques)
+    // =========================================================================
+
+    #[OA\Schema(
+        schema: 'CampaignMosqueStat',
+        type: 'object',
+        properties: [
+            new OA\Property(property: 'mosque_id',        type: 'integer', example: 5),
+            new OA\Property(property: 'mosque_name',      type: 'string',  nullable: true, example: 'جامع الراجحي الكبير'),
+            new OA\Property(property: 'city',             type: 'string',  nullable: true, example: 'الرياض'),
+            new OA\Property(property: 'total_campaigns',  type: 'integer', example: 8),
+            new OA\Property(property: 'active_count',     type: 'integer', example: 3),
+            new OA\Property(property: 'completed_count',  type: 'integer', example: 4),
+            new OA\Property(property: 'total_collected',  type: 'number', format: 'float', example: 750000),
+            new OA\Property(property: 'total_target',     type: 'number', format: 'float', example: 1000000),
+            new OA\Property(property: 'progress_percent', type: 'number', format: 'float', example: 75.0, description: 'collected / target × 100'),
+        ]
+    )]
+    public function schemaCampaignMosqueStat() {}
+
+    #[OA\Get(
+        path: '/admin/campaigns/stats',
+        operationId: 'getAllCampaignStats',
+        tags: ['Campaigns'],
+        summary: 'Campaign stats across all mosques (super admin)',
+        description: 'Aggregated campaign statistics for every mosque. Provides platform-wide totals, status breakdown, month-on-month growth, and a per-mosque breakdown. Restricted to super_admin.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string',  example: 'Success'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'total_campaigns',         type: 'integer', example: 320, description: 'Total campaigns across all mosques'),
+                                new OA\Property(property: 'total_collected',         type: 'number', format: 'float', example: 12500000, description: 'Sum of collected_amount across all campaigns'),
+                                new OA\Property(property: 'total_target',            type: 'number', format: 'float', example: 20000000, description: 'Sum of target_amount across all campaigns'),
+                                new OA\Property(property: 'overall_progress_percent', type: 'number', format: 'float', example: 62.5, description: 'total_collected / total_target × 100'),
+                                new OA\Property(property: 'active_count',             type: 'integer', example: 120, description: 'Campaigns with status = active across all mosques'),
+                                new OA\Property(property: 'completed_count',          type: 'integer', example: 150, description: 'Campaigns with status = completed across all mosques'),
+                                new OA\Property(property: 'growth_rate_percent',     type: 'number', format: 'float', example: 78.0, description: 'Month-on-month growth of collected_amount'),
+                                new OA\Property(property: 'mosques_with_campaigns', type: 'integer', example: 45, description: 'Distinct mosques that have at least one campaign'),
+                                new OA\Property(
+                                    property: 'status_breakdown',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'active',    type: 'integer', example: 120),
+                                        new OA\Property(property: 'completed', type: 'integer', example: 150),
+                                        new OA\Property(property: 'paused',    type: 'integer', example: 30),
+                                        new OA\Property(property: 'cancelled', type: 'integer', example: 20),
+                                    ]
+                                ),
+                                new OA\Property(
+                                    property: 'per_mosque',
+                                    type: 'array',
+                                    description: 'Per-mosque breakdown, ordered by total_collected descending',
+                                    items: new OA\Items(ref: '#/components/schemas/CampaignMosqueStat')
+                                ),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — requires super_admin role'),
+        ]
+    )]
+    public function getAllCampaignStats() {}
+
+    // =========================================================================
     // GET /campaigns/{id}
     // =========================================================================
 
