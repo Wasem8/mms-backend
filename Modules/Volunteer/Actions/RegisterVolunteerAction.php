@@ -16,6 +16,7 @@ class RegisterVolunteerAction
             'password' => Hash::make($data['password']),
             'status' => 'active',
             'email_verified_at' => now(),
+            'mosque_id' => $data['mosque_id'],
         ]);
 
         $role = Role::where('name', 'volunteer')->first();

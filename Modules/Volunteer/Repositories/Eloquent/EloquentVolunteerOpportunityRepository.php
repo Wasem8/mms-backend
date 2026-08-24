@@ -22,11 +22,11 @@ class EloquentVolunteerOpportunityRepository implements VolunteerOpportunityRepo
     }
 
     #[\Override]
-    public function findAllOpen(int $mosqueId, int $perPage = 15): LengthAwarePaginator
+    public function findAllOpen(?int $mosqueId, int $perPage = 15): LengthAwarePaginator
     {
         return $this->model
             ->withCount(['applications' => fn($q) => $q->where('status', 'approved')])
-            ->where('mosque_id', $mosqueId)
+            ->when($mosqueId, fn($q) => $q->where('mosque_id', $mosqueId))
             ->where('status', OpportunityStatus::Open)
             ->where('end_date', '>=', now()->toDateString())
             ->latest()

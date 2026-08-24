@@ -54,12 +54,10 @@ class VolunteerOpportunityController extends Controller
         );
     }
 
-    /** Volunteer: list open opportunities for their own mosque */
+    /** Volunteer: browse all open opportunities */
     public function index()
     {
-        $mosqueId = (int) auth()->user()->mosque_id;
-
-        $opportunities = $this->service->listOpen($mosqueId);
+        $opportunities = $this->service->listOpen(null);
 
         return ApiResponse::success(
             $opportunities->items(),
