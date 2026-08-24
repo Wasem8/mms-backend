@@ -33,7 +33,7 @@ class VolunteerOpportunityService
         return $this->opportunityRepo->findAllForManager($mosqueId, $perPage, $search, $status);
     }
 
-    public function listOpen(int $mosqueId, int $perPage = 15): LengthAwarePaginator
+    public function listOpen(?int $mosqueId, int $perPage = 15): LengthAwarePaginator
     {
         return $this->opportunityRepo->findAllOpen($mosqueId, $perPage);
     }

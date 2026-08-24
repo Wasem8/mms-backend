@@ -10,7 +10,7 @@ interface VolunteerOpportunityRepositoryInterface
 {
     public function findById(int $id): ?VolunteerOpportunity;
 
-    public function findAllOpen(int $mosqueId, int $perPage = 15): LengthAwarePaginator;
+    public function findAllOpen(?int $mosqueId, int $perPage = 15): LengthAwarePaginator;
 
     public function findAllForManager(?int $mosqueId, int $perPage = 15): LengthAwarePaginator;
 
