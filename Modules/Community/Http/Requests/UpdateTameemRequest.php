@@ -24,7 +24,7 @@ class UpdateTameemRequest extends FormRequest
                 function (string $attribute, mixed $value, \Closure $fail) {
                     $user = User::find($value);
                     if (!$user || !$user->hasRole('mosque_manager')) {
-                        $fail('أحد المستلمين غير موجود أو ليس مدير مسجد.');
+                        $fail(__('messages.community.invalid_recipient'));
                     }
                 },
             ],

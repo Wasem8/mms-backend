@@ -2,8 +2,7 @@
 
 namespace Modules\Donation\Services;
 
-use Dompdf\Dompdf;
-use Dompdf\Options;
+
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
@@ -14,32 +13,41 @@ use Modules\Donation\Models\Setting;
 use Modules\Donation\Strategies\PaymentStrategyFactory;
 use Modules\Donation\Repositories\SettingRepositoryInterface;
 use Modules\Donation\Models\Campaign;
+use Modules\Mosque\Models\Mosque;
 use Modules\Mosque\Models\MosqueNeed;
-use ArPHP\I18N\Arabic;
 use Illuminate\Validation\ValidationException;
-use Spatie\Browsershot\Browsershot;
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
+use App\Support\Pdf\PdfGeneratorService;
+use App\Support\Storage\SupabaseStorageService;
+
 
 class DonationService
 {
 
+    private const RECEIPT_CACHE_TTL = 60 * 60 * 24 * 30;
     private const RATE_CACHE_KEY = 'setting.usd_to_syp_rate';
     private const RATE_CACHE_TTL = 3600;
 
     public function __construct(
         protected ImageUploadService $imageUploader,
         private readonly SettingRepositoryInterface  $settingRepo,
+        private readonly PdfGeneratorService $pdfGenerator,
+        private readonly SupabaseStorageService $storage
 
     ) {}
 
     public function getByMosque(int $mosqueId, array $filters = [])
     {
+        $perPage = isset($filters['per_page']) ? max(1, min(100, (int) $filters['per_page'])) : 10;
+
         return Donation::where('mosque_id', $mosqueId)
+            ->with(['campaign:id,title'])
             ->when($filters['search']  ?? null, fn($q, $v) => $q->where('donor_name', 'like', "%{$v}%"))
             ->when($filters['type']    ?? null, fn($q, $v) => $q->where('donation_type', $v))
             ->when($filters['status']  ?? null, fn($q, $v) => $q->where('status', $v))
             ->when($filters['campaign'] ?? null, fn($q, $v) => $q->where('campaign_id', $v))
             ->latest()
-            ->paginate(10);
+            ->paginate($perPage);
     }
 
     public function getRecentDonations(int $mosqueId, int $limit = 5): \Illuminate\Database\Eloquent\Collection
@@ -53,13 +61,27 @@ class DonationService
 
     public function getByUser(int $userId, array $filters = [])
     {
+        $perPage = isset($filters['per_page']) ? max(1, min(100, (int) $filters['per_page'])) : 10;
+
         return Donation::where('user_id', $userId)
+            ->with(['campaign:id,title'])
             ->when($filters['search']  ?? null, fn($q, $v) => $q->where('donor_name', 'like', "%{$v}%"))
             ->when($filters['type']    ?? null, fn($q, $v) => $q->where('donation_type', $v))
             ->when($filters['status']  ?? null, fn($q, $v) => $q->where('status', $v))
             ->when($filters['campaign'] ?? null, fn($q, $v) => $q->where('campaign_id', $v))
             ->latest()
-            ->paginate(10);
+            ->paginate($perPage);
+    }
+
+    /**
+     * Super-admin: paginated donations across ALL mosques.
+     * Supports the same filters as the mosque report plus `mosque_id` and `city`.
+     */
+    public function getAllDonations(array $filters = [])
+    {
+        $perPage = isset($filters['per_page']) ? max(1, min(100, (int) $filters['per_page'])) : 10;
+
+        return $this->reportQuery(null, $filters)->paginate($perPage);
     }
 
     public function findByReference(string $reference)
@@ -72,13 +94,53 @@ class DonationService
         return Donation::findOrFail($id);
     }
 
+    /**
+     * Page stats for a specific mosque (legacy, mosque-scoped helper).
+     */
     public function getPageStats(int $mosqueId): array
+    {
+        return $this->computePageStats(
+            fn() => Donation::where('mosque_id', $mosqueId),
+            fn() => Campaign::where('mosque_id', $mosqueId),
+        );
+    }
+
+    /**
+     * Page stats for an authenticated user — scoped to their own donations.
+     * Active campaigns counts only the active campaigns the user has donated to.
+     */
+    public function getPageStatsForUser(int $userId): array
+    {
+        return $this->computePageStats(
+            fn() => Donation::where('user_id', $userId),
+            fn() => Campaign::where('status', 'active')
+                ->whereIn('id', function ($q) use ($userId) {
+                    $q->select('campaign_id')
+                        ->from('donations')
+                        ->where('user_id', $userId)
+                        ->whereNotNull('campaign_id');
+                }),
+        );
+    }
+
+    /**
+     * Page stats for a super-admin — aggregated across ALL mosques.
+     */
+    public function getPageStatsForAll(): array
+    {
+        return $this->computePageStats(
+            fn() => Donation::query(),
+            fn() => Campaign::query(),
+        );
+    }
+
+    private function computePageStats(callable $donationBase, callable $campaignBase): array
     {
         $now = now();
         $prev = now()->subMonth();
 
         // ── Helper: monthly donations for a given year/month ─────────────────
-        $monthlyQuery = fn(int $year, int $month) => Donation::where('mosque_id', $mosqueId)
+        $monthlyQuery = fn(int $year, int $month) => $donationBase()
             ->where('status', 'completed')
             ->where('donation_type', 'cash')
             ->where(fn($q) => $q
@@ -87,7 +149,7 @@ class DonationService
             );
 
         // ── Helper: new donors for a given year/month ────────────────────────
-        $donorsQuery = fn(int $year, int $month) => Donation::where('mosque_id', $mosqueId)
+        $donorsQuery = fn(int $year, int $month) => $donationBase()
             ->where('status', 'completed')
             ->where(fn($q) => $q
                 ->where(fn($q1) => $q1->whereYear('completed_at', $year)->whereMonth('completed_at', $month))
@@ -96,8 +158,8 @@ class DonationService
             ->distinct('donor_name');
 
         // ── Total all-time ───────────────────────────────────────────────────
-        $totalDonations    = Donation::where('mosque_id', $mosqueId)->where('status', 'completed')->where('donation_type', 'cash')->sum('base_amount');
-        $prevTotalDonations = Donation::where('mosque_id', $mosqueId)->where('status', 'completed')->where('donation_type', 'cash')
+        $totalDonations    = $donationBase()->where('status', 'completed')->where('donation_type', 'cash')->sum('base_amount');
+        $prevTotalDonations = $donationBase()->where('status', 'completed')->where('donation_type', 'cash')
             ->where('completed_at', '<', $prev->startOfMonth()->toDateTimeString())
             ->sum('base_amount');
 
@@ -110,9 +172,8 @@ class DonationService
         $lastDonors = (int) $donorsQuery($prev->year, $prev->month)->count('donor_name');
 
         // ── Active campaigns ─────────────────────────────────────────────────
-        $activeCampaigns  = (int) Campaign::where('mosque_id', $mosqueId)->where('status', 'active')->count();
-        $prevActive       = (int) Campaign::where('mosque_id', $mosqueId)
-            ->where('status', 'active')
+        $activeCampaigns  = (int) $campaignBase()->where('status', 'active')->count();
+        $prevActive       = (int) $campaignBase()->where('status', 'active')
             ->where('created_at', '<', $now->startOfMonth()->toDateTimeString())
             ->count();
 
@@ -167,7 +228,7 @@ class DonationService
 
         $percentage = match (true) {
             $yesterdayTotal > 0 => round((($todayTotal - $yesterdayTotal) / $yesterdayTotal) * 100, 1),
-            $todayTotal   > 0   => 100.0,  
+            $todayTotal   > 0   => 100.0,
             default             => 0.0,
         };
 
@@ -188,7 +249,6 @@ class DonationService
     {
         $rows = Donation::where('mosque_id', $mosqueId)
             ->where('status', 'completed')
-            ->where('donation_type', 'cash')          // ← add this
             ->where(function ($q) {
                 $q->where(
                     fn($q1) => $q1
@@ -202,15 +262,14 @@ class DonationService
                             ->whereMonth('created_at', now()->month)
                     );
             })
-            ->selectRaw('donation_type, COALESCE(SUM(base_amount), 0) as total')
+            ->selectRaw('donation_type, COALESCE(SUM(base_amount), 0) as total, COUNT(*) as count')
             ->groupBy('donation_type')
-            ->pluck('total', 'donation_type');
-
-        $cash = (float) ($rows['cash'] ?? 0);
+            ->get()
+            ->keyBy('donation_type');
 
         return [
-            'cash'          => $cash,
-         //   'monthly_total' => $cash,   // same value now, kept for consistency
+            'cash'    => (float) ($rows['cash']->total ?? 0),
+            'in_kind' => (int) ($rows['in_kind']->count ?? 0), // count, not sum — in-kind has no monetary value
         ];
     }
     public function create(array $data): array
@@ -305,35 +364,169 @@ class DonationService
             'client_secret' => $result->clientSecret ?? null,
         ];
     }
-    public function generateReceipt(Donation $donation): string
+    public function getReport(int $mosqueId, array $filters = []): array
     {
+        $donations = $this->reportQuery($mosqueId, $filters)->get();
+
+        return $this->formatReport($donations, false);
+    }
+
+    /**
+     * Super-admin report across ALL mosques.
+     * Supports the same filters plus `mosque_id` and `city`.
+     */
+    public function getReportForAll(array $filters = []): array
+    {
+        $donations = $this->reportQuery(null, $filters)->get();
+
+        return $this->formatReport($donations, true);
+    }
+
+    private function reportQuery(?int $mosqueId, array $filters): \Illuminate\Database\Eloquent\Builder
+    {
+        return Donation::query()
+            ->with(['campaign:id,title', 'mosque:id,name', 'mosqueNeed:id,description'])
+            ->when($mosqueId !== null, fn($q) => $q->where('mosque_id', $mosqueId))
+            ->when($filters['search'] ?? null, fn($q, $v) => $q->where('donor_name', 'like', "%{$v}%"))
+            ->when($filters['type']   ?? null, fn($q, $v) => $q->where('donation_type', $v))
+            ->when($filters['status'] ?? null, fn($q, $v) => $q->where('status', $v))
+            ->when($filters['campaign'] ?? null, fn($q, $v) => $q->where('campaign_id', $v))
+            ->when($mosqueId === null && ($filters['mosque_id'] ?? null), fn($q, $v) => $q->where('mosque_id', $v))
+            ->when($filters['city'] ?? null, fn($q, $v) => $q->whereHas('mosque', fn($q2) => $q2->where('city', 'like', "%{$v}%")))
+            ->when($filters['date_from'] ?? null, fn($q, $v) => $q->whereDate('created_at', '>=', $v))
+            ->when($filters['date_to']   ?? null, fn($q, $v) => $q->whereDate('created_at', '<=', $v))
+            ->latest();
+    }
+
+    private function formatReport(\Illuminate\Database\Eloquent\Collection $donations, bool $includeMosque): array
+    {
+        $completed = $donations->where('status', 'completed');
+
+        return [
+            'summary' => [
+                'total_amount'  => (float) $completed->sum('base_amount'),
+                'total_count'   => $donations->count(),
+                'cash_amount'   => (float) $completed->where('donation_type', 'cash')->sum('base_amount'),
+                'in_kind_count' => $donations->where('donation_type', 'in_kind')->count(),
+                'currency'      => 'SYP',
+            ],
+            'donations' => $donations->map(fn(Donation $d) => [
+                'id'            => $d->id,
+                'reference'     => $d->reference,
+                'mosque_id'     => $d->mosque_id,
+                'mosque_name'   => $includeMosque ? ($d->mosque?->name ?? '—') : null,
+                'donor_name'    => $d->donor_name,
+                'donation_type' => $d->donation_type,
+                'payment_method'=> $d->payment_method,
+                'amount'        => $d->amount,
+                'base_amount'   => $d->base_amount,
+                'currency'      => $d->currency,
+                'status'        => $d->status,
+                'campaign'      => $d->campaign?->title,
+                'created_at'    => $d->created_at,
+            ])->all(),
+        ];
+    }
+
+    public function exportReport(int $mosqueId, array $filters = []): string
+    {
+        $report = $this->getReport($mosqueId, $filters);
+        $mosque = Mosque::find($mosqueId);
+
+        return $this->renderAndUploadReport(
+            $report,
+            $mosque?->name ?? '—',
+            false,
+            "donation_report_{$mosqueId}"
+        );
+    }
+
+    /**
+     * Super-admin PDF export across ALL mosques.
+     */
+    public function exportReportForAll(array $filters = []): string
+    {
+        $report = $this->getReportForAll($filters);
+
+        return $this->renderAndUploadReport(
+            $report,
+            'كل المساجد',
+            true,
+            'donation_report_all'
+        );
+    }
+
+    private function renderAndUploadReport(array $report, string $mosqueName, bool $showMosque, string $cacheKey): string
+    {
+        $html = view('donation::reports.donation', [
+            'mosque_name'  => $mosqueName,
+            'generated_at' => now()->format('Y-m-d H:i'),
+            'summary'      => $report['summary'],
+            'donations'    => $report['donations'],
+            'filters'      => [],
+            'showMosque'   => $showMosque,
+        ])->render();
+
+        $pdfContent = $this->pdfGenerator->generate($html, $cacheKey, 'cairo');
+
+        $bucket   = config('services.supabase.bucket');
+        $fileName = $cacheKey . '_' . now()->timestamp . '.pdf';
+
+        $this->storage->uploadPdf($pdfContent, $fileName, $bucket, true);
+
+        return $this->storage->createSignedUrl($fileName, $bucket);
+    }
+
+    public function getReceiptDownloadUrl(Donation $donation): string
+    {
+        $bucket = config('services.supabase.bucket');
+        $base   = "receipt_donation_{$donation->id}";
+
+        // عدّ الإيصالات الموجودة فعلاً لهذا التبرع (القديم بلا رقم + المرقّمة)
+        $objects = $this->storage->listObjects($bucket, $base);
+        $count   = 0;
+        foreach ($objects as $object) {
+            $name = $object['name'] ?? null;
+            if ($name !== null
+                && str_ends_with($name, '.pdf')
+                && (str_starts_with($name, "{$base}_") || $name === "{$base}.pdf")
+            ) {
+                $count++;
+            }
+        }
+
+        // الحد الأقصى: إيصالان لتبرع واحد
+        if ($count >= 2) {
+            throw new ConflictHttpException(__('messages.max_receipts_reached'));
+        }
+
+        $index    = $count + 1;
+        $fileName = "{$base}_{$index}.pdf";
 
         $donationData = Donation::with(['mosque', 'campaign', 'mosqueNeed'])->findOrFail($donation->id);
         $target = $this->resolveTarget($donationData);
 
         $html = view('donation::receipts.donation', [
-            'donation'       => $donationData,
-            'mosque'         => $donationData->mosque,
-            'mosque_name'    => $donationData->mosque?->name ?? 'المسجد الرئيسي',
-            'target'         => $target,
-            'donor_name'     => $donationData->donor_name ?? 'متبرع كريم',
-            'payment_method' => $donationData->payment_method === 'cash' ? 'نقدي' : $donationData->payment_method,
+            'donation'        => $donationData,
+            'mosque'          => $donationData->mosque,
+            'mosque_name'     => $donationData->mosque?->name ?? 'المسجد الرئيسي',
+            'target'          => $target,
+            'donor_name'      => $donationData->donor_name ?? 'متبرع كريم',
+            'payment_method'  => $donationData->payment_method === 'cash' ? 'نقدي' : $donationData->payment_method,
             'donation_status' => $donationData->status === 'completed' ? 'مكتمل' : $donationData->status,
-            'currency'       => $donationData->currency ?? 'ليرة سورية',
-            'issued_at'      => now()->format('Y-m-d'),
+            'currency'        => $donationData->currency ?? 'ليرة سورية',
+            'issued_at'       => now()->format('Y-m-d'),
         ])->render();
 
-        return Browsershot::html($html)
-            ->setNodeBinary('C:\\Program Files\\nodejs\\node.exe')
-            ->setNpmBinary('C:\\Program Files\\nodejs\\npm.cmd')
-            ->noSandbox()
-            ->emulateMedia('print')
-            ->preferCssPageSize()
-            ->scale(1.0)
-            ->margins(0, 0, 0, 0)
-            ->paperSize(210, 297)
-            ->showBackground()
-            ->pdf();
+        $pdfContent = $this->pdfGenerator->generate(
+            $html,
+            "donation_receipt_{$donation->id}_{$index}",
+            'cairo'
+        );
+
+        $this->storage->uploadPdf($pdfContent, $fileName, $bucket, true);
+
+        return $this->storage->createSignedUrl($fileName, $bucket);
     }
 
     private function resolveTarget(Donation $donation): array
@@ -357,6 +550,7 @@ class DonationService
             'name'  => $donation->mosque?->name ?? 'المسجد الرئيسي',
         ];
     }
+
     private function resolveCurrency(string $paymentMethod): string
     {
         return match ($paymentMethod) {

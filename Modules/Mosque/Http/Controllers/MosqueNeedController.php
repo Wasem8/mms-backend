@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Modules\Mosque\Services\MosqueNeedsService;
 use App\Support\ApiResponse;
+use Modules\Mosque\Http\Requests\ListMosqueNeedsRequest;
+use Modules\Mosque\Http\Requests\NearbyMosqueNeedsRequest;
 use Modules\Mosque\Http\Requests\StoreMosqueNeedRequest;
 use Modules\Mosque\Http\Requests\UpdateMosqueNeedRequest;
 
@@ -24,37 +26,53 @@ class MosqueNeedController extends Controller
 
         return ApiResponse::success(
             $needs->items(),
-            'Needs retrieved successfully',
+            __('messages.mosque.needs_retrieved'),
             ApiResponse::pagination($needs)
         );
     }
 
-    public function AllNeeds(Request $request)
+    public function AllNeeds(ListMosqueNeedsRequest $request)
     {
         $perPage = $request->get('per_page', 10);
 
-        $filters = [
-            'status' => $request->get('status'),
-            'type'   => $request->get('type'),
-            'urgent' => $request->get('urgent'),
-        ];
+        $filters = $request->toFilters();
 
         $needs = $this->service->listAggregate($filters, $perPage);
 
         return ApiResponse::success(
             $needs->items(),
-            'Needs across all mosques retrieved successfully',
+            __('messages.mosque.all_needs_retrieved'),
             ApiResponse::pagination($needs)
         );
     }
+    private function parseNear(?string $near): ?array
+    {
+        if (! $near) {
+            return null;
+        }
 
+        $parts = explode(',', $near);
+
+        if (count($parts) !== 2 || ! is_numeric($parts[0]) || ! is_numeric($parts[1])) {
+            return null;
+        }
+
+        $lat = (float) $parts[0];
+        $lng = (float) $parts[1];
+
+        if ($lat < -90 || $lat > 90 || $lng < -180 || $lng > 180) {
+            return null;
+        }
+
+        return [$lat, $lng];
+    }
     public function show($mosqueId,$needId)
     {
         try {
             $need = $this->service->getNeedForMosque($mosqueId, $needId);
             return ApiResponse::success(
                 $need,
-                'Need retrieved successfully'
+                __('messages.mosque.need_retrieved')
             );
         } catch (\Exception $e) {
             return ApiResponse::error(
@@ -69,13 +87,13 @@ class MosqueNeedController extends Controller
 
         if (!$need) {
             return ApiResponse::error(
-                'Need not found',
+                __('messages.mosque.need_not_found'),
                 404
             );
         }
         return ApiResponse::success(
             $need,
-            'Need retrieved successfully'
+            __('messages.mosque.need_retrieved')
         );
     }
 
@@ -93,7 +111,7 @@ class MosqueNeedController extends Controller
 
         return ApiResponse::success(
             $need,
-            'Need created successfully'
+            __('messages.mosque.need_created')
         );
     }
 
@@ -107,7 +125,7 @@ class MosqueNeedController extends Controller
 
             return ApiResponse::success(
                 $need,
-                'Need updated successfully'
+                __('messages.mosque.need_updated')
             );
         } catch (\Exception $e) {
             return ApiResponse::error(
@@ -124,7 +142,7 @@ class MosqueNeedController extends Controller
 
             return ApiResponse::success(
                 null,
-                'Need deleted successfully'
+                __('messages.mosque.need_deleted')
             );
         } catch (\Exception $e) {
             return ApiResponse::error(
@@ -132,6 +150,24 @@ class MosqueNeedController extends Controller
                 404
             );
         }
+    }
+    public function nearbyWithNeeds(NearbyMosqueNeedsRequest $request)
+    {
+        $data = $request->validated();
+
+        $needs = $this->service->listNearbyMosquesWithNeeds(
+            (float) $data['lat'],
+            (float) $data['lng'],
+            isset($data['radius_km']) ? (float) $data['radius_km'] : null,
+            $data['urgent_only'] ?? false,
+            (int) ($data['per_page'] ?? 10)
+        );
+
+        return ApiResponse::success(
+            $needs->items(),
+            __('messages.mosque.nearby_needs_retrieved'),
+            ApiResponse::pagination($needs)
+        );
     }
 
 }

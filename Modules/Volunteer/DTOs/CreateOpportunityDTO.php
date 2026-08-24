@@ -11,5 +11,6 @@ readonly class CreateOpportunityDTO
         public int    $requiredVolunteers,
         public string $startDate,
         public string $endDate,
+        public array  $tasks = [],
     ) {}
 }

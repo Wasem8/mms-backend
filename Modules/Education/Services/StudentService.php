@@ -11,33 +11,51 @@ class StudentService
 
     public function list()
     {
+        if (request()->has('has_halaqa')) {
+            $hasHalaqaVal = request('has_halaqa');
+            if (!in_array($hasHalaqaVal, ['0', '1', 0, 1], true)) {
+                abort(422, __('messages.invalid_has_halaqa_value'));
+            }
+        }
+
         return Student::query()
             ->with([
                 'mosque',
                 'parent',
-                'halaqats:id,name'
+                'halaqats:id,name,teacher_id',
+                'halaqats.teacher:id,name',
+                'evaluations' => fn($q) => $q->latest('evaluated_at')
             ])
-
+            ->withAvg('evaluations', 'score')
             ->forUser(auth()->user())
 
-            ->when(
-                request('status'),
-                fn($q, $status) => $q->where('status', $status)
-            )
+            ->when(request('search'), function ($q, $search) {
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('first_name', 'ILIKE', "%{$search}%")
+                        ->orWhere('last_name', 'ILIKE', "%{$search}%")
+                        ->orWhereRaw("CONCAT(first_name, ' ', last_name) ILIKE ?", ["%{$search}%"]);
+                });
+            })
+
+            ->when(request('status'), fn($q, $status) => $q->where('status', $status))
 
             ->when(request()->has('has_halaqa'), function ($q) {
-
                 if (request('has_halaqa') == 1) {
                     $q->whereHas('halaqats');
-                }
-
-                if (request('has_halaqa') == 0) {
+                } else {
                     $q->whereDoesntHave('halaqats');
                 }
             })
 
+            // §8: فلتر الطلاب القابلين للإضافة لحلقة معينة (حيث الطالب ليس في هذه الحلقة)
+            ->when(request('assignable_to_halaqa'), function ($q, $halaqaId) {
+                $q->whereDoesntHave('halaqats', function ($sub) use ($halaqaId) {
+                    $sub->where('halaqats.id', $halaqaId);
+                });
+            })
+
             ->latest()
-            ->paginate(10);
+            ->paginate(request('per_page', 10));
     }
 
     public function create(array $data)
@@ -52,7 +70,12 @@ class StudentService
 
     public function find($id)
     {
-        return Student::with(['mosque', 'parent', 'halaqats'])
+        return Student::with([
+            'mosque',
+            'parent',
+            'halaqats:id,name,teacher_id',
+            'halaqats.teacher:id,name' // §7: معلم الحلقة
+        ])
             ->with([
                 'evaluations' => fn($q) => $q->latest('evaluated_at')
             ])
@@ -68,7 +91,7 @@ class StudentService
     public function search(array $filters)
     {
         return Student::query()
-            ->with(['mosque', 'parent', 'halaqats'])
+            ->with(['mosque', 'parent', 'halaqats.teacher'])
             ->forUser(auth()->user())
             ->when(!empty($filters['query']), function ($q) use ($filters) {
                 $searchTerm = $filters['query'];
@@ -102,7 +125,7 @@ class StudentService
 
         $student->update($data);
 
-        return $student->load(['mosque', 'parent', 'halaqats']);
+        return $student->load(['mosque', 'parent', 'halaqats.teacher']);
     }
 
     public function delete($id)
@@ -129,12 +152,17 @@ class StudentService
 
             if (!empty($data['halaqa_id'])) {
                 $halaqa = Halaqa::where('mosque_id', $user->mosque_id)->findOrFail($data['halaqa_id']);
-                $student->halaqats()->syncWithoutDetaching([$halaqa->id]);
+
+                if ($halaqa->students()->count() >= $halaqa->capacity) {
+                    return ['error' => true, 'message' => __('messages.capacity_full', ['remaining' => 0])];
+                }
+
+                $student->update(['halaqa_id' => $halaqa->id]);
             }
 
             $student->update(['status' => 'active']);
 
-            $loadedStudent = $student->load(['mosque', 'parent', 'halaqats']);
+            $loadedStudent = $student->load(['mosque', 'parent', 'halaqats.teacher']);
 
             // 🎯 إطلاق حدث الموافقة وإرسال كائن الطالب محمل بالبيانات
             event(new \Modules\Education\Events\StudentApproved($loadedStudent));
@@ -167,6 +195,48 @@ class StudentService
         event(new \Modules\Education\Events\StudentRejected($loadedStudent));
 
         return ['error' => false, 'data' => $loadedStudent];
+    }
+
+    public function transferHalaqa(int $id, array $data)
+    {
+        $user = auth()->user();
+
+        return DB::transaction(function () use ($id, $data, $user) {
+            $student = Student::query()
+                ->forUser($user)
+                ->findOrFail($id);
+
+            $currentHalaqaId = $student->halaqa_id;
+
+            if ((int) $currentHalaqaId !== (int) $data['from_halaqa_id']) {
+                return [
+                    'error' => true,
+                    'message' => __('messages.student_not_in_old_halaqa')
+                ];
+            }
+
+            $toHalaqa = Halaqa::where('mosque_id', $user->mosque_id)
+                ->findOrFail($data['to_halaqa_id']);
+
+            if ($toHalaqa->students()->count() >= $toHalaqa->capacity) {
+                return [
+                    'error' => true,
+                    'message' => __('messages.capacity_full', ['remaining' => 0])
+                ];
+            }
+
+            $student->update([
+                'halaqa_id' => $toHalaqa->id,
+            ]);
+
+            $loadedStudent = $student->load(['mosque', 'parent', 'halaqats.teacher']);
+
+            return [
+                'error' => false,
+                'message' => __('messages.transfer_success', ['name' => $toHalaqa->name]),
+                'data' => $loadedStudent,
+            ];
+        });
     }
 
 }

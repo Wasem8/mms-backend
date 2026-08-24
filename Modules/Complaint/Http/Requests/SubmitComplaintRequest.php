@@ -24,9 +24,25 @@ class SubmitComplaintRequest extends FormRequest
         ];
     }
 
-    /**
-     * Determine if the user is authorized to make this request.
-     */
+    public function messages(): array
+    {
+        return [
+            'title.required' => __('messages.complaint.validation.title.required'),
+            'title.max' => __('messages.complaint.validation.title.max'),
+            'description.required' => __('messages.complaint.validation.description.required'),
+            'description.min' => __('messages.complaint.validation.description.min'),
+            'mosque_id.required' => __('messages.complaint.validation.mosque_id.required'),
+            'mosque_id.exists' => __('messages.complaint.validation.mosque_id.exists'),
+            'complaint_type.required' => __('messages.complaint.validation.complaint_type.required'),
+            'complaint_type.in' => __('messages.complaint.validation.complaint_type.in'),
+            'priority.in' => __('messages.complaint.validation.priority.in'),
+            'email.email' => __('messages.complaint.validation.email.email'),
+            'files.*.mimes' => __('messages.complaint.validation.files.mimes'),
+            'files.*.max' => __('messages.complaint.validation.files.max'),
+            'status.in' => __('messages.complaint.validation.status.in'),
+        ];
+    }
+
     public function authorize(): bool
     {
         return true;

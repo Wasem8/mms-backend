@@ -3,11 +3,11 @@
 namespace Modules\Complaint\Repositories;
 
 use Modules\Complaint\Models\Complaint;
-use Illuminate\Support\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 interface ComplaintRepositoryInterface
 {
-    public function getFiltered(array $filters = []): Collection;
+    public function getFiltered(array $filters = []): LengthAwarePaginator;
     public function find(int $id): Complaint;
     public function findByComplaintNumber(string $complaintNumber): Complaint;
     public function create(array $data): Complaint;
@@ -17,4 +17,5 @@ interface ComplaintRepositoryInterface
     // Specific to WASL requirements
     public function attachFiles(Complaint $complaint, array $files): void;
     public function logStatusChange(Complaint $complaint, array $logData): void;
+    public function assignToAdmin(int $complaintId, int $adminId): Complaint;
 }

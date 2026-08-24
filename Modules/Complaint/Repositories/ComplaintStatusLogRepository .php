@@ -2,6 +2,8 @@
 
 namespace Modules\Complaint\Repositories;
 
+use Modules\Complaint\Models\ComplaintStatusLog;
+
 
 class ComplaintStatusLogRepository implements ComplaintStatusLogRepositoryInterface
 {

@@ -2,6 +2,7 @@
 
 namespace Modules\User\Actions;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Modules\User\Models\Role;
 use Modules\User\Models\User;
@@ -11,19 +12,46 @@ class RegisterParentAction
 {
     public function execute(array $data)
     {
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-            'status' => 'inactive',
-        ]);
+        $user = DB::transaction(function () use ($data) {
 
-        $role = Role::where('name', 'parent')->first();
+            // استخراج وتحديد الأسماء
+            $firstName = $data['first_name'] ?? null;
+            $lastName  = $data['last_name'] ?? null;
 
-        $user->roles()->attach($role->id);
+            // إذا أُرسل name نستخدمه، وإلا ندمج first_name و last_name تلقائياً
+            $fullName  = $data['name'] ?? trim("{$firstName} {$lastName}");
 
-        $otp = $user->generateOtp();
-        $user->notify(new SendOTPNotification($otp, 'verification'));
-        return $user;
+            $user = User::create([
+                'first_name' => $firstName,
+                'last_name'  => $lastName,
+                'name'       => $fullName,
+                'email'      => $data['email'],
+                'phone'      => $data['phone'] ?? null,
+                'password'   => Hash::make($data['password']),
+                'status'     => 'inactive',
+            ]);
+
+            $role = Role::firstWhere('name', 'parent');
+
+            if ($role) {
+                $user->roles()->attach($role->id);
+            }
+
+            $otp = $user->generateOtp();
+
+            return [
+                'user' => $user,
+                'otp'  => $otp,
+            ];
+        });
+
+        $user['user']->notify(
+            new SendOTPNotification(
+                $user['otp'],
+                'verification'
+            )
+        );
+
+        return $user['user'];
     }
 }

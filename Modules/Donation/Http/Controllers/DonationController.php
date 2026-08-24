@@ -20,7 +20,7 @@ class DonationController extends Controller
 
     public function index(int $mosqueId)
     {
-        $filters   = request()->only(['search', 'type', 'status', 'campaign']);
+        $filters   = request()->only(['search', 'type', 'status', 'campaign', 'per_page']);
         $donations = $this->donationService->getByMosque($mosqueId, $filters);
 
         return DonationResource::collection($donations)->response();
@@ -29,8 +29,19 @@ class DonationController extends Controller
     public function mine()
     {
         $userId    = auth()->guard('api')->id();
-        $filters   = request()->only(['search', 'type', 'status', 'campaign']);
+        $filters   = request()->only(['search', 'type', 'status', 'campaign', 'per_page']);
         $donations = $this->donationService->getByUser($userId, $filters);
+
+        return DonationResource::collection($donations)->response();
+    }
+
+    /**
+     * Super-admin: list all donations across all mosques (paginated).
+     */
+    public function allDonations(\Illuminate\Http\Request $request)
+    {
+        $filters   = $request->only(['search', 'type', 'status', 'campaign', 'mosque_id', 'city', 'date_from', 'date_to', 'per_page']);
+        $donations = $this->donationService->getAllDonations($filters);
 
         return DonationResource::collection($donations)->response();
     }
@@ -47,9 +58,23 @@ class DonationController extends Controller
         ]);
     }
 
-    public function stats(int $mosqueId)
+    /**
+     * Donation page stats.
+     * - Super-admin: aggregated across ALL mosques.
+     * - Any other authenticated user: scoped to their own donations.
+     * No mosque id is required — the scope is derived from the authenticated user.
+     */
+    public function stats()
     {
-        $data = $this->donationService->getPageStats($mosqueId);
+        $user = auth()->guard('api')->user();
+
+        if ($user->hasRole('super_admin')) {
+            $data = $this->donationService->getPageStatsForAll();
+        } elseif ($user->hasRole('mosque_manager') && $user->managedMosque) {
+            $data = $this->donationService->getPageStats($user->managedMosque->id);
+        } else {
+            $data = $this->donationService->getPageStatsForUser($user->id);
+        }
 
         return response()->json([
             'status'  => true,
@@ -80,16 +105,85 @@ class DonationController extends Controller
         ]);
     }
 
+    /**
+     * Donation report for the authenticated mosque manager.
+     * The mosque is derived from the manager's managedMosque (no mosque id required).
+     * - Without `?export=pdf` returns the report data as JSON.
+     * - With `?export=pdf` generates a PDF and returns a Supabase signed download URL
+     *   (same export flow used for donation receipts and volunteer certificates).
+     */
+    public function report(\Illuminate\Http\Request $request)
+    {
+        $manager = auth()->user();
+        $mosque  = $manager->managedMosque;
+
+        if (!$mosque) {
+            return response()->json([
+                'status'  => false,
+                'message' => __('messages.mosque.manager_without_mosque'),
+            ], 422);
+        }
+
+        $filters = $request->only(['search', 'type', 'status', 'campaign', 'date_from', 'date_to']);
+
+        if ($request->query('export') === 'pdf') {
+            $url = $this->donationService->exportReport($mosque->id, $filters);
+
+            return response()->json([
+                'status'  => true,
+                'message' => 'تم إنشاء تقرير التبرعات بنجاح.',
+                'data'    => ['report_url' => $url],
+            ]);
+        }
+
+        $report = $this->donationService->getReport($mosque->id, $filters);
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Success',
+            'data'    => $report,
+        ]);
+    }
+
+    /**
+     * Super-admin donation report across ALL mosques.
+     * - Without `?export=pdf` returns aggregated report data (JSON).
+     * - With `?export=pdf` returns a Supabase signed download URL.
+     * Supports the same filters as the mosque-manager report plus `mosque_id` and `city`.
+     */
+    public function allReport(\Illuminate\Http\Request $request)
+    {
+        $filters = $request->only(['search', 'type', 'status', 'campaign', 'mosque_id', 'city', 'date_from', 'date_to']);
+
+        if ($request->query('export') === 'pdf') {
+            $url = $this->donationService->exportReportForAll($filters);
+
+            return response()->json([
+                'status'  => true,
+                'message' => 'تم إنشاء تقرير التبرعات لكل المساجد بنجاح.',
+                'data'    => ['report_url' => $url],
+            ]);
+        }
+
+        $report = $this->donationService->getReportForAll($filters);
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Success',
+            'data'    => $report,
+        ]);
+    }
+
     public function receipt($id)
     {
-        $donation = \Modules\Donation\Models\Donation::with(['mosque', 'campaign', 'mosqueNeed'])
-            ->findOrFail($id);
+        $donation = Donation::findOrFail($id);
 
-        $pdf = $this->donationService->generateReceipt($donation);
+        $url = $this->donationService->getReceiptDownloadUrl($donation);
 
-        return response($pdf, 200, [
-            'Content-Type'        => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="receipt-' . $donation->reference . '.pdf"',
+        return response()->json([
+            'status'  => true,
+            'message' => 'Success',
+            'data'    => ['receipt_url' => $url],
         ]);
     }
 

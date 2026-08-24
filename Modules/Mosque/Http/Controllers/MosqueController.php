@@ -23,6 +23,8 @@ class MosqueController extends Controller
             'latitude'    => 'required|numeric|between:-90,90',
             'longitude'   => 'required|numeric|between:-180,180',
             'limit'       => 'nullable|integer|min:1|max:100',
+            'city_id'     => ['nullable', 'integer', 'exists:cities,id'],       // ⬅ إضافة
+            'district_id' => ['nullable', 'integer', 'exists:districts,id'],    // ⬅ إضافة
             'facility_id' => ['nullable', 'integer', 'exists:facilities,id'],
         ]);
 
@@ -30,7 +32,7 @@ class MosqueController extends Controller
 
         return ApiResponse::success(
             $paginatedMosques->items(),
-            'تم جلب المساجد الأقرب لموقعك بنجاح',
+            __('messages.mosque.nearby_retrieved'),
             $paginatedMosques
         );
     }
@@ -40,6 +42,8 @@ class MosqueController extends Controller
     {
         $validated = $request->validate([
             'per_page'    => ['nullable', 'integer', 'min:1', 'max:100'],
+            'city_id'     => ['nullable', 'integer', 'exists:cities,id'],
+            'district_id' => ['nullable', 'integer', 'exists:districts,id'],
             'city'        => ['nullable', 'string'],
             'district'    => ['nullable', 'string'],
             'status'      => ['nullable', 'string'],
@@ -49,7 +53,6 @@ class MosqueController extends Controller
             'sort_by'     => ['nullable', 'string', 'in:name,city,district,average_rating,reviews_count,created_at'],
             'sort_order'  => ['nullable', 'string', 'in:asc,desc'],
             'facility_id' => ['nullable', 'integer', 'exists:facilities,id'],
-
         ]);
 
         $data = $this->mosqueService->getAllMosques(
@@ -59,7 +62,7 @@ class MosqueController extends Controller
 
         return ApiResponse::success(
             $data->items(),
-            'Mosques retrieved successfully',
+            __('messages.mosque.all_retrieved'),
             ApiResponse::pagination($data)
         );
     }
@@ -70,10 +73,10 @@ class MosqueController extends Controller
         $mosque = $this->mosqueService->getMosqueById($id);
 
         if (!$mosque) {
-            return ApiResponse::error('Mosque not found', 404);
+            return ApiResponse::error(__('messages.mosque.not_found'), 404);
         }
 
-        return ApiResponse::success($mosque, 'Mosque retrieved successfully');
+        return ApiResponse::success($mosque, __('messages.mosque.retrieved'));
     }
 
 
@@ -86,7 +89,7 @@ class MosqueController extends Controller
 
         return ApiResponse::success(
             $mosque,
-            'Mosque created successfully',
+            __('messages.mosque.created'),
             null,
             201
         );
@@ -102,7 +105,7 @@ class MosqueController extends Controller
 
         return ApiResponse::success(
             $updated,
-            'Mosque updated successfully'
+            __('messages.mosque.updated')
         );
     }
 
@@ -111,7 +114,7 @@ class MosqueController extends Controller
     {
         $this->mosqueService->deleteMosque($mosque);
 
-        return ApiResponse::success(null, 'Mosque deleted successfully');
+        return ApiResponse::success(null, __('messages.mosque.deleted'));
     }
 
 
@@ -119,7 +122,7 @@ class MosqueController extends Controller
     {
         return ApiResponse::success(
             $this->mosqueService->getMosquesByCity($city),
-            'Mosques retrieved successfully'
+            __('messages.mosque.all_retrieved')
         );
     }
 
@@ -130,7 +133,7 @@ class MosqueController extends Controller
             $this->mosqueService->getFeaturedMosques(
                 (int) $request->get('limit', 10)
             ),
-            'Featured mosques retrieved successfully'
+            __('messages.mosque.featured_retrieved')
         );
     }
 
@@ -139,12 +142,16 @@ class MosqueController extends Controller
         $validated = $request->validate([
             'q'           => ['required', 'string', 'min:1'],
             'per_page'    => ['nullable', 'integer', 'min:1', 'max:100'],
+            'city_id'     => ['nullable', 'integer', 'exists:cities,id'],       // ⬅ إضافة
+            'district_id' => ['nullable', 'integer', 'exists:districts,id'],    // ⬅ إضافة
             'facility_id' => ['nullable', 'integer', 'exists:facilities,id'],
         ]);
 
         $data = $this->mosqueService->searchMosques(
             $validated['q'],
             array_filter([
+                'city_id' => $validated['city_id'] ?? null,        // ⬅ إضافة هون كمان
+                'district_id' => $validated['district_id'] ?? null, // ⬅ وهون
                 'facility_id' => $validated['facility_id'] ?? null,
             ]),
             (int) ($validated['per_page'] ?? 15)
@@ -152,7 +159,7 @@ class MosqueController extends Controller
 
         return ApiResponse::success(
             $data->items(),
-            'Search results retrieved successfully',
+            __('messages.mosque.search_retrieved'),
             ApiResponse::pagination($data)
         );
     }
@@ -164,7 +171,7 @@ class MosqueController extends Controller
     {
         return ApiResponse::success(
             $this->mosqueService->toggleFeaturedStatus($mosque),
-            'Feature status updated successfully'
+            __('messages.mosque.featured_status_updated')
         );
     }
 
@@ -177,7 +184,7 @@ class MosqueController extends Controller
 
         return ApiResponse::success(
             $this->mosqueService->updateMosqueStatus($mosque, $validated['status']),
-            'Status updated successfully'
+            __('messages.mosque.status_updated')
         );
     }
 
@@ -197,7 +204,17 @@ class MosqueController extends Controller
                 (float) $validated['average_rating'],
                 (int) $validated['reviews_count']
             ),
-            'Rating updated successfully'
+            __('messages.mosque.rating_updated')
+        );
+    }
+
+    public function mine(Request $request)
+    {
+        $mosques = $this->mosqueService->getMineForUser($request->user());
+
+        return ApiResponse::success(
+            $mosques,
+            __('messages.mosque.mine_retrieved')
         );
     }
 }

@@ -7,23 +7,22 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 use Modules\Invitation\Models\Invitation;
 use Modules\Invitation\Notifications\InvitationNotification;
+use Modules\Mosque\Models\Mosque;
 use Modules\User\Models\User;
 
 class SendInvitationAction
 {
     public function execute(User $user, string $email, string $role, int $mosqueId): Invitation
     {
-        // 1. تحديد اسم الصلاحية المطلوبة ديناميكياً (مثال: invite_mosque_manager)
+
         $permissionName = 'invite_' . $role;
 
-        // فحص الصلاحية بداخل نظام الأدوار الحالي لديك
         if (!$user->hasPermission($permissionName)) {
             throw ValidationException::withMessages([
                 'role' => 'غير مصرح لك بإرسال دعوة لهذا الدور الوظيفي.'
             ]);
         }
 
-        // 2. تطبيق التراتبية بدقة ومنع التلاعب عبر الـ API
         if ($user->hasRole('super_admin') && $role !== 'mosque_manager') {
             throw ValidationException::withMessages([
                 'role' => 'بصفتك مديراً للمنطقة (Super Admin)، يمكنك فقط دعوة مدير مسجد (Mosque Manager).'
@@ -49,7 +48,6 @@ class SendInvitationAction
             ]);
         }
 
-        // 4. التحقق من عدم وجود دعوة معلقة ونشطة لنفس الإيميل
         $existingInvitation = Invitation::where('email', $email)
             ->whereNull('accepted_at')
             ->where('expires_at', '>', now())
@@ -61,23 +59,32 @@ class SendInvitationAction
             ]);
         }
 
-        // 🔥 5. قانون الحظر الصارم (مدير واحد ومشرف واحد فقط للمسجد الواحد)
         if (in_array($role, ['mosque_manager', 'halaqa_supervisor'])) {
 
-            // أ. فحص إذا كان هناك مستخدم حقيقي في قاعدة البيانات يشغل هذا الدور في نفس المسجد
-            $hasActiveUser = User::where('mosque_id', $mosqueId)
-                ->whereHas('roles', function($query) use ($role) {
-                    $query->where('name', $role);
-                })->exists();
+            if ($role === 'mosque_manager') {
+                $hasActiveManager = Mosque::where('id', $mosqueId)
+                    ->whereNotNull('manager_id')
+                    ->exists();
 
-            if ($hasActiveUser) {
-                $roleTitle = $role === 'mosque_manager' ? 'مدير مسجد' : 'مشرف حلقات';
-                throw ValidationException::withMessages([
-                    'role' => "لا يمكن إرسال الدعوة. هذا المسجد يمتلك ($roleTitle) نشط بالفعل."
-                ]);
+                if ($hasActiveManager) {
+                    throw ValidationException::withMessages([
+                        'role' => 'لا يمكن إرسال الدعوة. هذا المسجد يمتلك مدير مسجد نشط بالفعل.'
+                    ]);
+                }
+            } else {
+                $hasActiveUser = User::where('mosque_id', $mosqueId)
+                    ->where('status', 'active')
+                    ->whereHas('roles', function ($query) use ($role) {
+                        $query->where('name', $role);
+                    })->exists();
+
+                if ($hasActiveUser) {
+                    throw ValidationException::withMessages([
+                        'role' => 'لا يمكن إرسال الدعوة. هذا المسجد يمتلك مشرف حلقات نشط بالفعل.'
+                    ]);
+                }
             }
 
-            // ب. فحص إذا كان هناك دعوة سابقة معلقة لم تنتهِ صلاحيتها لنفس الدور والمسجد
             $hasPendingInvitation = Invitation::where('mosque_id', $mosqueId)
                 ->where('role', $role)
                 ->whereNull('accepted_at')
@@ -92,7 +99,6 @@ class SendInvitationAction
             }
         }
 
-        // 6. إنشاء الدعوة وربطها بالـ mosque_id الفعلي
         $invitation = Invitation::create([
             'email'      => $email,
             'role'       => $role,
@@ -102,8 +108,45 @@ class SendInvitationAction
             'expires_at' => now()->addDays(7),
         ]);
 
-        // 7. إرسال الإشعار بالقالب الأخضر والشعار المخصص
         Notification::route('mail', $email)
+            ->notify(new InvitationNotification($invitation));
+
+        return $invitation;
+    }
+
+    public function resend(Invitation $invitation): Invitation
+    {
+        // 1️⃣ يمنع إعادة الإرسال إذا كانت الدعوة مقبولة بالفعل
+        if ($invitation->accepted_at !== null) {
+            throw ValidationException::withMessages([
+                'invitation' => 'لا يمكن إعادة إرسال الدعوة لأن المستخدم قَبِلها بالفعل.'
+            ]);
+        }
+
+        // 2️⃣ حظر تجاوز الحد الأقصى لإعادة الإرسال (مثلاً 3 مرات)
+        if (($invitation->resend_count ?? 0) >= 3) {
+            throw ValidationException::withMessages([
+                'invitation' => 'لقد وصلت للحد الأقصى المسموح به لإعادة إرسال هذه الدعوة (3 مرات).'
+            ]);
+        }
+
+        // 3️⃣ مهلة زمنية بين كل إرسال والآخر (مثلاً دقيقتان)
+        if ($invitation->updated_at && $invitation->updated_at->addMinutes(2)->isFuture()) {
+            $secondsLeft = now()->diffInSeconds($invitation->updated_at->addMinutes(2));
+            throw ValidationException::withMessages([
+                'invitation' => "يرجى الانتظار {$secondsLeft} ثانية قبل محاولة إعادة الإرسال مجدداً."
+            ]);
+        }
+
+        // 🟢 تجديد البيانات وتمديد الصلاحية لـ 7 أيام إضافية وزيادة العداد
+        $invitation->update([
+            'token'        => Str::random(40),
+            'expires_at'   => now()->addDays(7),
+            'resend_count' => ($invitation->resend_count ?? 0) + 1,
+        ]);
+
+        // إعادة إرسال الإشعار عبر البريد
+        Notification::route('mail', $invitation->email)
             ->notify(new InvitationNotification($invitation));
 
         return $invitation;

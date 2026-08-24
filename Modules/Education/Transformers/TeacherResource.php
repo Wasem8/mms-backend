@@ -12,7 +12,6 @@ class TeacherResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        // الوصول للبروفايل المنفصل لتجنب استدعاء الاستعلامات المتكررة (N+1 Problem)
         $profile = $this->whenLoaded('teacherProfile');
 
         return [
@@ -21,11 +20,14 @@ class TeacherResource extends JsonResource
             'email'          => $this->email,
             'mosque_id'      => $this->mosque_id,
 
-
             'phone'          => $profile ? $profile->phone : null,
             'specialization' => $profile ? $profile->specialization : null,
-            'status'         => $profile ? $profile->status : 'active', // active, paused, suspended
+            'status'         => $profile ? $profile->status : 'active',
             'notes'          => $profile ? $profile->notes : null,
+
+            // 🎯 إرجاع عدد الحلقات والطلاب التابعين للمعلم
+            'halaqats_count' => $this->halaqats_count ?? 0,
+            'students_count' => $this->students_count ?? 0,
 
             'halaqats'       => $this->whenLoaded('halaqats', function () {
                 return $this->halaqats->map(function ($halaqa) {

@@ -4,8 +4,10 @@ namespace Modules\Community\Providers;
 
 use Nwidart\Modules\Support\ModuleServiceProvider;
 use Illuminate\Console\Scheduling\Schedule;
+use Modules\Community\Repositories\EloquentSermonSelectionRepository;
 use Modules\Community\Repositories\SermonRepository;
 use Modules\Community\Repositories\SermonRepositoryInterface;
+use Modules\Community\Repositories\SermonSelectionRepositoryInterface;
 use Modules\Community\Repositories\TameemRepository;
 use Modules\Community\Repositories\TameemRepositoryInterface;
 
@@ -40,7 +42,7 @@ class CommunityServiceProvider extends ModuleServiceProvider
 
     public function register(): void
     {
-
+        parent::register();
 
         $this->app->bind(
             SermonRepositoryInterface::class,
@@ -56,6 +58,7 @@ class CommunityServiceProvider extends ModuleServiceProvider
             \Modules\Community\Repositories\DawahProgramRepositoryInterface::class,
             \Modules\Community\Repositories\DawahProgramRepository::class
         );
+        $this->app->bind(SermonSelectionRepositoryInterface::class, EloquentSermonSelectionRepository::class);
     }
 
     /**

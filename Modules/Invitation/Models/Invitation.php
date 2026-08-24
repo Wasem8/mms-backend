@@ -23,6 +23,32 @@ class Invitation extends Model
         'accepted_at' => 'datetime',
     ];
 
+    protected $appends = ['status', 'status_label'];
+
+
+    public function getStatusAttribute(): string
+    {
+        if ($this->accepted_at !== null) {
+            return 'accepted';
+        }
+
+        if ($this->expires_at && $this->expires_at->isPast()) {
+            return 'expired';
+        }
+
+        return 'pending';
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        return match ($this->status) {
+            'accepted' => 'مقبولة',
+            'expired'  => 'منتهية الصلاحية',
+            'pending'  => 'معلقة',
+            default    => 'غير معروفة',
+        };
+    }
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');

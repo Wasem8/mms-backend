@@ -3,54 +3,88 @@
 namespace Modules\Volunteer\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Support\ApiResponse;
 use Illuminate\Http\Request;
+use Modules\User\Models\User;
+use Modules\User\Transformers\UserResource;
+use Modules\Volunteer\Enums\ApplicationStatus;
+use Modules\Volunteer\Models\VolunteerApplication;
+use Modules\Volunteer\Models\VolunteerOpportunity;
 
 class VolunteerController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        return view('volunteer::index');
+        $currentUser = $request->user();
+
+        $query = User::with(['roles.permissions'])
+            ->whereHas('roles', fn($q) => $q->where('name', 'volunteer'))
+            ->latest();
+
+        // 🎯 super_admin sees all volunteers; others are scoped to their mosque
+        if (! $currentUser->hasRole('super_admin') && $currentUser->mosque_id) {
+            $query->where('mosque_id', $currentUser->mosque_id);
+        }
+
+        // 🔍 search by name / first_name / last_name / email / phone
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+
+        // 🔍 optional status filter (active / inactive)
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        $perPage    = $request->integer('per_page', 15);
+        $volunteers  = $query->paginate($perPage);
+
+        return ApiResponse::success(
+            UserResource::collection($volunteers)->resolve($request),
+            __('messages.volunteers_retrieved'),
+            $volunteers
+        );
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Mosque-manager dashboard cards, scoped to the manager's mosque:
+     * - total opportunities
+     * - pending (قائمة) applications
+     * - volunteers in the mosque
      */
-    public function create()
+    public function stats(Request $request)
     {
-        return view('volunteer::create');
+        $user = $request->user();
+        $isSuperAdmin = $user->hasRole('super_admin');
+        $mosqueId = $isSuperAdmin ? null : ($user->managedMosque?->id ?? $user->mosque_id);
+
+        $opportunitiesTotal = $isSuperAdmin
+            ? VolunteerOpportunity::count()
+            : VolunteerOpportunity::where('mosque_id', $mosqueId)->count();
+
+        $pendingApplications = $isSuperAdmin
+            ? VolunteerApplication::where('status', ApplicationStatus::Pending)->count()
+            : VolunteerApplication::where('status', ApplicationStatus::Pending)
+                ->whereHas('opportunity', fn($q) => $q->where('mosque_id', $mosqueId))
+                ->count();
+
+        $volunteersCount = $isSuperAdmin
+            ? User::whereHas('roles', fn($q) => $q->where('name', 'volunteer'))->count()
+            : User::where('mosque_id', $mosqueId)
+                ->whereHas('roles', fn($q) => $q->where('name', 'volunteer'))
+                ->count();
+
+        return ApiResponse::success([
+            'opportunities_total'   => $opportunitiesTotal,
+            'pending_applications'  => $pendingApplications,
+            'volunteers_count'      => $volunteersCount,
+        ], __('messages.volunteer_stats_retrieved'));
     }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request) {}
-
-    /**
-     * Show the specified resource.
-     */
-    public function show($id)
-    {
-        return view('volunteer::show');
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit($id)
-    {
-        return view('volunteer::edit');
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id) {}
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id) {}
 }

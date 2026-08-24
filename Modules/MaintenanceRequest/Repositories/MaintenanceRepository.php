@@ -49,6 +49,14 @@ class MaintenanceRepository implements MaintenanceRepositoryInterface
             ->when(isset($filters['category']),  fn($q) => $q->where('category',  $filters['category']))
             ->when(isset($filters['priority']),  fn($q) => $q->where('priority',  $filters['priority']))
             ->when(isset($filters['mosque_id']), fn($q) => $q->where('mosque_id', $filters['mosque_id']))
+            ->when(isset($filters['search']), function ($q) use ($filters) {
+                $s = $filters['search'];
+                $q->where(function ($sub) use ($s) {
+                    $sub->where('maintenance_number', 'like', "%{$s}%")
+                        ->orWhere('title', 'like', "%{$s}%")
+                        ->orWhere('description', 'like', "%{$s}%");
+                });
+            })
             ->latest()
             ->paginate($filters['per_page'] ?? 15);
     }
@@ -66,5 +74,48 @@ class MaintenanceRepository implements MaintenanceRepositoryInterface
             'changed_by' => $logData['changed_by'],
             'notes'      => $logData['note'] ?? null,
         ]);
+    }
+    public function getPublicFiltered(array $filters = [])
+    {
+        return Maintenance::query()
+            ->select(['id', 'maintenance_number', 'mosque_id', 'title', 'description', 'category', 'priority', 'status', 'scheduled_at', 'completed_at', 'created_at'])
+            ->with([
+                'mosque:id,name,city_id,latitude,longitude',
+                'files:id,maintenance_id,file_path,file_name,file_type',
+            ])
+            ->when(isset($filters['status']),    fn($q) => $q->where('status', $filters['status']))
+            ->when(isset($filters['category']),  fn($q) => $q->where('category', $filters['category']))
+            ->when(isset($filters['priority']),  fn($q) => $q->where('priority', $filters['priority']))
+            ->when(isset($filters['mosque_id']), fn($q) => $q->where('mosque_id', $filters['mosque_id']))
+            ->latest()
+            ->paginate($filters['per_page'] ?? 15);
+    }
+
+    public function findPublic(int $id): ?Maintenance
+    {
+        return Maintenance::query()
+            ->select(['id', 'maintenance_number', 'mosque_id', 'title', 'description', 'category', 'priority', 'status', 'scheduled_at', 'completed_at', 'created_at'])
+            ->with([
+                'mosque:id,name,city_id,latitude,longitude',
+                'files:id,maintenance_id,file_path,file_name,file_type',
+            ])
+            ->find($id);
+    }
+
+    public function requestFiles(int $id, array $data): Maintenance
+    {
+        $maintenance = $this->find($id);
+        $maintenance->update($data);
+
+        return $maintenance->fresh(['files', 'statusLogs']);
+    }
+
+    public function getPendingFileRequests(?int $mosqueId = null, int $perPage = 15)
+    {
+        return Maintenance::with(['files', 'statusLogs', 'filesRequestedBy:id,name'])
+            ->whereRaw('files_requested = true')
+            ->when($mosqueId, fn($q) => $q->where('mosque_id', $mosqueId))
+            ->latest()
+            ->paginate($perPage);
     }
 }

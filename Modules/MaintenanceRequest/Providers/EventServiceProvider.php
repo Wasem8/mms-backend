@@ -3,25 +3,23 @@
 namespace Modules\MaintenanceRequest\Providers;
 
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+use Modules\MaintenanceRequest\Events\MaintenanceRequestCreated;
+use Modules\MaintenanceRequest\Events\MaintenanceStatusChanged;
+use Modules\MaintenanceRequest\Listeners\SendMaintenanceRequestCreatedNotification;
+use Modules\MaintenanceRequest\Listeners\SendMaintenanceStatusChangedNotification;
 
 class EventServiceProvider extends ServiceProvider
 {
-    /**
-     * The event handler mappings for the application.
-     *
-     * @var array<string, array<int, string>>
-     */
-    protected $listen = [];
+    protected $listen = [
+        MaintenanceRequestCreated::class => [
+            SendMaintenanceRequestCreatedNotification::class,
+        ],
+        MaintenanceStatusChanged::class => [
+            SendMaintenanceStatusChangedNotification::class,
+        ],
+    ];
 
-    /**
-     * Indicates if events should be discovered.
-     *
-     * @var bool
-     */
     protected static $shouldDiscoverEvents = true;
 
-    /**
-     * Configure the proper event listeners for email verification.
-     */
     protected function configureEmailVerification(): void {}
 }

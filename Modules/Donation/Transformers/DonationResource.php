@@ -20,7 +20,7 @@ class DonationResource extends JsonResource
             'payment_method'   => $this->payment_method,          // cash | stripe
 
             // ── Amounts ───────────────────────────────────────────────────
-            'amount'           => (float) $this->amount,
+            'amount' => $this->amount !== null ? (float) $this->amount : null,
             'item_description' => $this->item_description,
 
             // ── Donor ─────────────────────────────────────────────────────
@@ -32,6 +32,7 @@ class DonationResource extends JsonResource
                 'id'    => $this->user->id,
                 'name'  => $this->user->name,
                 'email' => $this->user->email,
+                'phone' => $this->user->phone,
             ]),
 
             // ── Relations ─────────────────────────────────────────────────
@@ -44,8 +45,8 @@ class DonationResource extends JsonResource
 
             // ── Lifecycle ─────────────────────────────────────────────────
             'status'           => $this->status,                  // pending | completed
-            'created_at'       => $this->created_at->toDateTimeString(),
-            'updated_at'       => $this->updated_at->toDateTimeString(),
+            'created_at'       => $this->created_at?->toDateTimeString(),
+            'updated_at'       => $this->updated_at?->toDateTimeString(),
 
             // ── Stripe (only present for online donations) ────────────────
             'client_secret'    => $this->when(

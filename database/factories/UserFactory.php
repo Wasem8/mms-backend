@@ -54,7 +54,7 @@ class UserFactory extends Factory
     public function areaManager(): self
     {
         return $this->afterCreating(function (User $user) {
-            $user->assignRole('area_manager');
+            $user->assignRole('super_admin');
         });
     }
 

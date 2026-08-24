@@ -13,12 +13,22 @@ class StudentEndpoints
         path: '/education/students',
         operationId: 'getStudentsList',
         tags: ['Students'],
-        summary: 'عرض قائمة الطلاب مع الفلترة',
-        description: 'يمكن الفلترة حسب الحالة باستخدام query parameter: ?status=active أو pending أو rejected',
+        summary: 'عرض قائمة الطلاب مع الفلترة والبحث',
+        description: 'يمكن الفلترة حسب الحالة، البحث بالاسم، تصفية الطلاب حسب وجود حلقة، أو جلب الطلاب القابلين للإضافة لحلقة محددة.',
         security: [['bearerAuth' => []]],
         parameters: [
-
             new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+
+            // 1. فلتر البحث (§8)
+            new OA\Parameter(
+                name: 'search',
+                in: 'query',
+                description: 'البحث عن طالب عن طريق الاسم الأول أو الأخير أو الاسم الكامل',
+                required: false,
+                schema: new OA\Schema(type: 'string', example: 'عمر')
+            ),
+
+            // 2. فلتر وجود حلقة
             new OA\Parameter(
                 name: 'has_halaqa',
                 in: 'query',
@@ -29,6 +39,17 @@ class StudentEndpoints
                 ),
                 description: '1 = الطلاب المرتبطون بحلقات، 0 = الطلاب غير المرتبطين بأي حلقة'
             ),
+
+            // 3. فلتر الطلاب المتاحين لحلقة معينة (§8)
+            new OA\Parameter(
+                name: 'assignable_to_halaqa',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', example: 7),
+                description: 'جلب الطلاب الذين يمكن إضافتهم للحلقة رقم (ID) المحددة (أي ليسوا مضافين إليها حالياً)'
+            ),
+
+            // 4. فلتر الحالة (محدث بجميع الحالات)
             new OA\Parameter(
                 name: 'status',
                 in: 'query',
@@ -36,10 +57,19 @@ class StudentEndpoints
                 required: false,
                 schema: new OA\Schema(
                     type: 'string',
-                    enum: ['active', 'pending', 'rejected'],
+                    enum: ['active', 'pending', 'rejected', 'paused', 'suspended'],
                     example: 'active'
                 )
-            )
+            ),
+
+            // 5. عدد العناصر بالصفحة
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                description: 'عدد النتائج في الصفحة الواحدة',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 10, example: 15)
+            ),
         ],
         responses: [
             new OA\Response(
@@ -57,13 +87,24 @@ class StudentEndpoints
                         new OA\Property(property: 'pagination', ref: '#/components/schemas/Pagination')
                     ]
                 )
+            ),
+
+            // 6. توثيق استجابة الخطأ 422 عند إرسال فلاتر خاطئة (§8 Fail Loudly)
+            new OA\Response(
+                response: 422,
+                description: 'قيمة فلتر غير صحيحة (Validation Error)',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: false),
+                        new OA\Property(property: 'message', type: 'string', example: 'The selected has_halaqa is invalid.')
+                    ]
+                )
             )
         ]
     )]
-    public function index() {
-        // الكود كما هو
+    public function index(Request $request) {
+        // ...
     }
-
     #[OA\Post(
         path: '/education/students',
         operationId: 'storeStudent',

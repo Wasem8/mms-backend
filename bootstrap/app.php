@@ -10,7 +10,9 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Validation\ValidationException;
+use Modules\User\Http\Middleware\EnsureUserIsActive;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Illuminate\Console\Scheduling\Schedule; // 👈 1. إضافة الـ Schedule هنا
 
@@ -32,6 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'auth' => Authenticate::class, // 🔥 override
             'role' => RoleMiddleware::class,
+            'active.user' => EnsureUserIsActive::class,
         ]);
     })
     // 👇 2. إضافة بلوك الجدولة هنا 👇
@@ -43,9 +46,9 @@ return Application::configure(basePath: dirname(__DIR__))
     // 👆 نهاية بلوك الجدولة 👆
     ->withExceptions(function (Exceptions $exceptions): void {
 
-        $exceptions->shouldRenderJsonWhen(function ($request, $e) {
-            return $request->is('api/*') || $request->expectsJson();
-        });
+        // هذا الباك-إند API فقط: أعد كل الأخطاء كـ JSON دائماً
+        // حتى تظهر رسالة الخطأ الحقيقية بدلاً من صفحة HTML/الترحيب.
+        $exceptions->shouldRenderJsonWhen(fn($request, $e) => true);
 
         // 🔐 Unauthenticated
         $exceptions->render(function (AuthenticationException $e, $request) {
@@ -78,9 +81,18 @@ return Application::configure(basePath: dirname(__DIR__))
         // ⚠️ Validation
         $exceptions->render(function (ValidationException $e, $request) {
             return ApiResponse::error(
-                'Validation error.',
+                __('messages.validation_error'),
                 422,
                 $e->errors()
             );
+        });
+
+        // 🧾 Receipt limit (max 2 per donation)
+        $exceptions->render(function (ConflictHttpException $e, $request) {
+            return response()->json([
+                'statusCode' => 409,
+                'error'      => 'Conflict',
+                'message'    => $e->getMessage(),
+            ], 409);
         });
     })->create();

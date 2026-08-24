@@ -27,7 +27,7 @@ class MosqueNeedsService
     public function get(int $id): MosqueNeed
     {
         return $this->repository->find($id)
-            ?? throw new \Exception('Need not found');
+            ?? throw new \Exception(__('messages.mosque.need_not_found'));
     }
 
     public function getNeedForMosque($mosqueId, $needId)
@@ -37,7 +37,7 @@ class MosqueNeedsService
             ->first();
 
         if (! $need) {
-            throw new Exception('Need not found or does not belong to the specified mosque.');
+            throw new Exception(__('messages.mosque.need_not_in_mosque'));
         }
 
         return $need;
@@ -48,7 +48,7 @@ class MosqueNeedsService
         ->first();
 
         if(! $need) {
-            throw new Exception('Need not found');
+            throw new Exception(__('messages.mosque.need_not_found'));
         }
         return $need;
 
@@ -109,5 +109,15 @@ class MosqueNeedsService
         }
 
         return $baseUrl . '/storage/v1/object/public/' . $path;
+    }
+
+    public function listNearbyMosquesWithNeeds(
+        float $lat,
+        float $lng,
+        ?float $radiusKm = null,
+        bool $urgentOnly = false,
+        int $perPage = 15
+    ): LengthAwarePaginator {
+        return $this->repository->getNearbyMosquesWithNeeds($lat, $lng, $radiusKm, $urgentOnly, $perPage);
     }
 }

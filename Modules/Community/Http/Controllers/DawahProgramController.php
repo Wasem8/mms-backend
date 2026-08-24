@@ -20,6 +20,8 @@ class DawahProgramController extends Controller
         $this->dawahProgramService = $dawahProgramService;
     }
 
+
+
     public function index(Request $request)
     {
         $validated = $request->validate([
@@ -36,17 +38,18 @@ class DawahProgramController extends Controller
             ])
         );
 
-        return ApiResponse::success($programs->items(), 'تم جلب البرامج بنجاح', $programs);
+        return ApiResponse::success($programs->items(), __('messages.community.programs_retrieved'), $programs);
     }
 
     public function show(Mosque $mosque, DawahProgram $program)
     {
-        return ApiResponse::success($program->load('schedules'), 'تم جلب البرنامج بنجاح');
+        return ApiResponse::success($program->load('schedules'), __('messages.community.program_retrieved'));
     }
 
     public function store(StoreDawahProgramRequest $request, Mosque $mosque)
     {
         try {
+
             $data = $request->validated();
             $data['mosque_id'] = $mosque->id;
 
@@ -60,13 +63,13 @@ class DawahProgramController extends Controller
 
             $program = $this->dawahProgramService->createProgram($data);
 
-            return ApiResponse::success($program->load('schedules'), 'تم إنشاء البرنامج بنجاح', 201);
+            return ApiResponse::success($program->load('schedules'), __('messages.community.program_created'), 201);
         } catch (\Exception $e) {
             return ApiResponse::error($e->getMessage(), 400);
         }
     }
 
-    public function update(UpdateDawahProgramRequest $request, Mosque $mosque, DawahProgram $program)
+    public function update(UpdateDawahProgramRequest $request,Mosque $mosque, DawahProgram $program)
     {
         try {
             $data = $request->validated();
@@ -81,26 +84,33 @@ class DawahProgramController extends Controller
 
             $updatedProgram = $this->dawahProgramService->updateProgram($program, $data);
 
-            return ApiResponse::success($updatedProgram->load('schedules'), 'تم تحديث البرنامج بنجاح');
+            return ApiResponse::success($updatedProgram->load('schedules'), __('messages.community.program_updated'));
         } catch (\Exception $e) {
             return ApiResponse::error($e->getMessage(), 400);
         }
     }
 
-    public function destroy(Mosque $mosque, DawahProgram $program)
+    public function destroy(Mosque $mosque ,DawahProgram $program)
     {
         try {
-            $this->dawahProgramService->deleteProgram($mosque, $program);
-            return ApiResponse::success(null, 'تم حذف البرنامج بنجاح');
+            $this->dawahProgramService->deleteProgram($mosque,$program);
+            return ApiResponse::success(null, __('messages.community.program_deleted'));
         } catch (\Exception $e) {
             return ApiResponse::error($e->getMessage(), 400);
         }
     }
 
-    public function getProgramsByMosque(Mosque $mosque)
+    public function getProgramsByMosque(Request $request, Mosque $mosque)
     {
-        $programs = $this->dawahProgramService->getProgramsByMosque($mosque->id);
+        $validated = $request->validate([
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
 
-        return ApiResponse::success($programs->load('schedules'), 'تم جلب برامج المسجد بنجاح');
+        $programs = $this->dawahProgramService->getProgramsByMosque(
+            $mosque->id,
+            (int) ($validated['per_page'] ?? 10)
+        );
+
+        return ApiResponse::success($programs->items(), __('messages.community.mosque_programs_retrieved'), $programs);
     }
 }

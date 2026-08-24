@@ -4,11 +4,9 @@ namespace Modules\Volunteer\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Support\ApiResponse;
-use Modules\Volunteer\Resources\VolunteerApplicationResource;
-use Modules\Volunteer\Resources\VolunteerOpportunityResource;
+use Illuminate\Http\Request;
+use Modules\Volunteer\Models\VolunteerOpportunity;
 use Modules\Volunteer\Services\VolunteerOpportunityService;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Modules\Volunteer\Http\Requests\CreateOpportunityRequest as RequestsCreateOpportunityRequest;
 use Modules\Volunteer\Http\Requests\UpdateOpportunityRequest;
 use Modules\Volunteer\Http\Requests\AssignTaskRequest;
@@ -20,24 +18,55 @@ class VolunteerOpportunityController extends Controller
         private readonly VolunteerOpportunityService $service,
     ) {}
 
-    /** Manager: list all opportunities for their mosque */
-    public function managerIndex()
+    /** Manager: list opportunities for their own mosque, with optional search + status filter.
+     *  Super admins get all opportunities across mosques. */
+    public function managerIndex(Request $request)
     {
+        $user = auth()->user();
 
-        $mosqueId = (int) auth()->user()->mosque_id;
+        if ($user->hasRole('super_admin')) {
+            $mosqueId = null;
+        } else {
+            $mosque = $user->managedMosque;
 
-        $Opportunities = $this->service->listForManager($mosqueId);
-        return ApiResponse::success($Opportunities, __('messages.opportunities_retrieved'), 200);
+            if (! $mosque) {
+                return ApiResponse::error(__('messages.no_mosque_assigned_to_manager'), 422);
+            }
+
+            $mosqueId = (int) $mosque->id;
+        }
+
+        $perPage = $request->integer('per_page', 15);
+        $search  = $request->input('search');
+        $status  = $request->input('status');
+
+        $opportunities = $this->service->listForManager(
+            $mosqueId,
+            $perPage,
+            $search,
+            $status
+        );
+
+        return ApiResponse::success(
+            $opportunities->items(),
+            __('messages.opportunities_retrieved'),
+            $opportunities
+        );
     }
 
-    /** Volunteer: list open opportunities */
+    /** Volunteer: browse all open opportunities */
     public function index()
     {
-        $mosqueId = (int) auth()->user()->mosque_id;
-        $Opportunities = $this->service->listOpen($mosqueId);
-        return ApiResponse::success($Opportunities, __('messages.opportunities_retrieved'), 200);
+        $opportunities = $this->service->listOpen(null);
+
+        return ApiResponse::success(
+            $opportunities->items(),
+            __('messages.opportunities_retrieved'),
+            $opportunities
+        );
     }
 
+    /** Manager: create an opportunity for the mosque they manage (see CreateOpportunityRequest::toDTO) */
     public function store(RequestsCreateOpportunityRequest $request)
     {
         $opportunity = $this->service->create($request->toDTO());
@@ -47,12 +76,15 @@ class VolunteerOpportunityController extends Controller
     public function show(string $id)
     {
         $opportunity = $this->service->findOrFail((int) $id);
+        $this->ensureManagerOwnsOpportunity($opportunity);
+        $opportunity->load('acceptedApplications.tasks');
+        $opportunity->acceptedApplications->each->append('volunteer_name', 'all_tasks_completed');
         return ApiResponse::success($opportunity, __('messages.opportunity_retrieved'), 200);
     }
-
     public function update(UpdateOpportunityRequest $request, string $id)
     {
         $opportunity = $this->service->findOrFail((int) $id);
+        $this->ensureManagerOwnsOpportunity($opportunity);
         $updated     = $this->service->update($opportunity, $request->toDTO());
         return ApiResponse::success($updated, __('messages.opportunity_updated'), 200);
     }
@@ -60,15 +92,46 @@ class VolunteerOpportunityController extends Controller
     public function close(string $id)
     {
         $opportunity = $this->service->findOrFail((int) $id);
+        $this->ensureManagerOwnsOpportunity($opportunity);
         $closed      = $this->service->close($opportunity);
         return ApiResponse::success($closed, __('messages.opportunity_closed'), 200);
     }
 
-    /** Manager: list applications for an opportunity */
-    public function applications(string $opportunityId)
+    /**
+     * A mosque_manager may only access opportunities of the mosque they manage.
+     * Volunteers (and other roles) are not restricted here.
+     */
+    private function ensureManagerOwnsOpportunity(VolunteerOpportunity $opportunity): void
     {
-        $applications = $this->service->listApplications((int) $opportunityId);
-        return ApiResponse::success($applications, __('messages.applications_retrieved'), 200);
+        $user = auth()->user();
+
+        if (! $user || ! $user->isMosqueManager()) {
+            return;
+        }
+
+        $mosque = $user->managedMosque;
+
+        if (! $mosque || $opportunity->mosque_id !== $mosque->id) {
+            abort(403, __('messages.unauthorized_opportunity_access'));
+        }
+    }
+
+    /** Manager: list applications for an opportunity, optionally filtered by status */
+    public function applications(Request $request, string $opportunityId)
+    {
+        $validated = $request->validate([
+            'status' => 'nullable|in:pending,approved,rejected',
+        ]);
+        $status = $validated['status'] ?? null;
+
+        $applications = $this->service->listApplications((int) $opportunityId, $status);
+        $applications->getCollection()->each->append('volunteer_name', 'all_tasks_completed');
+
+        return ApiResponse::success(
+            $applications->items(),
+            __('messages.applications_retrieved'),
+            $applications
+        );
     }
 
     /** Volunteer: apply for an opportunity */
@@ -82,6 +145,7 @@ class VolunteerOpportunityController extends Controller
     public function myApplications()
     {
         $applications = $this->service->listMyApplications((int) auth()->id());
+        $applications->getCollection()->each->append('all_tasks_completed');
         return ApiResponse::success($applications, __('messages.my_applications_retrieved'), 200);
     }
 

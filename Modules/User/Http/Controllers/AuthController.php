@@ -9,11 +9,13 @@ use Illuminate\Http\Request;
 use Modules\User\Actions\ForgotPasswordAction;
 use Modules\User\Actions\LoginAction;
 use Modules\User\Actions\RegisterParentAction;
+use Modules\User\Actions\RegisterVolunteerAction;
 use Modules\User\Actions\ResetPasswordAction;
 use Modules\User\Actions\VerifyOtpAction;
 use Modules\User\Http\Requests\ForgotPasswordRequest;
 use Modules\User\Http\Requests\LoginRequest;
 use Modules\User\Http\Requests\RegisterParentRequest;
+use Modules\User\Http\Requests\RegisterVolunteerRequest;
 use Modules\User\Http\Requests\ResendOtpRequest;
 use Modules\User\Http\Requests\ResetPasswordRequest;
 use Modules\User\Http\Requests\VerifyOtpRequest;
@@ -73,6 +75,12 @@ class AuthController extends Controller {
         $action->execute($request->validated());
 
         return ApiResponse::success([], 'Password reset successfully.');
+    }
+
+    public function registerVolunteer(RegisterVolunteerRequest $request, RegisterVolunteerAction $action)
+    {
+        $user = $action->execute($request->validated());
+        return ApiResponse::success(new UserResource($user), 'Account created. An OTP has been sent to your email for verification.');
     }
 
     public function logout(Request $request) {

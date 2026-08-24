@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Support\ApiResponse;
 use Modules\Community\Http\Requests\CreateSermon;
 use Modules\Community\Services\SermonService;
+use Modules\Community\Http\Requests\SearchSermonRequest;
+
 
 class SermonController extends Controller
 {
@@ -25,7 +27,7 @@ class SermonController extends Controller
 
         $sermon = $this->sermonService->createSermon($validatedData, auth()->id(), $files);
 
-        return ApiResponse::success($sermon, 'Sermon submitted successfully with its attachments and is pending approval.');
+        return ApiResponse::success($sermon, __('messages.community.sermon_submitted'));
     }
 
     public function show($id)
@@ -33,37 +35,83 @@ class SermonController extends Controller
         $sermon = $this->sermonService->getSermonById($id);
 
         if (!$sermon) {
-            return ApiResponse::error('Sermon not found.', 404);
+            return ApiResponse::error(__('messages.community.sermon_not_found'), 404);
         }
 
-        return ApiResponse::success($sermon, 'Sermon details retrieved successfully.');
+        return ApiResponse::success($sermon, __('messages.community.sermon_retrieved'));
     }
 
     public function approve($id)
     {
         $sermon = $this->sermonService->approveSermon($id, auth()->id());
-        return ApiResponse::success($sermon, 'Sermon approved and archived for public mosque use.');
+        return ApiResponse::success($sermon, __('messages.community.sermon_approved'));
     }
 
-    public function reject($id)
+    public function reject(Request $request, $id)
     {
-        $this->sermonService->rejectAndDestroySermon($id);
-        return ApiResponse::success(null, 'Sermon has been rejected and deleted from the system.');
+        $validated = $request->validate([
+            'notes' => ['required', 'string', 'min:1'],
+        ]);
+
+        $sermon = $this->sermonService->rejectSermon($id, auth()->id(), $validated['notes']);
+
+        return ApiResponse::success($sermon, __('messages.community.sermon_rejected'));
+    }
+    public function index()
+    {
+        $sermons = $this->sermonService->getAllSermons(auth()->user());
+        return ApiResponse::success($sermons, __('messages.community.sermons_retrieved'));
+    }
+    public function pending(Request $request) {
+        $perPage = $this->perPage($request);
+        $sermons = $this->sermonService->getPendingSermons($perPage);
+
+        return ApiResponse::success($sermons->items(), __('messages.community.pending_sermons_retrieved'), $sermons);
     }
 
-    public function index() {
-        $sermons = $this->sermonService->getAllSermons();
-        return ApiResponse::success($sermons, 'All sermons retrieved successfully.');
-    }
-    public function pending() {
-        $sermons = $this->sermonService->getPendingSermons();
-        return ApiResponse::success($sermons, 'Pending sermons retrieved successfully.');
+    public function archived(Request $request) {
+        $perPage = $this->perPage($request);
+        $sermons = $this->sermonService->getArchivedSermons($perPage);
+
+        return ApiResponse::success($sermons->items(), __('messages.community.archived_sermons_retrieved'), $sermons);
     }
 
-    public function archived() {
-        $sermons = $this->sermonService->getArchivedSermons();
-        return ApiResponse::success($sermons, 'Archived sermons retrieved successfully.');
+    private function perPage(Request $request): int
+    {
+        return (int) $request->query('per_page', 15);
     }
 
+    public function search(SearchSermonRequest $request)
+    {
+        $filters = $request->validated();
+        $perPage = $filters['per_page'] ?? 15;
 
+        $sermons = $this->sermonService->searchSermons($filters, auth()->user(), $perPage);
+
+        return ApiResponse::success($sermons, __('messages.community.sermons_filtered'));
+    }
+
+    public function mostSelected(Request $request)
+    {
+        $filters = $request->validate([
+            'limit' => ['nullable', 'integer', 'min:1', 'max:50'],
+            'friday_date_from' => ['nullable', 'date'],
+            'friday_date_to' => ['nullable', 'date'],
+        ]);
+
+        $sermons = $this->sermonService->getMostSelectedSermons(
+            $filters['limit'] ?? 10,
+            $filters['friday_date_from'] ?? null,
+            $filters['friday_date_to'] ?? null,
+        );
+
+        return ApiResponse::success($sermons, __('messages.community.most_selected_sermons_retrieved'));
+    }
+
+    public function destroy($id)
+    {
+        $this->sermonService->deleteSermonIfPending($id, auth()->id());
+
+        return ApiResponse::success(null, __('messages.community.sermon_deleted'));
+    }
 }

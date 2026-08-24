@@ -437,4 +437,42 @@ class EvaluationEndpoints
     public function uploadVoice() {}
 
 
+    #[OA\Get(
+        path: '/education/evaluation-labels',
+        operationId: 'getEvaluationLabels',
+        tags: ['Evaluations'],
+        summary: 'قائمة تسميات وقيم التقييم المتاحة',
+        description: 'يجلب قائمة بجميع المفاتيح والقيم النصية المترجمة المعتمدة للتقييمات (مثل ممتاز، جيد، الخ).',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'تم جلب القائمة بنجاح',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Evaluation labels retrieved successfully.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(
+                                type: 'object',
+                                properties: [
+                                    new OA\Property(property: 'key', type: 'string', example: 'excellent'),
+                                    new OA\Property(property: 'name', type: 'string', example: 'ممتاز')
+                                ]
+                            )
+                        ),
+                        new OA\Property(property: 'pagination', type: 'object', nullable: true, example: null)
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'غير مصرح')
+        ]
+    )]
+    public function getEvaluationLabels() {}
+
 }

@@ -3,11 +3,10 @@
 namespace Modules\Volunteer\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Modules\Volunteer\DTOs\AssignTaskDTO;
-use Modules\Volunteer\Http\Requests\AssignTaskRequest;
-use Modules\Volunteer\Services\VolunteerTaskService;
 use App\Support\ApiResponse;
+use Modules\Volunteer\Http\Requests\AssignTaskRequest;
+use Modules\Volunteer\Http\Requests\CreateTaskRequest;
+use Modules\Volunteer\Services\VolunteerTaskService;
 
 class VolunteerTaskController extends Controller
 {
@@ -15,24 +14,41 @@ class VolunteerTaskController extends Controller
         private readonly VolunteerTaskService $service,
     ) {}
 
-    /** Manager / Volunteer: list tasks for an application */
-    public function index(string $applicationId)
+    /** Manager: list all tasks (assigned + unassigned) for an opportunity */
+    public function index(string $opportunityId)
     {
-       $tasks = $this->service->listForApplication((int) $applicationId);
-       return ApiResponse::success($tasks, __('messages.tasks_retrieved'), 200);
+        $tasks = $this->service->listForOpportunity((int) $opportunityId);
+        $tasks->each->append('volunteer_name');
+        return ApiResponse::success($tasks, __('messages.tasks_retrieved'), 200);
     }
 
-    /** Manager: assign a new task */
-    public function store(AssignTaskRequest $request)
+    /** Manager: create a general, unassigned task for an opportunity */
+    public function store(CreateTaskRequest $request, string $opportunityId)
     {
-        $task = $this->service->assign($request->toDTO());
-        return ApiResponse::success($task, __('messages.task_assigned'), 201);
+        $task = $this->service->create($request->toDTO((int) $opportunityId));
+        return ApiResponse::success($task, __('messages.task_created'), 201);
     }
 
-    /** Volunteer: mark their own task as completed */
+    /** Manager: distribute an existing task to one approved volunteer */
+    public function assign(AssignTaskRequest $request, string $taskId)
+    {
+        $dto  = $request->toDTO((int) $taskId);
+        $task = $this->service->assign($dto->taskId, $dto->applicationId);
+
+        return ApiResponse::success($task, __('messages.task_assigned'), 200);
+    }
+
+    /** Volunteer: list tasks assigned to my own approved application */
+    public function applicationTasks(string $applicationId)
+    {
+        $tasks = $this->service->listForApplication((int) $applicationId, (int) auth()->id());
+        return ApiResponse::success($tasks, __('messages.tasks_retrieved'), 200);
+    }
+
+    /** Volunteer: mark my own assigned task as completed */
     public function complete(string $taskId)
     {
-        $task = $this->service->markCompleted((int) $taskId);
+        $task = $this->service->complete((int) $taskId, (int) auth()->id());
         return ApiResponse::success($task, __('messages.task_completed'), 200);
     }
 }

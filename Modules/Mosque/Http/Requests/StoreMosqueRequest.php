@@ -19,12 +19,19 @@ class StoreMosqueRequest extends FormRequest
             'working_hours' => ['nullable', 'string', 'max:500'],
             'status' => ['required', Rule::in(['active', 'maintenance', 'closed'])],
             'is_featured' => 'nullable|in:true,false,1,0,true,false',
-            'city' => ['required', 'string', 'max:100'],
-            'district' => ['required', 'string', 'max:100'],
+            'city_id' => ['required', 'integer', 'exists:cities,id'],
+            'district_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('districts', 'id')->where(function ($query) {
+                    $query->whereColumn('city_id', 'city_id');
+                }),
+            ],
             'latitude' => ['required', 'numeric', 'decimal:0,8', 'between:-90,90'],
             'longitude' => ['required', 'numeric', 'decimal:0,8', 'between:-180,180'],
             'manager_id' => [
-                'required',
+                'nullable',
+                Rule::unique('mosques', 'manager_id'),
                 'integer',
                 Rule::exists('users', 'id')->where(function ($query) {
                     $query->whereExists(function ($subquery) {
@@ -42,7 +49,7 @@ class StoreMosqueRequest extends FormRequest
             'facility_ids.*' => ['required', 'integer', 'exists:facilities,id'],
             'spaces' => ['nullable', 'array'],
             'spaces.*.name' => ['required', 'string', 'max:255'],
-            'spaces.*.capacity' => ['required', 'integer', 'min:1'], 
+            'spaces.*.capacity' => ['required', 'integer', 'min:1'],
             'spaces.*.type' => ['nullable', 'string'],
         ];
     }

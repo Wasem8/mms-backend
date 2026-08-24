@@ -9,7 +9,11 @@ use Modules\MaintenanceRequest\Service\MaintenanceService;
 use Modules\MaintenanceRequest\Http\Requests\StoreMaintenanceRequest;
 use Modules\MaintenanceRequest\Http\Requests\UpdateMaintenanceRequest;
 use Modules\MaintenanceRequest\Http\Requests\ProcessMaintenanceRequest;
+use Modules\MaintenanceRequest\Http\Requests\RequestMaintenanceFilesRequest;
+use Modules\MaintenanceRequest\Http\Requests\UploadMaintenanceFilesRequest;
+use Modules\Mosque\Models\Mosque;
 use App\Support\ApiResponse;
+use Modules\MaintenanceRequest\Http\Resources\PublicMaintenanceResource;
 
 class MaintenanceRequestController extends Controller
 {
@@ -17,14 +21,63 @@ class MaintenanceRequestController extends Controller
         protected MaintenanceService $service
     ) {}
 
+    private function getManagerMosqueId(): ?int
+    {
+        $user = auth()->user();
+        if (!$user || !$user->hasRole('mosque_manager')) {
+            return null;
+        }
+
+        $mosque = Mosque::where('manager_id', $user->id)->first();
+
+        if (!$mosque) {
+            abort(403, __('messages.maintenance.no_mosque_assigned'));
+        }
+
+        return $mosque->id;
+    }
+
     // =========================================================================
     //  MOSQUE MANAGER ENDPOINTS
     // =========================================================================
 
+    public function search(Request $request)
+    {
+        $validated = $request->validate([
+            'q'           => ['required', 'string', 'min:1'],
+            'per_page'    => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $filters = ['search' => $validated['q']];
+
+        $mosqueId = $this->getManagerMosqueId();
+        if ($mosqueId) {
+            $filters['mosque_id'] = $mosqueId;
+        }
+
+        $filters['per_page'] = (int) ($validated['per_page'] ?? 15);
+        $paginator = $this->service->getList($filters);
+
+        return ApiResponse::success([
+            'data' => $paginator->items(),
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'per_page'     => $paginator->perPage(),
+                'total'        => $paginator->total(),
+                'last_page'    => $paginator->lastPage(),
+                'has_more'     => $paginator->hasMorePages(),
+            ]
+        ], __('messages.maintenance.search_retrieved'));
+    }
+
     public function index(Request $request)
     {
         $filters = $request->only(['status', 'priority', 'per_page']);
-        $filters['mosque_id'] = $request->user()->mosque->id ?? null;
+
+        $mosqueId = $this->getManagerMosqueId();
+        if ($mosqueId) {
+            $filters['mosque_id'] = $mosqueId;
+        }
 
         $paginator = $this->service->getList($filters);
 
@@ -37,7 +90,7 @@ class MaintenanceRequestController extends Controller
                 'last_page'    => $paginator->lastPage(),
                 'has_more'     => $paginator->hasMorePages(),
             ]
-        ], 'All maintenance requests retrieved successfully.');
+        ], __('messages.maintenance.all_retrieved'));
 
     }
 
@@ -52,15 +105,19 @@ class MaintenanceRequestController extends Controller
 
         $maintenance = $this->service->submitRequest($validated, $files);
 
-        return ApiResponse::success($maintenance->loadMissing(['files', 'statusLogs', 'mosque']), 'Maintenance request submitted successfully.', 201);
+        return ApiResponse::success($maintenance->loadMissing(['files', 'statusLogs', 'mosque']), __('messages.maintenance.created'), 201);
     }
 
     public function show(Request $request, int $id)
     {
-        $filters = ['mosque_id' => $request->user()->mosque->id ?? null];
+        $filters = [];
+        $mosqueId = $this->getManagerMosqueId();
+        if ($mosqueId) {
+            $filters['mosque_id'] = $mosqueId;
+        }
         $maintenance = $this->service->getDetails($id, $filters);
 
-        return ApiResponse::success($maintenance->loadMissing(['files', 'statusLogs', 'mosque']), 'Maintenance request retrieved successfully.');
+        return ApiResponse::success($maintenance->loadMissing(['files', 'statusLogs', 'mosque']), __('messages.maintenance.retrieved'));
     }
 
     /**
@@ -69,7 +126,11 @@ class MaintenanceRequestController extends Controller
      */
     public function update(UpdateMaintenanceRequest $request, int $id)
     {
-        $filters = ['mosque_id' => $request->user()->mosque->id ?? null];
+        $filters = [];
+        $mosqueId = $this->getManagerMosqueId();
+        if ($mosqueId) {
+            $filters['mosque_id'] = $mosqueId;
+        }
 
         // Ensure ownership before updating
         $this->service->getDetails($id, $filters);
@@ -80,17 +141,21 @@ class MaintenanceRequestController extends Controller
         // Refetch updated data
         $maintenance = $this->service->getDetails($id, $filters);
 
-        return ApiResponse::success($maintenance->loadMissing(['files', 'statusLogs', 'mosque']), 'Maintenance request updated successfully.');
+        return ApiResponse::success($maintenance->loadMissing(['files', 'statusLogs', 'mosque']), __('messages.maintenance.updated'));
     }
 
     public function destroy(Request $request, int $id)
     {
-        $filters = ['mosque_id' => $request->user()->mosque->id ?? null];
+        $filters = [];
+        $mosqueId = $this->getManagerMosqueId();
+        if ($mosqueId) {
+            $filters['mosque_id'] = $mosqueId;
+        }
         $this->service->getDetails($id, $filters);
 
         $this->service->delete($id);
 
-        return ApiResponse::success(null, 'Maintenance request deleted successfully.');
+        return ApiResponse::success(null, __('messages.maintenance.deleted'));
     }
 
     public function track(string $maintenanceNumber)
@@ -98,10 +163,46 @@ class MaintenanceRequestController extends Controller
         $maintenance = $this->service->trackRequest($maintenanceNumber);
 
         if (!$maintenance) {
-            return ApiResponse::error('Resource not found.', 404);
+            return ApiResponse::error(__('messages.maintenance.not_found'), 404);
         }
 
-        return ApiResponse::success($maintenance->loadMissing(['files', 'statusLogs', 'mosque']), 'Maintenance request retrieved successfully.');
+        return ApiResponse::success($maintenance->loadMissing(['files', 'statusLogs', 'mosque']), __('messages.maintenance.retrieved'));
+    }
+
+    /**
+     * GET /maintenance/file-requests
+     * Requests awaiting additional files (scope: mosque manager).
+     */
+    public function pendingFileRequests(Request $request)
+    {
+        $perPage = (int) $request->query('per_page', 15);
+        $mosqueId = $this->getManagerMosqueId();
+
+        $paginator = $this->service->getPendingFileRequests($mosqueId, $perPage);
+
+        return ApiResponse::success(
+            $paginator->items(),
+            __('messages.maintenance.file_requests_retrieved'),
+            $paginator
+        );
+    }
+
+    /**
+     * POST /maintenance/{id}/upload-files
+     * Mosque manager uploads the additional files requested by the region manager.
+     */
+    public function uploadFiles(UploadMaintenanceFilesRequest $request, int $id)
+    {
+        $mosqueId = $this->getManagerMosqueId();
+
+        $maintenance = $this->service->uploadFiles(
+            $id,
+            $request->file('files'),
+            $mosqueId,
+            $request->user()->name
+        );
+
+        return ApiResponse::success($maintenance->loadMissing(['files', 'statusLogs', 'mosque']), __('messages.maintenance.files_uploaded'));
     }
 
     // =========================================================================
@@ -125,25 +226,28 @@ class MaintenanceRequestController extends Controller
         ]);
     }
 
-    public function pageStats(int $mosqueId)
+    public function pageStats()
     {
-        $data = $this->service->getPageStats($mosqueId);
+        $mosqueId = $this->getManagerMosqueId();
+        $data = $mosqueId
+            ? $this->service->getPageStats($mosqueId)
+            : $this->service->getPageStats(null);
 
         return response()->json([
             'status'  => true,
-            'message' => 'Success',
+            'message' => __('messages.maintenance.success'),
             'data'    => $data,
         ]);
     }
 
-    public function recentRequests(int $mosqueId)
+    public function recentRequests()
     {
         $limit = (int) request()->query('limit', 5);
-        $data  = $this->service->getRecentRequests($mosqueId, $limit);
+        $data  = $this->service->getRecentRequests($this->getManagerMosqueId(), $limit);
 
         return response()->json([
             'status'  => true,
-            'message' => 'Success',
+            'message' => __('messages.maintenance.success'),
             'data'    => $data,
         ]);
     }
@@ -163,6 +267,50 @@ class MaintenanceRequestController extends Controller
             $validated['notes'] ?? null
         );
 
-        return ApiResponse::success($maintenance->loadMissing(['files', 'statusLogs', 'mosque']), 'Maintenance request processed successfully.');
+        return ApiResponse::success($maintenance->loadMissing(['files', 'statusLogs', 'mosque']), __('messages.maintenance.processed'));
+    }
+
+    /**
+     * POST /maintenance/admin/{id}/request-files
+     * Region manager requests additional files from the mosque manager.
+     */
+    public function requestFiles(RequestMaintenanceFilesRequest $request, int $id)
+    {
+        $validated = $request->validated();
+
+        $maintenance = $this->service->requestFiles(
+            $id,
+            $request->user()->name,
+            $validated['note'],
+            $request->user()->id
+        );
+
+        $messageKey = $maintenance->files()->exists()
+            ? 'messages.maintenance.files_requested_resend'
+            : 'messages.maintenance.files_requested';
+
+        return ApiResponse::success($maintenance->loadMissing(['files', 'statusLogs', 'mosque']), __($messageKey));
+    }
+
+    public function publicIndex(Request $request)
+    {
+        $filters = $request->only(['status', 'category', 'priority', 'mosque_id', 'per_page']);
+        $paginator = $this->service->getPublicList($filters);
+
+        return ApiResponse::success(
+            PublicMaintenanceResource::collection($paginator->items())->resolve(),
+            __('messages.maintenance.public_retrieved'),
+            ApiResponse::pagination($paginator)
+        );
+    }
+
+    public function publicShow(int $id)
+    {
+        $maintenance = $this->service->getPublicDetails($id);
+
+        return ApiResponse::success(
+            new PublicMaintenanceResource($maintenance),
+            __('messages.maintenance.retrieved')
+        );
     }
 }

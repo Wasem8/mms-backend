@@ -16,6 +16,7 @@ Route::middleware(['auth:api', 'role:super_admin,mosque_manager'])
     ->prefix('admin/complaints')
     ->group(function () {
         Route::get('/statistics', [ComplaintController::class, 'statistics']);
+        Route::get('/search', [ComplaintController::class, 'search']);
         Route::get('/', [ComplaintController::class, 'index']);
         Route::get('/{id}', [ComplaintController::class, 'show']);
         Route::patch('/{id}/status', [ComplaintController::class, 'updateStatus']);
@@ -24,5 +25,8 @@ Route::middleware(['auth:api',])->prefix('complaints/member')->group(function ()
     Route::post('/', [ComplaintController::class, 'storeMember']);
 });
 
-Route::get('mosques/{mosqueId}/complaints/recent', [ComplaintController::class, 'recentComplaints'])->middleware(['auth:api', 'role:mosque_manager']);
-Route::get('mosques/{mosqueId}/complaints/stats', [ComplaintController::class, 'pageStats'])->middleware(['auth:api', 'role:mosque_manager']);
+Route::get('complaints/recent', [ComplaintController::class, 'recentComplaints'])->middleware(['auth:api', 'role:mosque_manager']);
+Route::get('complaints/stats', [ComplaintController::class, 'pageStats'])->middleware(['auth:api', 'role:mosque_manager,super_admin']);
+Route::patch('admin/complaints/{id}/assign', [ComplaintController::class, 'assignToAdmin'])->middleware(['auth:api','active.user','role:mosque_manager']);
+
+Route::middleware('auth:api')->get('/complaints/mine', [ComplaintController::class, 'mine']);

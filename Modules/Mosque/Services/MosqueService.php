@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Http;
 use Modules\Mosque\Services\FacilityService;
 use Modules\Mosque\Models\Mosque;
 use Modules\Mosque\Repositories\MosqueRepositoryInterface;
+use Modules\User\Models\User; 
+use Illuminate\Support\Collection;
 
 class MosqueService
 {
@@ -202,5 +204,38 @@ class MosqueService
             'apikey' => env('SUPABASE_KEY'),
             'Authorization' => 'Bearer ' . env('SUPABASE_KEY'),
         ])->delete($deleteUrl);
+    }
+
+    public function getMineForUser(User $user): Collection
+    {
+        $attachments = collect();
+
+        if ($user->isMosqueManager()) {
+            $mosque = $this->mosqueRepository->findByManagerId($user->id);
+            if ($mosque) {
+                $mosque->load('spaces');
+                $attachments->push($this->withRelation($mosque, 'manager'));
+            }
+        }
+
+        if (($user->isSupervisor() || $user->isTeacher()) && $user->mosque_id) {
+            $mosque = $this->mosqueRepository->findByIdForListing($user->mosque_id);
+            if ($mosque) {
+                $mosque->load('spaces');
+                $attachments->push($this->withRelation(
+                    $mosque,
+                    $user->isSupervisor() ? 'halaqa_supervisor' : 'teacher'
+                ));
+            }
+        }
+
+        return $attachments->values();
+    }
+
+    private function withRelation(Mosque $mosque, string $relation): Mosque
+    {
+        $mosque->setAttribute('relation', $relation);
+
+        return $mosque;
     }
 }

@@ -17,9 +17,15 @@ class UpdateComplaintRequest extends FormRequest
         ];
     }
 
-    /**
-     * Determine if the user is authorized to make this request.
-     */
+    public function messages(): array
+    {
+        return [
+            'status.required' => __('messages.complaint.validation.status.required'),
+            'status.in' => __('messages.complaint.validation.status.in'),
+            'note.string' => __('messages.complaint.validation.note.string'),
+        ];
+    }
+
     public function authorize(): bool
     {
         return true;

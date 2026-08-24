@@ -3,25 +3,43 @@
 namespace Modules\Community\Providers;
 
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+use Modules\Community\Events\SermonApproved;
+use Modules\Community\Events\SermonRejected;
+use Modules\Community\Events\SermonSelectedForFriday;
+use Modules\Community\Events\TameemSent;
+use Modules\Community\Events\TameemUpdated;
+use Modules\Community\Listeners\SendSermonApprovedNotification;
+use Modules\Community\Listeners\SendSermonRejectedNotification;
+use Modules\Community\Listeners\SendSermonSelectedNotification;
+use Modules\Community\Listeners\SendTameemSentNotification;
+use Modules\Community\Listeners\SendTameemUpdatedNotification;
+use Modules\Community\Events\DawahProgramCreated;
+use Modules\Community\Listeners\SendDawahProgramCreatedNotification;
 
 class EventServiceProvider extends ServiceProvider
 {
-    /**
-     * The event handler mappings for the application.
-     *
-     * @var array<string, array<int, string>>
-     */
-    protected $listen = [];
+    protected $listen = [
+        SermonApproved::class => [
+            SendSermonApprovedNotification::class,
+        ],
+        SermonRejected::class => [
+            SendSermonRejectedNotification::class,
+        ],
+        SermonSelectedForFriday::class => [
+            SendSermonSelectedNotification::class,
+        ],
+        TameemSent::class => [
+            SendTameemSentNotification::class,
+        ],
+        TameemUpdated::class => [
+            SendTameemUpdatedNotification::class,
+        ],
+        DawahProgramCreated::class => [
+            SendDawahProgramCreatedNotification::class,
+        ],
+    ];
 
-    /**
-     * Indicates if events should be discovered.
-     *
-     * @var bool
-     */
     protected static $shouldDiscoverEvents = true;
 
-    /**
-     * Configure the proper event listeners for email verification.
-     */
     protected function configureEmailVerification(): void {}
 }

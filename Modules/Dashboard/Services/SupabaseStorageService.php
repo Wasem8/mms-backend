@@ -10,21 +10,12 @@ class SupabaseStorageService
         string $pdfContent,
         string $fileName
     ): void {
-
-        $baseUrl = config('services.supabase.url');
-
-        $bucket = config(
-            'services.supabase.reports_bucket'
-        );
-
-        $key = config('services.supabase.key');
+        $baseUrl = rtrim(config('services.supabase.url'), '/');
+        $bucket  = trim(config('services.supabase.reports_bucket'), '/');
+        $key     = config('services.supabase.service_role_key');
 
         $uploadUrl =
-            $baseUrl .
-            '/storage/v1/object/' .
-            $bucket .
-            '/' .
-            $fileName;
+            "{$baseUrl}/storage/v1/object/{$bucket}/{$fileName}";
 
         $response = Http::retry(3, 1000)
             ->timeout(60)
@@ -32,6 +23,7 @@ class SupabaseStorageService
                 'apikey'        => $key,
                 'Authorization' => 'Bearer ' . $key,
                 'Content-Type'  => 'application/pdf',
+                'x-upsert'      => 'true',
             ])
             ->withBody(
                 $pdfContent,
@@ -40,10 +32,9 @@ class SupabaseStorageService
             ->post($uploadUrl);
 
         if (!$response->successful()) {
-
             throw new \Exception(
-                'Supabase Upload Failed: ' .
-                $response->body()
+                'Supabase PDF Upload Failed: ' .
+                    $response->body()
             );
         }
     }
@@ -52,39 +43,35 @@ class SupabaseStorageService
         string $fileName,
         int $expiresIn = 3600
     ): string {
-
-        $baseUrl = config('services.supabase.url');
-
-        $bucket = config(
-            'services.supabase.reports_bucket'
-        );
-
-        $key = config('services.supabase.key');
+        $baseUrl = rtrim(config('services.supabase.url'), '/');
+        $bucket  = trim(config('services.supabase.reports_bucket'), '/');
+        $key     = config('services.supabase.service_role_key');
 
         $response = Http::withHeaders([
             'apikey'        => $key,
             'Authorization' => 'Bearer ' . $key,
         ])->post(
-            $baseUrl .
-            '/storage/v1/object/sign/' .
-            $bucket .
-            '/' .
-            $fileName,
+            "{$baseUrl}/storage/v1/object/sign/{$bucket}/{$fileName}",
             [
                 'expiresIn' => $expiresIn,
             ]
         );
 
         if (!$response->successful()) {
-
             throw new \Exception(
-                'Failed To Create Signed URL: ' .
-                $response->body()
+                'Failed to create signed URL: ' .
+                    $response->body()
             );
         }
 
-        return $baseUrl .
-            '/storage/v1' .
-            $response->json('signedURL');
+        $signedUrl = $response->json('signedURL');
+
+        if (!$signedUrl) {
+            throw new \Exception(
+                'Supabase did not return signedURL.'
+            );
+        }
+
+        return $baseUrl . '/storage/v1' . $signedUrl;
     }
 }

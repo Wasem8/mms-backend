@@ -34,20 +34,86 @@ class VolunteerEvaluationController extends Controller
     public function issueCertificate(string $volunteerId, string $opportunityId)
     {
         $certificate = $this->service->issueCertificate((int) $volunteerId, (int) $opportunityId);
-        return ApiResponse::success($certificate, __('messages.certificate_issued'), 201);
+        $downloadUrl = $this->service->getCertificateDownloadUrl($certificate);
+
+        return ApiResponse::success(
+            array_merge($certificate->toArray(), ['certificate_url' => $downloadUrl]),
+            __('messages.certificate_issued'),
+            201
+        );
     }
 
-    /** Volunteer: view their own certificates */
-    public function myCertificates()
+    public function downloadCertificate(string $volunteerId, string $opportunityId)
     {
-        $certificates = $this->service->getCertificatesForVolunteer((int) auth()->id());
-        return ApiResponse::success($certificates, __('messages.certificates_retrieved'), 200);
+        $certificate = $this->service->findCertificate((int) $volunteerId, (int) $opportunityId);
+
+        if (!$certificate) {
+            return ApiResponse::error(__('messages.certificate_not_found'), 404);
+        }
+
+        try {
+            $url = $this->service->getCertificateDownloadUrl($certificate);
+        } catch (\RuntimeException $e) {
+            return ApiResponse::error(__('messages.certificate_not_found'), 404);
+        }
+
+        return ApiResponse::success(
+            ['certificate_url' => $url],
+            __('messages.certificate_url_generated'),
+            200
+        );
     }
 
+    public function streamCertificate(string $volunteerId, string $opportunityId)
+    {
+        $certificate = $this->service->findCertificate((int) $volunteerId, (int) $opportunityId);
+
+        if (!$certificate) {
+            return ApiResponse::error(__('messages.certificate_not_found'), 404);
+        }
+
+        try {
+            $url = $this->service->getCertificateDownloadUrl($certificate);
+        } catch (\RuntimeException $e) {
+            return ApiResponse::error(__('messages.certificate_not_found'), 404);
+        }
+
+        return ApiResponse::success(
+            ['certificate_url' => $url],
+            __('messages.certificate_url_generated'),
+            200
+        );
+    }
+
+    public function myCertificateDownload(string $certificateId)
+    {
+        $certificate = $this->service->findCertificateById((int) $certificateId);
+
+        if (!$certificate || $certificate->volunteer_id !== (int) auth()->id()) {
+            return ApiResponse::error(__('messages.certificate_not_found'), 404);
+        }
+
+        try {
+            $url = $this->service->getCertificateDownloadUrl($certificate);
+        } catch (\RuntimeException $e) {
+            return ApiResponse::error(__('messages.certificate_not_found'), 404);
+        }
+
+        return ApiResponse::success(
+            ['certificate_url' => $url],
+            __('messages.certificate_url_generated'),
+            200
+        );
+    }
     /** Summary: total hours for a volunteer on an opportunity */
     public function totalHours(string $volunteerId, string $opportunityId)
     {
         $hours = $this->service->totalHours((int) $volunteerId, (int) $opportunityId);
         return ApiResponse::success(['total_hours' => $hours], __('messages.hours_retrieved'), 200);
+    }
+    public function myCertificates()
+    {
+        $certificates = $this->service->getCertificatesForVolunteer((int) auth()->id());
+        return ApiResponse::success($certificates, __('messages.certificates_retrieved'), 200);
     }
 }

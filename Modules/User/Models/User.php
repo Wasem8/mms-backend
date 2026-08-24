@@ -6,19 +6,22 @@ namespace Modules\User\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authentication;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Hash;
 use Modules\Education\Models\Halaqa;
 use Modules\Education\Models\Student;
 use Modules\Mosque\Models\Mosque;
 use Tymon\JWTAuth\Contracts\JWTSubject;
-
 
 class User extends Authentication implements JWTSubject
 {
     use  Notifiable,HasFactory;
 
     protected $fillable = [
+        'first_name',
+        'last_name',
         'name',
         'email',
+        'phone',
         'password',
         'otp',
         'otp_expires_at',
@@ -31,10 +34,13 @@ class User extends Authentication implements JWTSubject
     protected $hidden = [
         'password',
         'remember_token',
+        'otp',
+        'otp_expires_at',
     ];
 
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'otp_expires_at'=>'datetime',
     ];
 
     /*
@@ -64,6 +70,11 @@ class User extends Authentication implements JWTSubject
         return $this->roles()->where('name', $role)->exists();
     }
 
+    public function hasAnyRole(array $roles): bool
+    {
+        return $this->roles()->whereIn('name', $roles)->exists();
+    }
+
     public function hasPermission($permission)
     {
         return $this->roles()
@@ -77,21 +88,21 @@ class User extends Authentication implements JWTSubject
         $otp = rand(100000, 999999);
 
         $this->update([
-            'otp' => $otp,
+            'otp' => Hash::make($otp),
             'otp_expires_at' => now()->addMinutes(10)
         ]);
 
         return $otp;
     }
 
-    public function verifyOtp($otp): bool
+    public function verifyOtp(string $otp): bool
     {
-        if (! $this->otp || ! $this->otp_expires_at) {
+        if (!$this->otp || !$this->otp_expires_at) {
             return false;
         }
 
-        return (string)$this->otp === (string)$otp
-            && now()->lessThanOrEqualTo($this->otp_expires_at);
+        return Hash::check($otp, $this->otp)
+            && now()->lte($this->otp_expires_at);
     }
 
     public function clearOtp(): void
@@ -116,6 +127,11 @@ class User extends Authentication implements JWTSubject
     public function mosque()
     {
         return $this->belongsTo(Mosque::class);
+    }
+
+    public function managedMosque()
+    {
+        return $this->hasOne(Mosque::class, 'manager_id');
     }
 
     public function children()
@@ -148,6 +164,11 @@ class User extends Authentication implements JWTSubject
         return $this->hasRole('teacher');
     }
 
+    public function isVolunteer(): bool
+    {
+        return $this->hasRole('volunteer');
+    }
+
     public function scopeRole($query, $roleName)
     {
         return $query->whereHas('roles', function ($q) use ($roleName) {
@@ -158,6 +179,18 @@ class User extends Authentication implements JWTSubject
     public function halaqats()
     {
         return $this->hasMany(Halaqa::class, 'teacher_id');
+    }
+
+    public function students()
+    {
+        return $this->hasManyThrough(
+            Student::class,
+            Halaqa::class,
+            'teacher_id',
+            'halaqa_id',
+            'id',
+            'id'
+        );
     }
 
     public function teacherProfile()
@@ -176,5 +209,41 @@ class User extends Authentication implements JWTSubject
         if (!$this->roles()->where('role_id', $role->id)->exists()) {
             $this->roles()->attach($role->id);
         }
+    }
+
+    public function managerProfile()
+    {
+        return $this->hasOne(MosqueManagerProfile::class, 'user_id');
+    }
+
+    protected static function newFactory()
+    {
+        return \Database\Factories\UserFactory::new();
+    }
+
+    public function roleLevel(): int
+    {
+        return match (true) {
+            $this->hasRole('super_admin') => 5,
+            $this->hasRole('mosque_manager') => 4,
+            $this->hasRole('halaqa_supervisor') => 3,
+            $this->hasRole('teacher') => 2,
+            $this->hasRole('parent') => 1,
+            default => 0,
+        };
+    }
+
+    public function canManageUser(User $target): bool
+    {
+        if ($this->id === $target->id) {
+            return false;
+        }
+
+        return $this->roleLevel() > $target->roleLevel();
+    }
+
+    public function routeNotificationForMail($notification)
+    {
+        return $this->pending_email ?? $this->email;
     }
 }

@@ -2,10 +2,14 @@
 
 namespace Modules\Dashboard\Services;
 
+use Mpdf\Mpdf;
+
 class PdfGeneratorService
 {
     public function generate(string $html): string
     {
+        set_time_limit(120);
+
         // 1. تحديد وتأمين مجلد الكاش بداخل /tmp لـ Vercel
         $tempDir = '/tmp/mpdf_cache_core';
 
@@ -26,15 +30,23 @@ class PdfGeneratorService
             $localBoldPath = '/tmp/Cairo-Bold.ttf';
 
             if (!file_exists($localRegularPath)) {
-                @file_put_contents($localRegularPath, @file_get_contents($remoteRegularUrl));
+                $ctx = stream_context_create([
+                    'http'  => ['timeout' => 15],
+                    'https' => ['timeout' => 15],
+                ]);
+                @file_put_contents($localRegularPath, @file_get_contents($remoteRegularUrl, false, $ctx));
             }
             if (!file_exists($localBoldPath)) {
-                @file_put_contents($localBoldPath, @file_get_contents($remoteBoldUrl));
+                $ctx = stream_context_create([
+                    'http'  => ['timeout' => 15],
+                    'https' => ['timeout' => 15],
+                ]);
+                @file_put_contents($localBoldPath, @file_get_contents($remoteBoldUrl, false, $ctx));
             }
 
             // 3. بناء إعدادات مستقلة تماماً 100% دون استدعاء أي كلاسات داخلية من mPDF
             // هذا يحميك تماماً من مشاكل الـ Autoloading والـ Exclude في فيرسيل
-            $mpdf = new \Mpdf\Mpdf([
+            $mpdf = new Mpdf([
                 'mode'          => 'utf-8',
                 'format'        => 'A4',
                 'margin_left'   => 8,

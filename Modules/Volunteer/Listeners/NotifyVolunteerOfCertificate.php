@@ -2,24 +2,31 @@
 
 namespace Modules\Volunteer\Listeners;
 
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use Modules\Common\Services\NotificationService;
 use Modules\Volunteer\Events\CertificateIssued;
 
 class NotifyVolunteerOfCertificate
 {
-    /**
-     * Create the event listener.
-     */
-    public function __construct() {}
+    public function __construct(protected NotificationService $notificationService) {}
 
-    /**
-     * Handle the event.
-     */
     public function handle(CertificateIssued $event): void
     {
-        $volunteer = $event->certificate->volunteer;
+        $certificate = $event->certificate;
+        $volunteer   = $certificate->volunteer;
 
-        // Mail::to($volunteer->email)->send(new CertificateMail($event->certificate));
+        if (!$volunteer) {
+            return;
+        }
+
+        $this->notificationService->notify(
+            $volunteer,
+            'تم إصدار شهادتك',
+            'تم إصدار شهادة التطوع الخاصة بفرصة «' . $certificate->opportunity->title . '».',
+            'certificate_issued',
+            [
+                'certificate_id' => (string) $certificate->id,
+                'opportunity_id' => (string) $certificate->opportunity_id,
+            ]
+        );
     }
 }

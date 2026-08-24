@@ -20,11 +20,12 @@ class EloquentVolunteerApplicationRepository implements VolunteerApplicationRepo
     }
 
     #[\Override]
-    public function findByOpportunity(int $opportunityId, int $perPage = 15): LengthAwarePaginator
+    public function findByOpportunity(int $opportunityId, ?string $status = null, int $perPage = 15): LengthAwarePaginator
     {
         return $this->model
             ->where('opportunity_id', $opportunityId)
-            ->with('volunteer')
+            ->when($status, fn($q) => $q->where('status', $status))
+            ->with(['volunteer', 'tasks'])
             ->latest()
             ->paginate($perPage);
     }
@@ -34,7 +35,7 @@ class EloquentVolunteerApplicationRepository implements VolunteerApplicationRepo
     {
         return $this->model
             ->where('volunteer_id', $volunteerId)
-            ->with('opportunity')
+            ->with(['opportunity', 'tasks'])
             ->latest()
             ->paginate($perPage);
     }

@@ -5,6 +5,7 @@ namespace Modules\Education\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Modules\User\Models\User;
+use Modules\Education\Models\Halaqa;
 
 class UpdateHalaqaRequest extends FormRequest
 {
@@ -14,6 +15,19 @@ class UpdateHalaqaRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        // تحويل أيام الأسبوع إلى أحرف صغيرة canonical lowercase تلقائياً قبل الـ Validation
+        if ($this->has('schedule_days') && is_array($this->schedule_days)) {
+            $this->merge([
+                'schedule_days' => array_map('strtolower', $this->schedule_days),
+            ]);
+        }
     }
 
     /**
@@ -32,13 +46,8 @@ class UpdateHalaqaRequest extends FormRequest
             'teacher_id' => [
                 'nullable',
                 'integer',
-
-                // المعلم موجود
                 Rule::exists('users', 'id'),
-
-                // المعلم يملك role teacher
                 function ($attribute, $value, $fail) {
-
                     if (!$value) {
                         return;
                     }
@@ -49,26 +58,27 @@ class UpdateHalaqaRequest extends FormRequest
                         return;
                     }
 
-                    if (
-                        !$teacher->hasRole('teacher')
-                        && !$teacher->isTeacher()
-                    ) {
+                    if (!$teacher->hasRole('teacher') && !$teacher->isTeacher()) {
                         $fail(__('messages.user_not_teacher'));
                     }
 
-                    // منع تعيين معلم من مسجد آخر
                     $user = auth()->user();
 
-                    if (
-                        $user->mosque_id &&
-                        $teacher->mosque_id !== $user->mosque_id
-                    ) {
+                    if ($user->mosque_id && $teacher->mosque_id !== $user->mosque_id) {
                         $fail(__('messages.teacher_another_mosque'));
                     }
 
-                    // منع تعيين معلم غير نشط
                     if ($teacher->status !== 'active') {
                         $fail(__('messages.teacher_not_active'));
+                    }
+
+                    $halaqaId = $this->route('id') ?? $this->route('halaqa');
+                    $assignedElsewhere = Halaqa::where('teacher_id', $value)
+                        ->when($halaqaId, fn($q) => $q->where('id', '!=', $halaqaId))
+                        ->exists();
+
+                    if ($assignedElsewhere) {
+                        $fail(__('messages.teacher_already_has_halaqa'));
                     }
                 },
             ],
@@ -99,33 +109,37 @@ class UpdateHalaqaRequest extends FormRequest
                 ]),
             ],
 
+            // قبول H:i:s و H:i لضمان عدم حدوث تعارض مع السواجر أو التطبيق
             'start_time' => [
                 'sometimes',
                 'required',
-                'date_format:H:i:s',
+                'date_format:H:i:s,H:i',
             ],
 
             'end_time' => [
                 'sometimes',
                 'required',
-                'date_format:H:i:s',
-                'after:start_time',
+                'date_format:H:i:s,H:i',
+                function ($attribute, $value, $fail) {
+                    $startTime = $this->input('start_time');
+
+                    // إذا لم يُرسل start_time في الطلب، نجابه بالوقت القديم للحلقة
+                    if (!$startTime) {
+                        $halaqaId = $this->route('id') ?? $this->route('halaqa');
+                        $halaqa = Halaqa::find($halaqaId);
+                        $startTime = $halaqa?->start_time;
+                    }
+
+                    if ($startTime && strtotime($value) <= strtotime($startTime)) {
+                        $fail(__('validation.after', ['attribute' => __('validation.attributes.end_time'), 'date' => __('validation.attributes.start_time')]));
+                    }
+                },
             ],
 
             'status' => [
                 'sometimes',
                 Rule::in(['active', 'inactive']),
             ],
-        ];
-    }
-
-    /**
-     * Custom validation messages.
-     */
-    public function messages(): array
-    {
-        return [
-
         ];
     }
 }

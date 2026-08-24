@@ -2,71 +2,35 @@
 
 namespace Modules\Dashboard\Services;
 
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Modules\Dashboard\Models\Report;
+use Modules\User\Models\User;
 use Modules\Education\Models\Student;
 use Modules\Education\Models\Attendance;
 use Modules\Education\Models\Evaluation;
-use Spatie\Browsershot\Browsershot;
 
 class ParentDashboardService
 {
+    public function __construct(
+        private readonly PdfGeneratorService $pdfGenerator,
+        private readonly SupabaseStorageService $storage,
+    ) {}
 
-    public function getParentDashboardStats($parentId)
+    public function getParentDashboardStats(int $parentId): array
     {
-
-        $children = Student::where('parent_id', $parentId)
-            ->with(['halaqats:id,name'])
-            ->get();
-
-        if ($children->isEmpty()) {
-            return [
-                'has_children' => false,
-                'message' => 'لا يوجد أبناء مسجلين تحت حسابك حالياً.'
-            ];
-        }
-
-        $today = Carbon::today()->toDateString();
-
-        $data = $children->map(function ($student) use ($today) {
-            $todayAttendance = Attendance::where('student_id', $student->id)
-                ->whereDate('date', $today)
-                ->value('status') ?? 'لم يرصد بعد';
-
-
-            $lastEvaluation = Evaluation::where('student_id', $student->id)
-                ->latest('evaluated_at')
-                ->first();
-
-            $monthAyahsCount = Evaluation::where('student_id', $student->id)
-                ->whereMonth('evaluated_at', Carbon::today()->month)
-                ->selectRaw('SUM(to_ayah - from_ayah + 1) as total')
-                ->value('total') ?? 0;
-
-            return [
-                'id' => $student->id,
-                'name' => "{$student->first_name} {$student->last_name}",
-                'halaqa' => $student->halaqats->first()?->name ?? 'غير محدد',
-                'today_attendance' => $todayAttendance,
-                'month_progress' => $monthAyahsCount . ' آية المجموع التراكمي',
-                'last_evaluation' => $lastEvaluation ? [
-                    'surah' => $lastEvaluation->surah_name ?? 'غير محدد',
-                    'score' => $lastEvaluation->score,
-                    'date' => Carbon::parse($lastEvaluation->evaluated_at)->diffForHumans()
-                ] : null
-            ];
-        });
-
-        return [
-            'has_children' => true,
-            'children' => $data
-        ];
+        return $this->buildParentData($parentId);
     }
 
-    public function generateParentReportPdf(int $parentId): array
+    public function generateParentReportPdf(User $parent): array
     {
+        $parentId = $parent->id;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Cache
+        |--------------------------------------------------------------------------
+        */
+
         $lastReport = Report::where('user_id', $parentId)
             ->where('type', 'parent_dashboard')
             ->latest()
@@ -74,174 +38,235 @@ class ParentDashboardService
 
         if (
             $lastReport &&
-            $lastReport->created_at->gt(
-                now()->subDay()
-            )
+            $lastReport->created_at->gt(now()->subDay())
         ) {
             try {
-                $signedUrl = $this->createSignedUrl(
-                    $lastReport->storage_path
-                );
-
                 return [
-                    'url' => $signedUrl,
-                    'cached' => true
+                    'url' => $this->storage->createSignedUrl(
+                        $lastReport->storage_path
+                    ),
+                    'cached' => true,
                 ];
             } catch (\Throwable $e) {
+                Log::warning(
+                    'Parent report cached file unavailable',
+                    [
+                        'parent_id' => $parentId,
+                        'error' => $e->getMessage(),
+                    ]
+                );
+
                 $lastReport->delete();
             }
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | 1. جلب بيانات التقرير فقط
+        |--------------------------------------------------------------------------
+        */
+
         $data = $this->getParentReportData($parentId);
+
+        if (!$data['has_children']) {
+            throw new \Exception(
+                'لا يوجد أبناء مرتبطون بهذا الحساب.'
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | 2. Blade → HTML
+        |--------------------------------------------------------------------------
+        */
 
         $html = view(
             'dashboard::reports.parent',
             $data
         )->render();
 
-        // 🎯 1. حل مشكلة الـ Read-only: توجيه كاش mPDF بالكامل إلى المجلد المؤقت للسيرفر /tmp
-        $tempDir = '/tmp/mpdf_cache';
-        if (!file_exists($tempDir)) {
-            mkdir($tempDir, 0777, true);
-        }
+        /*
+        |--------------------------------------------------------------------------
+        | 3. HTML → PDF
+        |--------------------------------------------------------------------------
+        */
 
-        if (!defined('_MPDF_TEMP_DIR')) {
-            define('_MPDF_TEMP_DIR', $tempDir);
-        }
+        $pdfContent = $this->pdfGenerator->generate($html);
 
-        try {
-            // 🎯 2. حل مشكلة الحجم والمسارات: تحميل الخطوط برمجياً من Supabase إلى /tmp عند أول طلب فقط
-            $remoteRegularUrl = 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/assets/Cairo-Regular.ttf';
-            $remoteBoldUrl = 'https://koihzqfwzvnrcrrtpnyg.supabase.co/storage/v1/object/public/assets/Cairo-Bold.ttf';
-
-            $localRegularPath = '/tmp/Cairo-Regular.ttf';
-            $localBoldPath = '/tmp/Cairo-Bold.ttf';
-
-            if (!file_exists($localRegularPath)) {
-                file_put_contents($localRegularPath, file_get_contents($remoteRegularUrl));
-            }
-            if (!file_exists($localBoldPath)) {
-                file_put_contents($localBoldPath, file_get_contents($remoteBoldUrl));
-            }
-
-            $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
-            $fontDirs = $defaultConfig['fontDir'];
-
-            $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
-            $fontData = $defaultFontConfig['fontdata'];
-
-            // جعل mPDF يقرأ الخطوط من مجلد /tmp المستقر بالسيرفر
-            $mpdf = new \Mpdf\Mpdf([
-                'mode'          => 'utf-8',
-                'format'        => 'A4',
-                'margin_left'   => 8,
-                'margin_right'  => 8,
-                'margin_top'    => 8,
-                'margin_bottom' => 8,
-                'tempDir'       => $tempDir,
-                'fontDir'       => array_merge($fontDirs, ['/tmp']),
-                'fontdata'      => array_merge($fontData, [
-                    'cairo' => [
-                        'R'      => 'Cairo-Regular.ttf',
-                        'B'      => 'Cairo-Bold.ttf',
-                        'useOTL' => 0xFF, // تشبيك الحروف العربية تلقائياً
-                    ]
-                ]),
-                'default_font' => 'cairo'
-            ]);
-
-            // كتابة الـ HTML وتوليد محتوى الـ PDF
-            $mpdf->WriteHTML($html);
-            $pdfContent = $mpdf->Output('', 'S');
-
-        } catch (\Throwable $e) {
-            Log::error('mPDF VERCEL ERROR', [
-                'message' => $e->getMessage(),
-                'trace'   => $e->getTraceAsString(),
-            ]);
-            throw $e;
-        }
+        /*
+        |--------------------------------------------------------------------------
+        | 4. Upload to Supabase
+        |--------------------------------------------------------------------------
+        */
 
         $fileName =
             'parent-reports/' .
-            $parentId . '/' .
-            time() . '.pdf';
+            $parentId .
+            '/' .
+            now()->format('Y-m-d_H-i-s') .
+            '.pdf';
 
-        $this->uploadPdfToSupabase(
+        $this->storage->uploadPdf(
             $pdfContent,
             $fileName
         );
 
+        /*
+        |--------------------------------------------------------------------------
+        | 5. Cache record
+        |--------------------------------------------------------------------------
+        */
+
         Report::create([
-            'user_id'      => $parentId,
-            'type'         => 'parent_dashboard',
+            'user_id' => $parentId,
+            'type' => 'parent_dashboard',
             'storage_path' => $fileName,
         ]);
 
+        /*
+        |--------------------------------------------------------------------------
+        | 6. Signed URL
+        |--------------------------------------------------------------------------
+        */
+
         return [
-            'url' => $this->createSignedUrl(
-                $fileName
-            ),
+            'url' => $this->storage->createSignedUrl($fileName),
             'cached' => false,
         ];
     }
-    private function getParentReportData($parentId): array
+
+    private function getParentReportData(int $parentId): array
     {
+        /*
+        |--------------------------------------------------------------------------
+        | الطلاب
+        |--------------------------------------------------------------------------
+        */
+
         $children = Student::where('parent_id', $parentId)
-            ->with(['halaqats:id,name'])
+            ->with([
+                'halaqats:id,name',
+            ])
             ->get();
 
         if ($children->isEmpty()) {
             return [
-                'has_children' => false
+                'has_children' => false,
             ];
         }
 
-        $today = Carbon::today()->toDateString();
+        $studentIds = $children->pluck('id');
 
-        $childrenData = $children->map(function ($student) use ($today) {
+        /*
+        |--------------------------------------------------------------------------
+        | Attendance - Query واحدة
+        |--------------------------------------------------------------------------
+        */
 
-            /*
-            |--------------------------------------------------------------------------
-            | Attendance
-            |--------------------------------------------------------------------------
-            */
+        $attendanceRecords = Attendance::whereIn(
+            'student_id',
+            $studentIds
+        )
+            ->whereMonth('date', now()->month)
+            ->whereYear('date', now()->year)
+            ->get([
+                'student_id',
+                'date',
+                'status',
+            ])
+            ->groupBy('student_id');
 
-            $todayAttendance = Attendance::where('student_id', $student->id)
-                ->whereDate('date', $today)
-                ->value('status') ?? 'لم يرصد';
+        /*
+        |--------------------------------------------------------------------------
+        | Evaluations - Query واحدة
+        |--------------------------------------------------------------------------
+        */
 
-            $attendancePercentage = Attendance::where('student_id', $student->id)
-                ->whereMonth('date', Carbon::now()->month)
-                ->selectRaw("
-                ROUND(
-                    (
-                        SUM(CASE WHEN status = 'present' THEN 1 ELSE 0 END)::decimal
-                        /
-                        NULLIF(COUNT(*),0)
-                    ) * 100
-                ) as percentage
-            ")
-                ->value('percentage') ?? 0;
+        $evaluationRecords = Evaluation::whereIn(
+            'student_id',
+            $studentIds
+        )
+            ->whereMonth('evaluated_at', now()->month)
+            ->whereYear('evaluated_at', now()->year)
+            ->orderByDesc('evaluated_at')
+            ->get([
+                'id',
+                'student_id',
+                'surah_name',
+                'from_ayah',
+                'to_ayah',
+                'score',
+                'evaluated_at',
+            ])
+            ->groupBy('student_id');
 
+        /*
+        |--------------------------------------------------------------------------
+        | Build students
+        |--------------------------------------------------------------------------
+        */
 
-            $lastEvaluation = Evaluation::where('student_id', $student->id)
-                ->latest('evaluated_at')
-                ->first();
+        $childrenData = $children->map(function ($student) use (
+            $attendanceRecords,
+            $evaluationRecords
+        ) {
 
-            $monthAyahs = Evaluation::where('student_id', $student->id)
-                ->whereMonth('evaluated_at', Carbon::today()->month)
-                ->selectRaw('SUM(to_ayah - from_ayah + 1) as total')
-                ->value('total') ?? 0;
+            $attendance =
+                $attendanceRecords->get(
+                    $student->id,
+                    collect()
+                );
 
-            $evaluationsCount = Evaluation::where('student_id', $student->id)
-                ->whereMonth('evaluated_at', Carbon::today()->month)
+            $todayAttendance = $attendance->first(
+                fn ($record) =>
+                \Carbon\Carbon::parse($record->date)
+                    ->isToday()
+            );
+
+            $attendanceTotal = $attendance->count();
+
+            $attendancePresent = $attendance
+                ->where('status', 'present')
                 ->count();
 
-            $averageScore = Evaluation::where('student_id', $student->id)
-                ->whereMonth('evaluated_at', Carbon::today()->month)
-                ->avg('score');
+            $attendancePercentage =
+                $attendanceTotal > 0
+                    ? round(
+                    ($attendancePresent / $attendanceTotal) * 100
+                )
+                    : 0;
 
+            $evaluations =
+                $evaluationRecords->get(
+                    $student->id,
+                    collect()
+                );
+
+            $lastEvaluation =
+                $evaluations->first();
+
+            $monthAyahs =
+                $evaluations->sum(function ($evaluation) {
+
+                    if (
+                        $evaluation->from_ayah === null ||
+                        $evaluation->to_ayah === null
+                    ) {
+                        return 0;
+                    }
+
+                    return max(
+                        0,
+                        $evaluation->to_ayah -
+                        $evaluation->from_ayah +
+                        1
+                    );
+                });
+
+            $averageScore =
+                round(
+                    $evaluations->avg('score') ?? 0
+                );
 
             $performanceLevel = match (true) {
                 $averageScore >= 90 => 'ممتاز',
@@ -251,133 +276,79 @@ class ParentDashboardService
             };
 
             return [
+                'name' =>
+                    "{$student->first_name} {$student->last_name}",
 
-                'name' => "{$student->first_name} {$student->last_name}",
+                'halaqa' =>
+                    $student->halaqats?->name
+                    ?? 'غير محدد',
 
-                'halaqa' => $student->halaqats->first()?->name ?? 'غير محدد',
+                'attendance' =>
+                    $todayAttendance?->status
+                    ?? 'لم يرصد',
 
-                'attendance' => $todayAttendance,
+                'attendance_percentage' =>
+                    $attendancePercentage,
 
-                'attendance_percentage' => $attendancePercentage,
+                'month_progress' =>
+                    $monthAyahs,
 
-                'month_progress' => $monthAyahs,
+                'evaluations_count' =>
+                    $evaluations->count(),
 
-                'evaluations_count' => $evaluationsCount,
+                'average_score' =>
+                    $averageScore,
 
-                'average_score' => round($averageScore ?? 0),
+                'performance_level' =>
+                    $performanceLevel,
 
-                'performance_level' => $performanceLevel,
-
-                'last_evaluation' => $lastEvaluation,
-
+                'last_evaluation' =>
+                    $lastEvaluation,
             ];
         });
 
         /*
         |--------------------------------------------------------------------------
-        | Dashboard Summary Cards
+        | Summary
         |--------------------------------------------------------------------------
         */
 
-        $totalChildren = $childrenData->count();
-
-        $totalAyahs = $childrenData->sum('month_progress');
-
-        $avgAttendance = round(
-            $childrenData->avg('attendance_percentage')
-        );
-
-        $avgScores = round(
-            $childrenData->avg('average_score')
-        );
-
-
-
         return [
-
             'has_children' => true,
 
-            'parent' => auth()->user(),
+            'parent' => User::find($parentId),
 
-            'generated_at' => now()->format('Y-m-d H:i'),
+            'generated_at' =>
+                now()->format('Y-m-d H:i'),
 
             'summary' => [
-                'children_count' => $totalChildren,
-                'total_ayahs' => $totalAyahs,
-                'average_attendance' => $avgAttendance,
-                'average_scores' => $avgScores,
+                'children_count' =>
+                    $childrenData->count(),
+
+                'total_ayahs' =>
+                    $childrenData->sum('month_progress'),
+
+                'average_attendance' =>
+                    round(
+                        $childrenData->avg(
+                            'attendance_percentage'
+                        ) ?? 0
+                    ),
+
+                'average_scores' =>
+                    round(
+                        $childrenData->avg(
+                            'average_score'
+                        ) ?? 0
+                    ),
             ],
 
             'children' => $childrenData,
-
         ];
     }
 
-    private function uploadPdfToSupabase(
-        string $pdfContent,
-        string $fileName
-    ): void {
-
-        $baseUrl = config('services.supabase.url');
-        $bucket  = config('services.supabase.reports_bucket');
-        $key     = config('services.supabase.key');
-
-        $uploadUrl =
-            $baseUrl .
-            '/storage/v1/object/' .
-            $bucket .
-            '/' .
-            $fileName;
-
-        // 🎯 التعديل: محاولة الاتصال 3 مرات بين كل مرة ثانية واحدة، وزيادة وقت الانتظار لـ 30 ثانية
-        $response = Http::retry(3, 1000)
-            ->timeout(30)
-            ->withHeaders([
-                'apikey'       => $key,
-                'Authorization'=> 'Bearer ' . $key,
-                'Content-Type' => 'application/pdf',
-            ])->withBody(
-                $pdfContent,
-                'application/pdf'
-            )->post($uploadUrl);
-
-        if (! $response->successful()) {
-            throw new \Exception(
-                'Supabase PDF Upload Failed: ' .
-                $response->body()
-            );
-        }
-    }
-
-    private function createSignedUrl(string $fileName): string
+    private function buildParentData(int $parentId): array
     {
-        $baseUrl = config('services.supabase.url');
-        $bucket  = config('services.supabase.reports_bucket');
-        $key     = config('services.supabase.key');
-
-        $response = Http::withHeaders([
-            'apikey'       => $key,
-            'Authorization'=> 'Bearer ' . $key,
-        ])->post(
-            $baseUrl .
-            '/storage/v1/object/sign/' .
-            $bucket .
-            '/' .
-            $fileName,
-            [
-                'expiresIn' => 3600 // ساعة
-            ]
-        );
-
-        if (! $response->successful()) {
-            throw new \Exception(
-                'Failed to create signed URL: ' .
-                $response->body()
-            );
-        }
-
-        return $baseUrl .
-            '/storage/v1' .
-            $response->json('signedURL');
+        return $this->getParentReportData($parentId);
     }
 }

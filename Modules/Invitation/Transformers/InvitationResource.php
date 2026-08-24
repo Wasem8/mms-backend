@@ -13,14 +13,21 @@ class InvitationResource extends JsonResource
     public function toArray($request): array
     {
         return [
-            'id' => $this->id,
-            'email' => $this->email,
-            'role' => $this->role,
-            'expires_at' => $this->expires_at,
-            'created_at' => $this->created_at,
+            'id'           => $this->id,
+            'email'        => $this->email,
+            'role'         => $this->role,
+
+
+            'status'       => $this->status,
+            'status_label' => $this->status_label,
+
+            'expires_at'   => $this->expires_at?->toIso8601String(),
+            'accepted_at'  => $this->accepted_at?->toIso8601String(),
+            'created_at'   => $this->created_at?->toIso8601String(),
+
             'mosque' => [
-                'id' => $this->mosque_id,
-                'name' => $this->mosque?->name, // إرجاع الاسم فقط كافٍ جداً للفرونت إند
+                'id'   => $this->mosque_id,
+                'name' => $this->mosque?->name,
             ]
         ];
     }

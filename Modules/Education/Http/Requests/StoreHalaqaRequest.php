@@ -4,6 +4,7 @@ namespace Modules\Education\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Modules\User\Models\User;
+use Modules\Education\Models\Halaqa;
 
 class StoreHalaqaRequest extends FormRequest
 {
@@ -17,12 +18,18 @@ class StoreHalaqaRequest extends FormRequest
             'teacher_id' => [
                 'nullable',
                 function ($attribute, $value, $fail) {
+                    if (! $value) {
+                        return;
+                    }
+
                     $user = User::find($value);
 
                     if (! $user) {
                         $fail('Teacher not found.');
                     } elseif (! $user->hasRole('teacher')) {
                         $fail('User is not a teacher.');
+                    } elseif (Halaqa::where('teacher_id', $value)->exists()) {
+                        $fail(__('messages.teacher_already_has_halaqa'));
                     }
                 },
             ],

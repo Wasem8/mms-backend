@@ -21,11 +21,10 @@ class CampaignEndpoints
             new OA\Property(property: 'target_amount',    type: 'number',  format: 'float', example: 1000000),
             new OA\Property(property: 'collected_amount', type: 'number',  format: 'float', example: 750000),
             new OA\Property(
-                property: 'percent_complete',
-                type: 'number',
-                format: 'float',
-                example: 75.0,
-                description: 'UC-75 — computed: (collected_amount / target_amount) × 100'
+                property: 'percentage',
+                type: 'string',
+                example: '75%',
+                description: 'Computed: (collected_amount / target_amount) × 100, formatted as a percentage string.'
             ),
             new OA\Property(
                 property: 'status',
@@ -42,13 +41,26 @@ class CampaignEndpoints
             new OA\Property(property: 'start_date', type: 'string', format: 'date', example: '2026-01-01'),
             new OA\Property(property: 'end_date',   type: 'string', format: 'date', nullable: true, example: '2026-06-01'),
             new OA\Property(
-                property: 'days_remaining',
+                property: 'remaining_days',
                 type: 'integer',
                 nullable: true,
                 example: 12,
                 description: 'null when no end_date is set. 0 when the campaign has ended.'
             ),
+            new OA\Property(property: 'donors_count', type: 'integer', example: 42, description: 'Distinct completed donors'),
             new OA\Property(property: 'cover_image', type: 'string', nullable: true, example: 'https://…/storage/campaigns/abc.jpg'),
+            new OA\Property(
+                property: 'mosque',
+                type: 'object',
+                nullable: true,
+                description: 'Embedded mosque summary — present on list/detail endpoints',
+                properties: [
+                    new OA\Property(property: 'id',        type: 'integer', example: 5),
+                    new OA\Property(property: 'name',      type: 'string',  example: 'جامع الراجحي الكبير'),
+                    new OA\Property(property: 'city',      type: 'string',  example: 'الرياض'),
+                    new OA\Property(property: 'image_url', type: 'string',  nullable: true),
+                ]
+            ),
             new OA\Property(property: 'created_at',  type: 'string', format: 'date-time'),
             new OA\Property(property: 'updated_at',  type: 'string', format: 'date-time'),
         ]
@@ -69,7 +81,54 @@ class CampaignEndpoints
         operationId: 'listAllCampaigns',
         tags: ['Campaigns'],
         summary: 'List all campaigns with search & filters',
-        description: 'Returns a paginated list of all campaigns with optional search, status, priority, and sorting filters.',
+        description: 'Returns a paginated list of all campaigns with optional search, status, priority, sorting, and mosque_id filters. Public.',
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'search',     in: 'query', required: false, schema: new OA\Schema(type: 'string'),  description: 'Search by title or description'),
+            new OA\Parameter(name: 'status',     in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['active', 'paused', 'completed', 'cancelled'])),
+            new OA\Parameter(name: 'priority',   in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['high', 'medium', 'low'])),
+            new OA\Parameter(name: 'mosque_id',  in: 'query', required: false, schema: new OA\Schema(type: 'integer'), description: 'Optional. Filter by a specific mosque.'),
+            new OA\Parameter(name: 'sort_by',    in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['created_at', 'start_date', 'end_date', 'target_amount', 'collected_amount', 'title', 'status']), description: 'Sort field (default: created_at)'),
+            new OA\Parameter(name: 'sort_order', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['asc', 'desc']), description: 'Sort order (default: desc)'),
+            new OA\Parameter(name: 'per_page',   in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100, default: 15), description: 'Items per page'),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/Campaign')),
+                        new OA\Property(
+                            property: 'pagination',
+                            type: 'object',
+                            nullable: true,
+                            properties: [
+                                new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                new OA\Property(property: 'last_page',    type: 'integer', example: 5),
+                                new OA\Property(property: 'per_page',     type: 'integer', example: 15),
+                                new OA\Property(property: 'total',        type: 'integer', example: 72),
+                                new OA\Property(property: 'has_more_pages', type: 'boolean', example: true),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function listAllCampaigns() {}
+
+    // =========================================================================
+    // GET /mosque/campaigns  (authenticated mosque_manager — own mosque)
+    // =========================================================================
+
+    #[OA\Get(
+        path: '/mosque/campaigns',
+        operationId: 'listMyMosqueCampaigns',
+        tags: ['Campaigns'],
+        summary: 'List the authenticated mosque manager\'s campaigns',
+        description: 'Returns a paginated list of campaigns belonging to the authenticated mosque_manager\'s mosque. The mosque_id is taken automatically from the auth user.',
+        security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'search',     in: 'query', required: false, schema: new OA\Schema(type: 'string'),  description: 'Search by title or description'),
@@ -86,18 +145,26 @@ class CampaignEndpoints
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/Campaign')),
-                        new OA\Property(property: 'meta', type: 'object', properties: [
-                            new OA\Property(property: 'current_page', type: 'integer', example: 1),
-                            new OA\Property(property: 'last_page',    type: 'integer', example: 5),
-                            new OA\Property(property: 'per_page',     type: 'integer', example: 15),
-                            new OA\Property(property: 'total',        type: 'integer', example: 72),
-                        ]),
+                        new OA\Property(
+                            property: 'pagination',
+                            type: 'object',
+                            nullable: true,
+                            properties: [
+                                new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                new OA\Property(property: 'last_page',    type: 'integer', example: 5),
+                                new OA\Property(property: 'per_page',     type: 'integer', example: 15),
+                                new OA\Property(property: 'total',        type: 'integer', example: 72),
+                                new OA\Property(property: 'has_more_pages', type: 'boolean', example: true),
+                            ]
+                        ),
                     ]
                 )
             ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — requires mosque_manager role'),
         ]
     )]
-    public function listAllCampaigns() {}
+    public function listMyMosqueCampaigns() {}
 
     // =========================================================================
     // GET /mosques/{mosqueId}/campaigns  (with filters)
@@ -126,12 +193,18 @@ class CampaignEndpoints
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/Campaign')),
-                        new OA\Property(property: 'meta', type: 'object', properties: [
-                            new OA\Property(property: 'current_page', type: 'integer', example: 1),
-                            new OA\Property(property: 'last_page',    type: 'integer', example: 2),
-                            new OA\Property(property: 'per_page',     type: 'integer', example: 15),
-                            new OA\Property(property: 'total',        type: 'integer', example: 18),
-                        ]),
+                        new OA\Property(
+                            property: 'pagination',
+                            type: 'object',
+                            nullable: true,
+                            properties: [
+                                new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                new OA\Property(property: 'last_page',    type: 'integer', example: 5),
+                                new OA\Property(property: 'per_page',     type: 'integer', example: 15),
+                                new OA\Property(property: 'total',        type: 'integer', example: 72),
+                                new OA\Property(property: 'has_more_pages', type: 'boolean', example: true),
+                            ]
+                        ),
                     ]
                 )
             ),
@@ -206,6 +279,84 @@ class CampaignEndpoints
         ]
     )]
     public function getCampaignStats() {}
+
+    // =========================================================================
+    // GET /admin/campaigns/stats   ← NEW (super admin — all mosques)
+    // =========================================================================
+
+    #[OA\Schema(
+        schema: 'CampaignMosqueStat',
+        type: 'object',
+        properties: [
+            new OA\Property(property: 'mosque_id',        type: 'integer', example: 5),
+            new OA\Property(property: 'mosque_name',      type: 'string',  nullable: true, example: 'جامع الراجحي الكبير'),
+            new OA\Property(property: 'city',             type: 'string',  nullable: true, example: 'الرياض'),
+            new OA\Property(property: 'total_campaigns',  type: 'integer', example: 8),
+            new OA\Property(property: 'active_count',     type: 'integer', example: 3),
+            new OA\Property(property: 'completed_count',  type: 'integer', example: 4),
+            new OA\Property(property: 'total_collected',  type: 'number', format: 'float', example: 750000),
+            new OA\Property(property: 'total_target',     type: 'number', format: 'float', example: 1000000),
+            new OA\Property(property: 'progress_percent', type: 'number', format: 'float', example: 75.0, description: 'collected / target × 100'),
+        ]
+    )]
+    public function schemaCampaignMosqueStat() {}
+
+    #[OA\Get(
+        path: '/admin/campaigns/stats',
+        operationId: 'getAllCampaignStats',
+        tags: ['Campaigns'],
+        summary: 'Campaign stats across all mosques (super admin)',
+        description: 'Aggregated campaign statistics for every mosque. Provides platform-wide totals, status breakdown, month-on-month growth, and a per-mosque breakdown. Restricted to super_admin.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string',  example: 'Success'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'total_campaigns',         type: 'integer', example: 320, description: 'Total campaigns across all mosques'),
+                                new OA\Property(property: 'total_collected',         type: 'number', format: 'float', example: 12500000, description: 'Sum of collected_amount across all campaigns'),
+                                new OA\Property(property: 'total_target',            type: 'number', format: 'float', example: 20000000, description: 'Sum of target_amount across all campaigns'),
+                                new OA\Property(property: 'overall_progress_percent', type: 'number', format: 'float', example: 62.5, description: 'total_collected / total_target × 100'),
+                                new OA\Property(property: 'active_count',             type: 'integer', example: 120, description: 'Campaigns with status = active across all mosques'),
+                                new OA\Property(property: 'completed_count',          type: 'integer', example: 150, description: 'Campaigns with status = completed across all mosques'),
+                                new OA\Property(property: 'growth_rate_percent',     type: 'number', format: 'float', example: 78.0, description: 'Month-on-month growth of collected_amount'),
+                                new OA\Property(property: 'mosques_with_campaigns', type: 'integer', example: 45, description: 'Distinct mosques that have at least one campaign'),
+                                new OA\Property(
+                                    property: 'status_breakdown',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'active',    type: 'integer', example: 120),
+                                        new OA\Property(property: 'completed', type: 'integer', example: 150),
+                                        new OA\Property(property: 'paused',    type: 'integer', example: 30),
+                                        new OA\Property(property: 'cancelled', type: 'integer', example: 20),
+                                    ]
+                                ),
+                                new OA\Property(
+                                    property: 'per_mosque',
+                                    type: 'array',
+                                    description: 'Per-mosque breakdown, ordered by total_collected descending',
+                                    items: new OA\Items(ref: '#/components/schemas/CampaignMosqueStat')
+                                ),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Forbidden — requires super_admin role'),
+        ]
+    )]
+    public function getAllCampaignStats() {}
 
     // =========================================================================
     // GET /campaigns/{id}
@@ -342,14 +493,20 @@ class CampaignEndpoints
                 mediaType: 'multipart/form-data',
                 schema: new OA\Schema(
                     type: 'object',
-                    required: ['mosque_id', 'title', 'target_amount', 'start_date'],
+                    required: ['title', 'target_amount', 'start_date', 'end_date'],
                     properties: [
-                        new OA\Property(property: 'mosque_id',     type: 'integer', example: 5),
+                        new OA\Property(
+                            property: 'mosque_id',
+                            type: 'integer',
+                            nullable: true,
+                            example: 5,
+                            description: 'Optional. If omitted, it is automatically set to the authenticated mosque_manager\'s mosque.'
+                        ),
                         new OA\Property(property: 'title',         type: 'string',  example: 'كسوة العيد للأيتام'),
                         new OA\Property(property: 'description',   type: 'string',  nullable: true),
                         new OA\Property(property: 'target_amount', type: 'number',  format: 'float', example: 25000),
                         new OA\Property(property: 'start_date',    type: 'string',  format: 'date',  example: '2026-05-01'),
-                        new OA\Property(property: 'end_date',      type: 'string',  format: 'date',  nullable: true, example: '2026-06-01'),
+                        new OA\Property(property: 'end_date',      type: 'string',  format: 'date',  example: '2026-06-01'),
                         new OA\Property(
                             property: 'priority',
                             type: 'string',
@@ -359,7 +516,7 @@ class CampaignEndpoints
                         new OA\Property(
                             property: 'status',
                             type: 'string',
-                            enum: ['active', 'paused', 'completed', 'cancelled'],
+                            enum: ['active', 'paused' , 'cancelled'],
                             example: 'active'
                         ),
                         new OA\Property(

@@ -12,6 +12,8 @@ Route::post('stripe/webhook', [StripeWebhookController::class, 'handle']);
 
 Route::middleware(['auth:api', 'role:super_admin'])->group(function () {
     Route::put('settings/exchange-rate', [SettingController::class, 'updateExchangeRate']);
+    Route::get('admin/donations', [DonationController::class, 'allDonations']);
+    Route::get('admin/campaigns/stats', [CampaignController::class, 'statsForAll']);
 });
 
 Route::get('settings', [SettingController::class, 'index']);
@@ -22,7 +24,6 @@ Route::prefix('mosques/{mosqueId}/donations')->middleware(['auth:api','role:mosq
     Route::get('/',        [DonationController::class, 'index']);
     Route::get('/summary', [DonationController::class, 'summary']);
     Route::get('/chart',   [DonationController::class, 'chart']);
-    Route::get('/stats', [DonationController::class, 'stats']);
 });
 
 Route::prefix('donations')->group(function () {
@@ -32,6 +33,10 @@ Route::prefix('donations')->group(function () {
         Route::put('/{id}',    [DonationController::class, 'update']);
         Route::delete('/{id}', [DonationController::class, 'destroy']);
     });
+
+    // Page stats — no mosque id; scoped to the authenticated user (or all mosques for super-admin).
+    // Registered before `/{reference}` so it is not captured by the reference route.
+    Route::get('/stats', [DonationController::class, 'stats'])->middleware(['auth:api']);
 
     Route::get('/{reference}', [DonationController::class, 'show']);
     Route::post('/online', [DonationController::class, 'storeOnline']);
@@ -56,4 +61,16 @@ Route::prefix('campaigns')->group(function () {
     });
 });
 
+Route::middleware(['auth:api', 'role:mosque_manager'])->group(function () {
+    Route::get('mosque/campaigns', [CampaignController::class, 'mosqueIndex']);
+});
+
 Route::get('mosques/{mosqueId}/donations/recent', [DonationController::class, 'recentDonations'])->middleware(['auth:api','role:mosque_manager']);
+
+Route::middleware(['auth:api', 'role:mosque_manager'])->group(function () {
+    Route::get('mosque/donations/report', [DonationController::class, 'report']);
+});
+
+Route::middleware(['auth:api', 'role:super_admin'])->group(function () {
+    Route::get('admin/donations/report', [DonationController::class, 'allReport']);
+});

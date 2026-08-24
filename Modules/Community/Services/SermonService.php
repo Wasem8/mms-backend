@@ -2,12 +2,17 @@
 
 namespace Modules\Community\Services;
 
-use Illuminate\Http\UploadedFile;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Modules\Community\Models\Sermon;
 use Modules\Community\Repositories\SermonRepositoryInterface;
+use Modules\User\Models\User;
+use Modules\Community\Events\SermonApproved;
+use Modules\Community\Events\SermonRejected;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Auth\Access\AuthorizationException;
+
 
 class SermonService
 {
@@ -18,18 +23,29 @@ class SermonService
         $this->sermonRepo = $sermonRepo;
     }
 
-    public function getAllSermons()
+    public function getAllSermons(User $user)
     {
-        return Sermon::with('attachments')->get();
+        $filters = $this->applyRoleScope([], $user);
+
+        return Sermon::with('attachments')
+            ->filter($filters)
+            ->latest()
+            ->get();
     }
-    public function getPendingSermons()
+    public function getPendingSermons(int $perPage = 15)
     {
-        return Sermon::with('attachments')->where('status', 'Pending')->get();
+        return Sermon::with('attachments')
+            ->where('status', 'Pending')
+            ->latest()
+            ->paginate($perPage);
     }
 
-    public function getArchivedSermons()
+    public function getArchivedSermons(int $perPage = 15)
     {
-        return Sermon::with('attachments')->where('status', 'Archived')->get();
+        return Sermon::with('attachments')
+            ->where('status', 'Archived')
+            ->latest()
+            ->paginate($perPage);
     }
 
     public function createSermon(array $data, int $mosqueManagerId, array $files = []): Sermon
@@ -54,7 +70,7 @@ class SermonService
 
     public function getSermonById(int $sermonId): ?Sermon
     {
-        return $this->sermonRepo->findById($sermonId);
+        return $this->sermonRepo->findById($sermonId)->load('attachments');
     }
 
     public function approveSermon(int $sermonId, int $adminId): Sermon
@@ -66,16 +82,12 @@ class SermonService
 
         $this->sermonRepo->updateStatus($sermon, 'Archived');
 
+        event(new SermonApproved($sermon, $adminId));
+
+
         return $sermon;
     }
 
-    public function rejectAndDestroySermon(int $sermonId): void
-    {
-        $sermon = $this->sermonRepo->findById($sermonId);
-        $this->sermonRepo->delete($sermon);
-    }
-
-    // 4. تنظيف النظام التلقائي من الخطب المتروكة التي حل وقتها ولم تُعتمد
     public function purgeExpiredPendingSermons(): int
     {
         $today = Carbon::today()->toDateString();
@@ -115,10 +127,65 @@ class SermonService
     }
 
 
-    public function rejectSermon($sermonId, $regionManagerId, $notes)
+    public function rejectSermon($sermonId, $regionManagerId, $notes): Sermon
     {
-        return $this->sermonRepo->updateStatus($sermonId, 'Rejected', $notes, $regionManagerId);
+        $sermon = $this->sermonRepo->findById($sermonId);
+
+        $this->sermonRepo->updateStatus($sermon, 'Rejected', $notes, $regionManagerId);
+
+        event(new SermonRejected(
+            sermonId: $sermon->id,
+            sermonTitle: $sermon->title,
+            mosqueManagerId: $sermon->mosque_manager_id,
+            notes: $notes,
+            isHardReject: false,
+        ));
+
+        return $sermon->load('attachments');
     }
 
+    public function searchSermons(array $filters, User $user, int $perPage = 15)
+    {
+        $filters = $this->applyRoleScope($filters, $user);
 
+        return $this->sermonRepo->search($filters, $perPage);
+    }
+
+    private function applyRoleScope(array $filters, User $user): array
+    {
+        if ($user->isMosqueManager()) {
+            $filters['mosque_manager_id'] = $user->id;
+            return $filters;
+        }
+
+        if ($user->isAreaManager()) {
+            return $filters;
+        }
+
+        return $filters;
+    }
+
+    public function getMostSelectedSermons(int $limit = 10, ?string $fridayDateFrom = null, ?string $fridayDateTo = null)
+    {
+        return $this->sermonRepo->mostSelected($limit, $fridayDateFrom, $fridayDateTo);
+    }
+
+    public function deleteSermonIfPending(int $sermonId, int $mosqueManagerId): void
+    {
+        $sermon = $this->sermonRepo->findById($sermonId);
+
+        if (!$sermon) {
+            throw new ModelNotFoundException('Sermon not found.');
+        }
+
+        if ($sermon->mosque_manager_id !== $mosqueManagerId) {
+            throw new AuthorizationException('You are not authorized to delete this sermon.');
+        }
+
+        if ($sermon->status !== 'Pending') {
+            throw new \RuntimeException('Only pending sermons can be deleted.');
+        }
+
+        $this->sermonRepo->delete($sermon);
+    }
 }

@@ -61,6 +61,19 @@ class MaintenanceRequestEndpoints
             new OA\Property(property: 'scheduled_at', type: 'string',  nullable: true, example: '01 Jun 2026, 09:00 AM'),
             new OA\Property(property: 'completed_at', type: 'string',  nullable: true, example: null),
             new OA\Property(property: 'notes',        type: 'string',  nullable: true, example: 'Please come after Fajr prayer.'),
+            new OA\Property(property: 'files_requested',     type: 'boolean', default: false, example: true, description: 'Whether the region manager requested additional files from the mosque manager.'),
+            new OA\Property(
+                property: 'files_requested_by',
+                type: 'object',
+                nullable: true,
+                description: 'Region manager (super_admin) who requested the additional files.',
+                properties: [
+                    new OA\Property(property: 'id',   type: 'integer', example: 1),
+                    new OA\Property(property: 'name', type: 'string',  example: 'Dr. Abdullah'),
+                ],
+            ),
+            new OA\Property(property: 'files_requested_at',  type: 'string', nullable: true, format: 'date-time', example: '2026-08-15T10:00:00Z'),
+            new OA\Property(property: 'files_request_note',  type: 'string', nullable: true, example: 'Please upload photos of the damaged AC unit.'),
             new OA\Property(
                 property: 'files',
                 type: 'array',
@@ -85,6 +98,44 @@ class MaintenanceRequestEndpoints
         ],
     )]
     public function schemaRequest() {}
+    #[OA\Schema(
+        schema: 'PublicMaintenanceRequest',
+        type: 'object',
+        description: 'Reduced-visibility version of MaintenanceRequest for guest/public access — excludes requester identity, internal notes, and status change history.',
+        properties: [
+            new OA\Property(property: 'id',                 type: 'integer', example: 42),
+            new OA\Property(property: 'maintenance_number', type: 'string',  example: 'MR-2026-AB1C2D'),
+            new OA\Property(property: 'title',              type: 'string',  example: 'AC unit not cooling'),
+            new OA\Property(property: 'description',        type: 'string',  example: 'The main hall AC has stopped cooling since yesterday.'),
+            new OA\Property(property: 'category',           type: 'string',  enum: ['electrical', 'plumbing', 'carpentry', 'cleaning', 'other'], example: 'electrical'),
+            new OA\Property(property: 'priority',           type: 'string',  enum: ['low', 'medium', 'high', 'urgent'], example: 'high'),
+            new OA\Property(property: 'status',             type: 'string',  enum: ['pending', 'in_progress', 'completed', 'cancelled'], example: 'pending'),
+            new OA\Property(property: 'scheduled_at',       type: 'string',  nullable: true, example: '01 Jun 2026, 09:00 AM'),
+            new OA\Property(property: 'completed_at',       type: 'string',  nullable: true, example: null),
+            new OA\Property(
+                property: 'files',
+                type: 'array',
+                items: new OA\Items(
+                    properties: [
+                        new OA\Property(property: 'file_path', type: 'string', example: 'https://xyz.supabase.co/storage/v1/object/public/maintenance/ac-photo.jpg'),
+                        new OA\Property(property: 'file_name', type: 'string', example: 'ac-photo.jpg'),
+                    ]
+                ),
+            ),
+            new OA\Property(
+                property: 'mosque',
+                type: 'object',
+                nullable: true,
+                properties: [
+                    new OA\Property(property: 'id',   type: 'integer', example: 7),
+                    new OA\Property(property: 'name', type: 'string',  example: 'Al-Noor Mosque'),
+                ],
+            ),
+            new OA\Property(property: 'created_at', type: 'string', example: '21 May 2026, 10:30 AM'),
+        ],
+    )]
+    public function schemaPublicRequest() {}
+
 
     // =========================================================================
     //  MOSQUE MANAGER  —  middleware: auth:api, role:mosque_manager
@@ -127,22 +178,28 @@ class MaintenanceRequestEndpoints
                 description: 'Maintenance requests retrieved successfully.',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'status',  type: 'string', example: 'success'),
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
                         new OA\Property(property: 'message', type: 'string', example: 'Maintenance requests retrieved successfully.'),
                         new OA\Property(
                             property: 'data',
-                            type: 'array',
-                            items: new OA\Items(ref: '#/components/schemas/MaintenanceRequest'),
-                        ),
-                        new OA\Property(
-                            property: 'pagination',
                             type: 'object',
                             properties: [
-                                new OA\Property(property: 'current_page', type: 'integer', example: 1),
-                                new OA\Property(property: 'per_page',     type: 'integer', example: 15),
-                                new OA\Property(property: 'total',        type: 'integer', example: 8),
-                                new OA\Property(property: 'last_page',    type: 'integer', example: 1),
-                                new OA\Property(property: 'has_more',     type: 'boolean', example: false),
+                                new OA\Property(
+                                    property: 'data',
+                                    type: 'array',
+                                    items: new OA\Items(ref: '#/components/schemas/MaintenanceRequest'),
+                                ),
+                                new OA\Property(
+                                    property: 'pagination',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                        new OA\Property(property: 'per_page',     type: 'integer', example: 15),
+                                        new OA\Property(property: 'total',        type: 'integer', example: 8),
+                                        new OA\Property(property: 'last_page',    type: 'integer', example: 1),
+                                        new OA\Property(property: 'has_more',     type: 'boolean', example: false),
+                                    ],
+                                ),
                             ],
                         ),
                     ],
@@ -161,7 +218,7 @@ class MaintenanceRequestEndpoints
         operationId: 'maintenance.store',
         tags: ['Maintenance Requests'],
         summary: 'Submit a new maintenance request',
-        description: 'Creates a maintenance request. A unique `maintenance_number` (MR-YYYY-XXXXXX) is auto-generated. Status defaults to `pending`. `requested_by` is automatically resolved from the authenticated user\'s token.',
+        description: 'Creates a maintenance request for the authenticated mosque manager\'s mosque. `mosque_id` is automatically resolved from the manager\'s token and cannot be set manually. A unique `maintenance_number` (MR-YYYY-XXXXXX) is auto-generated. Status defaults to `pending`. `requested_by` is automatically resolved from the authenticated user\'s token.',
         security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
@@ -171,9 +228,8 @@ class MaintenanceRequestEndpoints
             content: new OA\MediaType(
                 mediaType: 'multipart/form-data',
                 schema: new OA\Schema(
-                    required: ['mosque_id', 'title', 'description', 'category'],
+                    required: ['title', 'description', 'category'],
                     properties: [
-                        new OA\Property(property: 'mosque_id',    type: 'integer', example: 7),
                         new OA\Property(property: 'title',        type: 'string',  maxLength: 255,  example: 'AC unit not cooling'),
                         new OA\Property(property: 'description',  type: 'string',  maxLength: 5000, example: 'The main hall AC has stopped cooling since yesterday.'),
                         new OA\Property(property: 'category',     type: 'string',  enum: ['electrical', 'plumbing', 'carpentry', 'cleaning', 'other'], example: 'electrical'),
@@ -196,7 +252,7 @@ class MaintenanceRequestEndpoints
                 description: 'Maintenance request submitted successfully.',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'status',  type: 'string', example: 'success'),
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
                         new OA\Property(property: 'message', type: 'string', example: 'Maintenance request submitted successfully.'),
                         new OA\Property(property: 'data', ref: '#/components/schemas/MaintenanceRequest'),
                     ],
@@ -208,7 +264,6 @@ class MaintenanceRequestEndpoints
         ],
     )]
     public function store() {}
-
     // ─── GET /maintenance/{id} ────────────────────────────────────────────────
 
     #[OA\Get(
@@ -228,7 +283,7 @@ class MaintenanceRequestEndpoints
                 description: 'Maintenance request retrieved successfully.',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'status',  type: 'string', example: 'success'),
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
                         new OA\Property(property: 'message', type: 'string', example: 'Maintenance request retrieved successfully.'),
                         new OA\Property(property: 'data', ref: '#/components/schemas/MaintenanceRequest'),
                     ],
@@ -242,15 +297,14 @@ class MaintenanceRequestEndpoints
     public function show() {}
 
     #[OA\Get(
-        path: '/mosques/{mosqueId}/maintenance/stats',
+        path: '/maintenance/stats',
         operationId: 'getMaintenancePageStats',
         tags: ['Maintenance Requests'],
         summary: 'Maintenance page stat cards',
-        description: 'Returns the four stat cards shown at the top of the maintenance management page: open requests, in progress, completed this month, and critical failures.',
+        description: 'Returns the four stat cards for the authenticated mosque_manager\'s mosque: open requests, in progress, completed this month, and critical failures.',
         security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
-            new OA\Parameter(name: 'mosqueId', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 1),
         ],
         responses: [
             new OA\Response(
@@ -258,7 +312,7 @@ class MaintenanceRequestEndpoints
                 description: 'Success',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'status',  type: 'string', example: 'success'),
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
                         new OA\Property(property: 'message', type: 'string', example: 'Maintenance page stats retrieved successfully.'),
                         new OA\Property(
                             property: 'data',
@@ -295,20 +349,19 @@ class MaintenanceRequestEndpoints
             ),
             new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
             new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
-            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
         ]
     )]
     public function pageStats() {}
 
     #[OA\Get(
-        path: '/mosques/{mosqueId}/maintenance/recent',
+        path: '/maintenance/recent',
         operationId: 'getRecentMaintenanceRequests',
         tags: ['Maintenance Requests'],
-        summary: 'Get recent maintenance requests for a mosque',
-        description: 'Returns the latest maintenance requests for a specific mosque. Restricted to mosque_manager.',
+        summary: 'Get recent maintenance requests for my mosque',
+        description: 'Returns the latest maintenance requests for the authenticated mosque_manager\'s mosque.',
         security: [['bearerAuth' => []]],
         parameters: [
-            new OA\Parameter(name: 'mosqueId', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 1),
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
             new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 5, minimum: 1, maximum: 50), description: 'Number of requests to return'),
         ],
         responses: [
@@ -341,10 +394,64 @@ class MaintenanceRequestEndpoints
             ),
             new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
             new OA\Response(response: 403, description: 'Forbidden — requires mosque_manager role'),
-            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
         ]
     )]
     public function recentRequests() {}
+
+    // ─── GET /maintenance/search ───────────────────────────────────────────────
+
+    #[OA\Get(
+        path: '/maintenance/search',
+        operationId: 'searchMaintenanceRequests',
+        tags: ['Maintenance Requests'],
+        summary: 'Search maintenance requests',
+        description: 'Search maintenance requests by keyword across maintenance_number, title, and description.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'q', in: 'query', required: true, schema: new OA\Schema(type: 'string', minLength: 1), description: 'Search keyword'),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 15, minimum: 1, maximum: 100), description: 'Items per page'),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Search results retrieved successfully.',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Search results retrieved successfully.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'data',
+                                    type: 'array',
+                                    items: new OA\Items(ref: '#/components/schemas/MaintenanceRequest'),
+                                ),
+                                new OA\Property(
+                                    property: 'pagination',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                        new OA\Property(property: 'per_page',     type: 'integer', example: 15),
+                                        new OA\Property(property: 'total',        type: 'integer', example: 8),
+                                        new OA\Property(property: 'last_page',    type: 'integer', example: 1),
+                                        new OA\Property(property: 'has_more',     type: 'boolean', example: false),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+            new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
+            new OA\Response(response: 422, ref: '#/components/responses/ValidationError'),
+        ]
+    )]
+    public function search() {}
+
     // ─── PUT /maintenance/{id} ────────────────────────────────────────────────
 
     #[OA\Put(
@@ -380,7 +487,7 @@ class MaintenanceRequestEndpoints
                 description: 'Maintenance request updated successfully.',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'status',  type: 'string', example: 'success'),
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
                         new OA\Property(property: 'message', type: 'string', example: 'Maintenance request updated successfully.'),
                         new OA\Property(property: 'data', ref: '#/components/schemas/MaintenanceRequest'),
                     ],
@@ -413,7 +520,7 @@ class MaintenanceRequestEndpoints
                 description: 'Maintenance request deleted successfully.',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'status',  type: 'string', example: 'success'),
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
                         new OA\Property(property: 'message', type: 'string', example: 'Maintenance request deleted successfully.'),
                         new OA\Property(property: 'data',    nullable: true, example: null),
                     ],
@@ -450,7 +557,7 @@ class MaintenanceRequestEndpoints
                 description: 'Maintenance request retrieved successfully.',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'status',  type: 'string', example: 'success'),
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
                         new OA\Property(property: 'message', type: 'string', example: 'Maintenance request retrieved successfully.'),
                         new OA\Property(property: 'data', ref: '#/components/schemas/MaintenanceRequest'),
                     ],
@@ -462,6 +569,107 @@ class MaintenanceRequestEndpoints
         ],
     )]
     public function track() {}
+
+    // ─── GET /maintenance/file-requests ───────────────────────────────────────
+
+    #[OA\Get(
+        path: '/maintenance/file-requests',
+        operationId: 'maintenance.fileRequests',
+        tags: ['Maintenance Requests'],
+        summary: 'List requests awaiting additional files',
+        description: 'Returns a paginated list of maintenance requests for the authenticated mosque manager\'s mosque where the region manager (super_admin) has requested additional files that have not been uploaded yet.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 15, minimum: 1, maximum: 100),
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'File requests retrieved successfully.',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'File requests retrieved successfully.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/MaintenanceRequest'),
+                        ),
+                        new OA\Property(
+                            property: 'pagination',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                new OA\Property(property: 'per_page',     type: 'integer', example: 15),
+                                new OA\Property(property: 'total',        type: 'integer', example: 3),
+                                new OA\Property(property: 'last_page',    type: 'integer', example: 1),
+                                new OA\Property(property: 'has_more_pages', type: 'boolean', example: false),
+                            ],
+                        ),
+                    ],
+                ),
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+            new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
+        ],
+    )]
+    public function fileRequests() {}
+
+    // ─── POST /maintenance/{id}/upload-files ──────────────────────────────────
+
+    #[OA\Post(
+        path: '/maintenance/{id}/upload-files',
+        operationId: 'maintenance.uploadFiles',
+        tags: ['Maintenance Requests'],
+        summary: 'Upload additional files requested by the region manager',
+        description: 'Uploads the additional files requested by the region manager for a maintenance request. Only allowed when `files_requested` is `true` and the request belongs to the authenticated mosque manager\'s mosque. Uploading clears the file request.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 42)),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    required: ['files'],
+                    properties: [
+                        new OA\Property(
+                            property: 'files[]',
+                            type: 'array',
+                            description: 'Additional attachments. Accepted: jpg, jpeg, png, pdf, doc, docx. Max 10 MB each. Up to 10 files.',
+                            items: new OA\Items(type: 'string', format: 'binary'),
+                        ),
+                    ],
+                ),
+            ),
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Additional files uploaded successfully.',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Additional files uploaded successfully.'),
+                        new OA\Property(property: 'data', ref: '#/components/schemas/MaintenanceRequest'),
+                    ],
+                ),
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+            new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
+            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+            new OA\Response(response: 422, ref: '#/components/responses/ValidationError'),
+        ],
+    )]
+    public function uploadFiles() {}
 
     // =========================================================================
     //  SUPER ADMIN  —  middleware: auth:api, role:super_admin
@@ -510,22 +718,28 @@ class MaintenanceRequestEndpoints
                 description: 'All maintenance requests retrieved successfully.',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'status',  type: 'string', example: 'success'),
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
                         new OA\Property(property: 'message', type: 'string', example: 'All maintenance requests retrieved successfully.'),
                         new OA\Property(
                             property: 'data',
-                            type: 'array',
-                            items: new OA\Items(ref: '#/components/schemas/MaintenanceRequest'),
-                        ),
-                        new OA\Property(
-                            property: 'pagination',
                             type: 'object',
                             properties: [
-                                new OA\Property(property: 'current_page', type: 'integer', example: 1),
-                                new OA\Property(property: 'per_page',     type: 'integer', example: 15),
-                                new OA\Property(property: 'total',        type: 'integer', example: 43),
-                                new OA\Property(property: 'last_page',    type: 'integer', example: 3),
-                                new OA\Property(property: 'has_more',     type: 'boolean', example: true),
+                                new OA\Property(
+                                    property: 'data',
+                                    type: 'array',
+                                    items: new OA\Items(ref: '#/components/schemas/MaintenanceRequest'),
+                                ),
+                                new OA\Property(
+                                    property: 'pagination',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                        new OA\Property(property: 'per_page',     type: 'integer', example: 15),
+                                        new OA\Property(property: 'total',        type: 'integer', example: 43),
+                                        new OA\Property(property: 'last_page',    type: 'integer', example: 3),
+                                        new OA\Property(property: 'has_more',     type: 'boolean', example: true),
+                                    ],
+                                ),
                             ],
                         ),
                     ],
@@ -581,7 +795,7 @@ class MaintenanceRequestEndpoints
                 description: 'Maintenance request processed successfully.',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'status',  type: 'string', example: 'success'),
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
                         new OA\Property(property: 'message', type: 'string', example: 'Maintenance request processed successfully.'),
                         new OA\Property(property: 'data', ref: '#/components/schemas/MaintenanceRequest'),
                     ],
@@ -594,4 +808,154 @@ class MaintenanceRequestEndpoints
         ],
     )]
     public function process() {}
+
+    // ─── POST /maintenance/admin/{id}/request-files ──────────────────────────
+
+    #[OA\Post(
+        path: '/maintenance/admin/{id}/request-files',
+        operationId: 'admin.maintenance.requestFiles',
+        tags: ['Maintenance Requests — Admin'],
+        summary: 'Request additional files from the mosque manager',
+        description: 'Lets the region manager (super_admin) request additional files from the mosque manager for a maintenance request. Sets `files_requested` to `true`. Cannot be used on `completed` or `cancelled` requests.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 42)),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'application/x-www-form-urlencoded',
+                schema: new OA\Schema(
+                    required: ['note'],
+                    properties: [
+                        new OA\Property(
+                            property: 'note',
+                            type: 'string',
+                            maxLength: 1000,
+                            example: 'Please upload photos of the damaged AC unit.',
+                            description: 'Reason the additional files are required.',
+                        ),
+                    ],
+                ),
+            ),
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Additional files requested successfully.',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Additional files requested successfully.'),
+                        new OA\Property(property: 'data', ref: '#/components/schemas/MaintenanceRequest'),
+                    ],
+                ),
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthenticated'),
+            new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
+            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+            new OA\Response(response: 422, ref: '#/components/responses/ValidationError'),
+        ],
+    )]
+    public function adminRequestFiles() {}
+
+    #[OA\Get(
+        path: '/maintenance/public',
+        operationId: 'maintenance.public.index',
+        tags: ['Maintenance Requests — Public'],
+        summary: 'List maintenance requests (public)',
+        description: 'Returns a paginated list of maintenance requests visible to guests, with sensitive fields (requester identity, internal notes, status change history) excluded. Filterable by status, category, priority, and mosque.',
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(
+                name: 'status',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string', enum: ['pending', 'in_progress', 'completed', 'cancelled'], example: 'pending'),
+            ),
+            new OA\Parameter(
+                name: 'category',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string', enum: ['electrical', 'plumbing', 'carpentry', 'cleaning', 'other'], example: 'electrical'),
+            ),
+            new OA\Parameter(
+                name: 'priority',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string', enum: ['low', 'medium', 'high', 'urgent'], example: 'high'),
+            ),
+            new OA\Parameter(
+                name: 'mosque_id',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', example: 7),
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 15, example: 15),
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Maintenance requests retrieved successfully.',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Maintenance requests retrieved successfully.'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/PublicMaintenanceRequest'),
+                        ),
+                        new OA\Property(
+                            property: 'pagination',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                new OA\Property(property: 'per_page',     type: 'integer', example: 15),
+                                new OA\Property(property: 'total',        type: 'integer', example: 8),
+                                new OA\Property(property: 'last_page',    type: 'integer', example: 1),
+                                new OA\Property(property: 'has_more_pages', type: 'boolean', example: false),
+                            ],
+                        ),
+                    ],
+                ),
+            ),
+        ],
+    )]
+    public function publicIndex() {}
+
+    // ─── GET /maintenance/public/{id} ───────────────────────────────────────
+
+    #[OA\Get(
+        path: '/maintenance/public/{id}',
+        operationId: 'maintenance.public.show',
+        tags: ['Maintenance Requests — Public'],
+        summary: 'Get a maintenance request (public)',
+        description: 'Returns the public-safe details of a single maintenance request — sensitive fields excluded.',
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/AcceptLanguageHeader'),
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 42)),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Maintenance request retrieved successfully.',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status',  type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Maintenance request retrieved successfully.'),
+                        new OA\Property(property: 'data', ref: '#/components/schemas/PublicMaintenanceRequest'),
+                    ],
+                ),
+            ),
+            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+        ],
+    )]
+    public function publicShow() {}
 }

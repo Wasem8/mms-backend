@@ -22,4 +22,12 @@ interface MaintenanceRepositoryInterface
     public function attachFiles(Maintenance $maintenance, array $fileRecords): void;
 
     public function logStatusChange(Maintenance $maintenance, array $logData): void;
+
+    public function getPublicFiltered(array $filters = []);
+
+    public function findPublic(int $id): ?Maintenance;
+
+    public function requestFiles(int $id, array $data): Maintenance;
+
+    public function getPendingFileRequests(?int $mosqueId = null, int $perPage = 15);
 }

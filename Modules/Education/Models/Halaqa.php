@@ -28,8 +28,7 @@ class Halaqa extends Model
 
     public function students()
     {
-        return $this->belongsToMany(Student::class, 'halaqa_student', 'halaqa_id', 'student_id')
-            ->withPivot(['status', 'joined_at']);
+        return $this->hasMany(Student::class, 'halaqa_id');
     }
 
     public function teacher()

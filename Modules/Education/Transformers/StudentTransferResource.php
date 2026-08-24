@@ -12,19 +12,23 @@ class StudentTransferResource extends JsonResource
      */
     public function toArray($request)
     {
+        $halaqa = $this->halaqats;
+
         return [
             'id' => $this->id,
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
             'status' => $this->status,
-            'halaqats' => $this->halaqats->map(function ($halaqa) {
-                return [
-                    'id' => $halaqa->id,
-                    'name' => $halaqa->name,
-                    'teacher_name' => $halaqa->teacher?->name, // اختياري
-                    'joined_at' => $halaqa->pivot->joined_at,
-                ];
-            }),
+            'halaqa' => $halaqa ? [
+                'id' => $halaqa->id,
+                'name' => $halaqa->name,
+                'teacher_name' => $halaqa->teacher?->name,
+            ] : null,
+            'halaqats' => $halaqa ? [[
+                'id' => $halaqa->id,
+                'name' => $halaqa->name,
+                'teacher_name' => $halaqa->teacher?->name,
+            ]] : [],
         ];
     }
 }

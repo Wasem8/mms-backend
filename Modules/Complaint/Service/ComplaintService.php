@@ -6,8 +6,12 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Modules\Complaint\Events\ComplaintAssigned;
 use Modules\Complaint\Models\Complaint;
 use Modules\Complaint\Repositories\ComplaintRepositoryInterface;
+use Modules\Complaint\Events\ComplaintSubmitted;
+use Modules\Complaint\Events\ComplaintStatusChanged;
+use Modules\User\Models\User;
 
 class ComplaintService
 {
@@ -41,6 +45,8 @@ class ComplaintService
             }
         }
 
+        event(new ComplaintSubmitted($complaint));
+
         return $complaint;
     }
 
@@ -59,6 +65,9 @@ class ComplaintService
         $complaint = $this->repository->find($complaintId);
         $oldStatus = $complaint->status;
 
+        $this->assertStatusTransitionAllowed($oldStatus, $newStatus);
+
+
         $this->repository->update($complaintId, [
             'status' => $newStatus,
             'admin_notes' => $note,
@@ -72,7 +81,11 @@ class ComplaintService
             'changed_by' => $adminId,
         ]);
 
-        return $this->repository->find($complaintId);
+        $updated = $this->repository->find($complaintId);
+
+        event(new ComplaintStatusChanged($updated, $oldStatus, $newStatus, $note, $adminId));
+
+        return $updated;
     }
 
     public function getComplaintDetails(int $id, array $filters = [])
@@ -80,7 +93,7 @@ class ComplaintService
         $complaint = $this->repository->find($id);
 
         if (isset($filters['mosque_id']) && $complaint->mosque_id !== $filters['mosque_id']) {
-            abort(403, 'غير مصرح لك بالوصول إلى هذه الشكوى.');
+            abort(403, __('messages.complaint.unauthorized'));
         }
 
         return $complaint;
@@ -108,27 +121,40 @@ class ComplaintService
         ];
     }
 
-    public function getComplaintPageStats(int $mosqueId): array
+    public function getComplaintPageStats(array $filters = []): array
     {
         $now = now();
-        $query = fn () => Complaint::where('mosque_id', $mosqueId);
+
+        $base = function () use ($filters) {
+            $q = Complaint::query();
+
+            if (isset($filters['mosque_id'])) {
+                $q->where('mosque_id', $filters['mosque_id']);
+            }
+
+            if (isset($filters['user_id'])) {
+                $q->where('user_id', $filters['user_id']);
+            }
+
+            return $q;
+        };
 
         // إجمالي الشكاوى
-        $total = $query()->count();
+        $total = $base()->count();
 
         // شكاوى مفتوحة (pending + in_progress)
-        $open = $query()
+        $open = $base()
             ->whereIn('status', ['pending', 'in_progress'])
             ->count();
 
         // شكاوى عاجلة (priority = high فقط حسب الـ migration)
-        $urgent = $query()
+        $urgent = $base()
             ->where('priority', 'high')
             ->whereIn('status', ['pending', 'in_progress'])
             ->count();
 
         // تم الحل هذا الشهر
-        $resolvedThisMonth = $query()
+        $resolvedThisMonth = $base()
             ->where('status', 'resolved')
             ->whereYear('updated_at', $now->year)
             ->whereMonth('updated_at', $now->month)
@@ -136,7 +162,17 @@ class ComplaintService
 
         // متوسط الاستجابة بالساعات
         // من created_at للشكوى إلى changed_at لأول log بعد pending
-        $avgResponseHours = Complaint::where('mosque_id', $mosqueId)
+        $avgQuery = Complaint::query();
+
+        if (isset($filters['mosque_id'])) {
+            $avgQuery->where('mosque_id', $filters['mosque_id']);
+        }
+
+        if (isset($filters['user_id'])) {
+            $avgQuery->where('user_id', $filters['user_id']);
+        }
+
+        $avgResponseHours = $avgQuery
             ->where('status', '!=', 'pending')
             ->join('complaint_status_logs as csl', function ($join) {
                 $join->on('csl.complaint_id', '=', 'complaints.id')
@@ -146,7 +182,7 @@ class ComplaintService
                 FROM complaint_status_logs
                 WHERE complaint_id = complaints.id
                     AND new_status != 'pending'
-             )");
+              )");
             })
             ->selectRaw('AVG(EXTRACT(EPOCH FROM (csl.changed_at - complaints.created_at)) / 3600) as avg_hours')
             ->value('avg_hours');
@@ -191,7 +227,7 @@ class ComplaintService
         )->post($uploadUrl);
 
         if (! $response->successful()) {
-            throw new \Exception('Upload failed: '.$response->body());
+            throw new \Exception(__('messages.complaint.upload_failed').$response->body());
         }
 
         return $baseUrl.'/storage/v1/object/public/'.$path;
@@ -212,4 +248,57 @@ class ComplaintService
             'Authorization' => 'Bearer '.env('SUPABASE_KEY'),
         ])->delete($deleteUrl);
     }
+
+    public function getMyComplaints(int $userId, array $filters = [])
+    {
+        $filters['user_id'] = $userId;
+        $filters['per_page'] = (int) ($filters['per_page'] ?? 15);
+
+        return $this->repository->getFiltered($filters);
+    }
+
+    public function assignToSuperAdmin(int $complaintId, ?int $adminId, int $assignedBy, ?string $note = null)
+    {
+        if ($adminId === null) {
+            $admin = User::whereHas('roles', fn ($q) => $q->where('name', 'super_admin'))->firstOrFail();
+        } else {
+            $admin = User::findOrFail($adminId);
+
+            if (! $admin->hasRole('super_admin')) {
+                abort(422, __('messages.complaint.invalid_admin_role'));
+            }
+        }
+
+        $complaint = $this->repository->find($complaintId);
+        $oldStatus = $complaint->status;
+
+        $updated = $this->repository->assignToAdmin($complaintId, $admin->id);
+
+        $this->repository->logStatusChange($complaint, [
+            'old_status' => $oldStatus,
+            'new_status' => $oldStatus, // الحالة ما تغيرت، بس نسجل الإسناد بالـ note
+            'note' => $note ?? __('messages.complaint.assigned_note', ['admin' => $admin->name]),
+            'changed_at' => now(),
+            'changed_by' => $assignedBy,
+        ]);
+
+        event(new ComplaintAssigned($updated, $admin, $assignedBy, $note));
+
+        return $updated;
+    }
+
+    private function assertStatusTransitionAllowed(string $currentStatus, string $newStatus): void
+    {
+        $finalStatuses = ['resolved', 'canceled'];
+
+        if (in_array($currentStatus, $finalStatuses) && $newStatus !== $currentStatus) {
+            abort(422, __('messages.complaint.status_locked'));
+        }
+
+        if ($currentStatus === 'in_progress' && $newStatus === 'pending') {
+            abort(422, __('messages.complaint.cannot_revert_to_pending'));
+        }
+    }
+
+
 }
