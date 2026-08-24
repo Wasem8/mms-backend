@@ -68,9 +68,13 @@ class DonationController extends Controller
     {
         $user = auth()->guard('api')->user();
 
-        $data = $user->hasRole('super_admin')
-            ? $this->donationService->getPageStatsForAll()
-            : $this->donationService->getPageStatsForUser($user->id);
+        if ($user->hasRole('super_admin')) {
+            $data = $this->donationService->getPageStatsForAll();
+        } elseif ($user->hasRole('mosque_manager') && $user->managedMosque) {
+            $data = $this->donationService->getPageStats($user->managedMosque->id);
+        } else {
+            $data = $this->donationService->getPageStatsForUser($user->id);
+        }
 
         return response()->json([
             'status'  => true,
